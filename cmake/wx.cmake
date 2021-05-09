@@ -84,7 +84,7 @@ if (WX_COMPONENTS)
 			message(STATUS "Found usable wx-${COMPONENT}: ${wxWidgets_VERSION_STRING}")
 		endif()
 
-		if (WIN32)
+		if (WIN32 AND NOT MINGW)
 			set_property (TARGET wxWidgets::${COMPONENT}
 				PROPERTY IMPORTED_LOCATION_RELEASE ${WX_${${COMPONENT}}}
 			)

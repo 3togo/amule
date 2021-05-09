@@ -249,10 +249,17 @@ void CClientCreditsList::Process()
 bool CClientCreditsList::CreateKeyPair()
 {
 	try {
-		CryptoPP::AutoSeededX917RNG<CryptoPP::DES_EDE3> rng;
+		puts("xxxx");
+		//exit(1);
+		//CryptoPP::AutoSeededX917RNG<CryptoPP::DES_EDE3> rng;
+		CryptoPP::AutoSeededRandomPool rng;
+		puts("yyy");
 		CryptoPP::InvertibleRSAFunction privkey;
-		privkey.Initialize(rng, RSAKEYSIZE);
-
+		//privkey.Initialize(rng, RSAKEYSIZE);
+		privkey.GenerateRandomWithKeySize( rng, RSAKEYSIZE );
+		puts("zzz");
+		//exit(1);
+		
 		// Nothing we can do against this filename2char :/
 		wxCharBuffer filename = filename2char(thePrefs::GetConfigDir() + CRYPTKEY_FILENAME);
 		CryptoPP::FileSink *fileSink = new CryptoPP::FileSink(filename);
