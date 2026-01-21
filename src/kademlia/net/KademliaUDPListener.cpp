@@ -143,7 +143,7 @@ void CKademliaUDPListener::SendMyDetails(uint8_t opcode, uint32_t ip, uint16_t p
 			)));
 		}
 		if (kadVersion >= 6) {
-			if (cryptTargetID == NULL || *cryptTargetID == 0) {
+			if (cryptTargetID == nullptr || *cryptTargetID == 0) {
 				AddDebugLogLineN(logClientKadUDP, CFormat(wxT("Sending hello response to crypt enabled Kad Node which provided an empty NodeID: %s (%u)")) % KadIPToString(ip) % kadVersion);
 				SendPacket(packetdata, opcode, ip, port, targetKey, NULL);
 			} else {
@@ -377,7 +377,7 @@ bool CKademliaUDPListener::AddContact2(const uint8_t *data, uint32_t lenData, ui
 
 	CMemFile bio(data, lenData);
 	CUInt128 id = bio.ReadUInt128();
-	if (outContactID != NULL) {
+	if (outContactID != nullptr) {
 		*outContactID = id;
 	}
 	uint16_t tport = bio.ReadUInt16();
@@ -385,7 +385,7 @@ bool CKademliaUDPListener::AddContact2(const uint8_t *data, uint32_t lenData, ui
 	if (version == 0) {
 		throw wxString(CFormat(wxT("***NOTE: Received invalid Kademlia2 version (%u) in %s")) % version % wxString::FromAscii(__FUNCTION__));
 	}
-	if (outVersion != NULL) {
+	if (outVersion != nullptr) {
 		*outVersion = version;
 	}
 	bool udpFirewalled = false;
