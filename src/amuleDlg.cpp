@@ -1500,7 +1500,7 @@ void CamuleDlg::DoNetworkRearrange()
 
 		replacement->Reparent(m_networknotebooksizer->GetContainingWindow());
 		replacement->Show();
-		m_networknotebooksizer->Add(replacement, 1, wxGROW | wxALIGN_CENTER_VERTICAL | wxTOP, 5);
+		m_networknotebooksizer->Add(replacement, 1, wxGROW | wxTOP, 5);
 		m_networknotebooksizer->Layout();
 		currentState = newState;
 	}
