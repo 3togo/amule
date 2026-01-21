@@ -1453,7 +1453,7 @@ bool wxListLineData::SetAttributes(wxDC *dc,
         if ( highlighted )
             dc->SetBrush( m_owner->GetHighlightBrush() );
         else
-            dc->SetBrush(*(wxTheBrushList->FindOrCreateBrush(attr->GetBackgroundColour(), wxSOLID)));
+            dc->SetBrush(wxBrush(attr->GetBackgroundColour(), wxBRUSHSTYLE_SOLID));
 
         dc->SetPen( *wxTRANSPARENT_PEN );
 
@@ -1936,7 +1936,7 @@ void wxListHeaderWindow::DrawCurrent()
 
     wxScreenDC dc;
     dc.SetLogicalFunction( wxINVERT );
-    dc.SetPen( *(wxThePenList->FindOrCreatePen(*wxBLACK, 2, wxSOLID ) ));
+    dc.SetPen(wxPen(*wxBLACK, 2, wxPENSTYLE_SOLID));
     dc.SetBrush( *wxTRANSPARENT_BRUSH );
 
     AdjustDC(dc);
@@ -2320,21 +2320,21 @@ wxListMainWindow::wxListMainWindow( wxWindow *parent,
 {
     Init();
 
-    m_highlightBrush = *(wxTheBrushList->FindOrCreateBrush(
+    m_highlightBrush = wxBrush(
                             wxSystemSettings::GetColour
                             (
                                 wxSYS_COLOUR_HIGHLIGHT
                             ),
-                            wxSOLID
-                         ));
+                            wxBRUSHSTYLE_SOLID
+                         );
 
-    m_highlightUnfocusedBrush = *(wxTheBrushList->FindOrCreateBrush(
+    m_highlightUnfocusedBrush = wxBrush(
                                  wxSystemSettings::GetColour
                                  (
                                      wxSYS_COLOUR_BTNSHADOW
                                  ),
-                                 wxSOLID
-                              ));
+                                 wxBRUSHSTYLE_SOLID
+                              );
 
     SetScrollbars( 0, 0, 0, 0, 0, 0 );
 
@@ -2734,7 +2734,7 @@ void wxListMainWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
 
     // Ensure an uniform background color, as to avoid differences between
     // the automatically cleared parts and the rest of the canvas.
-    dc.SetBackground(*(wxTheBrushList->FindOrCreateBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOX), wxSOLID)));
+    dc.SetBackground(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOX), wxBRUSHSTYLE_SOLID));
 
     // We need to clear the DC manually, since we intercept BG-erase events.
     // Clearing must be done first thing because caching of the double-buffering causes artifacts otherwise.
@@ -2805,7 +2805,7 @@ void wxListMainWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
 
         if ( HasFlag(wxLC_HRULES) )
         {
-            wxPen pen = *(wxThePenList->FindOrCreatePen(GetRuleColour(), 1, wxSOLID));
+            wxPen pen(GetRuleColour(), 1, wxPENSTYLE_SOLID);
             wxSize clientSize = GetClientSize();
 
             size_t i = visibleFrom;
@@ -2831,7 +2831,7 @@ void wxListMainWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
         // Draw vertical rules if required
         if ( HasFlag(wxLC_VRULES) && !IsEmpty() )
         {
-            wxPen pen = *(wxThePenList->FindOrCreatePen(GetRuleColour(), 1, wxSOLID));
+            wxPen pen(GetRuleColour(), 1, wxPENSTYLE_SOLID);
             wxRect firstItemRect, lastItemRect;
 
             GetItemRect(visibleFrom, firstItemRect);
@@ -4861,9 +4861,8 @@ void wxListMainWindow::OnScroll(wxScrollWinEvent& event)
 {
     // FIXME
 #if ( defined(__WXGTK__) || defined(__WXMAC__) ) && !defined(__WXUNIVERSAL__)
-    wxScrolledWindow::OnScroll(event);
-#else
-    HandleOnScroll( event );
+    // wxScrolledWindow::OnScroll is deprecated in wxWidgets 3.2+
+    wxScrollHelper::HandleOnScroll(event);
 #endif
 
     // update our idea of which lines are shown when we redraw the window the

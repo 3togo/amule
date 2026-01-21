@@ -6,6 +6,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Suppress 'register' keyword warnings in generated lexer files
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-Wno-register)
+endif()
+
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mtune=pentium4")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=pentium4")
 set(ENABLE_UPNP OFF CACHE BOOL "" FORCE)
