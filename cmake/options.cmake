@@ -185,7 +185,7 @@ endif()
 
 if (NEED_LIB_MULEAPPCOMMON)
 	option (ENABLE_BOOST "compile with Boost.ASIO Sockets" ON)
-	option (ENABLE_IP2COUNTRY "compile with GeoIP IP2Country library")
+	option (ENABLE_IP2COUNTRY "compile with GeoIP IP2Country library" ON)
 	option (ENABLE_MMAP "enable using mapped memory if supported")
 	option (ENABLE_NLS "enable national language support" ON)
 	set (NEED_LIB_MULEAPPCORE TRUE)

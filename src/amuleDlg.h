@@ -37,6 +37,7 @@
 
 #include "Types.h"			// Needed for uint32
 #include "StatisticsDlg.h"
+#include "IP2Country.h"         // Needed for CIP2Country
 
 class wxTimerEvent;
 class wxTextCtrl;

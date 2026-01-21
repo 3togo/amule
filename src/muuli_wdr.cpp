@@ -2130,6 +2130,13 @@ wxSizer *PreferencesGuiTweaksTab( wxWindow *parent, bool call_fit, bool set_size
     wxCheckBox *item12 = new wxCheckBox( parent, IDC_SHOW_COUNTRY_FLAGS, _("Show country flags for clients"), wxDefaultPosition, wxDefaultSize, 0 );
     item0->Add( item12, 0, wxGROW, 0);
 
+    // Download GeoIP database button
+    wxButton *geoipDownloadBtn = new wxButton(parent, IDC_GEOIP_DOWNLOAD, _("Download GeoIP Database"), wxDefaultPosition, wxDefaultSize, 0);
+    item0->Add(geoipDownloadBtn, 0, wxGROW, 0);
+    
+    // Tooltip
+    geoipDownloadBtn->SetToolTip(_("Download GeoIP database to enable country flag display"));
+
     wxStaticBox *item14 = new wxStaticBox( parent, -1, _("Download Queue Files") );
     wxStaticBoxSizer *item13 = new wxStaticBoxSizer( item14, wxVERTICAL );
 

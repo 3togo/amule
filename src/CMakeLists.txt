@@ -52,6 +52,11 @@ if (NEED_LIB)
 	add_subdirectory (libs)
 endif()
 
+# GeoIP module (new implementation)
+if (ENABLE_IP2COUNTRY)
+	add_subdirectory (geoip)
+endif()
+
 if (BUILD_AMULECMD)
 	add_executable (amulecmd
 		DataToText.cpp
@@ -425,7 +430,7 @@ endif()
 
 if (NEED_LIB_MULEAPPGUI)
 	add_library (muleappgui STATIC
-		${IP2COUNTRY}
+		IP2Country.cpp
 		extern/wxWidgets/listctrl.cpp
 		BarShader.cpp
 		ColorFrameCtrl.cpp
@@ -442,7 +447,8 @@ if (NEED_LIB_MULEAPPGUI)
 
 	if (ENABLE_IP2COUNTRY)
 		target_link_libraries (muleappgui
-			PUBLIC GeoIP::Shared
+			PUBLIC mulegeoip
+			PUBLIC maxminddb::maxminddb
 		)
 	endif()
 
@@ -462,7 +468,8 @@ if (NEED_LIB_MULEAPPGUI)
 
 	if (ENABLE_IP2COUNTRY)
 		add_dependencies (muleappgui
-			generate_CountryFlags.h)
+			generate_CountryFlags.h
+			mulegeoip)
 	endif()
 endif()
 
