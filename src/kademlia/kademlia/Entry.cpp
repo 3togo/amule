@@ -140,7 +140,7 @@ wxString CEntry::GetCommonFileName() const
 void CEntry::WriteTagListInc(CFileDataIO* data, uint32_t increaseTagNumber)
 {
 	// write taglist and add name + size tag
-	wxCHECK_RET(data != NULL, wxT("data must not be NULL"));
+	wxCHECK_RET(data != nullptr, wxT("data must not be NULL"));
 
 	uint32_t count = GetTagCount() + increaseTagNumber;	// will include name and size tag in the count if needed
 	wxASSERT(count <= 0xFF);
@@ -165,19 +165,19 @@ void CEntry::WriteTagListInc(CFileDataIO* data, uint32_t increaseTagNumber)
 ////// CKeyEntry
 CKeyEntry::CKeyEntry()
 {
-	m_publishingIPs = NULL;
+	m_publishingIPs = nullptr;
 	m_trustValue = 0;
 	m_lastTrustValueCalc = 0;
 }
 
 CKeyEntry::~CKeyEntry()
 {
-	if (m_publishingIPs != NULL) {
+	if (m_publishingIPs != nullptr) {
 		for (PublishingIPList::const_iterator it = m_publishingIPs->begin(); it != m_publishingIPs->end(); ++it) {
 			AdjustGlobalPublishTracking(it->m_ip, false, wxT("instance delete"));
 		}
 		delete m_publishingIPs;
-		m_publishingIPs = NULL;
+		m_publishingIPs = nullptr;
 	}
 }
 
@@ -353,25 +353,25 @@ void CKeyEntry::MergeIPsAndFilenames(CKeyEntry* fromEntry)
 	// we want to take over the tracked IPs and the different filenames from the old entry, the rest is still
 	// "overwritten" with the refreshed values. This might be not perfect for the taglist in some cases, but we can't afford
 	// to store hundreds of taglists to figure out the best one like we do for the filenames now
-	if (m_publishingIPs != NULL) { // This instance needs to be a new entry, otherwise we don't want/need to merge
-		wxASSERT(fromEntry == NULL);
+	if (m_publishingIPs != nullptr) { // This instance needs to be a new entry, otherwise we don't want/need to merge
+		wxASSERT(fromEntry == nullptr);
 		wxASSERT(!m_publishingIPs->empty());
 		wxASSERT(!m_filenames.empty());
 		return;
 	}
 
 	bool refresh = false;
-	if (fromEntry == NULL || fromEntry->m_publishingIPs == NULL) {
-		wxASSERT(fromEntry == NULL);
-		// if called with NULL, this is a complete new entry and we need to initalize our lists
-		if (m_publishingIPs == NULL) {
+	if (fromEntry == nullptr || fromEntry->m_publishingIPs == nullptr) {
+		wxASSERT(fromEntry == nullptr);
+		// if called with nullptr, this is a complete new entry and we need to initalize our lists
+		if (m_publishingIPs == nullptr) {
 			m_publishingIPs = new PublishingIPList();
 		}
 		// update the global track map below
 	} else {
 		// merge the tracked IPs, add this one if not already on the list
 		m_publishingIPs = fromEntry->m_publishingIPs;
-		fromEntry->m_publishingIPs = NULL;
+		fromEntry->m_publishingIPs = nullptr;
 		bool fastRefresh = false;
 		for (PublishingIPList::iterator it = m_publishingIPs->begin(); it != m_publishingIPs->end(); ++it) {
 			if (it->m_ip == m_uIP) {
@@ -456,7 +456,7 @@ void CKeyEntry::ReCalculateTrustValue()
 	//
 	// Its important to note that entry with < 1 do NOT get ignored or singled out, this only comes into play if we have 300 more results for
 	// a search request rating > 1
-	wxCHECK_RET(m_publishingIPs != NULL, wxT("No publishing IPs?"));
+	wxCHECK_RET(m_publishingIPs != nullptr, wxT("No publishing IPs?"));
 
 	m_lastTrustValueCalc = ::GetTickCount();
 	m_trustValue = 0;
@@ -488,7 +488,7 @@ double CKeyEntry::GetTrustValue()
 
 void CKeyEntry::CleanUpTrackedPublishers()
 {
-	if (m_publishingIPs == NULL) {
+	if (m_publishingIPs == nullptr) {
 		return;
 	}
 
@@ -514,7 +514,8 @@ void CKeyEntry::WritePublishTrackingDataToFile(CFileDataIO* data)
 		data->WriteUInt32(it->m_popularityIndex);
 	}
 
-	if (m_publishingIPs != NULL) {
+
+	if (m_publishingIPs != nullptr) {
 		data->WriteUInt32((uint32_t)m_publishingIPs->size());
 		for (PublishingIPList::const_iterator it = m_publishingIPs->begin(); it != m_publishingIPs->end(); ++it) {
 			wxASSERT(it->m_ip != 0);
@@ -539,7 +540,8 @@ void CKeyEntry::ReadPublishTrackingDataFromFile(CFileDataIO* data)
 		m_filenames.push_back(toAdd);
 	}
 
-	wxASSERT(m_publishingIPs == NULL);
+
+	wxASSERT(m_publishingIPs == nullptr);
 	m_publishingIPs = new PublishingIPList();
 	uint32_t ipCount = data->ReadUInt32();
 #ifdef __WXDEBUG__
@@ -574,12 +576,12 @@ void CKeyEntry::DirtyDeletePublishData()
 	// we just remove them, and trust that the caller in the end also resets the global map, so the
 	// kad shutdown is speed up a bit
 	delete m_publishingIPs;
-	m_publishingIPs = NULL;
+	m_publishingIPs = nullptr;
 }
 
 void CKeyEntry::WriteTagListWithPublishInfo(CFileDataIO* data)
 {
-	if (m_publishingIPs == NULL || m_publishingIPs->empty()) {
+	if (m_publishingIPs == nullptr || m_publishingIPs->empty()) {
 		wxFAIL;
 		WriteTagList(data);
 		return;
