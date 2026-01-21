@@ -124,7 +124,7 @@ public:
 		m_sync = false;
 		m_IP = wxT("?");
 		m_IPint = 0;
-		m_socket = new ip::tcp::socket(s_io_service);
+		m_socket = std::make_unique<ip::tcp::socket>(s_io_service);
 
 		// Set socket to non blocking
 		m_socket->non_blocking();
@@ -149,7 +149,7 @@ public:
 		m_port = adr.Service();
 		m_closed = false;
 		m_OK = false;
-		m_sync = !m_notify;		// set this once for the whole lifetime of the socket
+		m_sync = !m_notify;
 		AddDebugLogLineF(logAsio, CFormat(wxT("Connect %s %p")) % m_IP % this);
 
 		if (wait || m_sync) {
@@ -159,9 +159,8 @@ public:
 			m_connected = m_OK;
 			return m_OK;
 		} else {
-		m_socket->async_connect(adr.GetEndpoint(),
-			m_strand.wrap([this](const error_code& error) { HandleConnect(error); }));
-			// m_OK and return are false because we are not connected yet
+			m_socket->async_connect(adr.GetEndpoint(),
+				m_strand.wrap([this](const error_code& error) { HandleConnect(error); }));
 			return false;
 		}
 	}
@@ -447,9 +446,7 @@ private:
 		} else {
 			CoreNotify_LibSocketConnect(m_libSocket, err.value());
 			if (m_OK) {
-				// After connect also send a OUTPUT event to show data is available
 				CoreNotify_LibSocketSend(m_libSocket, 0);
-				// Start reading
 				StartBackgroundRead();
 				m_connected = true;
 			}
@@ -603,7 +600,7 @@ private:
 	}
 
 	CLibSocket	*	m_libSocket;
-	ip::tcp::socket	*	m_socket;
+	std::unique_ptr<ip::tcp::socket> m_socket;
 										// remote IP
 	wxString		m_IPstring;			// as String (use nowhere because of threading!)
 	const wxChar *	m_IP;				// as char*  (use in debug logs)
@@ -973,9 +970,9 @@ public:
 		m_timer(s_io_service),
 		m_address(address)
 	{
-		m_muleSocket = NULL;
-		m_socket = NULL;
-		m_readBuffer = new char[CMuleUDPSocket::UDP_BUFFER_SIZE];
+		m_muleSocket = nullptr;
+		m_socket.reset();
+		m_readBuffer = std::make_unique<char[]>(CMuleUDPSocket::UDP_BUFFER_SIZE);
 		m_OK = true;
 		CreateSocket();
 	}
@@ -983,8 +980,7 @@ public:
 	~CAsioUDPSocketImpl()
 	{
 		AddDebugLogLineF(logAsio, wxT("UDP ~CAsioUDPSocketImpl"));
-		delete m_socket;
-		delete[] m_readBuffer;
+		// Automatic deletion via unique_ptr
 		DeleteContents(m_receiveBuffers);
 	}
 
@@ -1103,7 +1099,7 @@ private:
 			AddDebugLogLineF(logAsio, CFormat(wxT("UDP HandleRead %d %s:%d")) % received % ipadr.IPAddress() % ipadr.Service());
 
 			// create our read buffer
-			CUDPData * recdata = new CUDPData(m_readBuffer, received, ipadr);
+			CUDPData * recdata = new CUDPData(m_readBuffer.get(), received, ipadr);
 			{
 				wxMutexLocker lock(m_receiveBuffersLock);
 				m_receiveBuffers.push_back(recdata);
@@ -1142,26 +1138,25 @@ private:
 	void CreateSocket()
 	{
 		try {
-			delete m_socket;
 			ip::udp::endpoint endpoint(m_address.GetEndpoint().address(), m_address.Service());
-			m_socket = new ip::udp::socket(s_io_service, endpoint);
+			m_socket = std::make_unique<ip::udp::socket>(s_io_service, endpoint);
 			AddDebugLogLineN(logAsio, CFormat(wxT("Created UDP socket %s %d")) % m_address.IPAddress() % m_address.Service());
 			StartBackgroundRead();
 		} catch (const system_error& err) {
 			AddLogLineC(CFormat(wxT("Error creating UDP socket %s %d : %s")) % m_address.IPAddress() % m_address.Service() % err.code().message());
-			m_socket = NULL;
+			m_socket.reset();
 			m_OK = false;
 		}
 	}
 
 	void StartBackgroundRead()
 	{
-		m_socket->async_receive_from(buffer(m_readBuffer, CMuleUDPSocket::UDP_BUFFER_SIZE), m_receiveEndpoint,
+		m_socket->async_receive_from(buffer(static_cast<void*>(m_readBuffer.get()), CMuleUDPSocket::UDP_BUFFER_SIZE), m_receiveEndpoint,
 		m_strand.wrap([this](const error_code& error, size_t bytes_transferred) { HandleRead(error, bytes_transferred); }));
 	}
 
 	CLibUDPSocket *		m_libSocket;
-	ip::udp::socket *	m_socket;
+	std::unique_ptr<ip::udp::socket> m_socket;
 	CMuleUDPSocket *	m_muleSocket;
 	bool				m_OK;
 	io_context::strand	m_strand;		// handle synchronisation in io_context thread pool
@@ -1169,7 +1164,7 @@ private:
 	amuleIPV4Address	m_address;
 
 	// One fix receive buffer
-	char *				m_readBuffer;
+	std::unique_ptr<char[]> m_readBuffer;
 	// and a list of dynamic buffers. UDP data may be coming in faster
 	// than the main loop can handle it.
 	std::list<CUDPData *>	m_receiveBuffers;
