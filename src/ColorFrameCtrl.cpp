@@ -62,7 +62,6 @@ END_EVENT_TABLE()
 void CColorFrameCtrl::SetFrameBrushColour(const wxColour& colour)
 {
 	m_brushFrame = wxBrush(colour, wxBRUSHSTYLE_SOLID);
-
 	Refresh(FALSE);
 }  // SetFrameColor
 

@@ -1384,7 +1384,7 @@ wxString amuleIPV4Address::IPAddress() const
 }
 
 // "Set address to any of the addresses of the current machine."
-// This just sets the address to 0.0.0.0 .
+// This just sets the address to 0.0.0.0 .Minor changes to modernize the app
 // wx does the same.
 bool amuleIPV4Address::AnyAddress()
 {

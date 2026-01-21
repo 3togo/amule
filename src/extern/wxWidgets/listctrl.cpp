@@ -40,14 +40,6 @@
 #include <wx/renderer.h>
 #include <wx/dcbuffer.h>
 
-#if wxCHECK_VERSION(2, 9, 0)
-// wxWidgets 2.9+ does not include a mac/private anymore.
-#else
-	#if defined( __WXMAC__ ) && !defined(__WXUNIVERSAL__) && (wxOSX_USE_CARBON || TARGET_CARBON)
-		#include <wx/mac/private.h>
-	#endif
-#endif
-
 
 // NOTE: If using the wxListBox visual attributes works everywhere then this can
 // be removed, as well as the #else case below.
@@ -1473,7 +1465,7 @@ void wxListLineData::Draw( wxDC *dc )
     wxListItemAttr *attr = GetAttr();
 
     if ( SetAttributes(dc, attr, highlighted) )
-#if ( !defined(__WXGTK20__) && !defined(__WXMAC__) )
+#if ( !defined(__WXGTK2__) && !defined(__WXMAC__) )
     {
         dc->DrawRectangle( m_gi->m_rectHighlight );
     }
@@ -1536,7 +1528,7 @@ void wxListLineData::DrawInReportMode( wxDC *dc,
     //       GetAttr() and move these lines into the loop below
     wxListItemAttr *attr = GetAttr();
     if ( SetAttributes(dc, attr, highlighted) )
-#if ( !defined(__WXGTK20__) && !defined(__WXMAC__) )
+#if ( !defined(__WXGTK2__) && !defined(__WXMAC__) )
     {
         dc->DrawRectangle( rectHL );
     }
@@ -2334,8 +2326,8 @@ wxListMainWindow::wxListMainWindow( wxWindow *parent,
                                      wxSYS_COLOUR_BTNSHADOW
                                  ),
                                  wxBRUSHSTYLE_SOLID
-                              );
 
+                              );
     SetScrollbars( 0, 0, 0, 0, 0, 0 );
 
     wxVisualAttributes attr = wxGenericListCtrl::GetClassDefaultAttributes();
@@ -2554,7 +2546,7 @@ void wxListMainWindow::HighlightLines( size_t lineFrom,
         if ( !m_selStore.SelectRange(lineFrom, lineTo, highlight,
                                      &linesChanged) )
         {
-            // meny items changed state, refresh everything
+            // many items changed state, refresh everything
             RefreshLines(lineFrom, lineTo);
         }
         else // only a few items changed state, refresh only them
@@ -2805,6 +2797,7 @@ void wxListMainWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
 
         if ( HasFlag(wxLC_HRULES) )
         {
+
             wxPen pen(GetRuleColour(), 1, wxPENSTYLE_SOLID);
             wxSize clientSize = GetClientSize();
 
@@ -2867,7 +2860,7 @@ void wxListMainWindow::OnPaint( wxPaintEvent &WXUNUSED(event) )
         if ( m_hasFocus )
         {
             wxRect rect( GetLineHighlightRect( m_current ) );
-#ifndef __WXGTK20__
+#ifndef __WXGTK2__
             dc.SetPen( *wxBLACK_PEN );
             dc.SetBrush( *wxTRANSPARENT_BRUSH );
             dc.DrawRectangle( rect );
@@ -3930,8 +3923,8 @@ void wxListMainWindow::SetItemStateAll(long state, long stateMask)
 
     if ( HasCurrent() && (state == 0) && (stateMask & wxLIST_STATE_FOCUSED) )
     {
-        // unfocus all: only one item can be focussed, so clearing focus for
-        // all items is simply clearing focus of the focussed item.
+        // unfocus all: only one item can be focused, so clearing focus for
+        // all items is simply clearing focus of the focused item.
         SetItemState(m_current, state, stateMask);
     }
     //(setting focus to all items makes no sense, so it is not handled here.)
@@ -4093,7 +4086,7 @@ int wxListMainWindow::GetSelectedItemCount() const
     if ( IsSingleSel() )
         return HasCurrent() ? IsHighlighted(m_current) : false;
 
-    // virtual controls remmebers all its selections itself
+    // virtual controls remembers all its selections itself
     if ( IsVirtual() )
         return m_selStore.GetSelectedCount();
 
@@ -4859,6 +4852,13 @@ void wxListMainWindow::SortItems( MuleListCtrlCompare fn, long data )
 
 void wxListMainWindow::OnScroll(wxScrollWinEvent& event)
 {
+      // wxScrolledWindows::OnScroll is deprecated in wx 3.0.0 and it does not exist anymore in 3.1.0.
+    // Please also notice that call to
+    // - wxScrolledWindow::OnScroll
+    // - HandleOnScroll
+    // have been removed in code present in
+    // src/generic/listctrl.cpp, wxListMainWindow::OnScroll
+    // of wxWidgets 3.0
     // FIXME
 #if ( defined(__WXGTK__) || defined(__WXMAC__) ) && !defined(__WXUNIVERSAL__)
     // wxScrolledWindow::OnScroll is deprecated in wxWidgets 3.2+

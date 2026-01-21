@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Suppress 'register' keyword warnings in generated lexer files
+# Suppress 'register' keyword warnings in generated C++ lexer files
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options(-Wno-register)
+    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-Wno-register>")
 endif()
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mtune=pentium4")
@@ -145,6 +145,10 @@ if (BUILD_REMOTEGUI)
 		DESTINATION "${CMAKE_INSTALL_DATADIR}/applications"
 	)
 endif()
+
+install (FILES org.amule.amule.metainfo.xml
+	DESTINATION "${CMAKE_INSTALL_DATADIR}/metainfo"
+)
 
 if (ENABLE_NLS)
 	include (FindGettext)

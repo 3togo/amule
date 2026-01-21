@@ -77,7 +77,7 @@ wxSizer *muleDlg( wxWindow *parent, bool call_fit, bool set_sizer )
 
     CMuleTextCtrl *item4 = new CMuleTextCtrl( parent, -1, wxT(""), wxDefaultPosition, wxSize(-1,40), wxTE_MULTILINE );
     item4->SetName( wxT("FastEd2kLinks") );
-    item2->Add( item4, 1, wxEXPAND|wxALL, 0);
+    item2->Add( item4, 1, wxALL|wxEXPAND, 5 );
 
     wxButton *item5 = new wxButton( parent, ID_BUTTON_FAST, _("Commit"), wxDefaultPosition, wxDefaultSize, 0 );
     item5->SetToolTip( _("Click here to add the eD2k link in the text control to your download queue.") );
@@ -474,7 +474,7 @@ wxSizer *transferBottomPane( wxWindow *parent, bool call_fit, bool set_sizer )
     item0->Add( item1, 0, wxGROW, 0);
 
     CSourceListCtrl *item6 = new CSourceListCtrl( parent, ID_CLIENTLIST, wxDefaultPosition, wxDefaultSize, wxLC_REPORT|wxSUNKEN_BORDER );
-    item0->Add( item6, 1, wxGROW, 0);
+    item0->Add( item6, 1, wxGROW, 5 );
 
     if (set_sizer)
     {
@@ -1089,7 +1089,7 @@ item3->SetName(wxT("dloadScope"));
 
     item1->Add( item4, 0, 0|wxLEFT|wxRIGHT|wxTOP, 0);
 
-    item0->Add( item1, 1, wxGROW|wxBOTTOM, 0);
+    item0->Add( item1, 1, wxGROW|wxBOTTOM, 5 );
 
     wxStaticBox *item15 = new wxStaticBox( parent, -1, _("Upload-Speed") );
     wxStaticBoxSizer *item14 = new wxStaticBoxSizer( item15, wxVERTICAL );
@@ -1138,7 +1138,7 @@ item16->SetName(wxT("uloadScope"));
 
     item14->Add( item17, 0, 0|wxLEFT|wxRIGHT|wxTOP, 0);
 
-    item0->Add( item14, 1, wxGROW|wxBOTTOM, 0);
+    item0->Add( item14, 1, wxGROW|wxBOTTOM, 5 );
 
     wxStaticBox *item28 = new wxStaticBox( parent, -1, _("Connections") );
     wxStaticBoxSizer *item27 = new wxStaticBoxSizer( item28, wxVERTICAL );
@@ -2596,11 +2596,7 @@ wxSizer *serverListDlgDown( wxWindow *parent, bool call_fit, bool set_sizer )
     wxStaticBoxSizer *item0 = new wxStaticBoxSizer( item1, wxVERTICAL );
 
     wxNotebook *item3 = new wxNotebook( parent, ID_SRVLOG_NOTEBOOK, wxDefaultPosition, wxDefaultSize, 0 );
-#if !wxCHECK_VERSION(2,5,2)
-    wxNotebookSizer *item2 = new wxNotebookSizer( item3 );
-#else
     wxWindow *item2 = item3;
-#endif
 
     wxPanel *item4 = new wxPanel( item3, -1 );
     aMuleLog( item4, FALSE );
@@ -3274,11 +3270,7 @@ wxSizer *NetDialog( wxWindow *parent, bool call_fit, bool set_sizer )
     m_networknotebooksizer = item0;
 
     wxNotebook *item2 = new wxNotebook( parent, ID_NETNOTEBOOK, wxDefaultPosition, wxDefaultSize, 0 );
-#if !wxCHECK_VERSION(2,5,2)
-    wxNotebookSizer *item1 = new wxNotebookSizer( item2 );
-#else
     wxWindow *item1 = item2;
-#endif
 
     wxPanel *item3 = new wxPanel( item2, -1 );
     serverListDlgUp( item3, FALSE );
