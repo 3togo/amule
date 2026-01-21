@@ -141,6 +141,10 @@ if (BUILD_REMOTEGUI)
 	)
 endif()
 
+install (FILES org.amule.amule.metainfo.xml
+	DESTINATION "${CMAKE_INSTALL_DATADIR}/metainfo"
+)
+
 if (ENABLE_NLS)
 	include (FindGettext)
 	add_subdirectory (po)

@@ -30,7 +30,7 @@ Please do not change anything here and release it..
 There is going to be a new forum created just for the Kademlia side of the client..
 If you feel there is an error or a way to improve something, please
 post it in the forum first and let us look at it.. If it is a real improvement,
-it will be added to the offical client.. Changing something without knowing
+it will be added to the official client.. Changing something without knowing
 what all it does can cause great harm to the network if released in mass form..
 Any mod that changes anything within the Kademlia side will not be allowed to advertise
 there client on the eMule forum..
@@ -122,9 +122,9 @@ void CEntry::SetFileName(const wxString& name)
 wxString CEntry::GetCommonFileName() const
 {
 	// return the filename on which most publishers seem to agree on
-	// due to the counting, this doesn't has to be excact, we just want to make sure to not use a filename which just
+	// due to the counting, this doesn't has to be exact, we just want to make sure to not use a filename which just
 	// a few bad publishers used and base or search matching and answering on this, instead of the most popular name
-	// Note: The Index values are not the acutal numbers of publishers, but just a relativ number to compare to other entries
+	// Note: The Index values are not the actual numbers of publishers, but just a relative number to compare to other entries
 	FileNameList::const_iterator result = m_filenames.end();
 	uint32_t highestPopularityIndex = 0;
 	for (auto it = m_filenames.begin(); it != m_filenames.end(); ++it) {
@@ -447,7 +447,7 @@ void CKeyEntry::ReCalculateTrustValue()
 	// but mostly we say everything below 1 is bad, everything above 1 is good. It is calculated by looking at how many different
 	// IPs/24 have published this entry and how many entries each of those IPs have.
 	// Each IP/24 has x (say 3) points. This means if one IP publishes 3 different entries without any other IP publishing those entries,
-	// each of those entries will have 3 / 3 = 1 Trustvalue. Thats fine. If it publishes 6 alone, each entry has 3 / 6 = 0.5 trustvalue - not so good
+	// each of those entries will have 3 / 3 = 1 Trustvalue. That's fine. If it publishes 6 alone, each entry has 3 / 6 = 0.5 trustvalue - not so good
 	// However if there is another publisher for entry 5, which only publishes this entry then we have 3/6 + 3/1 = 3.5 trustvalue for this entry
 	//
 	// What's the point? With this rating we try to avoid getting spammed with entries for a given keyword by a small IP range, which blends out
@@ -479,7 +479,7 @@ void CKeyEntry::ReCalculateTrustValue()
 
 double CKeyEntry::GetTrustValue()
 {
-	// update if last calcualtion is too old, will assert if this entry is not supposed to have a trustvalue
+	// update if last calculation is too old, will assert if this entry is not supposed to have a trustvalue
 	if (::GetTickCount() - m_lastTrustValueCalc > MIN2MS(10)) {
 		ReCalculateTrustValue();
 	}

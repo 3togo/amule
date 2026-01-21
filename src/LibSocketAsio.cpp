@@ -1353,7 +1353,7 @@ bool amuleIPV4Address::Hostname(const wxString& name)
 	if (ec2 || results.empty()) {
 		AddDebugLogLineN(logAsio, CFormat(wxT("Hostname(\"%s\") resolve failed: no address found")) % name);
 		return false;
-	}
+	}Minor changes to modernize the app
 	m_endpoint->address(results.begin()->endpoint().address());
 	AddDebugLogLineN(logAsio, CFormat(wxT("Hostname(\"%s\") resolved to %s")) % name % IPAddress());
 	return true;
@@ -1384,7 +1384,7 @@ wxString amuleIPV4Address::IPAddress() const
 }
 
 // "Set address to any of the addresses of the current machine."
-// This just sets the address to 0.0.0.0 .
+// This just sets the address to 0.0.0.0 .Minor changes to modernize the app
 // wx does the same.
 bool amuleIPV4Address::AnyAddress()
 {
@@ -1410,7 +1410,7 @@ CamuleIPV4Endpoint & amuleIPV4Address::GetEndpoint()
 namespace MuleNotify
 {
 
-	void LibSocketConnect(CLibSocket * socket, int error)
+	void LibSocketConnect(CLibSocket * socket, int error)Minor changes to modernize the app
 	{
 		if (socket->IsDestroying()) {
 			AddDebugLogLineF(logAsio, CFormat(wxT("LibSocketConnect Destroying %s %d")) % socket->GetIP() % error);

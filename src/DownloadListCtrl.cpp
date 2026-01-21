@@ -221,7 +221,7 @@ void CDownloadListCtrl::RemoveFile( CPartFile* file )
 	// Ensure that any list-entries are removed
 	ShowFile( file, false );
 
-	// Find the assosiated list-item
+	// Find the associated list-item
 	ListItems::iterator it = m_ListItems.find( file );
 
 	if ( it != m_ListItems.end() ) {
@@ -850,7 +850,7 @@ void CDownloadListCtrl::OnDrawItem(
 		dc->SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
 		dc->SetPen( colour.Blend(65).GetPen() );
 	} else {
-		dc->SetBackground(*(wxTheBrushList->FindOrCreateBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOX), wxSOLID)));
+		dc->SetBackground(*(wxTheBrushList->FindOrCreateBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOX), wxBRUSHSTYLE_SOLID)));
 		dc->SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
 		dc->SetPen(*wxTRANSPARENT_PEN);
 	}
@@ -1132,7 +1132,7 @@ int CDownloadListCtrl::SortProc(wxUIntPtr param1, wxUIntPtr param2, long sortDat
 	int sortMod = (sortData & CMuleListCtrl::SORT_DES) ? -1 : 1;
 	sortData &= CMuleListCtrl::COLUMN_MASK;
 
-	// We modify the result so that it matches with ascending or decending
+	// We modify the result so that it matches with ascending or descending
 	return sortMod * Compare( item1->GetFile(), item2->GetFile(), sortData);
 }
 
@@ -1413,7 +1413,7 @@ void CDownloadListCtrl::DrawFileStatusBar(
 		dc->DrawLine( rect.x, rect.y + 2, rect.x + width, rect.y + 2 );
 
 		// Draw the green line
-		dc->SetPen( *(wxThePenList->FindOrCreatePen( crProgress , 1, wxSOLID ) ));
+		dc->SetPen( *(wxThePenList->FindOrCreatePen( crProgress , 1, wxPENSTYLE_SOLID ) ));
 		dc->DrawLine( rect.x, rect.y + 1, rect.x + width, rect.y + 1 );
 	}
 }

@@ -176,7 +176,7 @@ MULE_IF_ENABLED_ANY([monolithic, amule-daemon, amule-gui, amulecmd, webserver, a
 		equivalent variable and wxWidgets version is 2.8.12 or above.
 		])]
 	)
-	AS_IF([test "${WX_VERSION_FULL}" = "2.9.0"], [AC_MSG_ERROR([
+	AS_IF([test "$WX_VERSION_MAJOR""$WX_VERSION_MINOR" -lt 32], [AC_MSG_ERROR([
 		This version of wxWidgets is known to not work with aMule.
 		Please upgrade to a newer version.]
 		)]
@@ -201,6 +201,7 @@ MULE_IF_ENABLED_ANY([monolithic, amule-gui, wxcas, alc],
 		enabled version of wxWidgets and then retry.
 	])]
 )])
+AS_IF([(test "${WX_PORT}" = gtk1 || test "${WX_PORT}" = gtk2)],[AC_MSG_ERROR([${WX_PORT} isn't supported.])])
 
 
 dnl Resource compiler for W32
