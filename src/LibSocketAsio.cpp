@@ -43,6 +43,7 @@
 #include <algorithm>	// Needed for std::min - Boost up to 1.54 fails to compile with MSVC 2013 otherwise
 
 #include <boost/asio.hpp>
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/bind.hpp>
 #include <boost/version.hpp>
 #include <boost/asio/executor_work_guard.hpp>
@@ -158,8 +159,8 @@ public:
 			m_connected = m_OK;
 			return m_OK;
 		} else {
-			m_socket->async_connect(adr.GetEndpoint(),
-				m_strand.wrap(boost::bind(& CAsioSocketImpl::HandleConnect, this, placeholders::error)));
+		m_socket->async_connect(adr.GetEndpoint(),
+			m_strand.wrap([this](const error_code& error) { HandleConnect(error); }));
 			// m_OK and return are false because we are not connected yet
 			return false;
 		}
@@ -302,7 +303,7 @@ public:
 			// sitting in Asio's event queue (I have seen such a crash).
 			// So create a delay timer so they can be called until core is notified.
 			m_timer.expires_from_now(boost::posix_time::seconds(1));
-			m_timer.async_wait(m_strand.wrap(boost::bind(& CAsioSocketImpl::HandleDestroy, this)));
+			m_timer.async_wait(m_strand.wrap([this](const error_code&) { HandleDestroy(); }));
 		}
 	}
 
@@ -856,7 +857,7 @@ private:
 	{
 		m_currentSocket.reset(new CAsioSocketImpl(NULL));
 		async_accept(m_currentSocket->GetAsioSocket(),
-			m_strand.wrap(boost::bind(& CAsioSocketServerImpl::HandleAccept, this, placeholders::error)));
+			m_strand.wrap([this](const error_code& error) { HandleAccept(error); }));
 	}
 
 	void HandleAccept(const error_code& error)
@@ -1051,7 +1052,7 @@ public:
 			// sitting in Asio's event queue (I have seen such a crash).
 			// So create a delay timer so they can be called until core is notified.
 			m_timer.expires_from_now(boost::posix_time::seconds(1));
-			m_timer.async_wait(m_strand.wrap(boost::bind(& CAsioUDPSocketImpl::HandleDestroy, this)));
+			m_timer.async_wait(m_strand.wrap([this](const error_code&) { HandleDestroy(); }));
 		}
 	}
 
@@ -1081,7 +1082,7 @@ private:
 		AddDebugLogLineF(logAsio, CFormat(wxT("UDP DispatchSendTo %d to %s:%d")) % recdata->size
 			% endpoint.address().to_string() % endpoint.port());
 		m_socket->async_send_to(buffer(recdata->buffer, recdata->size), endpoint,
-			m_strand.wrap(boost::bind(& CAsioUDPSocketImpl::HandleSendTo, this, placeholders::error, placeholders::bytes_transferred, recdata)));
+			m_strand.wrap([this, recdata](const error_code& error, size_t bytes_transferred) { HandleSendTo(error, bytes_transferred, recdata); }));
 	}
 
 	//
@@ -1156,7 +1157,7 @@ private:
 	void StartBackgroundRead()
 	{
 		m_socket->async_receive_from(buffer(m_readBuffer, CMuleUDPSocket::UDP_BUFFER_SIZE), m_receiveEndpoint,
-			m_strand.wrap(boost::bind(& CAsioUDPSocketImpl::HandleRead, this, placeholders::error, placeholders::bytes_transferred)));
+		m_strand.wrap([this](const error_code& error, size_t bytes_transferred) { HandleRead(error, bytes_transferred); }));
 	}
 
 	CLibUDPSocket *		m_libSocket;
