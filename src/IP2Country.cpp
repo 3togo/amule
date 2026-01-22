@@ -48,6 +48,7 @@
 #include "Preferences.h"	// For thePrefs
 #include "CFile.h"			// For CPath
 #include "Logger.h"			// For AddLogLineM()
+#include "OtherFunctions.h"	// For IsLibraryAvailable()
 #include <common/Format.h>		// For CFormat()
 #ifdef ENABLE_IP2COUNTRY
 #include "geoip/IP2CountryManager.h"  // Include new manager header
@@ -64,6 +65,16 @@ CIP2Country::CIP2Country(const wxString& configDir)
     , m_DataBasePath(configDir + m_DataBaseName)
     , m_enabled(false)
 {
+#ifndef _WIN32
+    // Check if libmaxminddb is available at runtime
+    if (!IsLibraryAvailable("maxminddb")) {
+        AddLogLineC(_("ERROR: libmaxminddb not found - GeoIP/country flags will be disabled"));
+        AddLogLineC(_("Please install: sudo apt install libmaxminddb-dev"));
+        m_enabled = false;
+        return;
+    }
+#endif
+
     // Create new IP2CountryManager instance
     m_manager = &IP2CountryManager::GetInstance();
 

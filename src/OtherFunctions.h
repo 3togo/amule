@@ -32,11 +32,26 @@
 #include "Preferences.h"	// Needed for AllCategoryFilter enumeration
 #include "MD4Hash.h"		// Needed for CMD4Hash
 
+#ifndef _WIN32
+#include <dlfcn.h>		// Needed for library checking
+#endif
+
 #include <algorithm>		// Needed for std::for_each	// Do_not_auto_remove (mingw-gcc-3.4.5)
 
 
 class CPath;
 
+/**
+ * Checks if a dynamic library is available at runtime
+ * 
+ * @param libraryName The name of the library (e.g., "maxminddb" or "libmaxminddb.so")
+ * @return true if the library can be loaded, false otherwise
+ */
+#ifndef _WIN32
+bool IsLibraryAvailable(const wxString& libraryName);
+#else
+bool IsLibraryAvailable(const wxString& libraryName);
+#endif
 
 /**
  * Helper function.

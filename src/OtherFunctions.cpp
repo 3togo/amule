@@ -1187,4 +1187,35 @@ CMD4Hash GetPassword(bool allowEmptyPassword)
 const uint8 BitVector::s_posMask[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 const uint8 BitVector::s_negMask[] = {0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F};
 
+
+#ifndef _WIN32
+/**
+ * Checks if a library is available at runtime
+ */
+bool IsLibraryAvailable(const wxString& libraryName)
+{
+    void* handle = dlopen(libraryName.utf8_str(), RTLD_LAZY | RTLD_NOLOAD);
+    if (handle) {
+        dlclose(handle);
+        return true;
+    }
+    
+    // Try with proper library naming
+    wxString fullLibName = wxString::Format("lib%s.so", libraryName);
+    handle = dlopen(fullLibName.utf8_str(), RTLD_LAZY | RTLD_NOLOAD);
+    if (handle) {
+        dlclose(handle);
+        return true;
+    }
+    
+    return false;
+}
+#else
+// Windows implementation would use LoadLibrary/GetModuleHandle
+bool IsLibraryAvailable(const wxString& libraryName)
+{
+    return false; // Simplified for Windows
+}
+#endif
+
 // File_checked_for_headers
