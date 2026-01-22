@@ -217,11 +217,11 @@ if (wx_NEED_ADV OR wx_NEED_BASE OR wx_NEED_GUI OR wx_NEED_NET)
 	endif()
 endif()
 
-ADD_COMPILE_DEFINITIONS ($<$<CONFIG:DEBUG>:__DEBUG__>)
+add_compile_definitions ($<$<CONFIG:DEBUG>:__DEBUG__>)
 
-IF (WIN32)
-	ADD_COMPILE_DEFINITIONS ($<$<CONFIG:DEBUG>:wxDEBUG_LEVEL=0>)
-ENDIF (WIN32)
+if (WIN32)
+	add_compile_definitions ($<$<CONFIG:DEBUG>:wxDEBUG_LEVEL=0>)
+endif ()
 
 if (NEED_LIB_MULEAPPCOMMON OR BUILD_WEBSERVER)
 	option (ENABLE_UPNP "enable UPnP support in aMule" ON)
