@@ -47,11 +47,7 @@ class CPath;
  * @param libraryName The name of the library (e.g., "maxminddb" or "libmaxminddb.so")
  * @return true if the library can be loaded, false otherwise
  */
-#ifndef _WIN32
 bool IsLibraryAvailable(const wxString& libraryName);
-#else
-bool IsLibraryAvailable(const wxString& libraryName);
-#endif
 
 /**
  * Helper function.
