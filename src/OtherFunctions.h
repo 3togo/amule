@@ -36,7 +36,8 @@
 #include <dlfcn.h>		// Needed for library checking
 #endif
 
-#include <algorithm>		// Needed for std::for_each	// Do_not_auto_remove (mingw-gcc-3.4.5)
+#include <algorithm>		// Needed for std::for_each
+#include <utility>           // Needed for std::pair, std::exchange (C++17)
 
 
 class CPath;
@@ -167,9 +168,7 @@ void DeleteContents(STL_CONTAINER& container)
 {
 	// Ensure that the actual container wont contain dangling pointers during
 	// this operation, to ensure that the destructors can't access them.
-	STL_CONTAINER copy;
-
-	std::swap(copy, container);
+	STL_CONTAINER copy = std::exchange(container, STL_CONTAINER{});
 	std::for_each(copy.begin(), copy.end(), SDoDelete());
 }
 

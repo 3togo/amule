@@ -1198,16 +1198,14 @@ bool IsLibraryAvailable(const wxString& libraryName)
 {
 #ifndef _WIN32
     // Try direct library name first
-    void* handle = dlopen(libraryName.utf8_str(), RTLD_LAZY | RTLD_NOLOAD);
-    if (handle) {
+    if (void* handle = dlopen(libraryName.utf8_str(), RTLD_LAZY | RTLD_NOLOAD); handle) {
         dlclose(handle);
         return true;
     }
     
     // Try with standard library prefix/suffix
     wxString fullLibName = wxString::Format("lib%s.so", libraryName);
-    handle = dlopen(fullLibName.utf8_str(), RTLD_LAZY | RTLD_NOLOAD);
-    if (handle) {
+    if (void* handle = dlopen(fullLibName.utf8_str(), RTLD_LAZY | RTLD_NOLOAD); handle) {
         dlclose(handle);
         return true;
     }
