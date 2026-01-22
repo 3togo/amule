@@ -13,9 +13,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 # Suppress 'register' keyword warnings in generated C++ lexer files
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-Wno-register>")
-endif()
+# if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+#    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-Wno-register>")
+# endif()
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mtune=pentium4")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=pentium4")
