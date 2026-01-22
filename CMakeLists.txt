@@ -2,9 +2,15 @@ cmake_minimum_required (VERSION 3.20)
 project (amule)
 
 # Set C++ standard for modern C++ support
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Enable C++20 features
+add_compile_definitions(USE_CPP20)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-fcoroutines)
+endif()
 
 # Suppress 'register' keyword warnings in generated C++ lexer files
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
