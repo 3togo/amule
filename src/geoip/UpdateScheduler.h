@@ -140,6 +140,10 @@ public:
     UpdateProgress GetProgress() const { return m_progress; }
 
 private:
+    // Helper methods
+    void ReportDownloadError(const wxString& message, const wxString& detail);
+    void NotifyProgress();
+
     wxString m_configDir;
     ProgressCallback m_progressCallback;
     CompletionCallback m_completionCallback;

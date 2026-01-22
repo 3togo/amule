@@ -45,6 +45,33 @@ MaxMindDBDatabase::MaxMindDBDatabase()
 #endif
 }
 
+std::vector<wxString> MaxMindDBDatabase::BatchGetCountryCodes(
+    const std::vector<wxString>& ips)
+{
+    std::vector<wxString> results;
+    results.reserve(ips.size());
+    
+#ifdef ENABLE_MAXMINDDB
+    if (!m_isOpen) {
+        results.assign(ips.size(), wxEmptyString);
+        return results;
+    }
+
+    for (const auto& ip : ips) {
+        wxString code, name;
+        if (LookupCountry(ip, code, name)) {
+            results.push_back(code);
+        } else {
+            results.push_back(wxEmptyString);
+        }
+    }
+#else
+    results.assign(ips.size(), wxT("MaxMind DB (not compiled)"));
+#endif
+
+    return results;
+}
+
 MaxMindDBDatabase::~MaxMindDBDatabase()
 {
     Close();
@@ -190,15 +217,8 @@ bool MaxMindDBDatabase::IsValid() const
 #endif
 }
 
-DatabaseType MaxMindDBDatabase::GetType() const
-{
-    return DB_TYPE_MAXMIND_DB;
-}
-
-wxString MaxMindDBDatabase::GetFormatName() const
-{
-    return wxT("MaxMind DB");
-}
+// GetType() and GetFormatName() are implemented inline in the header
+// to avoid duplicate symbol errors
 
 wxString MaxMindDBDatabase::GetVersion() const
 {

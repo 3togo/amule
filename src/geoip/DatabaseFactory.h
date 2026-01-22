@@ -51,25 +51,56 @@ class DatabaseFactory
 {
 public:
     /**
+     * @brief Factory result with database instance and status
+     */
+    struct CreateResult {
+        std::shared_ptr<IGeoIPDatabase> database;
+        bool success;
+        wxString errorMessage;
+        
+        CreateResult(std::shared_ptr<IGeoIPDatabase> db = nullptr, 
+                    bool s = false, 
+                    const wxString& msg = wxEmptyString)
+            : database(db), success(s), errorMessage(msg) {}
+    };
+
+    /**
      * @brief Create a database instance for the given type
      * @param type Database type
-     * @return Shared pointer to database instance
+     * @return Factory result with database and status
      */
-    static std::shared_ptr<IGeoIPDatabase> CreateDatabase(DatabaseType type);
+    static CreateResult CreateDatabase(DatabaseType type);
 
     /**
      * @brief Create a database instance from file (auto-detection)
      * @param path Path to database file
-     * @return Shared pointer to database instance or nullptr if failed
+     * @return Factory result with database and status
      */
-    static std::shared_ptr<IGeoIPDatabase> CreateFromFile(const wxString& path);
+    static CreateResult CreateFromFile(const wxString& path);
+
+    /**
+     * @brief Create and initialize database from file
+     * @param path Path to database file
+     * @param type Database type (if known)
+     * @return Factory result with initialized database
+     */
+    static CreateResult CreateAndOpen(const wxString& path, 
+                                    DatabaseType type = DB_TYPE_UNKNOWN);
+
+    /**
+     * @brief Format detection result
+     */
+    struct DetectResult {
+        DatabaseType type;
+        int confidence; // 0-100 confidence level
+    };
 
     /**
      * @brief Detect database format from file
      * @param path Path to database file
-     * @return Detected database type
+     * @return Detected database type and confidence level
      */
-    static DatabaseType DetectFormat(const wxString& path);
+    static DetectResult DetectFormat(const wxString& path);
 
     /**
      * @brief Get file extension for database type
@@ -90,6 +121,28 @@ public:
      * @return true if supported
      */
     static bool IsSupported(DatabaseType type);
+
+    /**
+     * @brief Get default database sources
+     * @return Vector of available database sources
+     */
+    static std::vector<DatabaseSource> GetDefaultSources();
+
+    /**
+     * @brief Validation result
+     */
+    struct ValidateResult {
+        bool valid;
+        wxString error;
+    };
+
+    /**
+     * @brief Validate database file
+     * @param path Path to database file
+     * @param type Expected database type
+     * @return Validation result with error message if failed
+     */
+    static ValidateResult ValidateDatabase(const wxString& path, DatabaseType type);
 };
 
 #endif // DATABASEFACTORY_H

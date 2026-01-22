@@ -288,7 +288,8 @@ void IP2CountryManager::LoadFlags()
 bool IP2CountryManager::LoadDatabase()
 {
     // Try to open the database
-    m_database = DatabaseFactory::CreateFromFile(m_databasePath);
+    auto result = DatabaseFactory::CreateAndOpen(m_databasePath);
+    m_database = result.database;
 
     if (!m_database) {
         // Database doesn't exist - try to find one in config dir
@@ -298,8 +299,9 @@ bool IP2CountryManager::LoadDatabase()
             bool cont = dir.GetFirst(&filename, "*.mmdb", wxDIR_FILES);
             while (cont) {
                 wxString fullPath = m_configDir + filename;
-                m_database = DatabaseFactory::CreateFromFile(fullPath);
-                if (m_database) {
+                auto searchResult = DatabaseFactory::CreateAndOpen(fullPath);
+                if (searchResult.database) {
+                    m_database = searchResult.database;
                     m_databasePath = fullPath;
                     AddLogLineN(CFormat(_("Found database at: %s")) % fullPath);
                     break;
@@ -311,47 +313,9 @@ bool IP2CountryManager::LoadDatabase()
 
     if (!m_database) {
         AddLogLineN(CFormat(_("No GeoIP database found at: %s")) % m_databasePath);
-        AddLogLineN(_("Attempting to download GeoLite2-Country database automatically..."));
         
-        // Try to download the database
-        UpdateProgress progress;
-        progress.inProgress = true;
-        progress.percentComplete = 0;
-        progress.statusMessage = _("Starting download...");
-        OnUpdateProgress(progress);
-        
-        // Download the database synchronously
-        wxString tempPath = m_configDir + "GeoLite2-Country.mmdb.temp";
-        wxString downloadUrl = "https://cdn.jsdelivr.net/npm/geolite2-country@1.0.2/GeoLite2-Country.mmdb.gz";
-        
-        bool downloadSuccess = false;
-        
-        // Use wget to download the database
-        wxString command = wxString::Format("wget -q --show-progress -O \"%s.gz\" \"%s\"", tempPath, downloadUrl);
-        int result = wxExecute(command, wxEXEC_SYNC);
-        
-        if (result == 0) {
-            // Extract the gzip file
-            wxString extractCommand = wxString::Format("gunzip -f \"%s.gz\"", tempPath);
-            result = wxExecute(extractCommand, wxEXEC_SYNC);
-            
-            if (result == 0 && wxFileExists(tempPath)) {
-                // Move to final location
-                if (wxRenameFile(tempPath, m_databasePath)) {
-                    AddLogLineN(_("Database downloaded successfully!"));
-                    downloadSuccess = true;
-                    
-                    // Try to load the downloaded database
-                    m_database = DatabaseFactory::CreateFromFile(m_databasePath);
-                }
-            }
-        }
-        
-        progress.percentComplete = 100;
-        progress.statusMessage = _("Download completed");
-        OnUpdateProgress(progress);
-        
-        if (!downloadSuccess || !m_database) {
+        // Attempt automatic download
+        if (!DownloadDatabase()) {
             AddLogLineN(_("Failed to download GeoIP database automatically."));
             AddLogLineN(_("You can download the GeoLite2-Country database from:"));
             AddLogLineN(_("  - https://github.com/8bitsaver/maxmind-geoip"));
@@ -407,4 +371,50 @@ void IP2CountryManager::OnUpdateComplete(UpdateCheckResult result, const wxStrin
             AddLogLineN(_("IP2Country: Database reloaded after update"));
         }
     }
+}
+
+bool IP2CountryManager::DownloadDatabase()
+{
+    AddLogLineN(_("Attempting to download GeoLite2-Country database automatically..."));
+    
+    // Try to download the database
+    UpdateProgress progress;
+    progress.inProgress = true;
+    progress.percentComplete = 0;
+    progress.statusMessage = _("Starting download...");
+    OnUpdateProgress(progress);
+    
+    // Download the database synchronously
+    wxString tempPath = m_configDir + "GeoLite2-Country.mmdb.temp";
+    wxString downloadUrl = "https://cdn.jsdelivr.net/npm/geolite2-country@1.0.2/GeoLite2-Country.mmdb.gz";
+    
+    bool downloadSuccess = false;
+    
+    // Use wget to download the database
+    wxString command = wxString::Format("wget -q --show-progress -O \"%s.gz\" \"%s\"", tempPath, downloadUrl);
+    int result = wxExecute(command, wxEXEC_SYNC);
+    
+    if (result == 0) {
+        // Extract the gzip file
+        wxString extractCommand = wxString::Format("gunzip -f \"%s.gz\"", tempPath);
+        result = wxExecute(extractCommand, wxEXEC_SYNC);
+        
+        if (result == 0 && wxFileExists(tempPath)) {
+            // Move to final location
+            if (wxRenameFile(tempPath, m_databasePath)) {
+                AddLogLineN(_("Database downloaded successfully!"));
+                downloadSuccess = true;
+                
+                // Try to load the downloaded database
+                auto loadResult = DatabaseFactory::CreateAndOpen(m_databasePath);
+                m_database = loadResult.database;
+            }
+        }
+    }
+    
+    progress.percentComplete = 100;
+    progress.statusMessage = _("Download completed");
+    OnUpdateProgress(progress);
+    
+    return downloadSuccess && m_database != nullptr;
 }

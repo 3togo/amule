@@ -111,14 +111,19 @@ public:
      * @brief Check for database updates
      */
     void CheckForUpdates();
-
     /**
      * @brief Download and install update
      */
     void DownloadUpdate();
 
     /**
-     * @brief Reload database from disk
+     * @brief Download database automatically
+     * @return true if download and installation successful
+     */
+    bool DownloadDatabase();
+
+    /**
+     * @brief Reload the database
      * @return true if successful
      */
     bool Reload();

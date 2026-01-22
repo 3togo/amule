@@ -82,39 +82,8 @@ void UpdateScheduler::SetCompletionCallback(CompletionCallback callback)
 
 std::vector<DatabaseSource> UpdateScheduler::GetDefaultSources()
 {
-    std::vector<DatabaseSource> sources;
-
-    // GitHub mirror (8bitsaver/maxmind-geoip) - Recommended
-    DatabaseSource github;
-    github.type = DB_TYPE_MAXMIND_DB;
-    github.name = "GitHub Mirror (8bitsaver)";
-    github.url = "https://raw.githubusercontent.com/8bitsaver/maxmind-geoip/release/GeoLite2-Country.mmdb";
-    github.checksumUrl = "https://raw.githubusercontent.com/8bitsaver/maxmind-geoip/release/GeoLite2-Country.mmdb.sha256sum";
-    github.priority = 0;
-    github.enabled = true;
-    sources.push_back(github);
-
-    // jsDelivr CDN mirror
-    DatabaseSource jsdelivr;
-    jsdelivr.type = DB_TYPE_MAXMIND_DB;
-    jsdelivr.name = "jsDelivr CDN";
-    jsdelivr.url = "https://cdn.jsdelivr.net/gh/8bitsaver/maxmind-geoip@release/GeoLite2-Country.mmdb";
-    jsdelivr.checksumUrl = "https://cdn.jsdelivr.net/gh/8bitsaver/maxmind-geoip@release/GeoLite2-Country.mmdb.sha256sum";
-    jsdelivr.priority = 1;
-    jsdelivr.enabled = true;
-    sources.push_back(jsdelivr);
-
-    // wp-statistics geolite2-country npm package
-    DatabaseSource wpstats;
-    wpstats.type = DB_TYPE_MAXMIND_DB;
-    wpstats.name = "WP Statistics (jsDelivr)";
-    wpstats.url = "https://cdn.jsdelivr.net/npm/geolite2-country/GeoLite2-Country.mmdb.gz";
-    wpstats.checksumUrl = "";  // npm packages don't provide separate checksum
-    wpstats.priority = 2;
-    wpstats.enabled = true;
-    sources.push_back(wpstats);
-
-    return sources;
+    // Use the centralized implementation from DatabaseFactory
+    return DatabaseFactory::GetDefaultSources();
 }
 
 void UpdateScheduler::CheckForUpdatesAsync(CompletionCallback callback)
@@ -244,78 +213,58 @@ bool UpdateScheduler::DownloadFile(const wxString& url, const wxString& outputPa
     wxString outputDir = outputFile.GetPath();
     if (!wxDirExists(outputDir)) {
         if (!wxMkdir(outputDir, wxS_DIR_DEFAULT)) {
-            AddLogLineC(CFormat(_("Failed to create output directory: %s")) % outputDir);
+            ReportDownloadError(_("Failed to create output directory"), outputDir);
             return false;
         }
-        // Recursively make dirs if needed
         if (!wxDirExists(outputDir)) {
-            AddLogLineC(CFormat(_("Failed to create output directory: %s")) % outputDir);
+            ReportDownloadError(_("Failed to create output directory"), outputDir);
             return false;
         }
     }
 
+    // Validate URL
     wxURL wxurl(url);
     if (wxurl.GetError() != wxURL_NOERR) {
-        m_progress.statusMessage = _("Invalid URL");
-        m_progress.inProgress = false;
-        AddLogLineC(CFormat(_("Invalid URL: %s")) % url);
+        ReportDownloadError(_("Invalid URL"), url);
         return false;
     }
 
-    // Work with wxProtocol as a temporary object since GetProtocol() returns an object
-    // Use wxHTTP directly for operations
+    // Configure HTTP client
     wxHTTP httpProtocol;
-    // Configure user agent if needed
     httpProtocol.SetHeader("User-Agent", "aMule/2.3 (GeoIP Update)");
 
-    // Create input stream directly using wxHTTP
+    // Get input stream
     wxInputStream* inputStream = httpProtocol.GetInputStream(url);
-
-    if (!inputStream) {
-        m_progress.statusMessage = _("Connection failed");
-        m_progress.inProgress = false;
-        AddLogLineC(CFormat(_("Failed to connect to %s")) % url);
-        return false;
-    }
-
-    // Check for input stream errors
-    if (inputStream->GetLastError() != wxSTREAM_NO_ERROR) {
-        m_progress.statusMessage = _("Connection failed");
-        m_progress.inProgress = false;
-        AddLogLineC(CFormat(_("Failed to connect to %s")) % url);
+    if (!inputStream || inputStream->GetLastError() != wxSTREAM_NO_ERROR) {
+        ReportDownloadError(_("Failed to connect to"), url);
         delete inputStream;
         return false;
     }
 
+    // Create output stream
     wxFileOutputStream outputStream(outputPath);
     if (!outputStream.IsOk()) {
-        m_progress.statusMessage = _("Cannot create file");
-        m_progress.inProgress = false;
-        AddLogLineC(CFormat(_("Failed to create output file: %s")) % outputPath);
+        ReportDownloadError(_("Failed to create output file"), outputPath);
         delete inputStream;
         return false;
     }
 
+    // Start download
     m_progress.statusMessage = _("Downloading...");
-    if (m_progressCallback) {
-        m_progressCallback(m_progress);
-    }
+    m_progress.inProgress = true;
+    NotifyProgress();
 
-    // Get content length if available
-    // Note: wxProtocol doesn't have GetHeader in newer wxWidgets versions
-    
+    // Download data
     char buffer[4096];
     wxFileOffset totalWritten = 0;
 
     while (!inputStream->Eof() && !m_cancelled) {
         inputStream->Read(buffer, sizeof(buffer));
-        size_t bytesRead = inputStream->LastRead(); // Get the actual number of bytes read
+        size_t bytesRead = inputStream->LastRead();
         wxStreamError readStatus = inputStream->GetLastError();
         
         if (readStatus != wxSTREAM_NO_ERROR && readStatus != wxSTREAM_EOF) {
-            m_progress.statusMessage = _("Download error");
-            m_progress.inProgress = false;
-            AddLogLineC(_("Error reading from server"));
+            ReportDownloadError(_("Error reading from server"), wxEmptyString);
             delete inputStream;
             return false;
         }
@@ -323,31 +272,47 @@ bool UpdateScheduler::DownloadFile(const wxString& url, const wxString& outputPa
         if (bytesRead > 0) {
             outputStream.Write(buffer, bytesRead);
             totalWritten += bytesRead;
-
             m_progress.bytesDownloaded = totalWritten;
-
-            // Update progress if callback is available
-            if (m_progressCallback) {
-                m_progressCallback(m_progress);
-            }
+            NotifyProgress();
         }
     }
 
     delete inputStream;
 
     if (m_cancelled) {
-        m_progress.statusMessage = _("Cancelled");
-        m_progress.inProgress = false;
+        ReportDownloadError(_("Cancelled"), wxEmptyString);
         return false;
     }
 
+    // Download completed
     m_progress.statusMessage = _("Completed");
     m_progress.inProgress = false;
+    NotifyProgress();
+
+    return true;
+}
+
+// Helper method for consistent error reporting
+void UpdateScheduler::ReportDownloadError(const wxString& message, const wxString& detail)
+{
+    m_progress.statusMessage = message;
+    m_progress.inProgress = false;
+    
+    if (!detail.IsEmpty()) {
+        AddLogLineC(CFormat(wxT("%s: %s")) % message % detail);
+    } else {
+        AddLogLineC(message);
+    }
+    
+    NotifyProgress();
+}
+
+// Helper method for progress notification
+void UpdateScheduler::NotifyProgress()
+{
     if (m_progressCallback) {
         m_progressCallback(m_progress);
     }
-
-    return true;
 }
 
 bool UpdateScheduler::DecompressFile(const wxString& compressedPath, const wxString& outputPath)

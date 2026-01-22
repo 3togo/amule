@@ -123,43 +123,39 @@ void CIP2Country::DownloadFinished(uint32 result)
     // Kept for API compatibility
     AddLogLineN(CFormat(_("IP2Country: Download finished with result %u")) % result);
 }
-
 const CountryDataOld& CIP2Country::GetCountryData(const wxString& ip)
 {
-	static CountryDataOld dummy;
-	dummy.Name = wxT("?");
-	dummy.Flag = wxImage();
+    if (!m_enabled || !m_manager || !m_manager->IsEnabled()) {
+        static CountryDataOld empty;
+        return empty;
+    }
 
-	if (!m_manager || !m_enabled) {
-		return dummy;
-	}
+    // Get data from new manager
+    CountryDataNew newData = m_manager->GetCountryData(ip);
 
-	// Get data from new manager
-	CountryDataNew newData = m_manager->GetCountryData(ip);
+    // Use static variable to avoid returning reference to local
+    static CountryDataOld result;
+    result.Name = newData.Name;
+    result.Flag = newData.Flag;
 
-	// Convert to legacy format
-	CountryDataOld result;
-	result.Name = newData.Name;
-	result.Flag = newData.Flag;
+    // Check if we have a flag in our map
+    if (result.Flag.IsOk()) {
+        // Already have a valid flag
+    } else if (!newData.Code.IsEmpty()) {
+        // Try to get flag from legacy map
+        auto it = m_CountryDataMap.find(newData.Code);
+        if (it != m_CountryDataMap.end()) {
+            result = it->second;
+        } else {
+            // Try unknown flag
+            auto unknownIt = m_CountryDataMap.find(wxT("unknown"));
+            if (unknownIt != m_CountryDataMap.end()) {
+                result = unknownIt->second;
+            }
+        }
+    }
 
-	// Check if we have a flag in our map
-	if (result.Flag.IsOk()) {
-		// Already have a valid flag
-	} else if (!newData.Code.IsEmpty()) {
-		// Try to get flag from legacy map
-		auto it = m_CountryDataMap.find(newData.Code);
-		if (it != m_CountryDataMap.end()) {
-			result = it->second;
-		} else {
-			// Try unknown flag
-			auto unknownIt = m_CountryDataMap.find(wxT("unknown"));
-			if (unknownIt != m_CountryDataMap.end()) {
-				result = unknownIt->second;
-			}
-		}
-	}
-
-	return result;
+    return result;
 }
 
 void CIP2Country::LoadFlags()

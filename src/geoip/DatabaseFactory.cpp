@@ -29,91 +29,110 @@
 #include <libs/common/StringFunctions.h>
 #include <libs/common/Format.h>  // Added for CFormat
 #include <wx/filename.h>
-
-std::shared_ptr<IGeoIPDatabase> DatabaseFactory::CreateDatabase(DatabaseType type)
+DatabaseFactory::CreateResult DatabaseFactory::CreateDatabase(DatabaseType type)
 {
     switch (type) {
         case DB_TYPE_MAXMIND_DB:
-            return std::make_shared<MaxMindDBDatabase>();
+            return CreateResult(std::make_shared<MaxMindDBDatabase>(), true);
 
         // Legacy GeoIP not supported per user requirements
         case DB_TYPE_LEGACY_GEOIP:
-            AddLogLineN(_("Legacy GeoIP format is no longer supported"));
-            return nullptr;
+            return CreateResult(nullptr, false, _("Legacy GeoIP format is no longer supported"));
 
         case DB_TYPE_CSV:
             // TODO: Implement CSV support
-            AddLogLineN(_("CSV format support not yet implemented"));
-            return nullptr;
+            return CreateResult(nullptr, false, _("CSV format support not yet implemented"));
 
         case DB_TYPE_SQLITE:
             // TODO: Implement SQLite support
-            AddLogLineN(_("SQLite format support not yet implemented"));
-            return nullptr;
+            return CreateResult(nullptr, false, _("SQLite format support not yet implemented"));
 
+        case DB_TYPE_UNKNOWN:
         default:
-            AddLogLineC(CFormat(_("Unknown database type: %d")) % static_cast<int>(type));
-            return nullptr;
+            return CreateResult(nullptr, false, _("Unknown database type"));
     }
 }
 
-std::shared_ptr<IGeoIPDatabase> DatabaseFactory::CreateFromFile(const wxString& path)
+DatabaseFactory::CreateResult DatabaseFactory::CreateFromFile(const wxString& path)
 {
-    if (path.IsEmpty()) {
-        return nullptr;
+    DetectResult detection = DetectFormat(path);
+
+    if (detection.confidence < 50) {
+        return CreateResult(nullptr, false, 
+                          CFormat(_("Low confidence format detection: %d%%")) % detection.confidence);
     }
 
-    DatabaseType type = DetectFormat(path);
+    CreateResult result = CreateDatabase(detection.type);
+    if (!result.success) {
+        return result;
+    }
+
+    if (result.database && result.database->Open(path)) {
+        return CreateResult(result.database, true);
+    }
+
+    return CreateResult(nullptr, false, _("Failed to open database file"));
+}
+
+DatabaseFactory::CreateResult DatabaseFactory::CreateAndOpen(const wxString& path, 
+                                                           DatabaseType type)
+{
     if (type == DB_TYPE_UNKNOWN) {
-        AddLogLineC(CFormat(_("Could not detect database format for: %s")) % path);
-        return nullptr;
+        DetectResult detection = DetectFormat(path);
+        type = detection.type;
     }
 
-    auto database = CreateDatabase(type);
-    if (!database) {
-        return nullptr;
+    CreateResult result = CreateDatabase(type);
+    if (!result.success) {
+        return result;
     }
 
-    if (!database->Open(path)) {
-        AddLogLineC(CFormat(_("Failed to open database: %s")) % path);
-        return nullptr;
+    if (result.database && result.database->Open(path)) {
+        return CreateResult(result.database, true);
     }
 
-    return database;
+    return CreateResult(nullptr, false, _("Failed to open database file"));
 }
 
-DatabaseType DatabaseFactory::DetectFormat(const wxString& path)
+DatabaseFactory::DetectResult DatabaseFactory::DetectFormat(const wxString& path)
 {
-    wxFileName filename(path);
+    DetectResult result{DB_TYPE_UNKNOWN, 0};
 
-    if (!filename.FileExists()) {
-        return DB_TYPE_UNKNOWN;
+    if (path.IsEmpty()) {
+        return result;
     }
 
-    wxString ext = filename.GetExt().Lower();
+    wxFileName fn(path);
+    wxString ext = fn.GetExt().Lower();
 
-    // Check file extension first
     if (ext == "mmdb") {
-        return DB_TYPE_MAXMIND_DB;
+        result.type = DB_TYPE_MAXMIND_DB;
+        result.confidence = 90;
+        return result;
     }
 
     if (ext == "dat") {
-        // Legacy GeoIP.dat - not supported
-        return DB_TYPE_LEGACY_GEOIP;
+        result.type = DB_TYPE_LEGACY_GEOIP;
+        result.confidence = 80;
+        return result;
     }
 
     if (ext == "csv") {
-        return DB_TYPE_CSV;
+        result.type = DB_TYPE_CSV;
+        result.confidence = 85;
+        return result;
     }
 
     if (ext == "db" || ext == "sqlite") {
-        return DB_TYPE_SQLITE;
+        result.type = DB_TYPE_SQLITE;
+        result.confidence = 85;
+        return result;
     }
 
     // Try to detect by reading file header
     FILE* fp = wxFopen(path, "rb");
     if (!fp) {
-        return DB_TYPE_UNKNOWN;
+        return result;
     }
 
     unsigned char header[16];
@@ -121,20 +140,24 @@ DatabaseType DatabaseFactory::DetectFormat(const wxString& path)
     fclose(fp);
 
     if (read < 4) {
-        return DB_TYPE_UNKNOWN;
+        return result;
     }
 
     // MaxMind DB magic bytes: 0xDB 0xEE 0x47 0x0F
     if (header[0] == 0xDB && header[1] == 0xEE && header[2] == 0x47 && header[3] == 0x0F) {
-        return DB_TYPE_MAXMIND_DB;
+        result.type = DB_TYPE_MAXMIND_DB;
+        result.confidence = 95;
+        return result;
     }
 
     // Legacy GeoIP: might start with GeoIP Country V6
     if (memcmp(header, "GeoIP Country", 13) == 0) {
-        return DB_TYPE_LEGACY_GEOIP;
+        result.type = DB_TYPE_LEGACY_GEOIP;
+        result.confidence = 85;
+        return result;
     }
 
-    return DB_TYPE_UNKNOWN;
+    return result;
 }
 
 wxString DatabaseFactory::GetFileExtension(DatabaseType type)
@@ -164,4 +187,88 @@ std::vector<DatabaseType> DatabaseFactory::GetSupportedTypes()
 bool DatabaseFactory::IsSupported(DatabaseType type)
 {
     return type == DB_TYPE_MAXMIND_DB || type == DB_TYPE_CSV;
+}
+
+std::vector<DatabaseSource> DatabaseFactory::GetDefaultSources()
+{
+    std::vector<DatabaseSource> sources;
+    
+    // Primary source: GitHub mirror
+    DatabaseSource github;
+    github.type = DB_TYPE_MAXMIND_DB;
+    github.name = _("GitHub Mirror (8bitsaver)");
+    github.url = "https://raw.githubusercontent.com/8bitsaver/maxmind-geoip/release/GeoLite2-Country.mmdb";
+    github.checksumUrl = "https://raw.githubusercontent.com/8bitsaver/maxmind-geoip/release/GeoLite2-Country.mmdb.sha256";
+    github.priority = 0;
+    github.enabled = true;
+    sources.push_back(github);
+    
+    // Secondary source: jsDelivr CDN
+    DatabaseSource jsdelivr;
+    jsdelivr.type = DB_TYPE_MAXMIND_DB;
+    jsdelivr.name = _("jsDelivr CDN");
+    jsdelivr.url = "https://cdn.jsdelivr.net/gh/8bitsaver/maxmind-geoip@release/GeoLite2-Country.mmdb";
+    jsdelivr.checksumUrl = "https://cdn.jsdelivr.net/gh/8bitsaver/maxmind-geoip@release/GeoLite2-Country.mmdb.sha256";
+    jsdelivr.priority = 1;
+    jsdelivr.enabled = true;
+    sources.push_back(jsdelivr);
+    
+    // Tertiary source: npm package (gzipped)
+    DatabaseSource npm;
+    npm.type = DB_TYPE_MAXMIND_DB;
+    npm.name = _("NPM Package (WP Statistics)");
+    npm.url = "https://cdn.jsdelivr.net/npm/geolite2-country/GeoLite2-Country.mmdb.gz";
+    npm.checksumUrl = "";
+    npm.priority = 2;
+    npm.enabled = true;
+    sources.push_back(npm);
+    
+    return sources;
+}
+
+DatabaseFactory::ValidateResult DatabaseFactory::ValidateDatabase(const wxString& path, DatabaseType type)
+{
+    ValidateResult result{false, wxEmptyString};
+    
+    // Check if file exists
+    if (!wxFileExists(path)) {
+        result.error = _("Database file does not exist");
+        return result;
+    }
+    
+    // Check file size (minimum 1KB)
+    wxULongLong fileSize = wxFileName::GetSize(path);
+    if (fileSize < 1024) {
+        result.error = _("Database file is too small (minimum 1KB required)");
+        return result;
+    }
+    
+    // For MaxMind DB, check magic bytes
+    if (type == DB_TYPE_MAXMIND_DB || type == DB_TYPE_UNKNOWN) {
+        FILE* fp = wxFopen(path, "rb");
+        if (fp) {
+            unsigned char header[4];
+            size_t read = fread(header, 1, 4, fp);
+            fclose(fp);
+            
+            if (read == 4 && header[0] == 0xDB && header[1] == 0xEE && header[2] == 0x47 && header[3] == 0x0F) {
+                result.valid = true;
+                return result;
+            }
+        }
+        
+        if (type == DB_TYPE_MAXMIND_DB) {
+            result.error = _("Not a valid MaxMind DB file (missing magic bytes)");
+            return result;
+        }
+    }
+    
+    // If type is unknown but we got here, it's probably valid
+    if (type == DB_TYPE_UNKNOWN) {
+        result.valid = true;
+        return result;
+    }
+    
+    result.error = _("Unsupported database type validation");
+    return result;
 }
