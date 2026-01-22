@@ -34,6 +34,7 @@
 #include <wx/timer.h>
 #include <wx/wfstream.h>
 #include <wx/zipstrm.h>
+#include <memory>  // For smart pointers
 
 #include "Types.h"			// Needed for uint32
 #include "StatisticsDlg.h"
@@ -174,7 +175,7 @@ public:
 
 	void DoNetworkRearrange();
 
-	CIP2Country*		m_IP2Country;
+	std::unique_ptr<CIP2Country> m_IP2Country;
 	void IP2CountryDownloadFinished(uint32 result);
 	void EnableIP2Country();
 
@@ -209,8 +210,8 @@ private:
 	//! Specifies if the prefs-dialog was shown before minimizing.
 	bool m_prefsVisible;
 	wxToolBar *m_wndToolbar;
-	wxTimer *gui_timer;
-	CMuleTrayIcon *m_wndTaskbarNotifier;
+	std::unique_ptr<wxTimer> gui_timer;
+	std::unique_ptr<CMuleTrayIcon> m_wndTaskbarNotifier;
 	DialogType m_nActiveDialog;
 	bool m_is_safe_state;
 	bool m_BlinkMessages;

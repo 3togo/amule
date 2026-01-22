@@ -182,10 +182,11 @@ public:
      */
     bool IsAutoUpdateEnabled() const { return m_autoUpdateEnabled; }
 
-private:
+public:
     IP2CountryManager();
     ~IP2CountryManager();
 
+private:
     // Disable copying
     IP2CountryManager(const IP2CountryManager&) = delete;
     IP2CountryManager& operator=(const IP2CountryManager&) = delete;
@@ -201,7 +202,7 @@ private:
      */
     bool LoadDatabase();
 
-    static IP2CountryManager* m_instance;  ///< Singleton instance
+    static std::unique_ptr<IP2CountryManager> m_instance;  ///< Singleton instance
     wxString m_configDir;                   ///< Configuration directory
     wxString m_databasePath;                ///< Current database path
     std::shared_ptr<IGeoIPDatabase> m_database;  ///< Database instance

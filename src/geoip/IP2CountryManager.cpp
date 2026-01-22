@@ -34,20 +34,22 @@
 #include <wx/filefn.h>        // For wxFileExists, wxRenameFile
 #include <wx/dir.h>           // For wxDir
 
-IP2CountryManager* IP2CountryManager::m_instance = nullptr;
+// Static member initialization
+std::unique_ptr<IP2CountryManager> IP2CountryManager::m_instance = nullptr;
 
+// Constructor
 IP2CountryManager::IP2CountryManager()
     : m_configDir()
     , m_databasePath()
-    , m_database()
-    , m_scheduler()
-    , m_CountryDataMap()
+    , m_database(nullptr)
+    , m_scheduler(nullptr)
     , m_enabled(false)
     , m_autoUpdateEnabled(true)
     , m_updateCheckDays(7)
 {
 }
 
+// Destructor
 IP2CountryManager::~IP2CountryManager()
 {
     Disable();
@@ -56,15 +58,14 @@ IP2CountryManager::~IP2CountryManager()
 IP2CountryManager& IP2CountryManager::GetInstance()
 {
     if (!m_instance) {
-        m_instance = new IP2CountryManager();
+        m_instance = std::make_unique<IP2CountryManager>();
     }
     return *m_instance;
 }
 
 void IP2CountryManager::DestroyInstance()
 {
-    delete m_instance;
-    m_instance = nullptr;
+    m_instance.reset();
 }
 
 bool IP2CountryManager::Initialize(const wxString& configDir)

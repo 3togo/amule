@@ -18,7 +18,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 echo "Updating package lists..."
-apt-get update -qq
+apt-get update -y
 
 echo ""
 echo "========================================"
@@ -35,8 +35,7 @@ echo "Installing wxWidgets (GUI Framework)"
 echo "========================================"
 apt-get install -y \
     libwxgtk3.2-dev \
-    libwxgtk3.2-gtk3-dev \
-    wx3.0-headers
+    wx3.2-headers
 
 echo ""
 echo "========================================"
@@ -59,7 +58,7 @@ echo "========================================"
 echo "Installing Image Processing Libraries"
 echo "========================================"
 apt-get install -y \
-    libgd2-xpm-dev \
+    libgd-dev \
     libjpeg-dev \
     libpng-dev
 

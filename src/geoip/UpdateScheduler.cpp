@@ -36,6 +36,7 @@
 #include <wx/wfstream.h>
 #include <wx/filename.h>
 #include <cstdio>
+#include <memory>  // For smart pointers
 
 UpdateScheduler::UpdateScheduler()
     : m_configDir()
@@ -233,11 +234,10 @@ bool UpdateScheduler::DownloadFile(const wxString& url, const wxString& outputPa
     wxHTTP httpProtocol;
     httpProtocol.SetHeader("User-Agent", "aMule/2.3 (GeoIP Update)");
 
-    // Get input stream
-    wxInputStream* inputStream = httpProtocol.GetInputStream(url);
+    // Get input stream with smart pointer management
+    std::unique_ptr<wxInputStream> inputStream(httpProtocol.GetInputStream(url));
     if (!inputStream || inputStream->GetLastError() != wxSTREAM_NO_ERROR) {
         ReportDownloadError(_("Failed to connect to"), url);
-        delete inputStream;
         return false;
     }
 
@@ -245,7 +245,6 @@ bool UpdateScheduler::DownloadFile(const wxString& url, const wxString& outputPa
     wxFileOutputStream outputStream(outputPath);
     if (!outputStream.IsOk()) {
         ReportDownloadError(_("Failed to create output file"), outputPath);
-        delete inputStream;
         return false;
     }
 
@@ -265,7 +264,6 @@ bool UpdateScheduler::DownloadFile(const wxString& url, const wxString& outputPa
         
         if (readStatus != wxSTREAM_NO_ERROR && readStatus != wxSTREAM_EOF) {
             ReportDownloadError(_("Error reading from server"), wxEmptyString);
-            delete inputStream;
             return false;
         }
 
@@ -276,8 +274,6 @@ bool UpdateScheduler::DownloadFile(const wxString& url, const wxString& outputPa
             NotifyProgress();
         }
     }
-
-    delete inputStream;
 
     if (m_cancelled) {
         ReportDownloadError(_("Cancelled"), wxEmptyString);

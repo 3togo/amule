@@ -163,7 +163,7 @@ m_imagelist(16,16),
 m_tblist(32,32),
 m_prefsVisible(false),
 m_wndToolbar(NULL),
-m_wndTaskbarNotifier(NULL),
+m_wndTaskbarNotifier(nullptr),
 m_nActiveDialog(DT_NETWORKS_WND),
 m_is_safe_state(false),
 m_BlinkMessages(false),
@@ -240,7 +240,7 @@ m_clientSkinNames(CLIENT_SKIN_SIZE)
 
 #ifdef ENABLE_IP2COUNTRY
 	m_GeoIPavailable = true;
-	m_IP2Country = new CIP2Country(thePrefs::GetConfigDir());
+	m_IP2Country = std::make_unique<CIP2Country>(thePrefs::GetConfigDir());
 #else
 	m_GeoIPavailable = false;
 #endif
@@ -258,8 +258,8 @@ m_clientSkinNames(CLIENT_SKIN_SIZE)
 	m_statisticswnd->Show(false);
 	m_chatwnd->Show(false);
 
-	// Create the GUI timer
-	gui_timer=new wxTimer(this,ID_GUI_TIMER_EVENT);
+	// Create the GUI timer with smart pointer
+	gui_timer = std::make_unique<wxTimer>(this, ID_GUI_TIMER_EVENT);
 	if (!gui_timer) {
 		AddLogLineN(_("FATAL ERROR: Failed to create Timer"));
 		exit(1);
@@ -401,10 +401,10 @@ void CamuleDlg::UpdateTrayIcon(int percent)
 
 void CamuleDlg::CreateSystray()
 {
-	wxCHECK_RET(m_wndTaskbarNotifier == NULL,
+	wxCHECK_RET(m_wndTaskbarNotifier == nullptr,
 		wxT("Systray already created"));
 
-	m_wndTaskbarNotifier = new CMuleTrayIcon();
+	m_wndTaskbarNotifier = std::make_unique<CMuleTrayIcon>();
 	// This will effectively show the Tray Icon.
 	UpdateTrayIcon(0);
 }
@@ -412,8 +412,7 @@ void CamuleDlg::CreateSystray()
 
 void CamuleDlg::RemoveSystray()
 {
-	delete m_wndTaskbarNotifier;
-	m_wndTaskbarNotifier = NULL;
+	m_wndTaskbarNotifier.reset();
 }
 
 
@@ -539,9 +538,7 @@ CamuleDlg::~CamuleDlg()
 {
 	theApp->amuledlg = NULL;
 
-#ifdef ENABLE_IP2COUNTRY
-	delete m_IP2Country;
-#endif
+// m_IP2Country is now managed by std::unique_ptr, no need for manual delete
 
 	AddLogLineN(_("aMule dialog destroyed"));
 }
@@ -895,7 +892,8 @@ void CamuleDlg::DlgShutDown()
 	m_is_safe_state = false;
 
 	// Stop the GUI Timer
-	delete gui_timer;
+	// gui_timer is now managed by std::unique_ptr, no need for manual delete
+	gui_timer.reset();
 	m_transferwnd->downloadlistctrl->DeleteAllItems();
 
 	// We want to delete the systray too!
