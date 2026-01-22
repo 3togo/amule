@@ -201,11 +201,6 @@ void CServerListCtrl::RefreshServer( CServer* server )
 			const CountryDataNew& countrydata = newMgr->GetCountryData(server->GetFullIP());
 			serverName << countrydata.Name;
 			serverName << wxT(" - ");
-		} else {
-			// Fallback to legacy if new manager not available
-			const CountryDataOld& countrydata = theApp->amuledlg->m_IP2Country->GetCountryData(server->GetFullIP());
-			serverName << countrydata.Name;
-			serverName << wxT(" - ");
 		}
 	}
 #endif // ENABLE_IP2COUNTRY

@@ -856,7 +856,6 @@ void CGenericClientListCtrl::DrawClientItem(wxDC* dc, int nColumn, const wxRect&
 				if (theApp->amuledlg->m_IP2Country->IsEnabled() && thePrefs::IsGeoIPEnabled()) {
 					// Draw the flag. Size can't be precached.
 					IP2CountryManager* newMgr = theApp->amuledlg->m_IP2Country->GetNewManager();
-					const CountryDataOld* countrydataold_ptr = nullptr;
 					
 					if (newMgr) {
 						// Access new manager directly
@@ -874,20 +873,6 @@ void CGenericClientListCtrl::DrawClientItem(wxDC* dc, int nColumn, const wxRect&
 
 							point.x += countrydata_new.Flag.GetWidth() + 2 /*Padding*/;
 						}
-					} else {
-						// Fallback to legacy
-						countrydataold_ptr = &theApp->amuledlg->m_IP2Country->GetCountryData(client.GetFullIP());
-						
-						int realY = point.y + (rect.GetHeight() - countrydataold_ptr->Flag.GetHeight())/2 + 1 /* floor() */;
-
-						dc->DrawBitmap(countrydataold_ptr->Flag,
-							point.x, realY,
-							true);
-
-							userName << countrydataold_ptr->Name;
-							userName << wxT(" - ");
-
-							point.x += countrydataold_ptr->Flag.GetWidth() + 2 /*Padding*/;
 					}
 				}
 #endif // ENABLE_IP2COUNTRY
