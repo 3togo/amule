@@ -319,7 +319,12 @@ m_clientSkinNames(CLIENT_SKIN_SIZE)
 	s_main->AddGrowableCol(0);
 	s_main->AddGrowableRow(0);
 
-	wxPanel* p_cnt = new wxPanel(this, -1, wxDefaultPosition, wxDefaultSize);
+	// Fix for pixman warnings: Use valid dimensions instead of wxDefaultSize (-1x-1)
+	wxSize panelSize = wxDefaultSize;
+	if (panelSize.GetWidth() < 100) panelSize.SetWidth(800);
+	if (panelSize.GetHeight() < 100) panelSize.SetHeight(600);
+	
+	wxPanel* p_cnt = new wxPanel(this, -1, wxDefaultPosition, panelSize);
 	s_main->Add(p_cnt, 0, wxGROW|wxEXPAND, 0);
 	muleDlg(p_cnt, false, true);
 	SetSizer(s_main, true);
