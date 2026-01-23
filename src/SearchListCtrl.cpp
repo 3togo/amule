@@ -808,7 +808,15 @@ static const wxBrush& GetBrush(wxSystemColour index)
 void CSearchListCtrl::OnDrawItem(
 	int item, wxDC* dc, const wxRect& rect, const wxRect& rectHL, bool highlighted)
 {
+	std::cout << "DEBUG: OnDrawItem called for item " << item 
+	          << ", rect: " << rect.width << "x" << rect.height
+	          << ", rectHL: " << rectHL.width << "x" << rectHL.height << std::endl;
+
 	CSearchFile* file = reinterpret_cast<CSearchFile*>(GetItemData(item));
+
+	// Debug output for item information
+	std::cout << "DEBUG: Drawing file: " << file->GetFileName().GetPrintable().ToUTF8().data()
+	          << ", search ID: " << file->GetSearchID() << std::endl;
 
 	// Define text-color and background
 	if (highlighted) {
@@ -848,11 +856,33 @@ void CSearchListCtrl::OnDrawItem(
 		wxListItem listitem;
 		GetColumn(i, listitem);
 
-		if ( listitem.GetWidth() > 0 ) {
+		// Debug output to track invalid rectangles
+		if (listitem.GetWidth() <= 0) {
+			std::cout << "DEBUG: Invalid column width: " << listitem.GetWidth() 
+					  << " for column: " << i << std::endl;
+		}
+
+		if ( listitem.GetWidth() > 2*iOffset ) {
 			cur_rec.width = listitem.GetWidth() - 2*iOffset;
+
+			// Debug output for rectangle dimensions
+			if (cur_rec.width <= 0) {
+				std::cout << "DEBUG: Negative width after calculation: " << cur_rec.width 
+						  << " (column width: " << listitem.GetWidth() << ", iOffset: " << iOffset << ")" << std::endl;
+			}
 
 			// Make a copy of the current rectangle so we can apply specific tweaks
 			wxRect target_rec = cur_rec;
+
+			// Ensure positive dimensions for drawing operations
+			if (target_rec.width < 1) {
+				std::cout << "DEBUG: Correcting invalid width: " << target_rec.width << " -> 1" << std::endl;
+				target_rec.width = 1;
+			}
+			if (target_rec.height < 1) {
+				std::cout << "DEBUG: Correcting invalid height: " << target_rec.height << " -> 1" << std::endl;
+				target_rec.height = 1;
+			}
 
 			// will ensure that text is about in the middle ;)
 			target_rec.y += iTextOffset;

@@ -55,6 +55,8 @@
 #include "SearchExpr.h"
 
 #include "Scanner.h"
+#include "protocol/bt/BitTorrentSession.h"  // For BitTorrent search support
+#include <cstring>  // For std::memcpy
 void LexInit(const wxString& pszInput);
 void LexFree();
 
@@ -311,8 +313,16 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 	// Check that we can actually perform the specified desired search.
 	if ((type == KadSearch) && !Kademlia::CKademlia::IsRunning()) {
 		return _("Kad search can't be done if Kad is not running");
-	} else if ((type != KadSearch) && !theApp->IsConnectedED2K()) {
+	} else if ((type == LocalSearch || type == GlobalSearch) && !theApp->IsConnectedED2K()) {
 		return _("eD2k search can't be done if eD2k is not connected");
+	} else if ((type == BitTorrentSearch || type == HybridSearch)) {
+		// Basic check for BitTorrent session availability
+		try {
+			auto& session = BitTorrent::BitTorrentSession::instance();
+			// Session exists, proceed with search
+		} catch (const std::exception& e) {
+			return _("BitTorrent session is not available");
+		}
 	}
 
 	if (params.typeText != ED2KFTSTR_PROGRAM) {
@@ -984,6 +994,56 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 	return data;
 }
 
+
+// Convert BitTorrent search result to CSearchFile format
+CSearchFile* CSearchList::ConvertBTSearchResult(const BitTorrent::SearchResult& btResult, long searchID) 
+{
+	CMemFile temp(250);
+	
+	// Convert info_hash string to CMD4Hash
+	CMD4Hash hash;
+	if (btResult.info_hash.size() == 16) { // MD4 hash is 16 bytes
+		std::memcpy(hash.GetHash(), btResult.info_hash.data(), 16);
+	}
+	
+	temp.WriteHash(hash);
+	temp.WriteUInt32(0);	// client IP
+	temp.WriteUInt16(0);	// client port
+
+	// Write tag list
+	unsigned int uFilePosTagCount = temp.GetPosition();
+	uint32 tagcount = 0;
+	temp.WriteUInt32(tagcount); // dummy tag count, will be filled later
+
+	// Standard tags
+	CTagString tagName(FT_FILENAME, wxString(btResult.name.c_str(), wxConvUTF8));
+	tagName.WriteTagToFile(&temp, utf8strRaw);
+	tagcount++;
+
+	CTagInt64 tagSize(FT_FILESIZE, btResult.size);
+	tagSize.WriteTagToFile(&temp, utf8strRaw);
+	tagcount++;
+
+	// Additional BitTorrent specific tags
+	CTagInt32 tagSeeders(FT_SOURCES, btResult.seeders);
+	tagSeeders.WriteTagToFile(&temp, utf8strRaw);
+	tagcount++;
+	
+	CTagInt32 tagLeechers(FT_COMPLETE_SOURCES, btResult.leechers);
+	tagLeechers.WriteTagToFile(&temp, utf8strRaw);
+	tagcount++;
+	
+	// Protocol tag to identify BitTorrent results
+	CTagString tagProtocol(FT_SOURCEPROTOCOL, wxT("BitTorrent"));
+	tagProtocol.WriteTagToFile(&temp, utf8strRaw);
+	tagcount++;
+
+	temp.Seek(uFilePosTagCount, wxFromStart);
+	temp.WriteUInt32(tagcount);
+	temp.Seek(0, wxFromStart);
+
+	return new CSearchFile(temp, true, searchID, 0, 0, wxEmptyString, true);
+}
 
 void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt128 *fileID,
 	const wxString& name, uint64_t size, const wxString& type, uint32_t kadPublishInfo, const TagPtrList& taglist)
