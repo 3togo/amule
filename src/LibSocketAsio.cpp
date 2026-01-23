@@ -64,6 +64,7 @@
 #include <common/Format.h>	// Needed for CFormat
 #include "Logger.h"
 #include "GuiEvents.h"
+#include "common/NetworkPerformanceMonitor.h"
 #include "amuleIPV4Address.h"
 #include "MuleUDPSocket.h"
 #include "OtherFunctions.h"	// DeleteContents
@@ -239,6 +240,11 @@ public:
 		m_readBufferPtr		+= readCache;
 
 		AddDebugLogLineF(logAsio, CFormat(wxT("Read2 %s %d - %d")) % m_IP % bytesToRead % readCache);
+		
+		// Performance monitoring integration
+		if (readCache > 0) {
+			network_perf::g_network_perf_monitor.record_received(readCache);
+		}
 		if (m_readBufferContent) {
 			// Data left, post another event
 			PostReadEvent(1);
@@ -264,6 +270,12 @@ public:
 			return 0;
 		}
 		AddDebugLogLineF(logAsio, CFormat(wxT("Write %d %s")) % nbytes % m_IP);
+		
+		// Performance monitoring integration
+		if (nbytes > 0) {
+			network_perf::g_network_perf_monitor.record_sent(nbytes);
+		}
+		
 		m_sendBuffer = new char[nbytes];
 		memcpy(m_sendBuffer, buf, nbytes);
 		m_strand.dispatch(boost::bind(& CAsioSocketImpl::DispatchWrite, this, nbytes), boost::asio::get_associated_allocator(boost::bind(& CAsioSocketImpl::DispatchWrite, this, nbytes)));

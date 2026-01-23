@@ -289,8 +289,7 @@ if (BUILD_REMOTEGUI)
 endif()
 
 if (NEED_LIB_MULEAPPCOMMON)
-	add_library (muleappcommon STATIC
-		${UPNP_SOURCES}
+	set(MULEAPPCOMMON_SOURCES
 		CFile.cpp
 		ClientCredits.cpp
 		DataToText.cpp
@@ -309,6 +308,12 @@ if (NEED_LIB_MULEAPPCOMMON)
 		TerminationProcess.cpp
 		Timer.cpp
 	)
+	
+	if(ENABLE_UPNP)
+		list(APPEND MULEAPPCOMMON_SOURCES ${UPNP_SOURCES})
+	endif()
+	
+	add_library (muleappcommon STATIC ${MULEAPPCOMMON_SOURCES})
 
 	add_dependencies (muleappcommon
 		generate_ECCodes.h

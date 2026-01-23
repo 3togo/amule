@@ -192,3 +192,22 @@ target_include_directories (TextFileTest
 target_link_libraries (TextFileTest
 	muleunit
 )
+
+# ModernLogging tests - compilation only, no runtime dependencies
+add_executable (ModernLoggingTest
+	ModernLoggingTest.cpp
+)
+
+add_test (NAME ModernLoggingTest
+	COMMAND ModernLoggingTest
+)
+
+target_include_directories (ModernLoggingTest
+	PRIVATE ${CMAKE_SOURCE_DIR}/src
+	PRIVATE ${CMAKE_SOURCE_DIR}/src/include
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../muleunit
+)
+
+target_link_libraries (ModernLoggingTest
+	muleunit
+)

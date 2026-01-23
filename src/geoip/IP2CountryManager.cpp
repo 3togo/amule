@@ -136,10 +136,16 @@ void IP2CountryManager::AutoMigrateGeoIPUrl()
     }
     
     // Use SetDatabaseDownloadUrl to handle automatic migration of obsolete URLs
+    wxString oldUrl = configUrl;
     SetDatabaseDownloadUrl(configUrl);
     
-    // Log the migration
-    AddLogLineN(CFormat(_("IP2Country: Configuration URL migrated to: %s")) % m_downloadUrl);
+    // If URL was updated, save the new URL to preferences
+    if (m_downloadUrl != oldUrl) {
+        thePrefs::SetGeoIPUpdateUrl(m_downloadUrl);
+        AddLogLineN(CFormat(_("IP2Country: Configuration URL migrated and saved: %s")) % m_downloadUrl);
+    } else {
+        AddLogLineN(CFormat(_("IP2Country: Using configured download URL: %s")) % m_downloadUrl);
+    }
 }
 
 void IP2CountryManager::Enable()
