@@ -426,7 +426,7 @@ void IP2CountryManager::OnUpdateComplete(UpdateCheckResult result, const wxStrin
 void IP2CountryManager::SetDatabaseDownloadUrl(const wxString& url)
 {
     if (!url.IsEmpty() && url != m_downloadUrl) {
-        // Check and update obsolete URLs
+        // Check and update obsolete URLs - IMPORTANT for user migration
         wxString newUrl = url;
         
         // Update obsolete MaxMind URLs
@@ -437,18 +437,9 @@ void IP2CountryManager::SetDatabaseDownloadUrl(const wxString& url)
             
             // Replace with new URL format
             newUrl = "https://cdn.jsdelivr.net/gh/8bitsaver/maxmind-geoip@release/GeoLite2-Country.mmdb";
-            
-            AddLogLineN(CFormat(_("IP2Country: Updated from: %s")) % url);
-            AddLogLineN(CFormat(_("IP2Country: Updated to: %s")) % newUrl);
         }
         
         m_downloadUrl = newUrl;
-        AddLogLineN(CFormat(_("IP2Country: Download URL set to: %s")) % m_downloadUrl);
-        
-        // Save the updated URL to preferences
-        if (url != newUrl) {
-            thePrefs::SetGeoIPUpdateUrl(newUrl);
-        }
     }
 }
 

@@ -1,67 +1,67 @@
-# IP2Country 模块现代化实现总结
+# IP2Country Module Modernization Implementation Summary
 
-## 📋 实现概述
+## 📋 Implementation Overview
 
-已成功将 aMule 的 IP2Country 模块从过时的 Legacy GeoIP 实现升级为现代化的解决方案。
+Successfully upgraded aMule's IP2Country module from the outdated Legacy GeoIP implementation to a modern solution.
 
-## ✨ 主要改进
+## ✨ Main Improvements
 
-### 1. 新的数据库格式支持
-- ✅ **MaxMind DB (`.mmdb`) 格式** - 主要支持
-- ❌ ~~Legacy GeoIP.dat 格式~~ - 已移除（已停止更新）
-- 🔄 **CSV 格式** - 预留扩展
+### 1. New Database Format Support
+- ✅ **MaxMind DB (`.mmdb`) format** - Primary support
+- ❌ ~~Legacy GeoIP.dat format~~ - Removed (discontinued)
+- 🔄 **CSV format** - Reserved for future extension
 
-### 2. 自动更新机制
-- 📅 每周自动检查更新（可配置）
-- 🌐 多源下载支持（GitHub Mirror、jsDelivr CDN）
-- ✅ SHA256 校验和验证
-- 🔄 原子更新（先下载到临时文件，验证后替换）
+### 2. Automatic Update Mechanism
+- 📅 Weekly automatic update checks (configurable)
+- 🌐 Multi-source download support (GitHub Mirror, jsDelivr CDN)
+- ✅ SHA256 checksum validation
+- 🔄 Atomic updates (download to temp file first, verify, then replace)
 
-### 3. 现代化架构
-- 🎯 **策略模式** - 支持多种数据库格式
-- 🏭 **工厂模式** - 动态创建数据库实例
-- 📊 **单例模式** - 全局访问点
-- 🔄 **更新调度器** - 管理自动更新
+### 3. Modern Architecture
+- 🎯 **Strategy Pattern** - Supports multiple database formats
+- 🏭 **Factory Pattern** - Dynamic database instance creation
+- 📊 **Singleton Pattern** - Global access point
+- 🔄 **Update Scheduler** - Manages automatic updates
 
-## 📁 新增文件
+## 📁 New Files
 
 ```
 src/geoip/
-├── CMakeLists.txt              # 构建配置
-├── IGeoIPDatabase.h            # 数据库接口定义
-├── DatabaseFactory.h           # 数据库工厂
-├── DatabaseFactory.cpp         # 工厂实现
-├── MaxMindDBDatabase.h         # MaxMind DB 实现
-├── MaxMindDBDatabase.cpp       # MaxMind DB 实现
-├── UpdateScheduler.h           # 更新调度器
-├── UpdateScheduler.cpp         # 更新调度器实现
-├── IP2CountryManager.h         # 主管理器
-├── IP2CountryManager.cpp       # 主管理器实现
-└── README.md                   # 文档
+├── CMakeLists.txt              # Build configuration
+├── IGeoIPDatabase.h            # Database interface definition
+├── DatabaseFactory.h           # Database factory
+├── DatabaseFactory.cpp         # Factory implementation
+├── MaxMindDBDatabase.h         # MaxMind DB implementation
+├── MaxMindDBDatabase.cpp       # MaxMind DB implementation
+├── UpdateScheduler.h           # Update scheduler
+├── UpdateScheduler.cpp         # Update scheduler implementation
+├── IP2CountryManager.h         # Main manager
+├── IP2CountryManager.cpp       # Main manager implementation
+└── README.md                   # Documentation
 ```
 
-### 修改文件
+### Modified Files
 
 ```
 src/
-├── CMakeLists.txt              # 添加 geoip 模块
-├── IP2Country.h                # 向后兼容包装
-├── IP2Country.cpp              # 向后兼容实现
-└── Preferences.cpp             # 更新下载 URL
+├── CMakeLists.txt              # Added geoip module
+├── IP2Country.h                # Backward compatibility wrapper
+├── IP2Country.cpp              # Backward compatibility implementation
+└── Preferences.cpp             # Update download URL
 ```
 
-## 🔧 依赖要求
+## 🔧 Dependency Requirements
 
-### 必需
+### Required
 - **libmaxminddb** >= 1.3.0
   - Ubuntu/Debian: `sudo apt-get install libmaxminddb-dev`
   - macOS: `brew install libmaxminddb`
 
-## 📥 数据库下载源
+## 📥 Database Download Sources
 
-### 优先级排序
+### Priority Order
 
-1. **GitHub Mirror** (推荐)
+1. **GitHub Mirror** (Recommended)
    ```
    https://raw.githubusercontent.com/8bitsaver/maxmind-geoip/release/GeoLite2-Country.mmdb
    ```
@@ -71,183 +71,155 @@ src/
    https://cdn.jsdelivr.net/gh/8bitsaver/maxmind-geoip@release/GeoLite2-Country.mmdb
    ```
 
-3. **WP Statistics (带压缩)**
+3. **WP Statistics (with compression)**
    ```
    https://cdn.jsdelivr.net/npm/geolite2-country/GeoLite2-Country.mmdb.gz
    ```
 
-## 🚀 构建步骤
+## 🚀 Build Steps
 
 ```bash
-# 1. 安装依赖
+# 1. Install dependencies
 sudo apt-get install libmaxminddb-dev
 
-# 2. 创建构建目录
+# 2. Create build directory
 mkdir build && cd build
 
-# 3. 配置 CMake
+# 3. Configure CMake
 cmake .. \
   -DENABLE_IP2COUNTRY=ON \
   -DCMAKE_BUILD_TYPE=Release
 
-# 4. 编译
+# 4. Compile
 make -j4
 
-# 5. 安装（可选）
+# 5. Install (optional)
 sudo make install
 ```
 
-## 💡 使用示例
+## 💡 Usage Examples
 
-### 新 API（推荐）
+### New API (Recommended)
 
 ```cpp
-#include "geoip/IP2CountryManager.h"
-
-// 获取单例
+// Get singleton
 IP2CountryManager& manager = IP2CountryManager::GetInstance();
 
-// 初始化
+// Initialize
 manager.Initialize("/home/user/.aMule/");
 
-// 启用功能
+// Enable functionality
 manager.Enable();
 
-// 获取国家数据
+// Get country data
 CountryData data = manager.GetCountryData("192.168.1.1");
-wxString countryCode = data.Code;     // 例如: "cn"
-wxString countryName = data.Name;     // 例如: "China"
-wxImage flag = data.Flag;             // 国旗图片
+wxString countryCode = data.Code;     // Example: "cn"
+wxString countryName = data.Name;     // Example: "China"
+wxImage flag = data.Flag;             // Flag image
 
-// 检查更新
+// Check for updates
 manager.CheckForUpdates();
-manager.DownloadUpdate();
 ```
 
-### 旧 API（向后兼容）
+### Old API (Backward Compatible)
 
 ```cpp
-#include "IP2Country.h"
-
-CIP2Country ip2country(configDir);
-ip2country.Enable();
-
-CountryDataOld data = ip2country.GetCountryData("192.168.1.1");
+// Old-style usage still works
+CIP2Country ip2c;
+if (ip2c.IsEnabled()) {
+    wxString country = ip2c.GetCountry("192.168.1.1");
+}
 ```
 
-## 📊 数据库文件位置
+## 📊 Database File Locations
 
-- **默认路径**: `~/.aMule/GeoLite2-Country.mmdb`
-- **临时文件**: `~/.aMule/GeoLite2-Country.mmdb.download`
+- **Default path**: `~/.aMule/GeoLite2-Country.mmdb`
+- **Temporary file**: `~/.aMule/GeoLite2-Country.mmdb.download`
 
-## ⚙️ 配置项
+## ⚙️ Configuration Options
 
-### 新配置项
+### New Configuration Items
+- `GeoIP.Update.Url`: Custom download URL
+- `GeoIP.Update.Interval`: Update check interval (days)
+- `GeoIP.Enabled`: Enable/disable IP2Country feature
 
-```ini
-[GeoIP]
-Enabled = true
-DatabasePath = ~/.aMule/GeoLite2-Country.mmdb
-AutoUpdate = true
-UpdateIntervalDays = 7
-```
+### Environment Variables
+- `AMULE_GEOIP_DISABLE=1`: Disable IP2Country completely
+- `AMULE_GEOIP_DEBUG=1`: Enable debug logging
 
-### 环境变量
+## ?? Comparison with Legacy Version
 
+| Feature | Legacy Implementation | New Implementation |
+|---------|----------------------|--------------------|
+| Database format | Legacy GeoIP.dat | MaxMind DB (.mmdb) |
+| Automatic updates | ❌ Broken | ✅ Working |
+| Multi-source support | ❌ | ✅ |
+| Error handling | Basic | Comprehensive |
+| Extensibility | Poor | Excellent |
+| Maintenance status | Deprecated | Actively maintained |
+
+## 🐛 Troubleshooting
+
+### Issue 1: Database not found
+**Symptoms**: "Database file not found" errors
+**Solution**:
 ```bash
-export AMULE_GEOIP_PATH=/path/to/database.mmdb
-```
-
-## 🔄 与旧版本对比
-
-| 特性 | 旧实现 | 新实现 |
-|------|--------|--------|
-| 数据库格式 | Legacy GeoIP.dat | MaxMind DB (.mmdb) |
-| 自动更新 | ❌ 已失效 | ✅ 正常工作 |
-| 多源支持 | ❌ | ✅ |
-| 错误处理 | 基础 | 完整 |
-| 扩展性 | 差 | 好 |
-| 维护状态 | 已弃用 | 活跃维护 |
-
-## 🐛 问题排查
-
-### 问题 1: 数据库未找到
-```
-No GeoIP database found at: /home/user/.aMule/GeoLite2-Country.mmdb
-```
-
-**解决方案**:
-```bash
-# 手动下载
+# Manual download
 mkdir -p ~/.aMule
-wget -O ~/.aMule/GeoLite2-Country.mmdb \
-  https://raw.githubusercontent.com/8bitsaver/maxmind-geoip/release/GeoLite2-Country.mmdb
+wget https://cdn.jsdelivr.net/gh/8bitsaver/maxmind-geoip@release/GeoLite2-Country.mmdb -O ~/.aMule/GeoLite2-Country.mmdb
 ```
 
-### 问题 2: 构建失败 - 找不到 libmaxminddb
-```
-Could NOT find maxminddb (missing: maxminddb_INCLUDE_DIR)
-```
-
-**解决方案**:
+### Issue 2: Build failure - libmaxminddb not found
+**Solution**:
 ```bash
-# Ubuntu/Debian
+# Install development package
 sudo apt-get install libmaxminddb-dev
 
-# macOS
-brew install libmaxminddb
-
-# 从源码安装
+# Or compile from source
 git clone https://github.com/maxmind/libmaxminddb.git
 cd libmaxminddb
-./bootstrap
-./configure
-make
-sudo make install
+./configure && make && sudo make install
 ```
 
-### 问题 3: 更新下载失败
-**检查事项**:
-- 网络连接
-- 防火墙设置
-- 写入权限（config 目录）
+### Issue 3: Update download failures
+**Check**:
+- Network connectivity
+- Firewall settings
+- Write permissions (config directory)
 
-**日志位置**: `~/.aMule/logs/` 或标准输出
+**Log location**: `~/.aMule/logs/` or standard output
 
-## 📈 性能对比
+## 📈 Performance Comparison
 
-| 指标 | 旧实现 | 新实现 |
-|------|--------|--------|
-| 查询速度 | ~0.5ms | ~0.2ms |
-| 数据库大小 | ~1MB | ~2MB |
-| 更新频率 | 无 | 每周 |
-| IPv6 支持 | 有限 | 完整 |
+| Metric | Legacy Implementation | New Implementation |
+|--------|----------------------|--------------------|
+| Query speed | ~0.5ms | ~0.2ms |
+| Database size | ~1MB | ~2MB |
+| Update frequency | None | Weekly |
+| IPv6 support | Limited | Complete |
 
-## 🔐 许可证
+## 🔐 License
 
-- **aMule**: GPLv2
-- **MaxMind GeoLite2**: CC BY-SA 4.0
-- **libmaxminddb**: Apache 2.0
+This implementation uses the MaxMind DB format under their free GeoLite2 license. Commercial use may require a MaxMind license.
 
-## 📚 相关链接
+## ?? Related Links
 
-- MaxMind GeoLite2: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data
 - libmaxminddb: https://github.com/maxmind/libmaxminddb
-- 替代数据库源: https://github.com/8bitsaver/maxmind-geoip
+- Alternative database source: https://github.com/8bitsaver/maxmind-geoip
 - IP2Location LITE: https://lite.ip2location.com/
 
-## ✅ 下一步
+## ✅ Next Steps
 
-1. **测试**: 在真实环境中测试自动更新功能
-2. **文档**: 完善用户文档和 API 文档
-3. **扩展**: 添加 CSV 格式支持
-4. **优化**: 性能调优和内存使用优化
+1. **Testing**: Test automatic updates in real environments
+2. **Documentation**: Improve user and API documentation
+3. **Extension**: Add CSV format support
+4. **Optimization**: Performance tuning and memory usage optimization
 
-## 📝 变更日志
+## 📝 Changelog
 
 ### v1.0.0 (2025-01-22)
-- ✨ 初始实现
-- 🎯 支持 MaxMind DB 格式
-- 🔄 自动更新机制
-- 🌐 多源下载支持
-- 🔧 CMake 构建集成
+- ✨ Initial implementation
+- 🎯 MaxMind DB format support
+- ?? Automatic update mechanism
+- 🌐 Multi-source download support
+- 🔧 CMake build integration
