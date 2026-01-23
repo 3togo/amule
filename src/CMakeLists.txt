@@ -127,6 +127,7 @@ if (BUILD_DAEMON)
 	)
 
 	target_link_libraries (amuled
+		PRIVATE LibtorrentRasterbar::torrent-rasterbar
 		PRIVATE ec
 		PRIVATE muleappcommon
 		PRIVATE muleappcore
@@ -198,6 +199,7 @@ if (BUILD_MONOLITHIC)
 	endif()
 
 	target_link_libraries (amule
+		PRIVATE LibtorrentRasterbar::torrent-rasterbar
 		PRIVATE ec
 		PRIVATE muleappcommon
 		PRIVATE muleappcore

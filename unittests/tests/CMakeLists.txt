@@ -41,6 +41,39 @@ target_link_libraries (CUInt128Test
 	muleunit
 )
 
+
+# BitTorrent Protocol Test
+add_executable (BitTorrentProtocolTest
+	BitTorrentProtocolTest.cpp
+	${CMAKE_SOURCE_DIR}/src/SafeFile.cpp
+	${CMAKE_SOURCE_DIR}/src/CFile.cpp
+	${CMAKE_SOURCE_DIR}/src/MemFile.cpp
+	${CMAKE_SOURCE_DIR}/src/Tag.cpp
+	${CMAKE_SOURCE_DIR}/src/Packet.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+	${CMAKE_SOURCE_DIR}/src/libs/common/Path.cpp
+	${CMAKE_SOURCE_DIR}/src/common/NetworkSummaryUtil.cpp
+	${CMAKE_SOURCE_DIR}/src/protocol/ProtocolConversion.cpp
+)
+
+add_test (NAME BitTorrentProtocolTest
+	COMMAND BitTorrentProtocolTest
+)
+
+target_include_directories (BitTorrentProtocolTest
+	PRIVATE ${CMAKE_BINARY_DIR}
+	PRIVATE ${CMAKE_SOURCE_DIR}/src
+	PRIVATE ${CMAKE_SOURCE_DIR}/src/include
+)
+
+target_link_libraries (BitTorrentProtocolTest
+	muleunit
+	${OPENSSL_LIBRARIES}
+	wxWidgets::CORE
+	z
+)
+
 add_executable (FileDataIOTest
 	FileDataIOTest.cpp
 	${CMAKE_SOURCE_DIR}/src/SafeFile.cpp

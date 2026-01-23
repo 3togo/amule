@@ -39,6 +39,21 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		UploadClient.cpp
 		UploadQueue.cpp
 		ThreadTasks.cpp
+// =============================================================================
+// CMake Source Configuration for BitTorrent Integration
+// IMPORTANT: To avoid linker errors about duplicate definitions:
+// 
+// Only include ONE of the following files, NOT both:
+// - BitTorrentSession.cpp (legacy, incomplete)
+// - BitTorrentSessionImpl.cpp (complete implementation)
+// 
+// Current: Using BitTorrentSessionImpl.cpp which contains full Impl + BitTorrentSession
+// =============================================================================
+
+		protocol/bt/BitTorrentSessionImpl.cpp
+		protocol/MultiProtocolSocket.cpp
+		protocol/ProtocolCoordinator.cpp
+		protocol/ProtocolConversion.cpp
 	)
 endif()
 
