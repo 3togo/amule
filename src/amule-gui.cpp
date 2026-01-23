@@ -193,9 +193,12 @@ int CamuleGuiBase::InitGui(bool geometry_enabled, wxString &geom_string)
 
 	// Should default/last-used position be overridden?
 	if ( geometry_enabled ) {
-		amuledlg = new CamuleDlg(NULL, m_FrameTitle,
-		                         wxPoint(geometry_x,geometry_y),
-		                         wxSize( geometry_width, geometry_height - 58 ));
+	// Fix for pixman warnings: ensure valid window dimensions
+	unsigned int valid_width = std::max(geometry_width, 100u);
+	unsigned int valid_height = std::max(geometry_height - 58, 100u);
+	amuledlg = new CamuleDlg(NULL, m_FrameTitle,
+	                         wxPoint(geometry_x, geometry_y),
+	                         wxSize(valid_width, valid_height));
 	} else {
 		amuledlg = new CamuleDlg(NULL, m_FrameTitle);
 	}
