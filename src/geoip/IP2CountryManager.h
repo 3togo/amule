@@ -71,6 +71,12 @@ public:
     bool Initialize(const wxString& configDir);
 
     /**
+     * @brief Auto-migrate GeoIP URL from configuration
+     * Automatically detects and updates obsolete URLs
+     */
+    void AutoMigrateGeoIPUrl();
+
+    /**
      * @brief Enable IP2Country functionality
      */
     void Enable();
@@ -122,6 +128,7 @@ public:
      */
     bool DownloadDatabase();
 
+
     /**
      * @brief Reload the database
      * @return true if successful
@@ -165,6 +172,18 @@ public:
     void SetUpdateCheckInterval(int days);
 
     /**
+     * @brief Set database download URL
+     * @param url Download URL for GeoIP database
+     */
+    void SetDatabaseDownloadUrl(const wxString& url);
+    
+    /**
+     * @brief Get database download URL
+     * @return Download URL for GeoIP database
+     */
+    wxString GetDatabaseDownloadUrl() const { return m_downloadUrl; }
+
+    /**
      * @brief Get update check interval
      * @return Days between checks
      */
@@ -205,6 +224,7 @@ private:
     static std::unique_ptr<IP2CountryManager> m_instance;  ///< Singleton instance
     wxString m_configDir;                   ///< Configuration directory
     wxString m_databasePath;                ///< Current database path
+    wxString m_downloadUrl;                 ///< Database download URL
     std::shared_ptr<IGeoIPDatabase> m_database;  ///< Database instance
     std::unique_ptr<UpdateScheduler> m_scheduler;  ///< Update scheduler
     CountryDataMap m_CountryDataMap;        ///< Country flag data

@@ -72,6 +72,7 @@ if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 		SourceListCtrl.cpp
 		StatisticsDlg.cpp
 		TransferWnd.cpp
+		GeoIPConfigDlg.cpp
 	)
 endif()
 

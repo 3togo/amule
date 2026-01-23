@@ -43,7 +43,22 @@
 #include <common/EventIDs.h>
 
 #include "config.h"				// Needed for SVNDATE, PACKAGE, VERSION
+#include <common/MenuIDs.h>		// Needed for MP_GEOIP_CONFIG
 #include "amuleDlg.h"				// Interface declarations.
+#include "Logger.h"				// For AddLogLineC/N macros
+
+// Logging helper implementations
+void CamuleDlg::LogError(const wxString& message) {
+    AddLogLineC(wxT("ERROR: ") + message);
+}
+
+void CamuleDlg::LogInfo(const wxString& message) {
+    AddLogLineN(message);
+}
+
+void CamuleDlg::LogWarning(const wxString& message) {
+    AddLogLineC(wxT("WARNING: ") + message);
+}
 
 #include <common/Format.h>			// Needed for CFormat
 #include "amule.h"				// Needed for theApp
@@ -78,6 +93,86 @@
 
 #include "kademlia/kademlia/Kademlia.h"
 #include "MuleVersion.h"			// Needed for GetMuleVersion()
+
+#include "GeoIPConfigDlg.h"		// Needed for GeoIP configuration dialog
+
+// Connection state helper implementations
+bool CamuleDlg::IsConnectingOrConnected() const {
+    return theApp->IsConnectedED2K() || theApp->serverconnect->IsConnecting()
+#ifdef CLIENT_GUI
+        || theApp->IsConnectedKad()
+#else
+        || Kademlia::CKademlia::IsRunning()
+#endif
+        ;
+}
+
+bool CamuleDlg::IsConnected() const {
+    return theApp->IsConnectedED2K()
+#ifdef CLIENT_GUI
+        || theApp->IsConnectedKad()
+#else
+        || Kademlia::CKademlia::IsRunning()
+#endif
+        ;
+}
+
+bool CamuleDlg::IsConnecting() const {
+    return theApp->serverconnect->IsConnecting()
+#ifdef CLIENT_GUI
+        || (theApp->IsKadRunning() && !theApp->IsConnectedKad())
+#else
+        || (Kademlia::CKademlia::IsRunning() && !theApp->IsConnectedKad())
+#endif
+        ;
+}
+
+wxString CamuleDlg::GetED2KStatusMessage(ED2KState& state) const {
+    wxString msg;
+    state = ED2KOff;
+    
+    if (theApp->IsConnectedED2K()) {
+        CServer* server = theApp->serverconnect->GetCurrentServer();
+        if (server) {
+            msg = CFormat(wxT("eD2k: %s")) % server->GetListName();
+        }
+
+        if (theApp->serverconnect->IsLowID()) {
+            state = ED2KLowID;
+        } else {
+            state = ED2KHighID;
+        }
+    } else if (theApp->serverconnect->IsConnecting()) {
+        msg = _("eD2k: Connecting");
+        state = ED2KConnecting;
+    } else if (thePrefs::GetNetworkED2K()) {
+        msg = _("eD2k: Disconnected");
+    }
+    
+    return msg;
+}
+
+wxString CamuleDlg::GetKadStatusMessage(EKadState& state) const {
+    wxString msg;
+    state = EKadOff;
+    
+    if (theApp->IsConnectedKad()) {
+        if (theApp->IsFirewalledKad()) {
+            msg = _("Kad: Firewalled");
+            state = EKadFW;
+        } else {
+            msg = _("Kad: Connected");
+            state = EKadOK;
+        }
+    } else if (theApp->IsKadRunning()) {
+        msg = _("Kad: Connecting");
+        state = EKadConnecting;
+    } else if (thePrefs::GetNetworkKademlia()) {
+        msg = _("Kad: Off");
+    }
+    
+    return msg;
+}
 
 #ifdef ENABLE_IP2COUNTRY
 #include "IP2Country.h"				// Needed for IP2Country
@@ -131,6 +226,7 @@ BEGIN_EVENT_TABLE(CamuleDlg, wxFrame)
 	EVT_KEY_UP(CamuleDlg::OnKeyPressed)
 
 	EVT_MENU(wxID_EXIT, CamuleDlg::OnExit)
+	EVT_MENU(MP_GEOIP_CONFIG, CamuleDlg::OnGeoIPConfig)
 
 END_EVENT_TABLE()
 
@@ -433,8 +529,8 @@ void CamuleDlg::OnToolBarButton(wxCommandEvent& ev)
 			}
 		}
 
-		if ( lastbutton != ev.GetId() ) {
-			switch ( ev.GetId() ) {
+		// Always process the button click, even if it's the same button
+		switch ( ev.GetId() ) {
 				case ID_BUTTONNETWORKS:
 					SetActiveDialog(DT_NETWORKS_WND, m_serverwnd);
 					// Set serverlist splitter position
@@ -475,10 +571,14 @@ void CamuleDlg::OnToolBarButton(wxCommandEvent& ev)
 			}
 		}
 
-		m_wndToolbar->ToggleTool(lastbutton, lastbutton == ev.GetId() );
+		// Update button states: current button pressed, previous unpressed
+		if (lastbutton != ev.GetId()) {
+			m_wndToolbar->ToggleTool(lastbutton, false);
+		}
+		// Always set the current button to pressed state
+		m_wndToolbar->ToggleTool(ev.GetId(), true);
 		lastbutton = ev.GetId();
 	}
-}
 
 
 void CamuleDlg::OnAboutButton(wxCommandEvent& WXUNUSED(ev))
@@ -547,13 +647,7 @@ CamuleDlg::~CamuleDlg()
 void CamuleDlg::OnBnConnect(wxCommandEvent& WXUNUSED(evt))
 {
 
-	bool disconnect = (theApp->IsConnectedED2K() || theApp->serverconnect->IsConnecting())
-						#ifdef CLIENT_GUI
-						|| theApp->IsConnectedKad()		// there's no Kad running state atm
-						#else
-						|| (Kademlia::CKademlia::IsRunning())
-						#endif
-						;
+	bool disconnect = IsConnectingOrConnected();
 	if (thePrefs::GetNetworkED2K()) {
 		if (disconnect) {
 			//disconnect if currently connected
@@ -564,7 +658,7 @@ void CamuleDlg::OnBnConnect(wxCommandEvent& WXUNUSED(evt))
 			}
 		} else {
 			//connect if not currently connected
-			AddLogLineC(_("Connecting"));
+			LogInfo(_("Connecting"));
 			theApp->serverconnect->ConnectToAnyServer();
 		}
 	} else {
@@ -668,56 +762,14 @@ void CamuleDlg::ShowConnectionState(bool skinChanged)
 
 
 	////////////////////////////////////////////////////////////
-	// Determine the status of the networks
+	// Determine the status of the networks using helper methods
 	//
-	enum ED2KState { ED2KOff = 0, ED2KLowID = 1, ED2KConnecting = 2, ED2KHighID = 3, ED2KUndef = -1 };
-	enum EKadState { EKadOff = 4, EKadFW = 5, EKadConnecting = 5, EKadOK = 6, EKadUndef = -1 };
-
 	ED2KState ed2kState = ED2KOff;
-	EKadState kadState  = EKadOff;
+	EKadState kadState = EKadOff;
 
-	////////////////////////////////////////////////////////////
-	// Update the label on the status-bar and determine
-	// the states of the two networks.
-	//
-	wxString msgED2K;
-	if (theApp->IsConnectedED2K()) {
-		CServer* server = theApp->serverconnect->GetCurrentServer();
-		if (server) {
-			msgED2K = CFormat(wxT("eD2k: %s")) % server->GetListName();
-		}
-
-		if (theApp->serverconnect->IsLowID()) {
-			ed2kState = ED2KLowID;
-		} else {
-			ed2kState = ED2KHighID;
-		}
-	} else if (theApp->serverconnect->IsConnecting()) {
-		msgED2K = _("eD2k: Connecting");
-
-		ed2kState = ED2KConnecting;
-	} else if (thePrefs::GetNetworkED2K()) {
-		msgED2K = _("eD2k: Disconnected");
-	}
-
-	wxString msgKad;
-	if (theApp->IsConnectedKad()) {
-		if (theApp->IsFirewalledKad()) {
-			msgKad = _("Kad: Firewalled");
-
-			kadState = EKadFW;
-		} else {
-			msgKad = _("Kad: Connected");
-
-			kadState = EKadOK;
-		}
-	} else if (theApp->IsKadRunning()) {
-		msgKad = _("Kad: Connecting");
-
-		kadState = EKadConnecting;
-	} else if (thePrefs::GetNetworkKademlia()) {
-		msgKad = _("Kad: Off");
-	}
+	// Get status messages and states from helper methods
+	wxString msgED2K = GetED2KStatusMessage(ed2kState);
+	wxString msgKad = GetKadStatusMessage(kadState);
 
 	wxStaticText* connLabel = CastChild( wxT("connLabel"), wxStaticText );
 	{ wxCHECK_RET(connLabel, wxT("'connLabel' widget not found")); }
@@ -1289,6 +1341,7 @@ void CamuleDlg::Apply_Toolbar_Skin(wxToolBar *wndToolbar)
 	Add_Skin_Icon(wxT("Toolbar_Import"),     amuleDlgImages(32), useSkins);
 	Add_Skin_Icon(wxT("Toolbar_About"),      amuleDlgImages(29), useSkins);
 	Add_Skin_Icon(wxT("Toolbar_Blink"),	 amuleDlgImages(33), useSkins);
+	Add_Skin_Icon(wxT("Toolbar_GeoIP"),	 amuleDlgImages(34), useSkins); // Added for GeoIP configuration
 
 	// Build aMule toolbar
 	wndToolbar->SetMargins(0, 0);
@@ -1308,7 +1361,16 @@ void CamuleDlg::Apply_Toolbar_Skin(wxToolBar *wndToolbar)
 #ifndef CLIENT_GUI
 	wndToolbar->AddTool(ID_BUTTONIMPORT, _("Import"), m_tblist.GetBitmap(10), wxNullBitmap, wxITEM_NORMAL, _("The partfile importer tool"));
 #endif
+	// Add GeoIP configuration button
+	wndToolbar->AddSeparator();
+	wndToolbar->AddTool(MP_GEOIP_CONFIG, _("GeoIP"), m_tblist.GetBitmap(12), 
+	                  wxNullBitmap, wxITEM_NORMAL, _("Configure GeoIP database download"));
+
+	// Add About button at the rightmost position
 	wndToolbar->AddTool(ID_ABOUT, _("About"), m_tblist.GetBitmap(11), wxNullBitmap, wxITEM_NORMAL, _("About/Help"));
+
+	// Set focus to GeoIP button to make it stand out
+	wndToolbar->SetFocus();
 
 	wndToolbar->ToggleTool(ID_BUTTONDOWNLOADS, true);
 
@@ -1388,6 +1450,78 @@ void CamuleDlg::OnKeyPressed(wxKeyEvent& event)
 void CamuleDlg::OnExit(wxCommandEvent& WXUNUSED(evt))
 {
 	Close(true);
+}
+
+void CamuleDlg::OnGeoIPConfig(wxCommandEvent& WXUNUSED(evt))
+{
+#ifdef ENABLE_IP2COUNTRY
+	// Ensure log window is visible
+	if (m_serverwnd) {
+		m_serverwnd->Show(true);
+		SetActiveDialog(DT_NETWORKS_WND, m_serverwnd);
+	}
+	
+	// Create and show the GeoIP configuration dialog
+	GeoIPConfigDlg dlg(this, _("GeoIP Database Configuration"),
+	                 thePrefs::GetGeoIPUpdateUrl());
+	
+	if (dlg.ShowModal() == wxID_OK) {
+		wxString newUrl = dlg.GetDownloadUrl().Trim();
+		
+		if (!newUrl.IsEmpty()) {
+			// Save to preferences
+			thePrefs::SetGeoIPUpdateUrl(newUrl);
+			
+			// Apply to IP2CountryManager
+			IP2CountryManager::GetInstance().SetDatabaseDownloadUrl(newUrl);
+			
+			LogInfo(CFormat(_("GeoIP download URL updated to: %s")) % newUrl);
+			
+			// Optionally download immediately
+			if (wxMessageBox(
+				_("Do you want to download the GeoIP database now with the new URL?"),
+				_("Download Now"), wxYES_NO | wxICON_QUESTION, this) == wxYES) {
+				
+				if (IP2CountryManager::GetInstance().DownloadDatabase()) {
+					LogInfo(_("GeoIP database downloaded successfully!"));
+				} else {
+					LogError(_("Failed to download GeoIP database. Check the URL and try again."));
+				}
+			}
+		}
+	}
+	
+	// Unselect all other toolbar buttons and select the GeoIP button
+	for (int i = 0; i < m_wndToolbar->GetToolsCount(); i++) {
+		wxToolBarToolBase* tool = m_wndToolbar->GetToolByPos(i);
+		if (tool && tool->GetId() != MP_GEOIP_CONFIG) {
+			m_wndToolbar->ToggleTool(tool->GetId(), false);
+		}
+	}
+	
+	// Set focus to toolbar and highlight GeoIP button
+	m_wndToolbar->SetFocus();
+	m_wndToolbar->ToggleTool(MP_GEOIP_CONFIG, true);
+	
+	// Refresh toolbar to ensure visual feedback
+	m_wndToolbar->Refresh();
+	m_wndToolbar->Update();
+	
+	// Ensure actual GeoIP button gets keyboard focus
+	wxToolBarToolBase* geoipTool = m_wndToolbar->FindById(MP_GEOIP_CONFIG);
+	if (geoipTool) {
+		if (geoipTool->IsControl()) {
+			geoipTool->GetControl()->SetFocus();
+		} else {
+			// For non-control tools, refresh the toolbar to ensure visual feedback
+			m_wndToolbar->Refresh();
+			m_wndToolbar->Update();
+		}
+	}
+#else
+	wxMessageBox(_("GeoIP support is not enabled in this build."),
+	            _("Information"), wxOK | wxICON_INFORMATION, this);
+#endif
 }
 
 void CamuleDlg::DoNetworkRearrange()

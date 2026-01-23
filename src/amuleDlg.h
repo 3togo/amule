@@ -207,6 +207,23 @@ protected:
 	void OnExit(wxCommandEvent& evt);
 
 private:
+	// Logging helper functions
+	void LogError(const wxString& message);
+	void LogInfo(const wxString& message);
+	void LogWarning(const wxString& message);
+
+	// Connection state helpers
+	bool IsConnectingOrConnected() const;
+	bool IsConnected() const;
+	bool IsConnecting() const;
+	
+	// Network state enums
+	enum ED2KState { ED2KOff = 0, ED2KLowID = 1, ED2KConnecting = 2, ED2KHighID = 3, ED2KUndef = -1 };
+	enum EKadState { EKadOff = 4, EKadFW = 5, EKadConnecting = 5, EKadOK = 6, EKadUndef = -1 };
+	
+	wxString GetED2KStatusMessage(ED2KState& state) const;
+	wxString GetKadStatusMessage(EKadState& state) const;
+
 	//! Specifies if the prefs-dialog was shown before minimizing.
 	bool m_prefsVisible;
 	wxToolBar *m_wndToolbar;
@@ -239,6 +256,9 @@ private:
 	void ToogleED2KLinksHandler();
 	void SetMessagesTool();
 	void OnKeyPressed(wxKeyEvent& evt);
+	
+	// GeoIP Configuration
+	void OnGeoIPConfig(wxCommandEvent& evt);
 
 	DECLARE_EVENT_TABLE()
 };

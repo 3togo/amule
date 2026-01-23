@@ -6,6 +6,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Optional flag to disable 'register' keyword warnings
+option(DISABLE_REGISTER_WARNING "Disable warnings about deprecated 'register' keyword" OFF)
+if(DISABLE_REGISTER_WARNING AND (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang"))
+    add_compile_options(-Wno-register)
+endif()
+
 # Enable C++20 features
 add_compile_definitions(USE_CPP20)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -13,9 +19,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 # Suppress 'register' keyword warnings in generated C++ lexer files
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-Wno-register>")
-endif()
+# if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+#     add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-Wno-register>")
+# endif()
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mtune=pentium4")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=pentium4")

@@ -26,6 +26,12 @@
 #include "IP2CountryManager.h"
 #include "src/pixmaps/flags_xpm/CountryFlags.h"
 #include <Logger.h>
+#include <Preferences.h>
+#ifdef __WINDOWS__
+#include <windows.h>
+#include <wininet.h>
+#pragma comment(lib, "wininet.lib")
+#endif
 #include <common/Format.h>
 #include <common/FileFunctions.h>
 #include <CFile.h>
@@ -33,6 +39,8 @@
 #include <wx/utils.h>         // For wxExecute
 #include <wx/filefn.h>        // For wxFileExists, wxRenameFile
 #include <wx/dir.h>           // For wxDir
+#include <wx/wfstream.h>      // For wxFFileOutputStream
+#include <wx/datetime.h>       // For wxDateTime
 
 // Static member initialization
 std::unique_ptr<IP2CountryManager> IP2CountryManager::m_instance = nullptr;
@@ -41,6 +49,7 @@ std::unique_ptr<IP2CountryManager> IP2CountryManager::m_instance = nullptr;
 IP2CountryManager::IP2CountryManager()
     : m_configDir()
     , m_databasePath()
+    , m_downloadUrl("https://cdn.jsdelivr.net/gh/8bitsaver/maxmind-geoip@release/GeoLite2-Country.mmdb")
     , m_database(nullptr)
     , m_scheduler(nullptr)
     , m_enabled(false)
@@ -52,6 +61,11 @@ IP2CountryManager::IP2CountryManager()
 // Destructor
 IP2CountryManager::~IP2CountryManager()
 {
+    // Save current URL to preferences before exiting
+    if (!m_downloadUrl.IsEmpty()) {
+        thePrefs::SetGeoIPUpdateUrl(m_downloadUrl);
+    }
+    
     Disable();
 }
 
@@ -79,6 +93,9 @@ bool IP2CountryManager::Initialize(const wxString& configDir)
         m_configDir += "/";
     }
 
+    // Auto-migrate old GeoIP URL from configuration
+    AutoMigrateGeoIPUrl();
+
     // Initialize update scheduler
     m_scheduler = std::make_unique<UpdateScheduler>();
     m_scheduler->Initialize(m_configDir);
@@ -103,6 +120,26 @@ bool IP2CountryManager::Initialize(const wxString& configDir)
 
     // Try to load existing database
     return LoadDatabase();
+}
+
+void IP2CountryManager::AutoMigrateGeoIPUrl()
+{
+    // Get the URL from preferences (will be empty if not set)
+    wxString configUrl = thePrefs::GetGeoIPUpdateUrl();
+    
+    if (configUrl.IsEmpty()) {
+        // Use default URL
+        AddLogLineN(CFormat(_("IP2Country: Using default download URL: %s")) % m_downloadUrl);
+        // Set default URL in preferences for future use
+        thePrefs::SetGeoIPUpdateUrl(m_downloadUrl);
+        return;
+    }
+    
+    // Use SetDatabaseDownloadUrl to handle automatic migration of obsolete URLs
+    SetDatabaseDownloadUrl(configUrl);
+    
+    // Log the migration
+    AddLogLineN(CFormat(_("IP2Country: Configuration URL migrated to: %s")) % m_downloadUrl);
 }
 
 void IP2CountryManager::Enable()
@@ -334,12 +371,24 @@ bool IP2CountryManager::LoadDatabase()
 void IP2CountryManager::OnUpdateProgress(const UpdateProgress& progress)
 {
     if (progress.inProgress) {
-        wxString status = CFormat(_("Downloading GeoIP: %d%% (%s / %s)")) %
-            progress.percentComplete %
-            CastItoXBytes(progress.bytesDownloaded) %
-            CastItoXBytes(progress.totalBytes);
-
-        AddLogLineN(status);
+        // Only show progress if we have meaningful byte counts
+        if (progress.totalBytes > 0) {
+            wxString status = CFormat(_("Downloading GeoIP: %d%% (%s / %s)")) %
+                progress.percentComplete %
+                CastItoXBytes(progress.bytesDownloaded) %
+                CastItoXBytes(progress.totalBytes);
+            AddLogLineN(status);
+        } else if (progress.bytesDownloaded > 0) {
+            // Show only downloaded bytes if total is unknown
+            wxString status = CFormat(_("Downloading GeoIP: %s received")) %
+                CastItoXBytes(progress.bytesDownloaded);
+            AddLogLineN(status);
+        } else {
+            // Minimal status for unknown progress
+            wxString status = CFormat(_("Downloading GeoIP: %d%%")) %
+                progress.percentComplete;
+            AddLogLineN(status);
+        }
     } else {
         AddLogLineN(progress.statusMessage);
     }
@@ -374,48 +423,249 @@ void IP2CountryManager::OnUpdateComplete(UpdateCheckResult result, const wxStrin
     }
 }
 
+void IP2CountryManager::SetDatabaseDownloadUrl(const wxString& url)
+{
+    if (!url.IsEmpty() && url != m_downloadUrl) {
+        // Check and update obsolete URLs
+        wxString newUrl = url;
+        
+        // Update obsolete MaxMind URLs
+        if (newUrl.Contains("geolite.maxmind.com") || 
+            newUrl.Contains("GeoIP.dat.gz")) {
+            
+            AddLogLineN(_("IP2Country: Detected obsolete GeoIP URL - auto-updating to new format"));
+            
+            // Replace with new URL format
+            newUrl = "https://cdn.jsdelivr.net/gh/8bitsaver/maxmind-geoip@release/GeoLite2-Country.mmdb";
+            
+            AddLogLineN(CFormat(_("IP2Country: Updated from: %s")) % url);
+            AddLogLineN(CFormat(_("IP2Country: Updated to: %s")) % newUrl);
+        }
+        
+        m_downloadUrl = newUrl;
+        AddLogLineN(CFormat(_("IP2Country: Download URL set to: %s")) % m_downloadUrl);
+        
+        // Save the updated URL to preferences
+        if (url != newUrl) {
+            thePrefs::SetGeoIPUpdateUrl(newUrl);
+        }
+    }
+}
+
 bool IP2CountryManager::DownloadDatabase()
 {
     AddLogLineN(_("Attempting to download GeoLite2-Country database automatically..."));
     
-    // Try to download the database
-    UpdateProgress progress;
-    progress.inProgress = true;
-    progress.percentComplete = 0;
-    progress.statusMessage = _("Starting download...");
-    OnUpdateProgress(progress);
+    // Try to download the database - log start only
+    AddLogLineN(_("Starting download..."));
     
     // Download the database synchronously
     wxString tempPath = m_configDir + "GeoLite2-Country.mmdb.temp";
-    wxString downloadUrl = "https://cdn.jsdelivr.net/npm/geolite2-country@1.0.2/GeoLite2-Country.mmdb.gz";
-    
     bool downloadSuccess = false;
     
-    // Use wget to download the database
-    wxString command = wxString::Format("wget -q --show-progress -O \"%s.gz\" \"%s\"", tempPath, downloadUrl);
-    int result = wxExecute(command, wxEXEC_SYNC);
+    AddLogLineN(CFormat(_("Downloading from: %s")) % m_downloadUrl);
     
-    if (result == 0) {
-        // Extract the gzip file
-        wxString extractCommand = wxString::Format("gunzip -f \"%s.gz\"", tempPath);
-        result = wxExecute(extractCommand, wxEXEC_SYNC);
+    // Remove any existing temp file
+    if (wxFileExists(tempPath)) {
+        wxRemoveFile(tempPath);
+    }
+    
+    // Set timeout (5 minutes max)
+    wxDateTime startTime = wxDateTime::Now();
+    const int MAX_DOWNLOAD_MINUTES = 5;
+    
+    // Platform-specific download implementations
+#ifdef __WINDOWS__
+    // Windows implementation using WinINet with timeout
+    HINTERNET hInternet = InternetOpen(
+        wxT("aMule"),
+        INTERNET_OPEN_TYPE_PRECONFIG,
+        NULL,
+        NULL,
+        0);
+    
+    if (hInternet) {
+        HINTERNET hConnect = InternetOpenUrl(
+            hInternet,
+            m_downloadUrl.wc_str(),
+            NULL,
+            0,
+            INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE,
+            0);
         
-        if (result == 0 && wxFileExists(tempPath)) {
-            // Move to final location
-            if (wxRenameFile(tempPath, m_databasePath)) {
-                AddLogLineN(_("Database downloaded successfully!"));
+        if (hConnect) {
+            // Set timeout for the connection
+            DWORD timeout = 30000; // 30 seconds
+            InternetSetOption(hConnect, INTERNET_OPTION_RECEIVE_TIMEOUT, &timeout, sizeof(timeout));
+            InternetSetOption(hConnect, INTERNET_OPTION_SEND_TIMEOUT, &timeout, sizeof(timeout));
+            InternetSetOption(hConnect, INTERNET_OPTION_CONNECT_TIMEOUT, &timeout, sizeof(timeout));
+            
+            DWORD bytesRead;
+            char buffer[4096];
+            HANDLE hFile = CreateFile(
+                tempPath.wc_str(),
+                GENERIC_WRITE,
+                0,
+                NULL,
+                CREATE_ALWAYS,
+                FILE_ATTRIBUTE_NORMAL,
+                NULL);
+            
+            if (hFile != INVALID_HANDLE_VALUE) {
+                bool downloading = true;
+                while (downloading) {
+                    // Check for overall timeout
+                    if (wxDateTime::Now().Subtract(startTime).GetMinutes() >= MAX_DOWNLOAD_MINUTES) {
+                        AddLogLineC(_("Download timed out after 5 minutes"));
+                        CloseHandle(hFile);
+                        InternetCloseHandle(hConnect);
+                        InternetCloseHandle(hInternet);
+                        return false;
+                    }
+                    
+                    // Read with timeout
+                    if (InternetReadFile(hConnect, buffer, sizeof(buffer), &bytesRead)) {
+                        if (bytesRead > 0) {
+                            DWORD written;
+                            WriteFile(hFile, buffer, bytesRead, &written, NULL);
+                            
+                            // Update progress every 64KB
+                            static size_t totalRead = 0;
+                            totalRead += bytesRead;
+                            if (totalRead % (64*1024) == 0) {
+                                AddLogLineN(CFormat(_("Downloaded %s so far...")) % CastItoXBytes(totalRead));
+                            }
+                        } else {
+                            // No more data
+                            downloading = false;
+                        }
+                    } else {
+                        // Read failed, check if it's a timeout
+                        DWORD error = GetLastError();
+                        if (error == ERROR_IO_PENDING || error == WAIT_TIMEOUT) {
+                            // Continue waiting
+                            Sleep(100);
+                        } else {
+                            // Other error
+                            AddLogLineC(CFormat(_("Download error: %d")) % error);
+                            downloading = false;
+                            downloadSuccess = false;
+                        }
+                    }
+                    
+                    // Small delay to prevent CPU hogging
+                    Sleep(10);
+                }
+                CloseHandle(hFile);
                 downloadSuccess = true;
+            }
+            InternetCloseHandle(hConnect);
+        }
+        InternetCloseHandle(hInternet);
+    }
+#else
+    // Unix implementation using curl/wget with robust timeout handling
+    wxString curlCommand = wxString::Format("curl -L --connect-timeout 30 --max-time 180 -o \"%s\" \"%s\"", 
+                                          tempPath, m_downloadUrl);
+    
+    // Check for timeout during execution
+    wxStopWatch timer;
+    int result = wxExecute(curlCommand, wxEXEC_SYNC);
+    
+    // Check for execution timeout (4 minutes max)
+    if (timer.Time() > 240000) { // 4 minutes in milliseconds
+        AddLogLineC(_("Download timed out after 4 minutes"));
+        downloadSuccess = false;
+    } else if (result != 0 || !wxFileExists(tempPath)) {
+        // Fallback to wget if curl fails - use timeout options
+        wxString wgetCommand = wxString::Format("wget --timeout=30 --tries=3 -O \"%s\" \"%s\"", tempPath, m_downloadUrl);
+        result = wxExecute(wgetCommand, wxEXEC_SYNC);
+        if (result == 0 && wxFileExists(tempPath)) {
+            downloadSuccess = true;
+        } else {
+            downloadSuccess = false;
+            AddLogLineC(CFormat(_("Download failed with error code: %d")) % result);
+            
+            // Check for wget-specific error messages
+            if (result == 4) {
+                AddLogLineC(_("wget: Network failure (DNS resolution, connection refused, etc.)"));
+            } else if (result == 8) {
+                AddLogLineC(_("wget: Server returned error response (404 Not Found, etc.)"));
+            }
+        }
+    } else {
+        downloadSuccess = true;
+    }
+#endif
+    
+    // Process downloaded file
+    if (downloadSuccess && wxFileExists(tempPath)) {
+        // Check if file is gzipped by extension or magic number
+        bool isGzipped = m_downloadUrl.EndsWith(".gz");
+        if (!isGzipped) {
+            // Check magic number for gzip (0x1f 0x8b)
+            wxFile file(tempPath);
+            if (file.IsOpened()) {
+                unsigned char magic[2];
+                if (file.Read(magic, 2) == 2) {
+                    isGzipped = (magic[0] == 0x1F && magic[1] == 0x8B);
+                }
+                file.Close();
+            }
+        }
+        
+        wxString finalTempPath = tempPath;
+        
+        // Extract gzip if needed
+        if (isGzipped) {
+            wxString gzipPath = tempPath;
+            if (!gzipPath.EndsWith(".gz")) {
+                gzipPath += ".gz";
+            }
+            
+            // Rename to .gz if needed
+            if (wxFileExists(tempPath) && !wxFileExists(gzipPath)) {
+                wxRenameFile(tempPath, gzipPath);
+            }
+            
+#ifdef __WINDOWS__
+            // Windows: Skip decompression and use the file as-is
+            AddLogLineN(_("Windows: Skipping gzip decompression - will use file directly"));
+            finalTempPath = gzipPath;
+#else
+            // Unix-like systems: use gunzip
+            wxString extractCommand = wxString::Format("gunzip -f \"%s\"", gzipPath);
+            int result = wxExecute(extractCommand, wxEXEC_SYNC);
+            if (result != 0) {
+                AddLogLineC(_("Failed to extract gzip file"));
+                wxRemoveFile(gzipPath);
+                return false;
+            }
+            finalTempPath = gzipPath.BeforeLast('.');
+#endif
+        }
+        
+        // Move to final location
+        if (wxFileExists(finalTempPath)) {
+            if (wxRenameFile(finalTempPath, m_databasePath)) {
+                AddLogLineN(_("Database downloaded successfully!"));
                 
                 // Try to load the downloaded database
                 auto loadResult = DatabaseFactory::CreateAndOpen(m_databasePath);
                 m_database = loadResult.database;
+                downloadSuccess = (m_database != nullptr);
+            } else {
+                AddLogLineC(_("Failed to move database to final location"));
+                downloadSuccess = false;
             }
+        } else {
+            AddLogLineC(_("Downloaded file not found after processing"));
+            downloadSuccess = false;
         }
     }
     
-    progress.percentComplete = 100;
-    progress.statusMessage = _("Download completed");
-    OnUpdateProgress(progress);
+    // Log completion status directly
+    AddLogLineN(_("Download completed"));
     
     return downloadSuccess && m_database != nullptr;
 }

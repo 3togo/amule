@@ -40,8 +40,9 @@ struct DatabaseSource {
     wxString checksumUrl;   ///< Checksum URL for verification
     int priority;           ///< Priority (lower = higher priority)
     bool enabled;           ///< Whether this source is enabled
+    int timeout;            ///< Download timeout in seconds
 
-    DatabaseSource() : type(DB_TYPE_UNKNOWN), priority(100), enabled(true) {}
+    DatabaseSource() : type(DB_TYPE_UNKNOWN), priority(100), enabled(true), timeout(30) {}
 };
 
 /**
