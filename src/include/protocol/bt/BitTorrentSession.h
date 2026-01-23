@@ -1,0 +1,89 @@
+#pragma once
+
+#include "protocol/Protocols.h"
+#include "protocol/ed2k/Constants.h"
+#include "protocol/kad/Constants.h"
+#include "../../../common/NetworkPerformanceMonitor.h"
+#include "../../../MD4Hash.h"
+#include <memory>
+#include <vector>
+#include <string>
+
+// Forward declarations
+class CPartFile;
+class CKnownFile;
+class CUpDownClient;
+
+namespace BitTorrent {
+
+class BitTorrentSession {
+public:
+    // Singleton access
+    static BitTorrentSession& instance();
+    
+    // Initialization and shutdown
+    bool initialize();
+    void shutdown();
+    
+    // File operations
+    bool add_torrent(const std::string& torrent_file, const std::string& save_path);
+    bool add_magnet_link(const std::string& magnet_link, const std::string& save_path);
+    bool remove_torrent(const std::string& info_hash, bool remove_data = false);
+    
+    // Cross-protocol integration
+    std::vector<std::shared_ptr<CUpDownClient>> find_cross_protocol_sources(
+        const CPartFile* ed2k_file, const CKnownFile* known_file);
+    
+    bool import_ed2k_to_torrent(const CPartFile* ed2k_file, const std::string& torrent_path);
+    bool export_torrent_to_ed2k(const std::string& torrent_file, CPartFile* ed2k_file);
+    
+    // Protocol coordination
+    enum class ProtocolPriority {
+        ED2K_FIRST,
+        BT_FIRST, 
+        HYBRID_AUTO,
+        HYBRID_BANDWIDTH
+    };
+    
+    void set_protocol_priority(ProtocolPriority priority);
+    ProtocolPriority get_protocol_priority() const;
+    
+    // Statistics and monitoring
+    struct SessionStats {
+        uint64_t total_downloaded;
+        uint64_t total_uploaded;
+        uint32_t active_torrents;
+        uint32_t connected_peers;
+        uint32_t active_trackers;
+        double download_rate;
+        double upload_rate;
+    };
+    
+    SessionStats get_session_stats() const;
+    
+    // DHT integration with KAD
+    bool enable_dht_integration(bool enable);
+    bool share_dht_routing_table();
+    std::vector<std::string> get_shared_peers() const;
+    
+private:
+    BitTorrentSession();
+    ~BitTorrentSession();
+    
+    // Internal implementation
+    class Impl;
+    std::unique_ptr<Impl> pimpl_;
+    
+    // Disable copying
+    BitTorrentSession(const BitTorrentSession&) = delete;
+    BitTorrentSession& operator=(const BitTorrentSession&) = delete;
+};
+
+// Cross-protocol helper functions
+std::string ed2k_hash_to_info_hash(const CMD4Hash& ed2k_hash);
+CMD4Hash info_hash_to_ed2k_hash(const std::string& info_hash);
+
+bool is_cross_protocol_compatible(const CPartFile* ed2k_file, const std::string& info_hash);
+bool create_hybrid_download(const std::string& info_hash, CPartFile* ed2k_file);
+
+} // namespace BitTorrent

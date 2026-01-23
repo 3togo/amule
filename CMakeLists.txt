@@ -101,8 +101,12 @@ if (BUILD_WEBSERVER)
 endif()
 
 if (ENABLE_BOOST)
-	include (cmake/boost.cmake)
+    include (cmake/boost.cmake)
 endif()
+
+# Add BitTorrent protocol support
+find_package(LibtorrentRasterbar 2.0 REQUIRED)
+message(STATUS "Found libtorrent: ${LibtorrentRasterbar_VERSION}")
 
 if (ENABLE_IP2COUNTRY)
 	include (cmake/ip2country.cmake)
@@ -121,8 +125,16 @@ if (NEED_GLIB_CHECK)
 endif()
 
 if (NEED_LIB_CRYPTO)
-	include (cmake/cryptopp.cmake)
+    include (cmake/cryptopp.cmake)
 endif()
+
+# Add BitTorrent source files
+set(BITTORRENT_SOURCES
+    src/protocol/bt/BitTorrentSession.cpp
+    src/protocol/MultiProtocolSocket.cpp
+    src/protocol/ProtocolCoordinator.cpp
+    src/protocol/ProtocolConversion.cpp
+)
 
 if (wx_NEEDED)
 	include (cmake/wx.cmake)

@@ -6,11 +6,25 @@
  * 
  * Features:
  * - Real-time TCP/UDP traffic tracking
- * - Adaptive sampling for minimal overhead
+ * - Adaptive sampling for minimal overhead  
  * - Cache-optimized atomic operations
  * - Comprehensive performance reporting
  * - Thread-safe design for concurrent access
+ * - Compile-time configurability for performance tuning
  */
+
+// Performance tuning configuration - adjust these based on deployment needs
+#ifndef NETWORK_PERF_SAMPLING_THRESHOLD
+#define NETWORK_PERF_SAMPLING_THRESHOLD (10 * 1024 * 1024) // 10MB/s threshold for adaptive sampling
+#endif
+
+#ifndef NETWORK_PERF_CACHE_LINE_SIZE
+#define NETWORK_PERF_CACHE_LINE_SIZE 64 // Standard cache line size for alignment
+#endif
+
+#ifndef NETWORK_PERF_REPORT_CACHE_MS
+#define NETWORK_PERF_REPORT_CACHE_MS 500 // Report caching duration in milliseconds
+#endif
 
 #include "PerformanceUtils.h"
 #include "NetworkSummaryUtil.h"
@@ -54,6 +68,14 @@ private:
     alignas(64) std::atomic<uint64_t> udp_packets_sent{0};        ///< UDP packets sent
     alignas(64) std::atomic<uint64_t> udp_packets_received{0};    ///< UDP packets received
     
+    // BitTorrent protocol tracking
+    alignas(64) std::atomic<uint64_t> bt_bytes_sent{0};           ///< BitTorrent bytes sent
+    alignas(64) std::atomic<uint64_t> bt_bytes_received{0};       ///< BitTorrent bytes received
+    alignas(64) std::atomic<uint64_t> bt_packets_sent{0};         ///< BitTorrent packets sent
+    alignas(64) std::atomic<uint64_t> bt_packets_received{0};     ///< BitTorrent packets received
+    alignas(64) std::atomic<uint64_t> bt_peers_connected{0};      ///< Active BitTorrent peers
+    alignas(64) std::atomic<uint64_t> bt_trackers_active{0};      ///< Active BitTorrent trackers
+    
     // Adaptive throughput tracking (aligned to prevent false sharing)
     alignas(64) std::atomic<double> m_avg_send_throughput_kbs{0.0};      ///< Moving average of send throughput (KB/s)
     alignas(64) std::atomic<double> m_avg_recv_throughput_kbs{0.0};      ///< Moving average of receive throughput (KB/s)
@@ -62,13 +84,17 @@ private:
     alignas(64) std::atomic<uint64_t> m_recv_bytes_window{0};            ///< Receive bytes in current measurement window
     
     // Adaptive sampling control (reduces overhead during high traffic)
-    alignas(64) std::atomic<uint32_t> m_sampling_rate{1};                ///< Current sampling rate (1=100%, 2=50%, etc.)
-    alignas(64) std::atomic<uint32_t> m_sampling_counter{0};             ///< Sampling counter for rate control
-    alignas(64) std::atomic<uint64_t> m_high_traffic_threshold{10*1024*1024}; ///< Threshold for reducing sampling (10MB/s)
+    alignas(NETWORK_PERF_CACHE_LINE_SIZE) std::atomic<uint32_t> m_sampling_rate{1};                ///< Current sampling rate (1=100%, 2=50%, etc.)
+    alignas(NETWORK_PERF_CACHE_LINE_SIZE) std::atomic<uint32_t> m_sampling_counter{0};             ///< Sampling counter for rate control
+    alignas(NETWORK_PERF_CACHE_LINE_SIZE) std::atomic<uint64_t> m_high_traffic_threshold{NETWORK_PERF_SAMPLING_THRESHOLD}; ///< Threshold for adaptive sampling
     
     modern_utils::PerformanceTimer global_timer{"NetworkOperations"}; ///< Global timer for elapsed time measurement
     
     CNetworkSummaryUtil summary_util; ///< Summary utility for detailed protocol analytics
+    
+    // Self-monitoring statistics
+    alignas(64) std::atomic<uint64_t> m_monitoring_ops{0}; ///< Total monitoring operations performed
+    alignas(64) std::atomic<uint64_t> m_sampling_skips{0}; ///< Operations skipped due to adaptive sampling
     
 public:
     /**
@@ -95,6 +121,7 @@ public:
             summary_util.record_udp_activity(0, bytes);
         }
         
+        m_monitoring_ops.fetch_add(1, std::memory_order_relaxed);
         update_throughput(bytes, true);
     }
     
@@ -112,6 +139,7 @@ private:
         // Adaptive sampling - skip some updates during high traffic to reduce overhead
         if (m_sampling_rate.load(std::memory_order_relaxed) > 1) {
             if (++m_sampling_counter % m_sampling_rate != 0) {
+                m_sampling_skips.fetch_add(1, std::memory_order_relaxed);
                 return; // Skip this update due to sampling rate
             }
         }
@@ -161,6 +189,7 @@ public:
             summary_util.record_udp_activity(bytes, 0);
         }
         
+        m_monitoring_ops.fetch_add(1, std::memory_order_relaxed);
         update_throughput(bytes, false);
     }
     
@@ -169,6 +198,22 @@ public:
     void record_tcp_received(size_t bytes) { record_received(bytes, true); }
     void record_udp_sent(size_t bytes) { record_sent(bytes, false); }
     void record_udp_received(size_t bytes) { record_received(bytes, false); }
+    
+    // BitTorrent specific recording
+    void record_bt_sent(size_t bytes) { 
+        bt_bytes_sent.fetch_add(bytes, std::memory_order_relaxed);
+        bt_packets_sent.fetch_add(1, std::memory_order_relaxed);
+        record_sent(bytes, true); // BT primarily uses TCP
+    }
+    void record_bt_received(size_t bytes) { 
+        bt_bytes_received.fetch_add(bytes, std::memory_order_relaxed);
+        bt_packets_received.fetch_add(1, std::memory_order_relaxed);
+        record_received(bytes, true);
+    }
+    void record_bt_peer_connected() { bt_peers_connected.fetch_add(1, std::memory_order_relaxed); }
+    void record_bt_peer_disconnected() { bt_peers_connected.fetch_sub(1, std::memory_order_relaxed); }
+    void record_bt_tracker_active() { bt_trackers_active.fetch_add(1, std::memory_order_relaxed); }
+    void record_bt_tracker_inactive() { bt_trackers_active.fetch_sub(1, std::memory_order_relaxed); }
     
     // Get performance statistics
     struct Statistics {
@@ -184,6 +229,12 @@ public:
         uint64_t udp_bytes_received;
         uint64_t udp_packets_sent;
         uint64_t udp_packets_received;
+        uint64_t bt_bytes_sent;
+        uint64_t bt_bytes_received;
+        uint64_t bt_packets_sent;
+        uint64_t bt_packets_received;
+        uint64_t bt_peers_connected;
+        uint64_t bt_trackers_active;
         double elapsed_seconds;
         double bytes_per_second;
         double packets_per_second;
@@ -207,6 +258,12 @@ public:
         stats.udp_bytes_received = udp_bytes_received.load(std::memory_order_relaxed);
         stats.udp_packets_sent = udp_packets_sent.load(std::memory_order_relaxed);
         stats.udp_packets_received = udp_packets_received.load(std::memory_order_relaxed);
+        stats.bt_bytes_sent = bt_bytes_sent.load(std::memory_order_relaxed);
+        stats.bt_bytes_received = bt_bytes_received.load(std::memory_order_relaxed);
+        stats.bt_packets_sent = bt_packets_sent.load(std::memory_order_relaxed);
+        stats.bt_packets_received = bt_packets_received.load(std::memory_order_relaxed);
+        stats.bt_peers_connected = bt_peers_connected.load(std::memory_order_relaxed);
+        stats.bt_trackers_active = bt_trackers_active.load(std::memory_order_relaxed);
         
         auto elapsed = global_timer.elapsed_time();
         stats.elapsed_seconds = elapsed.count() / 1000000.0; // μs to seconds
@@ -234,8 +291,8 @@ public:
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_report_time).count();
         
-        // Regenerate report if more than 500ms has passed or first call
-        if (elapsed > 500 || !is_initialized) {
+        // Regenerate report if cache duration exceeded or first call
+        if (elapsed > NETWORK_PERF_REPORT_CACHE_MS || !is_initialized) {
             auto stats = get_statistics();
             cached_report.clear();
             
@@ -271,8 +328,8 @@ public:
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_summary_time).count();
         
-        // Regenerate summary if more than 500ms has passed or first call
-        if (elapsed > 500 || !is_initialized) {
+        // Regenerate summary if cache duration exceeded or first call
+        if (elapsed > NETWORK_PERF_REPORT_CACHE_MS || !is_initialized) {
             auto stats = get_statistics();
             cached_summary.clear();
             
@@ -284,7 +341,9 @@ public:
                    .append("  TCP: ").append(stats.tcp_bytes_sent + stats.tcp_bytes_received)
                    .append(" bytes (").append(tpc_percent).append("%)\n")
                    .append("  UDP: ").append(stats.udp_bytes_sent + stats.udp_bytes_received)
-                   .append(" bytes (").append(udp_percent).append("%)");
+                   .append(" bytes (").append(udp_percent).append("%)\n")
+                   .append("  Monitoring Efficiency: ").append(m_monitoring_ops.load()).append(" ops, ")
+                   .append(m_sampling_skips.load()).append(" skips");
             
             last_summary_time = now;
             is_initialized = true;
@@ -296,6 +355,21 @@ public:
 
 // Global network performance monitor
 inline NetworkPerformanceMonitor g_network_perf_monitor;
+
+// Compile-time configuration documentation
+/**
+ * @def NETWORK_PERF_SAMPLING_THRESHOLD
+ * @brief Traffic threshold (in bytes/sec) for activating adaptive sampling
+ * @default 10485760 (10MB/s)
+ * 
+ * @def NETWORK_PERF_CACHE_LINE_SIZE  
+ * @brief Cache line size for alignment to prevent false sharing
+ * @default 64 (standard x86 cache line size)
+ * 
+ * @def NETWORK_PERF_REPORT_CACHE_MS
+ * @brief Duration in milliseconds to cache performance reports
+ * @default 500 (0.5 seconds)
+ */
 
 // Helper macros for network performance monitoring
 #ifdef NETWORK_PERF_MONITORING
