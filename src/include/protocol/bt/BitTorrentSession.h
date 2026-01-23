@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <ctime>
 
 // Forward declarations
 class CPartFile;
@@ -15,6 +16,24 @@ class CKnownFile;
 class CUpDownClient;
 
 namespace BitTorrent {
+
+// Search result structure for DHT searches
+struct SearchResult {
+    std::string name;
+    std::string info_hash;
+    uint64_t size;
+    std::vector<std::string> trackers;
+    std::vector<std::pair<std::string, uint16_t>> peers;
+    time_t creation_date;
+    std::string comment;
+    std::string source;  // "dht", "tracker", "peer_exchange"
+    double download_speed;
+    double upload_speed;
+    uint32_t seeders;
+    uint32_t leechers;
+    
+    SearchResult() : size(0), creation_date(0), download_speed(0), upload_speed(0), seeders(0), leechers(0) {}
+};
 
 class BitTorrentSession {
 public:
@@ -65,6 +84,11 @@ public:
     bool enable_dht_integration(bool enable);
     bool share_dht_routing_table();
     std::vector<std::string> get_shared_peers() const;
+    
+    // DHT Search functionality (Step 1: Basic DHT Search API)
+    std::vector<SearchResult> dht_search(const std::string& keyword);
+    std::vector<SearchResult> dht_search_by_infohash(const std::string& info_hash);
+    void start_dht_announce(const std::string& info_hash);
     
 private:
     BitTorrentSession();

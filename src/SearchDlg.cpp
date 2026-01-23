@@ -137,18 +137,22 @@ void CSearchDlg::FixSearchTypes()
 
 	searchchoice->Clear();
 
-	// We should have only filedonkey now. Let's insert stuff.
-
 	int pos = 0;
 
+	// ED2K search options
 	if (thePrefs::GetNetworkED2K()){
-		searchchoice->Insert(m_searchchoices[0], pos++);
-		searchchoice->Insert(m_searchchoices[1], pos++);
+		searchchoice->Insert(m_searchchoices[0], pos++); // Local
+		searchchoice->Insert(m_searchchoices[1], pos++); // Global
 	}
 
+	// Kademlia search option
 	if (thePrefs::GetNetworkKademlia()) {
-		searchchoice->Insert(m_searchchoices[2], pos++);
+		searchchoice->Insert(m_searchchoices[2], pos++); // Kad
 	}
+
+	// BitTorrent search options (always available if BitTorrent is enabled)
+	searchchoice->Insert(_("BitTorrent"), pos++);
+	searchchoice->Insert(_("Hybrid (ED2K + BitTorrent)"), pos++);
 
 	searchchoice->SetSelection(0);
 }
@@ -506,20 +510,40 @@ void CSearchDlg::StartNewSearch()
 		selection += 1;
 	}
 
-	switch (selection) {
-		case 0: // Local Search
-			search_type = LocalSearch;
-			break;
-		case 1: // Global Search
-			search_type = GlobalSearch;
-			break;
-		case 2: // Kad search
-			search_type = KadSearch;
-			break;
-		default:
-			// Should never happen
-			wxFAIL;
-			break;
+	// Update selection accounting for BitTorrent and Hybrid search options
+	if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
+		// Full network support - all 5 options available
+		switch (selection) {
+			case 0: search_type = LocalSearch; break;
+			case 1: search_type = GlobalSearch; break;
+			case 2: search_type = KadSearch; break;
+			case 3: search_type = BitTorrentSearch; break;
+			case 4: search_type = HybridSearch; break;
+			default: wxFAIL; break;
+		}
+	} else if (thePrefs::GetNetworkED2K()) {
+		// Only ED2K support - Local, Global, BitTorrent, Hybrid
+		switch (selection) {
+			case 0: search_type = LocalSearch; break;
+			case 1: search_type = GlobalSearch; break;
+			case 2: search_type = BitTorrentSearch; break;
+			case 3: search_type = HybridSearch; break;
+			default: wxFAIL; break;
+		}
+	} else if (thePrefs::GetNetworkKademlia()) {
+		// Only Kad support - Kad, BitTorrent, Hybrid
+		switch (selection) {
+			case 0: search_type = KadSearch; break;
+			case 1: search_type = BitTorrentSearch; break;
+			case 2: search_type = HybridSearch; break;
+			default: wxFAIL; break;
+		}
+	} else {
+		// No network support - only BitTorrent
+		switch (selection) {
+			case 0: search_type = BitTorrentSearch; break;
+			default: wxFAIL; break;
+		}
 	}
 
 	uint32 real_id = m_nSearchID;
