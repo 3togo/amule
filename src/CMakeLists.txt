@@ -292,6 +292,7 @@ if (NEED_LIB_MULEAPPCOMMON)
 	set(MULEAPPCOMMON_SOURCES
 		CFile.cpp
 		ClientCredits.cpp
+		common/NetworkSummaryUtil.cpp
 		DataToText.cpp
 		ED2KLink.cpp
 		Friend.cpp

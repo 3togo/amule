@@ -63,6 +63,7 @@ there client on the eMule forum..
 #include "../../ClientTCPSocket.h"
 #include "../../Logger.h"
 #include "../../Preferences.h"
+#include "../../common/NetworkPerformanceMonitor.h"
 #include "../../ScopedPtr.h"
 #include "../../IPFilter.h"
 #include "../../RandomFunctions.h"		// Needed for GetRandomUint128()
@@ -212,7 +213,10 @@ void CKademliaUDPListener::SendPublishSourcePacket(const CContact& contact, cons
 
 void CKademliaUDPListener::ProcessPacket(const uint8_t* data, uint32_t lenData, uint32_t ip, uint16_t port, bool validReceiverKey, const CKadUDPKey& senderKey)
 {
-	// we do not accept (<= 0.48a) unencrypted incoming packets from port 53 (DNS) to avoid attacks based on DNS protocol confusion
+	// Performance monitoring: Record incoming UDP packet
+	network_perf::g_network_perf_monitor.record_udp_received(lenData);
+	
+	// we do not accept (<= 0.48a) unencrypted incoming packets on port 53 (DNS) to avoid attacks based on DNS protocol confusion
 	if (port == 53 && senderKey.IsEmpty()) {
 		AddDebugLogLineN(logKadPacketTracking, wxT("Dropping incoming unencrypted packet on port 53 (DNS), IP: ") + KadIPToString(ip));
 		return;
@@ -1582,6 +1586,9 @@ void CKademliaUDPListener::Process2FirewallUDP(const uint8_t *packetData, uint32
 
 void CKademliaUDPListener::SendPacket(const CMemFile &data, uint8_t opcode, uint32_t destinationHost, uint16_t destinationPort, const CKadUDPKey& targetKey, const CUInt128* cryptTargetID)
 {
+	// Performance monitoring: Record outgoing UDP packet
+	network_perf::g_network_perf_monitor.record_udp_sent(data.GetLength());
+	
 	AddTrackedOutPacket(destinationHost, opcode);
 	CPacket* packet = new CPacket(data, OP_KADEMLIAHEADER, opcode);
 	if (packet->GetPacketSize() > 200) {

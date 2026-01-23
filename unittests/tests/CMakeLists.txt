@@ -5,6 +5,7 @@ add_executable (CTagTest
 	${CMAKE_SOURCE_DIR}/src/Tag.cpp
 	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
 	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+	${CMAKE_SOURCE_DIR}/src/common/NetworkSummaryUtil.cpp
 )
 
 add_test (NAME CTagTest
@@ -90,6 +91,7 @@ add_executable (NetworkFunctionsTest
 	${CMAKE_SOURCE_DIR}/src/LibSocket.cpp
 	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
 	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+	${CMAKE_SOURCE_DIR}/src/common/NetworkSummaryUtil.cpp
 )
 
 add_test (NAME NetworkFunctionsTest
