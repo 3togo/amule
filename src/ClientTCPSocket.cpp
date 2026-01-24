@@ -287,6 +287,10 @@ void CClientTCPSocket::Safe_Delete()
 	// Destroy may be called several times
 	byConnected = ES_DISCONNECTED;
 	Destroy();
+	
+	// Delete this object to prevent memory leak
+	// This is safe because Safe_Delete() is designed to be the final operation
+	delete this;
 }
 
 
