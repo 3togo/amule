@@ -36,6 +36,10 @@
 #include "Logger.h"
 
 #ifndef AMULE_DAEMON
+#include <wx/notifmsg.h>	// Needed for wxNotificationMessage
+#endif
+
+#ifndef AMULE_DAEMON
 #	include "ChatWnd.h"
 #	include "amuleDlg.h"
 #	include "ServerWnd.h"
@@ -713,6 +717,18 @@ void Download_Added(const wxString& link, bool isMagnet)
 			wxString::Format(_("Magnet link added: %s"), link.c_str()) :
 			wxString::Format(_("eD2k link added: %s"), link.c_str());
 		theApp->amuledlg->AddLogLine(msg);
+		
+		// Show toast notification if enabled and not in daemon mode
+#ifndef AMULE_DAEMON
+		if (thePrefs::ShowNotifications()) {
+			wxNotificationMessage *notification = new wxNotificationMessage();
+			notification->SetTitle(isMagnet ? _("Magnet Link Added") : _("Download Added"));
+			notification->SetMessage(msg);
+			notification->SetFlags(wxICON_INFORMATION);
+			notification->Show(5); // Show for 5 seconds
+			delete notification;
+		}
+#endif
 	}
 }
 
