@@ -56,6 +56,7 @@
 #include "UserEvents.h"
 #include "MagnetURI.h"		// Needed for CMagnetED2KConverter
 #include "ScopedPtr.h"		// Needed for CScopedPtr
+#include "GuiEvents.h"		// Needed for CoreNotify_Download_*
 #include "PlatformSpecific.h"	// Needed for CanFSHandleLargeFiles
 
 #include "kademlia/kademlia/Kademlia.h"
@@ -1397,17 +1398,24 @@ void CDownloadQueue::OnHostnameResolved(uint32 ip)
 bool CDownloadQueue::AddLink( const wxString& link, uint8 category )
 {
 	wxString uri(link);
+	bool isMagnetLink = false;
 
 	if (link.compare(0, 7, wxT("magnet:")) == 0) {
+		isMagnetLink = true;
 		uri = CMagnetED2KConverter(link);
 		if (uri.empty()) {
 			AddLogLineC(CFormat(_("Cannot convert magnet link to eD2k: %s")) % link);
 			return false;
 		}
+		AddLogLineN(CFormat(_("Successfully converted magnet link to eD2k: %s")) % uri);
 	}
 
 	if (uri.compare(0, 7, wxT("ed2k://")) == 0) {
-		return AddED2KLink(uri, category);
+		bool result = AddED2KLink(uri, category);
+		if (result && isMagnetLink) {
+			AddLogLineN(_("Magnet link successfully added to download queue"));
+		}
+		return result;
 	} else {
 		AddLogLineC(CFormat(_("Unknown protocol of link: %s")) % link);
 		return false;
