@@ -40,6 +40,7 @@
 #include "SearchList.h"		// Needed for CSearchList
 #include <common/Format.h>
 #include "Logger.h"
+#include "protocol/hybrid/HybridSearch.h"
 
 #define ID_SEARCHLISTCTRL wxID_HIGHEST+667
 

@@ -382,7 +382,7 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 			AddLogLineC(what);
 			return _("Unexpected error while attempting Kad search: ") + what;
 		}
-	} else {
+	} else if (type == LocalSearch || type == GlobalSearch) {
 		// This is an ed2k search, local or global
 		m_currentSearch = *(searchID);
 		m_searchInProgress = true;
@@ -397,6 +397,50 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 			m_searchPacket = searchPacket;
 			m_64bitSearchPacket = packetUsing64bit;
 			m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ); // will be changed later when actually sending the packet!!
+		}
+	}
+	else if (type == BitTorrentSearch || type == HybridSearch) {
+		// BitTorrent DHT search or hybrid search
+		m_currentSearch = *(searchID);
+		m_searchInProgress = true;
+		
+		// For hybrid search, also start eD2k search if requested
+		if (type == HybridSearch) {
+			// Start eD2k global search in parallel
+			CPacket* searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_SEARCHREQUEST);
+			theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
+			theApp->serverconnect->SendPacket(searchPacket, false);
+			
+			if (m_searchPacket) delete m_searchPacket;
+			m_searchPacket = searchPacket;
+			m_64bitSearchPacket = packetUsing64bit;
+			m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ);
+		}
+		
+		// Start BitTorrent DHT search
+		try {
+			auto& bt_session = BitTorrent::BitTorrentSession::instance();
+			auto bt_results = bt_session.dht_search(params.searchString.ToUTF8().data());
+			
+			AddDebugLogLineN(logGeneral, CFormat(wxT("BitTorrent search completed, found %d results")) % bt_results.size());
+			
+			// Convert and add BitTorrent results
+			for (const auto& bt_result : bt_results) {
+				if (auto search_file = CreateSearchFileFromBT(bt_result, *searchID)) {
+					AddDebugLogLineN(logGeneral, CFormat(wxT("Adding BitTorrent result: %s (%s)")) % bt_result.name % bt_result.info_hash);
+					bool added = AddToList(search_file, false);
+					AddDebugLogLineN(logGeneral, CFormat(wxT("Result added: %s")) % (added ? wxT("true") : wxT("false")));
+				}
+			}
+			
+			// For hybrid search, we wait for eD2k results to come in asynchronously
+			if (type == BitTorrentSearch) {
+				m_searchInProgress = false;
+				Notify_SearchLocalEnd();
+			}
+			
+		} catch (const std::exception& e) {
+			return wxString::Format(_("BitTorrent search error: %s"), e.what());
 		}
 	}
 
@@ -1109,6 +1153,72 @@ void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)
 			}
 		}
 	}
+}
+
+CSearchFile* CSearchList::CreateSearchFileFromBT(const BitTorrent::SearchResult& btResult, long searchID)
+{
+	CMemFile temp(250);
+	
+	// Convert info_hash string to CMD4Hash
+	CMD4Hash hash;
+	if (btResult.info_hash.size() == 16) { // MD4 hash is 16 bytes
+		std::memcpy(hash.GetHash(), btResult.info_hash.data(), 16);
+	} else if (btResult.info_hash.size() == 20) { // SHA-1 hash, truncate to MD4
+		std::memcpy(hash.GetHash(), btResult.info_hash.data(), 16);
+	} else {
+		// Invalid hash size
+		return nullptr;
+	}
+	
+	temp.WriteHash(hash);
+	temp.WriteUInt32(0);	// client IP
+	temp.WriteUInt16(0);	// client port
+
+	// Write tag list
+	unsigned int uFilePosTagCount = temp.GetPosition();
+	uint32 tagcount = 0;
+	temp.WriteUInt32(tagcount); // dummy tag count, will be filled later
+
+	// Standard tags
+	CTagString tagName(FT_FILENAME, wxString(btResult.name.c_str(), wxConvUTF8));
+	tagName.WriteTagToFile(&temp, utf8strRaw);
+	tagcount++;
+
+	CTagInt64 tagSize(FT_FILESIZE, btResult.size);
+	tagSize.WriteTagToFile(&temp, utf8strRaw);
+	tagcount++;
+
+	// Additional BitTorrent specific tags
+	CTagInt32 tagSeeders(FT_SOURCES, btResult.seeders);
+	tagSeeders.WriteTagToFile(&temp, utf8strRaw);
+	tagcount++;
+	
+	CTagInt32 tagLeechers(FT_COMPLETE_SOURCES, btResult.leechers);
+	tagLeechers.WriteTagToFile(&temp, utf8strRaw);
+	tagcount++;
+	
+	// Protocol tag to identify BitTorrent results
+	CTagString tagProtocol(FT_SOURCEPROTOCOL, wxT("BitTorrent"));
+	tagProtocol.WriteTagToFile(&temp, utf8strRaw);
+	tagcount++;
+	
+	// Add trackers as additional info
+	if (!btResult.trackers.empty()) {
+		wxString trackerList;
+		for (const auto& tracker : btResult.trackers) {
+			if (!trackerList.IsEmpty()) trackerList += wxT(", ");
+			trackerList += wxString(tracker.c_str(), wxConvUTF8);
+		}
+		CTagString tagTrackers(TAG_DESCRIPTION, trackerList);
+		tagTrackers.WriteTagToFile(&temp, utf8strRaw);
+		tagcount++;
+	}
+
+	temp.Seek(uFilePosTagCount, wxFromStart);
+	temp.WriteUInt32(tagcount);
+	temp.Seek(0, wxFromStart);
+
+	return new CSearchFile(temp, true, searchID, 0, 0, wxEmptyString, true);
 }
 
 // File_checked_for_headers
