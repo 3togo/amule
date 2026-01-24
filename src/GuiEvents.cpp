@@ -732,6 +732,28 @@ void Download_Added(const wxString& link, bool isMagnet)
 	}
 }
 
+void Download_Failed(const wxString& link, bool isMagnet, const wxString& error)
+{
+	if (theApp->amuledlg) {
+		wxString msg = isMagnet ?
+			wxString::Format(_("Failed to add magnet link: %s - %s"), link.c_str(), error.c_str()) :
+			wxString::Format(_("Failed to add download: %s - %s"), link.c_str(), error.c_str());
+		theApp->amuledlg->AddLogLine(msg);
+		
+		// Show error notification if enabled and not in daemon mode
+#ifndef AMULE_DAEMON
+		if (thePrefs::ShowNotifications()) {
+			wxNotificationMessage *notification = new wxNotificationMessage();
+			notification->SetTitle(isMagnet ? _("Magnet Link Failed") : _("Download Failed"));
+			notification->SetMessage(msg);
+			notification->SetFlags(wxICON_ERROR);
+			notification->Show(7); // Show for 7 seconds for errors
+			delete notification;
+		}
+#endif
+	}
+}
+
 void Download_Set_Cat_Prio(uint8 cat, uint8 newprio)
 {
 	theApp->downloadqueue->SetCatPrio(cat, newprio);

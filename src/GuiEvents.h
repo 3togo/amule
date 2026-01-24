@@ -170,6 +170,7 @@ namespace MuleNotify
 	void Search_Update_Progress(uint32 value);
 
 	void Download_Added(const wxString& link, bool isMagnet);
+	void Download_Failed(const wxString& link, bool isMagnet, const wxString& error);
 	void Download_Set_Cat_Prio(uint8 cat, uint8 newprio);
 	void Download_Set_Cat_Status(uint8 cat, int newstatus);
 
@@ -568,6 +569,7 @@ typedef void (wxEvtHandler::*MuleNotifyEventFunction)(CMuleGUIEvent&);
 
 // download queue
 #define CoreNotify_Download_Added(link, isMagnet)	MuleNotify::DoNotify(&MuleNotify::Download_Added, link, isMagnet)
+#define CoreNotify_Download_Failed(link, isMagnet, error)	MuleNotify::DoNotify(&MuleNotify::Download_Failed, link, isMagnet, error)
 #define CoreNotify_Download_Set_Cat_Prio(cat, pri)	MuleNotify::DoNotify(&MuleNotify::Download_Set_Cat_Prio, cat, pri)
 #define CoreNotify_Download_Set_Cat_Status(cat, st)	MuleNotify::DoNotify(&MuleNotify::Download_Set_Cat_Status, cat, st)
 
