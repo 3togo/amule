@@ -712,7 +712,7 @@ void Download_Added(const wxString& link, bool isMagnet)
 		wxString msg = isMagnet ? 
 			wxString::Format(_("Magnet link added: %s"), link.c_str()) :
 			wxString::Format(_("eD2k link added: %s"), link.c_str());
-		theApp->amuledlg->ShowNotification(msg);
+		theApp->amuledlg->AddLogLine(msg);
 	}
 }
 
