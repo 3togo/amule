@@ -315,10 +315,9 @@ void CUpDownClient::CreateStandardPackets(const uint8_t* buffer, uint32 togo, Re
 			data.WriteUInt32(startpos);
 			data.WriteUInt32(endpos);
 		}
-		char *tempbuf = new char[nPacketSize];
-		memfile.Read(tempbuf, nPacketSize);
-		data.Write(tempbuf, nPacketSize);
-		delete [] tempbuf;
+		std::vector<char> tempbuf(nPacketSize);
+		memfile.Read(tempbuf.data(), nPacketSize);
+		data.Write(tempbuf.data(), nPacketSize);
 		CPacket* packet = new CPacket(data, (bLargeBlocks ? OP_EMULEPROT : OP_EDONKEYPROT), (bLargeBlocks ? (uint8)OP_SENDINGPART_I64 : (uint8)OP_SENDINGPART));
 		theStats::AddUpOverheadFileRequest(16 + 2 * (bLargeBlocks ? 8 :4));
 		theStats::AddUploadToSoft(GetClientSoft(), nPacketSize);
@@ -368,10 +367,9 @@ void CUpDownClient::CreatePackedPackets(const uint8_t* buffer, uint32 togo, Requ
 			data.WriteUInt32(currentblock->StartOffset);
 		}
 		data.WriteUInt32(newsize);
-		char *tempbuf = new char[nPacketSize];
-		memfile.Read(tempbuf, nPacketSize);
-		data.Write(tempbuf,nPacketSize);
-		delete [] tempbuf;
+		std::vector<char> tempbuf(nPacketSize);
+		memfile.Read(tempbuf.data(), nPacketSize);
+		data.Write(tempbuf.data(), nPacketSize);
 		CPacket* packet = new CPacket(data, OP_EMULEPROT, (isLargeBlock ? OP_COMPRESSEDPART_I64 : OP_COMPRESSEDPART));
 
 		// approximate payload size
