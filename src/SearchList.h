@@ -168,6 +168,15 @@ public:
 	 */
 	void	KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt128 *fileID, const wxString& name, uint64_t size, const wxString& type, uint32_t kadPublishInfo, const TagPtrList& taglist);
 
+	/**
+	 * Converts a BitTorrent search result to a CSearchFile object.
+	 *
+	 * @param btResult The BitTorrent search result to convert.
+	 * @param searchID The search ID this result belongs to.
+	 * @return A new CSearchFile object or nullptr on failure.
+	 */
+	CSearchFile* CreateSearchFileFromBT(const BitTorrent::SearchResult& btResult, long searchID);
+
 	/** Update a certain search result in all lists */
 	void UpdateSearchFileByHash(const CMD4Hash& hash);
 
