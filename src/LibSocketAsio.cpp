@@ -1285,6 +1285,7 @@ CAsioService::CAsioService()
 
 CAsioService::~CAsioService()
 {
+	Stop();
 }
 
 
