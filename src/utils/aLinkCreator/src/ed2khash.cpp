@@ -67,7 +67,7 @@ bool Ed2kHash::SetED2KHashFromFile(const wxFileName& filename, MD4Hook hook)
       size_t partcount;
       wxFileOffset totalread;
 
-      char *buf = new char[BUFSIZE];
+      std::unique_ptr<char[]> buf(new char[BUFSIZE]);
 
       bool goAhead = true;
 
@@ -109,9 +109,8 @@ bool Ed2kHash::SetED2KHashFromFile(const wxFileName& filename, MD4Hook hook)
                   MD4Update(&hdc, reinterpret_cast<unsigned char const *>(buf),
                             read);
                 }
-              else
+                else
                 {
-		  delete [] buf;
                   return (false);
                 }
 
@@ -141,7 +140,6 @@ bool Ed2kHash::SetED2KHashFromFile(const wxFileName& filename, MD4Hook hook)
 	  if (tmpPtr) {
 		  tmpCharHash = tmpPtr;
 	  } else {
-		  delete [] buf;
 		  free(tmpCharHash);
 		  wxLogError(_("Out of memory while calculating ed2k hash!"));
 		  return (false);
@@ -151,7 +149,6 @@ bool Ed2kHash::SetED2KHashFromFile(const wxFileName& filename, MD4Hook hook)
 
         }
 
-      delete [] buf;
 
       // hash == hash of concatenned parthashes
       if (partcount > 1)
