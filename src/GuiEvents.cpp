@@ -706,15 +706,25 @@ namespace MuleNotify
 	}
 
 
-	void Download_Set_Cat_Prio(uint8 cat, uint8 newprio)
-	{
-		theApp->downloadqueue->SetCatPrio(cat, newprio);
+void Download_Added(const wxString& link, bool isMagnet)
+{
+	if (theApp->amuledlg) {
+		wxString msg = isMagnet ? 
+			wxString::Format(_("Magnet link added: %s"), link.c_str()) :
+			wxString::Format(_("eD2k link added: %s"), link.c_str());
+		theApp->amuledlg->ShowNotification(msg);
 	}
+}
 
-	void Download_Set_Cat_Status(uint8 cat, int newstatus)
-	{
-		theApp->downloadqueue->SetCatStatus(cat, newstatus);
-	}
+void Download_Set_Cat_Prio(uint8 cat, uint8 newprio)
+{
+	theApp->downloadqueue->SetCatPrio(cat, newprio);
+}
+
+void Download_Set_Cat_Status(uint8 cat, int newstatus)
+{
+	theApp->downloadqueue->SetCatStatus(cat, newstatus);
+}
 
 	void Upload_Resort_Queue()
 	{

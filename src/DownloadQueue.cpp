@@ -1402,22 +1402,27 @@ bool CDownloadQueue::AddLink( const wxString& link, uint8 category )
 
 	if (link.compare(0, 7, wxT("magnet:")) == 0) {
 		isMagnetLink = true;
+		AddLogLineN(CFormat(_("Processing magnet link: %s")) % link);
 		uri = CMagnetED2KConverter(link);
 		if (uri.empty()) {
-			AddLogLineC(CFormat(_("Cannot convert magnet link to eD2k: %s")) % link);
+			AddLogLineC(CFormat(_("Failed to convert magnet link: %s")) % link);
 			return false;
 		}
-		AddLogLineN(CFormat(_("Successfully converted magnet link to eD2k: %s")) % uri);
+		AddLogLineN(CFormat(_("Converted to eD2k link: %s")) % uri);
 	}
 
 	if (uri.compare(0, 7, wxT("ed2k://")) == 0) {
 		bool result = AddED2KLink(uri, category);
-		if (result && isMagnetLink) {
-			AddLogLineN(_("Magnet link successfully added to download queue"));
+		if (result) {
+			if (isMagnetLink) {
+				AddLogLineN(_("Magnet link successfully queued for download"));
+			}
+			// Notify GUI for real-time status update
+			CoreNotify_Download_Added(uri, isMagnetLink);
 		}
 		return result;
 	} else {
-		AddLogLineC(CFormat(_("Unknown protocol of link: %s")) % link);
+		AddLogLineC(CFormat(_("Unsupported link protocol: %s")) % link);
 		return false;
 	}
 }
