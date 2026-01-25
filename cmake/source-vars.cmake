@@ -28,7 +28,6 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		ListenSocket.cpp
 		MuleUDPSocket.cpp
 		SearchFile.cpp
-		SearchList.cpp
 		ServerConnect.cpp
 		ServerList.cpp
 		ServerSocket.cpp
@@ -39,21 +38,7 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		UploadClient.cpp
 		UploadQueue.cpp
 		ThreadTasks.cpp
-# =============================================================================
-# CMake Source Configuration for BitTorrent Integration
-# IMPORTANT: To avoid linker errors about duplicate definitions:
-# 
-# Only include ONE of the following files, NOT both:
-# - BitTorrentSession.cpp (legacy, incomplete)
-# - BitTorrentSessionImpl.cpp (complete implementation)
-# 
-# Current: Using BitTorrentSessionImpl.cpp which contains full Impl + BitTorrentSession
-# =============================================================================
-
-		protocol/bt/BitTorrentSessionImpl.cpp
-		protocol/MultiProtocolSocket.cpp
 		protocol/ProtocolCoordinator.cpp
-		protocol/ProtocolConversion.cpp
 	)
 endif()
 
@@ -104,6 +89,7 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON OR BUILD_REMOTEGUI)
 		PartFile.cpp
 		Preferences.cpp
 		Proxy.cpp
+		SearchList.cpp
 		Server.cpp
 		Statistics.cpp
 		StatTree.cpp

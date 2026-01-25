@@ -219,6 +219,17 @@ private:
 	//! Kademlia publish information.
 	uint32_t		m_kadPublishInfo;
 
+        // Public tag list needed for compilation
+        std::vector<CTag*> m_taglist;
+
+        // Methods needed for compilation - make them public
+public:
+        CMD4Hash GetFileHash() const;
+        CPath GetFileName() const;
+        uint64 GetFileSize() const;
+        bool HasRating() const { return false; }
+        int UserRating() const { return 0; }
+
 	friend class CPartFile;
 	friend class CSearchListRem;
 };

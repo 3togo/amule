@@ -27,6 +27,7 @@
 
 #include <protocol/ed2k/ClientSoftware.h>
 #include <common/MenuIDs.h>
+#include "common/DimensionSafety.h"
 
 #include <common/Format.h>	// Needed for CFormat
 #include "amule.h"		// Needed for theApp
@@ -972,8 +973,8 @@ void CDownloadListCtrl::DrawFileItem( wxDC* dc, int nColumn, const wxRect& rect,
 		// Progress
 		case ColumnProgress:{
 			if (thePrefs::ShowProgBar()) {
-				int iWidth  = rect.GetWidth() - 2;
-				int iHeight = rect.GetHeight() - 2;
+				int iWidth  = std::max(rect.GetWidth() - 2, 1);
+				int iHeight = std::max(rect.GetHeight() - 2, 1);
 
 				// DO NOT DRAW IT ALL THE TIME
 				uint32 dwTicks = GetTickCount();

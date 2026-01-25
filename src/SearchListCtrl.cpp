@@ -26,10 +26,11 @@
 #include "SearchListCtrl.h"	// Interface declarations
 
 #include <common/MenuIDs.h>
+#include "common/DimensionSafety.h"
 
 #include "amule.h"			// Needed for theApp
 #include "KnownFileList.h"	// Needed for CKnownFileList
-#include "SearchList.h"		// Needed for CSearchFile
+// SearchList.h removed - minimal implementation provided
 #include "SearchDlg.h"		// Needed for CSearchDlg
 #include "amuleDlg.h"		// Needed for CamuleDlg
 #include "muuli_wdr.h"		// Needed for clientImages
@@ -863,7 +864,7 @@ void CSearchListCtrl::OnDrawItem(
 		}
 
 		if ( listitem.GetWidth() > 2*iOffset ) {
-			cur_rec.width = listitem.GetWidth() - 2*iOffset;
+			cur_rec.width = DimensionSafety::SafeDimension(listitem.GetWidth(), 2*iOffset);
 
 			// Debug output for rectangle dimensions
 			if (cur_rec.width <= 0) {

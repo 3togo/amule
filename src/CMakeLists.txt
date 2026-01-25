@@ -466,8 +466,9 @@ if (NEED_LIB_MULEAPPGUI)
 
 	target_include_directories (muleappgui
 		PUBLIC ${amule_BINARY_DIR}
-		PUBLIC ${INCLUDE_INCLUDE_DIR}
+		PUBLIC ${INCLUDE_INCLUDE_DIR} 
 		PUBLIC ${LIBS_INCLUDE_DIR}
+		PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/common
 	)
 
 	target_link_libraries (muleappgui

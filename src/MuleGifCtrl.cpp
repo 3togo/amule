@@ -30,6 +30,7 @@
 
 #include "MuleGifCtrl.h"
 #include "Types.h"
+#include "common/DimensionSafety.h"
 
 
 BEGIN_EVENT_TABLE(MuleGifCtrl, wxControl)
@@ -160,8 +161,8 @@ void MuleGifCtrl::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 	wxSize clientsize = GetClientSize();
 	wxSize gifsize = m_decoder->GetAnimationSize();
-	int x = (clientsize.GetWidth()-gifsize.GetWidth())/2;
-	int y = (clientsize.GetHeight()-gifsize.GetHeight())/2;
+	int x = DimensionSafety::SafeCenterPosition(clientsize.GetWidth(), gifsize.GetWidth());
+	int y = DimensionSafety::SafeCenterPosition(clientsize.GetHeight(), gifsize.GetHeight());
 
 	dc.SetBackground(wxBrush(GetBackgroundColour(), wxBRUSHSTYLE_SOLID));
 	dc.Clear();

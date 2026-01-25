@@ -92,13 +92,7 @@ private:
     alignas(64) std::atomic<uint64_t> udp_packets_sent{0};        ///< UDP packets sent
     alignas(64) std::atomic<uint64_t> udp_packets_received{0};    ///< UDP packets received
     
-    // BitTorrent protocol tracking
-    alignas(64) std::atomic<uint64_t> bt_bytes_sent{0};           ///< BitTorrent bytes sent
-    alignas(64) std::atomic<uint64_t> bt_bytes_received{0};       ///< BitTorrent bytes received
-    alignas(64) std::atomic<uint64_t> bt_packets_sent{0};         ///< BitTorrent packets sent
-    alignas(64) std::atomic<uint64_t> bt_packets_received{0};     ///< BitTorrent packets received
-    alignas(64) std::atomic<uint64_t> bt_peers_connected{0};      ///< Active BitTorrent peers
-    alignas(64) std::atomic<uint64_t> bt_trackers_active{0};      ///< Active BitTorrent trackers
+    // Protocol tracking (ED2K only)
     
     // Adaptive throughput tracking (aligned to prevent false sharing)
     alignas(64) std::atomic<double> m_avg_send_throughput_kbs{0.0};      ///< Moving average of send throughput (KB/s)
@@ -223,21 +217,7 @@ public:
     void record_udp_sent(size_t bytes) { record_sent(bytes, false); }
     void record_udp_received(size_t bytes) { record_received(bytes, false); }
     
-    // BitTorrent specific recording
-    void record_bt_sent(size_t bytes) { 
-        bt_bytes_sent.fetch_add(bytes, std::memory_order_relaxed);
-        bt_packets_sent.fetch_add(1, std::memory_order_relaxed);
-        record_sent(bytes, true); // BT primarily uses TCP
-    }
-    void record_bt_received(size_t bytes) { 
-        bt_bytes_received.fetch_add(bytes, std::memory_order_relaxed);
-        bt_packets_received.fetch_add(1, std::memory_order_relaxed);
-        record_received(bytes, true);
-    }
-    void record_bt_peer_connected() { bt_peers_connected.fetch_add(1, std::memory_order_relaxed); }
-    void record_bt_peer_disconnected() { bt_peers_connected.fetch_sub(1, std::memory_order_relaxed); }
-    void record_bt_tracker_active() { bt_trackers_active.fetch_add(1, std::memory_order_relaxed); }
-    void record_bt_tracker_inactive() { bt_trackers_active.fetch_sub(1, std::memory_order_relaxed); }
+    // Protocol-specific recording methods (ED2K only)
     
     // Get performance statistics
     struct Statistics {
@@ -253,12 +233,7 @@ public:
         uint64_t udp_bytes_received;
         uint64_t udp_packets_sent;
         uint64_t udp_packets_received;
-        uint64_t bt_bytes_sent;
-        uint64_t bt_bytes_received;
-        uint64_t bt_packets_sent;
-        uint64_t bt_packets_received;
-        uint64_t bt_peers_connected;
-        uint64_t bt_trackers_active;
+        // Protocol statistics (ED2K only)
         double elapsed_seconds;
         double bytes_per_second;
         double packets_per_second;
@@ -282,12 +257,7 @@ public:
         stats.udp_bytes_received = udp_bytes_received.load(std::memory_order_relaxed);
         stats.udp_packets_sent = udp_packets_sent.load(std::memory_order_relaxed);
         stats.udp_packets_received = udp_packets_received.load(std::memory_order_relaxed);
-        stats.bt_bytes_sent = bt_bytes_sent.load(std::memory_order_relaxed);
-        stats.bt_bytes_received = bt_bytes_received.load(std::memory_order_relaxed);
-        stats.bt_packets_sent = bt_packets_sent.load(std::memory_order_relaxed);
-        stats.bt_packets_received = bt_packets_received.load(std::memory_order_relaxed);
-        stats.bt_peers_connected = bt_peers_connected.load(std::memory_order_relaxed);
-        stats.bt_trackers_active = bt_trackers_active.load(std::memory_order_relaxed);
+        // Protocol statistics (ED2K only)
         
         auto elapsed = global_timer.elapsed_time();
         stats.elapsed_seconds = elapsed.count() / 1000000.0; // μs to seconds

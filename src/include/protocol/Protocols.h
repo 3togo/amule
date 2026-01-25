@@ -26,8 +26,6 @@
 #ifndef ED2KPROTOCOLS_H
 #define ED2KPROTOCOLS_H
 
-// BitTorrent protocol version
-#define BITTORRENT_PROTOCOL_VERSION 1
 
 // For MuleInfoPacket (OLD - DEPRECATED.)
 #define	EMULE_PROTOCOL				0x01
@@ -51,10 +49,6 @@ enum Protocols {
 	OP_ED2KV2HEADER			= 0xF4,
 	OP_ED2KV2PACKEDPROT		= 0xF5,
 
-	// BitTorrent protocol
-	OP_BITTORRENTHEADER		= 0xFB,
-	OP_BITTORRENTPACKEDPROT	= 0xFC,
-	OP_BITTORRENTEXT		= 0xFD,
 
 	OP_MLDONKEYPROT			= 0x00
 };

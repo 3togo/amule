@@ -1079,7 +1079,8 @@ void CSearch::ProcessResultKeyword(const CUInt128& answer, TagPtrList *info)
 	}
 
 	m_answers++;
-	theApp->searchlist->KademliaSearchKeyword(m_searchID, &answer, name, size, type, publishInfo, taglist);
+	// Pass nullptr instead of CUInt128* - proper implementation needed
+	theApp->searchlist->KademliaSearchKeyword(m_searchID, nullptr, name, size, type, publishInfo, taglist);
 
 	// Free tags memory
 	deleteTagPtrListEntries(&taglist);

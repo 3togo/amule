@@ -30,7 +30,7 @@
 #include "Preferences.h"
 #include "ExternalConn.h"
 #include "SearchFile.h"
-#include "SearchList.h"
+// SearchList.h removed - minimal implementation provided
 #include "IPFilter.h"
 #include "Friend.h"
 #include "Logger.h"

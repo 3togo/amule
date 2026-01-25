@@ -60,7 +60,7 @@
 #include "amule.h"		// Needed for theApp
 #include "ED2KLink.h"		// Needed for CED2KLink
 #include "Packet.h"		// Needed for CTag
-#include "SearchList.h"		// Needed for CSearchFile
+// SearchList.h removed - minimal implementation provided
 #include "ClientList.h"		// Needed for clientlist
 #include "Statistics.h"		// Needed for theStats
 #include "Logger.h"
@@ -151,7 +151,7 @@ CPartFile::CPartFile(CSearchFile* searchresult)
 	SetFileSize(searchresult->GetFileSize());
 
 	for (unsigned int i = 0; i < searchresult->m_taglist.size(); ++i){
-		const CTag& pTag = searchresult->m_taglist[i];
+		const CTag& pTag = *searchresult->m_taglist[i];
 
 		bool bTagAdded = false;
 		if (pTag.GetNameID() == 0 && !pTag.GetName().IsEmpty() && (pTag.IsStr() || pTag.IsInt())) {

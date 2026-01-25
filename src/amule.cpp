@@ -66,7 +66,7 @@
 #include "PartFile.h"			// Needed for CPartFile
 #include "PlatformSpecific.h"   // Needed for PlatformSpecific::AllowSleepMode();
 #include "Preferences.h"		// Needed for CPreferences
-#include "SearchList.h"			// Needed for CSearchList
+// SearchList.h removed - minimal implementation provided
 #include "Server.h"			// Needed for GetListName
 #include "ServerList.h"			// Needed for CServerList
 #include "ServerConnect.h"              // Needed for CServerConnect

@@ -27,7 +27,6 @@
 #include "protocol/Protocols.h"
 #include "protocol/ed2k/Constants.h"
 #include "protocol/kad/Constants.h"
-#include "protocol/bt/Constants.h"
 #include "../../MD4Hash.h"
 #include "../../common/NetworkPerformanceMonitor.h"
 #include <vector>
@@ -51,11 +50,8 @@ struct NetworkConditions {
     bool supports_nat_traversal;    // Supports NAT traversal techniques
     bool high_bandwidth_mode;       // High bandwidth mode available
 };
-
 enum class ProtocolType {
     ED2K,
-    KADEMLIA,
-    BITTORRENT,
     HYBRID_AUTO
 };
 
@@ -68,9 +64,8 @@ struct SourceEndpoint {
     uint32_t latency_ms;
     
     // Cross-protocol metadata
-    std::string info_hash;      // For BitTorrent
-    CMD4Hash ed2k_hash;         // For ED2K
-    bool supports_hybrid;       // Supports cross-protocol transfers
+    CMD4Hash ed2k_hash;         // For ED2K protocol
+    bool supports_ed2k;         // Supports ED2K protocol transfers
     
     bool operator==(const SourceEndpoint& other) const;
     bool is_duplicate(const SourceEndpoint& other) const;
@@ -86,9 +81,8 @@ public:
         ProtocolType preferred = ProtocolType::HYBRID_AUTO,
         uint32_t max_sources = 50);
     
-    std::vector<SourceEndpoint> find_cross_protocol_sources(
-        const CPartFile* ed2k_file, 
-        const std::string& bt_info_hash);
+    std::vector<SourceEndpoint> find_ed2k_sources(
+        const CPartFile* ed2k_file);
     
     bool add_source(const SourceEndpoint& source, CPartFile* file);
     bool remove_duplicate_sources(CPartFile* file);
@@ -107,8 +101,6 @@ public:
     struct BandwidthAllocation {
         uint32_t ed2k_download_kbps;
         uint32_t ed2k_upload_kbps;
-        uint32_t bt_download_kbps;
-        uint32_t bt_upload_kbps;
         uint32_t kad_download_kbps;
         uint32_t kad_upload_kbps;
     };
@@ -116,9 +108,8 @@ public:
     BandwidthAllocation calculate_bandwidth_allocation() const;
     void apply_bandwidth_allocation(const BandwidthAllocation& allocation);
     
-    // Cross-protocol metadata conversion
-    bool convert_metadata_ed2k_to_bt(const CPartFile* ed2k_file, std::string& bt_metadata);
-    bool convert_metadata_bt_to_ed2k(const std::string& bt_metadata, CPartFile* ed2k_file);
+    // Metadata handling
+    bool validate_ed2k_metadata(const CPartFile* ed2k_file);
     
     // Statistics and monitoring
     struct CoordinationStats {
@@ -134,11 +125,8 @@ public:
     void reset_stats();
     
     // Configuration
-    void set_hybrid_mode_enabled(bool enabled);
-    bool is_hybrid_mode_enabled() const;
-    
-    void set_max_cross_protocol_sources(uint32_t max);
-    uint32_t get_max_cross_protocol_sources() const;
+    void set_max_ed2k_sources(uint32_t max);
+    uint32_t get_max_ed2k_sources() const;
     
 private:
     ProtocolCoordinator();
@@ -153,8 +141,7 @@ private:
 };
 
 // Helper functions
-bool is_hybrid_transfer_supported(const SourceEndpoint& source);
+bool is_ed2k_transfer_supported(const SourceEndpoint& source);
 double calculate_protocol_efficiency(ProtocolType protocol, const NetworkConditions& conditions);
-SourceEndpoint create_hybrid_endpoint(const SourceEndpoint& ed2k_source, const SourceEndpoint& bt_source);
 
 } // namespace ProtocolIntegration

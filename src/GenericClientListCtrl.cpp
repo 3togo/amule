@@ -32,6 +32,7 @@
 #include <common/MenuIDs.h>
 
 #include <common/Format.h>	// Needed for CFormat
+#include "common/DimensionSafety.h"
 #include "amule.h"
 #include "ClientRef.h"
 #include "ClientList.h"
@@ -921,8 +922,8 @@ void CGenericClientListCtrl::DrawClientItem(wxDC* dc, int nColumn, const wxRect&
 			break;
 		case ColumnUserProgress:
 			if ( thePrefs::ShowProgBar() ) {
-				int iWidth = rect.GetWidth() - 2;
-				int iHeight = rect.GetHeight() - 2;
+				int iWidth = DimensionSafety::SafeDimension(rect.GetWidth(), 2);
+				int iHeight = DimensionSafety::SafeDimension(rect.GetHeight(), 2);
 
 				// don't draw Text beyond the bar
 				dc->SetClippingRegion(rect.GetX(), rect.GetY() + 1, iWidth, iHeight);

@@ -60,7 +60,7 @@ class CListenSocket;
 class CClientList;
 class CKnownFileList;
 class CCanceledFileList;
-class CSearchList;
+#include "SearchList.h"
 class CClientCreditsList;
 class CFriendList;
 class CClientUDPSocket;
