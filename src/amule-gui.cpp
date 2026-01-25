@@ -182,8 +182,8 @@ int CamuleGuiBase::InitGui(bool geometry_enabled, wxString &geom_string)
 					geometry_enabled = true;
 					geometry_x = x;
 					geometry_y = y;
-					geometry_width = width;
-					geometry_height = height;
+					geometry_width = std::max<unsigned int>(width, 100u);
+					geometry_height = std::max<unsigned int>(height, 100u);
 				}
 			}
 		}
@@ -195,7 +195,7 @@ int CamuleGuiBase::InitGui(bool geometry_enabled, wxString &geom_string)
 	if ( geometry_enabled ) {
 		amuledlg = new CamuleDlg(NULL, m_FrameTitle,
 		                         wxPoint(geometry_x,geometry_y),
-		                         wxSize( geometry_width, geometry_height - 58 ));
+		                         wxSize( geometry_width, std::max<int>(geometry_height - 58, 100) ));
 	} else {
 		amuledlg = new CamuleDlg(NULL, m_FrameTitle);
 	}

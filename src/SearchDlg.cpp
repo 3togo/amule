@@ -185,10 +185,21 @@ void CSearchDlg::AddResult(CSearchFile* toadd)
 	CSearchListCtrl* outputwnd = GetSearchList( toadd->GetSearchID() );
 
 	if ( outputwnd ) {
+		static uint32 lastUpdateTime = 0;
+		static uint32 updateCounter = 0;
+		
 		outputwnd->AddResult( toadd );
 
-		// Update the result count
-		UpdateHitCount( outputwnd );
+		// Throttle UI updates: update immediately for first few results, 
+		// then batch updates for better performance
+		uint32 currentTime = GetTickCount();
+		updateCounter++;
+		
+		if (updateCounter <= 10 || (currentTime - lastUpdateTime) > 500) {
+			UpdateHitCount( outputwnd );
+			lastUpdateTime = currentTime;
+			updateCounter = 0;
+		}
 	}
 }
 
@@ -200,7 +211,8 @@ void CSearchDlg::UpdateResult(CSearchFile* toupdate)
 	if ( outputwnd ) {
 		outputwnd->UpdateResult( toupdate );
 
-		// Update the result count
+		// Defer hit count updates to prevent UI freezes during rapid updates
+		// The async UpdateHitCount will handle the actual UI refresh
 		UpdateHitCount( outputwnd );
 	}
 }
@@ -578,26 +590,32 @@ void CSearchDlg::StartNewSearch()
 
 void CSearchDlg::UpdateHitCount(CSearchListCtrl* page)
 {
-	for ( uint32 i = 0; i < (uint32)m_notebook->GetPageCount(); ++i ) {
-		if ( m_notebook->GetPage(i) == page ) {
-			wxString searchtxt = m_notebook->GetPageText(i).BeforeLast(wxT(' '));
-
-			if ( !searchtxt.IsEmpty() ) {
-				size_t shown = page->GetItemCount();
-				size_t hidden = page->GetHiddenItemCount();
-
-				if (hidden) {
-					searchtxt += CFormat(wxT(" (%u/%u)")) % shown % (shown + hidden);
-				} else {
-					searchtxt += CFormat(wxT(" (%u)")) % shown;
+	// Use CallAfter to defer UI updates and prevent blocking
+	CallAfter([this, page]() {
+		for ( uint32 i = 0; i < (uint32)m_notebook->GetPageCount(); ++i ) {
+			if ( m_notebook->GetPage(i) == page ) {
+				wxString searchtxt = m_notebook->GetPageText(i).BeforeLast(wxT(' '));
+				
+				if ( !searchtxt.IsEmpty() ) {
+					size_t shown = page->GetItemCount();
+					size_t hidden = page->GetHiddenItemCount();
+					
+					if (hidden) {
+						searchtxt += CFormat(wxT(" (%u/%u)")) % shown % (shown + hidden);
+					} else {
+						searchtxt += CFormat(wxT(" (%u)")) % shown;
+					}
+					
+					// Only update if the text actually changed to avoid unnecessary redraws
+					if (searchtxt != m_notebook->GetPageText(i)) {
+						m_notebook->SetPageText(i, searchtxt);
+					}
 				}
-
-				m_notebook->SetPageText(i, searchtxt);
+				
+				break;
 			}
-
-			break;
 		}
-	}
+	});
 }
 
 

@@ -13,11 +13,11 @@ cd amule
 # Checkout the feature branch
 git checkout feature/bitTorrent-integration 2>/dev/null || git fetch origin feature/bitTorrent-integration && git checkout feature/bitTorrent-integration
 
-# Search for max( pattern with context
-echo "Searching for max( pattern in feature/bitTorrent-integration branch..."
+# Search for std::max( pattern with context
+echo "Searching for std::max( pattern in feature/bitTorrent-integration branch..."
 echo "--------------------------------------------------"
 
-grep --color=always -A2 -B2 -r -E -i "max\(" src/
+grep --color=always -A2 -B2 -r -E "std::max\(" src/
 
 echo "--------------------------------------------------"
 echo "Search complete. Results shown above."
