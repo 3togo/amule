@@ -68,6 +68,10 @@ public:
 	wxString GetName() const;
 	uint64 GetSize() const;
 	const CMD4Hash& GetHashKey() const;
+	
+	// Magnet link tracking
+	bool IsFromMagnet() const			{ return m_fromMagnet; }
+	void SetFromMagnet(bool fromMagnet)	{ m_fromMagnet = fromMagnet; }
 
 	// AICH data
 	bool	HasValidAICHHash() const;
@@ -103,6 +107,9 @@ private:
 	CMD4Hash	m_hash;
 	bool		m_bAICHHashValid;
 	CAICHHash	m_AICHHash;
+	
+	// Magnet link tracking
+	bool		m_fromMagnet;
 };
 
 

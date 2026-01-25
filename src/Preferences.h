@@ -546,8 +546,21 @@ public:
 	static const wxString& GetKadNodesUrl() { return s_KadURL; }
 	static void SetKadNodesUrl(const wxString& url) { s_KadURL = url; }
 
-	static const wxString& GetEd2kServersUrl() { return s_Ed2kURL; }
-	static void SetEd2kServersUrl(const wxString& url) { s_Ed2kURL = url; }
+static const wxString& GetEd2kServersUrl() { return s_Ed2kURL; }
+static void SetEd2kServersUrl(const wxString& url) { s_Ed2kURL = url; }
+
+	// Magnet Protocol Preferences
+	static uint8_t GetMagnetProtocolPreference() { return s_MagnetProtocolPreference; }
+	static void SetMagnetProtocolPreference(uint8_t pref) { s_MagnetProtocolPreference = pref; }
+	
+	static bool GetMagnetShowProtocolIndicator() { return s_MagnetShowProtocolIndicator; }
+	static void SetMagnetShowProtocolIndicator(bool show) { s_MagnetShowProtocolIndicator = show; }
+	
+	static bool GetMagnetAutoConvertToED2K() { return s_MagnetAutoConvertToED2K; }
+	static void SetMagnetAutoConvertToED2K(bool convert) { s_MagnetAutoConvertToED2K = convert; }
+	
+	static bool GetMagnetEnableBitTorrent() { return s_MagnetEnableBitTorrent; }
+	static void SetMagnetEnableBitTorrent(bool enable) { s_MagnetEnableBitTorrent = enable; }
 
 	// Crypt
 	static bool		IsClientCryptLayerSupported()		{return s_IsClientCryptLayerSupported;}
@@ -798,6 +811,12 @@ protected:
 
 	static wxString s_Ed2kURL;
 	static wxString s_KadURL;
+	
+	// Magnet Protocol Preferences
+	static uint8_t s_MagnetProtocolPreference;
+	static bool s_MagnetShowProtocolIndicator;
+	static bool s_MagnetAutoConvertToED2K;
+	static bool s_MagnetEnableBitTorrent;
 
 	// Crypt
 	static bool s_IsClientCryptLayerSupported;

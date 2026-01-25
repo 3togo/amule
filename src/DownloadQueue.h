@@ -30,12 +30,12 @@
 #include "ObservableQueue.h"	// Needed for CObservableQueue
 #include "GetTickCount.h"	// Needed for GetTickCount
 
-
 #include <deque>
-
+#include <memory>
 
 class CSharedFileList;
 class CSearchFile;
+class CMagnetProgressTracker;
 class CPartFile;
 class CUpDownClient;
 class CServer;
@@ -86,6 +86,14 @@ public:
 	 * @return The corresponding file or NULL.
 	 */
 	CPartFile* GetFileByID(const CMD4Hash& filehash) const;
+
+	/**
+	 * Updates magnet conversion progress for a file
+	 *
+	 * @param fileHash The hash of the file to update
+	 * @param progress The conversion progress (0.0 to 1.0)
+	 */
+	void UpdateMagnetConversionProgress(const CMD4Hash& fileHash, float progress);
 
 	/**
 	 * Returns the file at the specified position in the file-list, or NULL if invalid.

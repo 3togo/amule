@@ -47,6 +47,7 @@
 #include <common/FileFunctions.h>
 #include "GuiEvents.h"		// Needed for Notify_*
 #include "SHAHashSet.h"		// Needed for CAICHHash
+#include "MagnetGenerator.h"	// Needed for CMagnetGenerator
 
 
 #include "kademlia/kademlia/Kademlia.h"
@@ -1068,29 +1069,65 @@ bool CSharedFileList::IsShared(const CPath& path) const
 
 void CSharedFileList::CheckAICHHashes(const std::list<CAICHHash>& hashes)
 {
-	wxMutexLocker locker(list_mut);
+    wxMutexLocker locker(list_mut);
 
-	// Now we check that all files which are in the sharedfilelist have a
-	// corresponding hash in our list. Those how don't are queued for hashing.
-	CKnownFileMap::iterator it = m_Files_map.begin();
-	for (; it != m_Files_map.end(); ++it) {
-		const CKnownFile* file = it->second;
+    // Now we check that all files which are in thesharedfilelist have a
+    // corresponding hash in our list. Those how don't are queued for hashing.
+    CKnownFileMap::iterator it = m_Files_map.begin();
+    for (; it != m_Files_map.end(); ++it) {
+        const CKnownFile* file = it->second;
 
-		if (file->IsPartFile() == false) {
-			CAICHHashSet* hashset = file->GetAICHHashset();
+        if (file->IsPartFile() == false) {
+            CAICHHashSet* hashset = file->GetAICHHashset();
 
-			if (hashset->GetStatus() == AICH_HASHSETCOMPLETE) {
-				if (std::find(hashes.begin(), hashes.end(), hashset->GetMasterHash()) != hashes.end()) {
-					continue;
-				}
-			}
+            if (hashset->GetStatus() == AICH_HASHSETCOMPLETE) {
+                if (std::find(hashes.begin(), hashes.end(), hashset->GetMasterHash()) != hashes.end()) {
+                    continue;
+                }
+            }
 
-			hashset->SetStatus(AICH_ERROR);
+            hashset->SetStatus(AICH_ERROR);
 
-			CThreadScheduler::AddTask(new CHashingTask(file));
-		}
-	}
+            CThreadScheduler::AddTask(new CHashingTask(file));
+        }
+    }
 
+}
+
+/* Magnet Generation Implementation */
+
+wxString CSharedFileList::GenerateMagnetLink(CKnownFile* file)
+{
+    if (!file) {
+        AddDebugLogLineC(logGeneral, wxT("Attempted to generate magnet link for null file"));
+        return wxEmptyString;
+    }
+    
+    if (file->IsPartFile()) {
+        AddDebugLogLineC(logGeneral, wxT("Cannot generate magnet link for part file"));
+        return wxEmptyString;
+    }
+    
+    AddDebugLogLineN(logGeneral, 
+        wxString::Format(wxT("Generating magnet link for file: %s"), 
+                       file->GetFileName().GetPrintable()));
+    
+    return CMagnetGenerator::GenerateMagnetSync(file);
+}
+
+wxString CSharedFileList::GenerateMagnetLink(const CMD4Hash& fileHash)
+{
+    wxMutexLocker lock(list_mut);
+    
+    CKnownFileMap::iterator it = m_Files_map.find(fileHash);
+    if (it != m_Files_map.end()) {
+        return GenerateMagnetLink(it->second);
+    }
+    
+    AddDebugLogLineC(logGeneral, 
+        wxString::Format(wxT("File not found for magnet generation: %s"), 
+                       fileHash.Encode()));
+    return wxEmptyString;
 }
 
 // File_checked_for_headers

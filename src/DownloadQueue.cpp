@@ -55,6 +55,7 @@
 #include "GuiEvents.h"		// Needed for Notify_*
 #include "UserEvents.h"
 #include "MagnetURI.h"		// Needed for CMagnetED2KConverter
+#include "MagnetProgressTracker.h" // Needed for CMagnetProgressTracker
 #include "ScopedPtr.h"		// Needed for CScopedPtr
 #include "PlatformSpecific.h"	// Needed for CanFSHandleLargeFiles
 
@@ -252,6 +253,15 @@ void CDownloadQueue::AddSearchToDownload(CSearchFile* toadd, uint8 category)
 	CPartFile* newfile = NULL;
 	try {
 		newfile = new CPartFile(toadd);
+		
+		// If it's a magnet link, set conversion status
+		if (newfile) {
+			newfile->SetFromMagnet(toadd->IsFromMagnet());
+			if (toadd->IsFromMagnet()) {
+				newfile->SetStatus(PS_CONVERTING_MAGNET);
+				newfile->SetMagnetConversionProgress(0.0f);
+			}
+		}
 	} catch (const CInvalidPacket& WXUNUSED(e)) {
 		AddDebugLogLineC(logDownloadQueue, wxT("Search-result contained invalid tags, could not add"));
 	}
@@ -1482,6 +1492,12 @@ bool CDownloadQueue::AddED2KLink( const CED2KFileLink* link, uint8 category )
 			return false;
 		}
 
+		// If this was a magnet link, update status
+		if (link->IsFromMagnet()) {
+			file->SetStatus(PS_READY);
+			file->SetMagnetConversionProgress(1.0f);
+		}
+
 		AddDownload(file, thePrefs::AddNewFilesPaused(), category);
 	}
 
@@ -1660,6 +1676,15 @@ CPartFile* CDownloadQueue::GetFileByKadFileSearchID(uint32 id) const
 	}
 
 	return NULL;
+}
+
+void CDownloadQueue::UpdateMagnetConversionProgress(const CMD4Hash& fileHash, float progress)
+{
+	CPartFile* file = GetFileByID(fileHash);
+	if (file && file->GetStatus() == PS_CONVERTING_MAGNET) {
+		file->SetMagnetConversionProgress(progress);
+		Notify_DownloadCtrlUpdateItem(file);
+	}
 }
 
 bool CDownloadQueue::DoKademliaFileRequest()

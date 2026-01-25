@@ -172,6 +172,10 @@ public:
 	uint16_t GetClientServerPort() const throw()		{ return m_clientServerPort; }
 	void	 SetClientServerPort(uint16_t port) throw()	{ m_clientServerPort = port; }
 	int	 GetClientsCount() const			{ return ((GetClientID() && GetClientPort()) ? 1 : 0) + m_clients.size(); }
+	
+	// Magnet link tracking
+	bool IsFromMagnet() const throw()			{ return m_fromMagnet; }
+	void SetFromMagnet(bool fromMagnet) throw()		{ m_fromMagnet = fromMagnet; }
 
 	void	 SetKadPublishInfo(uint32_t val) throw()	{ m_kadPublishInfo = val; }
 	uint32_t GetKadPublishInfo() const throw()		{ return m_kadPublishInfo; }
@@ -218,6 +222,9 @@ private:
 
 	//! Kademlia publish information.
 	uint32_t		m_kadPublishInfo;
+	
+	// Magnet link tracking
+	bool			m_fromMagnet;
 
 	friend class CPartFile;
 	friend class CSearchListRem;

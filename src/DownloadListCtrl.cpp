@@ -1306,6 +1306,15 @@ void CDownloadListCtrl::DrawFileStatusBar(
 		s_ChunkBar.Fill( bFlat ? crFlatProgress : crProgress );
 		s_ChunkBar.Draw(dc, rect.x, rect.y, bFlat);
 		return;
+	} else if (file->GetStatus() == PS_CONVERTING_MAGNET) {
+		// Show magnet conversion progress in blue
+		static const CMuleColour crMagnet(0, 0, 255);
+		static const CMuleColour crFlatMagnet(0, 0, 180);
+		
+		uint64 progressPos = (uint64)(file->GetMagnetConversionProgress() * file->GetFileSize());
+		s_ChunkBar.FillRange(0, progressPos, bFlat ? crFlatMagnet : crMagnet);
+		s_ChunkBar.Draw(dc, rect.x, rect.y, bFlat);
+		return;
 	} else if (file->GetHashingProgress() > 0) {
 		uint64 left = file->GetHashingProgress() * PARTSIZE;
 		if (left < file->GetFileSize() - 1) {

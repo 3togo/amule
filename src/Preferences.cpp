@@ -25,7 +25,7 @@
 
 #include <wx/wx.h>
 #include "Preferences.h"
-
+#include "MagnetProtocolDetector.h"
 #include <protocol/ed2k/Constants.h>
 #include <common/Constants.h>
 #include <common/DataFileVersion.h>
@@ -223,6 +223,12 @@ uint8		CPreferences::s_byCryptTCPPaddingLength;
 
 wxString	CPreferences::s_Ed2kURL;
 wxString	CPreferences::s_KadURL;
+
+// Magnet Protocol Preferences
+uint8_t		CPreferences::s_MagnetProtocolPreference;
+bool		CPreferences::s_MagnetShowProtocolIndicator;
+bool		CPreferences::s_MagnetAutoConvertToED2K;
+bool		CPreferences::s_MagnetEnableBitTorrent;
 bool		CPreferences::s_GeoIPEnabled;
 wxString	CPreferences::s_GeoIPUpdateUrl;
 bool		CPreferences::s_preventSleepWhileDownloading;
@@ -1260,8 +1266,14 @@ void CPreferences::BuildItemList( const wxString& appdir )
 	s_MiscList.push_back( new Cfg_Str( wxT("/eMule/StatsServerName"),		s_StatsServerName,	wxT("Shorty's ED2K stats") ) );
 	s_MiscList.push_back( new Cfg_Str( wxT("/eMule/StatsServerURL"),		s_StatsServerURL,	wxT("http://ed2k.shortypower.dyndns.org/?hash=") ) );
 
-	s_MiscList.push_back( new Cfg_Bool( wxT("/ExternalConnect/TransmitOnlyUploadingClients"),	s_TransmitOnlyUploadingClients, false ) );
-	s_MiscList.push_back( new Cfg_Bool( wxT("/eMule/CreateSparseFiles"),		s_createFilesSparse, true ) );
+    s_MiscList.push_back( new Cfg_Bool( wxT("/ExternalConnect/TransmitOnlyUploadingClients"),	s_TransmitOnlyUploadingClients, false ) );
+    s_MiscList.push_back( new Cfg_Bool( wxT("/eMule/CreateSparseFiles"),		s_createFilesSparse, true ) );
+
+    // Magnet Protocol Preferences
+    s_MiscList.push_back( MkCfg_Int( wxT("/Magnet/ProtocolPreference"), s_MagnetProtocolPreference, PREFERENCE_HYBRID_AUTO ) );
+    s_MiscList.push_back( new Cfg_Bool( wxT("/Magnet/ShowProtocolIndicator"), s_MagnetShowProtocolIndicator, true ) );
+    s_MiscList.push_back( new Cfg_Bool( wxT("/Magnet/AutoConvertToED2K"), s_MagnetAutoConvertToED2K, true ) );
+    s_MiscList.push_back( new Cfg_Bool( wxT("/Magnet/EnableBitTorrent"), s_MagnetEnableBitTorrent, true ) );
 
 #ifndef AMULE_DAEMON
 	// Colors have been moved from global prefs to CStatisticsDlg

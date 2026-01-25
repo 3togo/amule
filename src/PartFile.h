@@ -399,6 +399,14 @@ public:
 	uint32 GetLastSearchTime() const			{ return m_lastsearchtime; }
 	void SetLastSearchTime(uint32 time)			{ m_lastsearchtime = time; }
 
+	/* Magnet conversion tracking */
+	void SetFromMagnet(bool fromMagnet)		{ m_fromMagnet = fromMagnet; }
+	bool IsFromMagnet() const			{ return m_fromMagnet; }
+	
+	/* Magnet conversion progress */
+	void SetMagnetConversionProgress(float progress)	{ m_magnetConversionProgress = progress; }
+	float GetMagnetConversionProgress() const		{ return m_magnetConversionProgress; }
+
 	void AddDownloadingSource(CUpDownClient* client);
 
 	void RemoveDownloadingSource(CUpDownClient* client);
@@ -426,6 +434,12 @@ private:
 	/* Kad Stuff */
 	uint32	m_LastSearchTimeKad;
 	uint8	m_TotalSearchesKad;
+
+	/* Magnet conversion tracking */
+	bool	m_fromMagnet;
+	
+	/* Magnet conversion progress */
+	float	m_magnetConversionProgress;
 
 friend class CKnownFilesRem;
 friend class CPartFileConvert;

@@ -43,6 +43,7 @@ class CPublishKeywordList;
 class CPath;
 class CAICHHash;
 class CThreadTask;
+class CMagnetGenerator;
 
 
 typedef std::map<CMD4Hash,CKnownFile*> CKnownFileMap;
@@ -69,6 +70,22 @@ public:
 	void	Process();
 	void	PublishNextTurn()	{ m_lastPublishED2KFlag = true; }
 	bool	RenameFile(CKnownFile* pFile, const CPath& newName);
+
+	/* Magnet Generation */
+	
+	/**
+	 * Generate magnet link for a shared file
+	 * @param file The file to generate magnet link for
+	 * @return magnet URI or empty string on failure
+	 */
+	wxString GenerateMagnetLink(CKnownFile* file);
+	
+	/**
+	 * Generate magnet link for a shared file by hash
+	 * @param fileHash Hash of the file to generate magnet link for
+	 * @return magnet URI or empty string on failure
+	 */
+	wxString GenerateMagnetLink(const CMD4Hash& fileHash);
 
 	/**
 	 * Returns the name of a folder visible to the public.
