@@ -340,7 +340,9 @@ m_clientSkinNames(CLIENT_SKIN_SIZE)
 #else
 	m_GeoIPavailable = false;
 #endif
+	AddDebugLogLineN(logSearch, wxT("=== Creating Search Dialog ==="));
 	m_searchwnd = new CSearchDlg(p_cnt);
+	AddDebugLogLineN(logSearch, wxT("Search Dialog created successfully"));
 	m_transferwnd = new CTransferWnd(p_cnt);
 	m_sharedfileswnd = new CSharedFilesWnd(p_cnt);
 	m_statisticswnd = new CStatisticsDlg(p_cnt, theApp->m_statistics);
@@ -1020,7 +1022,7 @@ bool CamuleDlg::LoadGUIPrefs(bool override_pos, bool override_size)
 	m_srv_split_pos = config->Read(section + wxT("SRV_SPLITTER_POS"), 463l);
 	if (!override_size) {
 		if (x2 > 0 && y2 > 0) {
-			SetSize(x2, y2);
+			SetSize(wxMax(x2, 10), wxMax(y2, 10));
 		} else {
 #ifndef __WXGTK__
 			// Probably first run.

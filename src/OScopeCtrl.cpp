@@ -348,7 +348,7 @@ void COScopeCtrl::OnSize(wxSizeEvent& WXUNUSED(evt))
 	m_rectPlot.SetLeft(20);
 	m_rectPlot.SetTop(10);
 	m_rectPlot.SetRight(std::max<int>(m_rectPlot.GetLeft() + 1, m_rectClient.GetRight() - 40));
-	m_rectPlot.SetBottom(std::max<int>(m_rectPlot.GetTop() + 1, m_rectClient.GetBottom() - 25));
+	m_rectPlot.SetBottom(std::max<int>(m_rectPlot.GetTop() + 1, wxMax(m_rectClient.GetBottom() - 25, m_rectPlot.GetTop() + 10)));
 
 	PlotData_t* ppds = pdsTrends;
 	for(unsigned iTrend=0; iTrend<nTrends; ++iTrend, ++ppds) {
@@ -382,8 +382,8 @@ void COScopeCtrl::ShiftGraph(unsigned cntPoints)
 	// clear a rectangle over the right side of plot prior to adding the new points
 	dcPlot.SetPen(*wxTRANSPARENT_PEN);
 	dcPlot.SetBrush(brushBack);	// fill with background color
-	dcPlot.DrawRectangle(m_rectPlot.GetWidth()-cntPixelOffset, 0,
-		cntPixelOffset, m_rectPlot.GetHeight());
+	dcPlot.DrawRectangle(wxMax(m_rectPlot.GetWidth()-cntPixelOffset, 0), 0,
+		wxMax(cntPixelOffset, 10), wxMax(m_rectPlot.GetHeight(), 10));
 }
 
 

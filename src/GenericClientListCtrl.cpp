@@ -710,7 +710,7 @@ void CGenericClientListCtrl::OnDrawItem(
 		if (columnwidth > 2*iOffset) {
 			// Make a copy of the current rectangle so we can apply specific tweaks
 			wxRect target_rec = cur_rec;
-			target_rec.width = columnwidth - 2*iOffset;
+			target_rec.width = wxMax(columnwidth - 2*iOffset, 10);
 
 			GenericColumnEnum cid = m_columndata.columns[i].cid;
 

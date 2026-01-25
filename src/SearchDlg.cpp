@@ -82,20 +82,26 @@ END_EVENT_TABLE()
 CSearchDlg::CSearchDlg(wxWindow* pParent)
 : wxPanel(pParent, -1)
 {
+	AddDebugLogLineN(logSearch, wxT("=== CSearchDlg::CSearchDlg: Constructor START ==="));
+
 	m_last_search_time = 0;
 
+	AddDebugLogLineN(logSearch, wxT("CSearchDlg: Creating search dialog UI..."));
 	wxSizer* content = searchDlg(this, true);
 	content->Show(this, true);
 
+	AddDebugLogLineN(logSearch, wxT("CSearchDlg: Getting progress bar control..."));
 	m_progressbar = CastChild( ID_SEARCHPROGRESS, wxGauge );
 	m_progressbar->SetRange(100);
 
+	AddDebugLogLineN(logSearch, wxT("CSearchDlg: Getting notebook control..."));
 	m_notebook = CastChild( ID_NOTEBOOK, CMuleNotebook );
 
 #ifdef __WXMAC__
 	//#warning TODO: restore the image list if/when wxMac supports locating the image
 #else
 	// Initialise the image list
+	AddDebugLogLineN(logSearch, wxT("CSearchDlg: Setting up image list for notebook..."));
 	wxImageList* m_ImageList = new wxImageList(16,16);
 	m_ImageList->Add(amuleSpecial(3));
 	m_ImageList->Add(amuleSpecial(4));
@@ -103,6 +109,7 @@ CSearchDlg::CSearchDlg(wxWindow* pParent)
 #endif
 
 	// Sanity sanity
+	AddDebugLogLineN(logSearch, wxT("CSearchDlg: Checking search type choices..."));
 	wxChoice* searchchoice = CastChild( ID_SEARCHTYPE, wxChoice );
 	wxASSERT(searchchoice);
 	wxASSERT(searchchoice->GetString(0) == _("Local"));
@@ -112,18 +119,23 @@ CSearchDlg::CSearchDlg(wxWindow* pParent)
 	m_searchchoices = searchchoice->GetStrings();
 
 	// Let's break it now.
-
+	AddDebugLogLineN(logSearch, wxT("CSearchDlg: Calling FixSearchTypes..."));
 	FixSearchTypes();
 
+	AddDebugLogLineN(logSearch, wxT("CSearchDlg: Setting default control values..."));
 	CastChild( IDC_TypeSearch, wxChoice )->SetSelection(0);
 	CastChild( IDC_SEARCHMINSIZE, wxChoice )->SetSelection(2);
 	CastChild( IDC_SEARCHMAXSIZE, wxChoice )->SetSelection(2);
 
 	// Not there initially.
+	AddDebugLogLineN(logSearch, wxT("CSearchDlg: Hiding extended and filter sections..."));
 	s_searchsizer->Show(s_extendedsizer, false);
 	s_searchsizer->Show(s_filtersizer, false);
 
+	AddDebugLogLineN(logSearch, wxT("CSearchDlg: Calling Layout..."));
 	Layout();
+
+	AddDebugLogLineN(logSearch, wxT("=== CSearchDlg::CSearchDlg: Constructor END ==="));
 }
 
 
@@ -270,7 +282,10 @@ void CSearchDlg::OnSearchPageChanged(wxBookCtrlEvent& WXUNUSED(evt))
 
 void CSearchDlg::OnBnClickedStart(wxCommandEvent& WXUNUSED(evt))
 {
+	AddDebugLogLineN(logSearch, wxT("=== OnBnClickedStart: Search button clicked ==="));
+
 	if (!thePrefs::GetNetworkED2K() && !thePrefs::GetNetworkKademlia()) {
+		AddDebugLogLineN(logSearch, wxT("OnBnClickedStart: ERROR - both eD2k and Kademlia are disabled"));
 		wxMessageBox(_("It's impossible to search when both eD2k and Kademlia are disabled."),
 			     _("Search error"),
 			     wxOK|wxCENTRE|wxICON_ERROR
@@ -278,11 +293,22 @@ void CSearchDlg::OnBnClickedStart(wxCommandEvent& WXUNUSED(evt))
 		return;
 	}
 
+	AddDebugLogLineN(logSearch, wxString::Format(wxT("OnBnClickedStart: Network available - ED2K=%d, Kad=%d"),
+		thePrefs::GetNetworkED2K(), thePrefs::GetNetworkKademlia()));
+
 	// We mustn't search more often than once every 2 secs
-	if ((GetTickCount() - m_last_search_time) > 2000) {
-		m_last_search_time = GetTickCount();
+	uint32 currentTime = GetTickCount();
+	AddDebugLogLineN(logSearch, wxString::Format(wxT("OnBnClickedStart: Current time=%u, Last search time=%u, Diff=%u"),
+		currentTime, m_last_search_time, currentTime - m_last_search_time));
+
+	if ((currentTime - m_last_search_time) > 2000) {
+		m_last_search_time = currentTime;
+		AddDebugLogLineN(logSearch, wxT("OnBnClickedStart: Time constraint passed, calling OnBnClickedStop"));
 		OnBnClickedStop(nullEvent);
+		AddDebugLogLineN(logSearch, wxT("OnBnClickedStart: Calling StartNewSearch"));
 		StartNewSearch();
+	} else {
+		AddDebugLogLineN(logSearch, wxT("OnBnClickedStart: Search blocked - too soon after last search"));
 	}
 }
 
@@ -453,7 +479,17 @@ void CSearchDlg::StartNewSearch()
 	}
 
 	if (CastChild(IDC_EXTENDEDSEARCHCHECK, wxCheckBox)->GetValue()) {
-		params.extension = CastChild( IDC_EDITSEARCHEXTENSION, wxTextCtrl )->GetValue();
+		// Convert file extension string to numeric hash for network compatibility
+		wxString ext = CastChild( IDC_EDITSEARCHEXTENSION, wxTextCtrl )->GetValue();
+		if (!ext.IsEmpty()) {
+			uint32 extHash = 0;
+			for (size_t i = 0; i < ext.Length(); i++) {
+				extHash = (extHash << 5) + extHash + static_cast<unsigned char>(ext[i]);
+			}
+			params.extension = extHash;
+		} else {
+			params.extension = 0;
+		}
 
 		uint32 sizemin = GetTypeSize( (uint8) CastChild( IDC_SEARCHMINSIZE, wxChoice )->GetSelection() );
 		uint32 sizemax = GetTypeSize( (uint8) CastChild( IDC_SEARCHMAXSIZE, wxChoice )->GetSelection() );
@@ -477,18 +513,18 @@ void CSearchDlg::StartNewSearch()
 		params.availability = CastChild( IDC_SPINSEARCHAVAIBILITY, wxSpinCtrl )->GetValue();
 
 		switch ( CastChild( IDC_TypeSearch, wxChoice )->GetSelection() ) {
-		case 0:	params.typeText.Clear();	break;
-		case 1:	params.typeText = ED2KFTSTR_ARCHIVE;	break;
-		case 2: params.typeText = ED2KFTSTR_AUDIO;	break;
-		case 3:	params.typeText = ED2KFTSTR_CDIMAGE;	break;
-		case 4: params.typeText = ED2KFTSTR_IMAGE;	break;
-		case 5: params.typeText = ED2KFTSTR_PROGRAM;	break;
-		case 6:	params.typeText = ED2KFTSTR_DOCUMENT;	break;
-		case 7:	params.typeText = ED2KFTSTR_VIDEO;	break;
+		case 0:	params.fileType.Clear();	break;
+		case 1:	params.fileType = ED2KFTSTR_ARCHIVE;	break;
+		case 2: params.fileType = ED2KFTSTR_AUDIO;	break;
+		case 3:	params.fileType = ED2KFTSTR_CDIMAGE;	break;
+		case 4: params.fileType = ED2KFTSTR_IMAGE;	break;
+		case 5: params.fileType = ED2KFTSTR_PROGRAM;	break;
+		case 6:	params.fileType = ED2KFTSTR_DOCUMENT;	break;
+		case 7:	params.fileType = ED2KFTSTR_VIDEO;	break;
 		default:
 			AddDebugLogLineC( logGeneral,
 				CFormat( wxT("Warning! Unknown search-category (%s) selected!") )
-					% params.typeText
+					% params.fileType
 			);
 			break;
 		}

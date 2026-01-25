@@ -308,23 +308,31 @@ void CSearchList::RemoveResults(long searchID)
 
 wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchParams& params)
 {
+	AddDebugLogLineN(logSearch, wxString::Format(wxT("=== StartNewSearch: type=%d, searchString='%s', fileType='%s', extension=%u, minSize=%llu, maxSize=%llu, availability=%u"),
+		type, params.searchString, params.fileType, params.extension, params.minSize, params.maxSize, params.availability));
+
 	// Check that we can actually perform the specified desired search.
 	if ((type == KadSearch) && !Kademlia::CKademlia::IsRunning()) {
+		AddDebugLogLineN(logSearch, wxT("StartNewSearch: Kad search failed - Kad not running"));
 		return _("Kad search can't be done if Kad is not running");
 	} else if ((type != KadSearch) && !theApp->IsConnectedED2K()) {
+		AddDebugLogLineN(logSearch, wxT("StartNewSearch: eD2k search failed - not connected"));
 		return _("eD2k search can't be done if eD2k is not connected");
 	}
 
-	if (params.typeText != ED2KFTSTR_PROGRAM) {
-		if (params.typeText.CmpNoCase(wxT("Any"))) {
-			m_resultType = params.typeText;
+	if (params.fileType != ED2KFTSTR_PROGRAM) {
+		if (params.fileType.CmpNoCase(wxT("Any")) != 0) {
+			m_resultType = params.fileType;
+			AddDebugLogLineN(logSearch, wxString::Format(wxT("StartNewSearch: Setting resultType filter to '%s'"), m_resultType));
 		} else {
 			m_resultType.Clear();
+			AddDebugLogLineN(logSearch, wxT("StartNewSearch: Clearing resultType filter (Any selected)"));
 		}
 	} else {
 		// No check is to be made on returned results if the
 		// type is 'Programs', since this returns multiple types.
 		m_resultType.Clear();
+		AddDebugLogLineN(logSearch, wxT("StartNewSearch: Clearing resultType filter (Programs selected)"));
 	}
 
 	if (type == KadSearch) {
@@ -543,6 +551,9 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 	CMemFile packet(in_packet, size);
 
 	uint32_t results = packet.ReadUInt32();
+	AddDebugLogLineN(logSearch, wxString::Format(wxT("ProcessSearchAnswer: received %u results from server %s:%u, searchID=%ld"),
+		results, Uint32_16toStringIP_Port(serverIP, serverPort), m_currentSearch));
+
 	for (; results > 0; --results) {
 		AddToList(new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort), false);
 	}
@@ -551,6 +562,8 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 
 void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, uint32_t serverIP, uint16_t serverPort)
 {
+	AddDebugLogLineN(logSearch, wxString::Format(wxT("ProcessUDPSearchAnswer: received result from server %s:%u, searchID=%ld"),
+		Uint32_16toStringIP_Port(serverIP, serverPort), m_currentSearch));
 	AddToList(new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort), false);
 }
 
@@ -666,13 +679,13 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 {
 	// Count the number of used parameters
 	unsigned int parametercount = 0;
-	if ( !params.typeText.IsEmpty() )	++parametercount;
+	if ( !params.fileType.IsEmpty() )	++parametercount;
 	if ( params.minSize > 0 )			++parametercount;
 	if ( params.maxSize > 0 )			++parametercount;
 	if ( params.availability > 0 )		++parametercount;
-	if ( !params.extension.IsEmpty() )	++parametercount;
+	if ( params.extension > 0 )			++parametercount;
 
-	wxString typeText = params.typeText;
+	wxString typeText = params.fileType;
 	if (typeText == ED2KFTSTR_ARCHIVE){
 		// eDonkeyHybrid 0.48 uses type "Pro" for archives files
 		// www.filedonkey.com uses type "Pro" for archives files
@@ -772,11 +785,11 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 			target.WriteMetaDataSearchParam(FT_SOURCES, ED2K_SEARCH_OP_GREATER, params.availability);
 		}
 
-		if (!params.extension.IsEmpty()){
+		if (params.extension > 0){
 			if (++iParameterCount < parametercount) {
 				target.WriteBooleanAND();
 			}
-			target.WriteMetaDataSearchParam(FT_FILEFORMAT, params.extension);
+			target.WriteMetaDataSearchParam(FT_FILEFORMAT, wxString::Format(wxT("%u"), params.extension));
 		}
 
 		//#warning TODO - I keep this here, ready if we ever allow such searches...
@@ -836,7 +849,7 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 		wxASSERT( iParameterCount == parametercount );
 
 	} else {
-		if (!params.extension.IsEmpty()) {
+		if (params.extension > 0) {
 			if (++iParameterCount < parametercount) {
 				target.WriteBooleanAND();
 			}
@@ -926,9 +939,9 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 			}
 		}
 
-		if (!params.typeText.IsEmpty()) {
+		if (!params.fileType.IsEmpty()) {
 			// Type is always ASCII string
-			target.WriteMetaDataSearchParamASCII(FT_FILETYPE, params.typeText);
+			target.WriteMetaDataSearchParamASCII(FT_FILETYPE, params.fileType);
 		}
 
 		if (params.minSize > 0) {
@@ -943,8 +956,8 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 			target.WriteMetaDataSearchParam(FT_SOURCES, ED2K_SEARCH_OP_GREATER, params.availability);
 		}
 
-		if (!params.extension.IsEmpty()) {
-			target.WriteMetaDataSearchParam(FT_FILEFORMAT, params.extension);
+		if (params.extension > 0) {
+			target.WriteMetaDataSearchParam(FT_FILEFORMAT, wxString::Format(wxT("%u"), params.extension));
 		}
 
 		//#warning TODO - third and last warning of the same series.

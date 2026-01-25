@@ -36,6 +36,7 @@
 #include "Preferences.h"	// Needed for thePrefs
 #include "GuiEvents.h"		// Needed for CoreNotify_Search_Add_Download
 #include "MuleColour.h"
+#include "Logger.h"			// Needed for AddDebugLogLineN
 
 BEGIN_EVENT_TABLE(CSearchListCtrl, CMuleListCtrl)
 	EVT_LIST_ITEM_RIGHT_CLICK(-1, CSearchListCtrl::OnRightClick)
@@ -136,6 +137,7 @@ CSearchListCtrl::~CSearchListCtrl()
 
 void CSearchListCtrl::AddResult(CSearchFile* toshow)
 {
+	AddDebugLogLineN(logSearch, wxT("=== SEARCH LIST DEBUG: AddResult called ==="));
 	wxCHECK_RET(toshow->GetSearchID() == m_nResultsID, wxT("Wrong search-id for result-list"));
 
 	const wxUIntPtr toshowdata = reinterpret_cast<wxUIntPtr>(toshow);
@@ -183,6 +185,7 @@ void CSearchListCtrl::AddResult(CSearchFile* toshow)
 		insertPos = GetInsertPos(toshowdata);
 	}
 	long newid = InsertItem(insertPos, toshow->GetFileName().GetPrintable());
+	AddDebugLogLineN(logSearch, wxT("=== SEARCH LIST DEBUG: Inserted item successfully ==="));
 
 	// Sanity checks to ensure that results/children are properly positioned.
 #ifdef __WXDEBUG__
@@ -210,6 +213,7 @@ void CSearchListCtrl::AddResult(CSearchFile* toshow)
 #endif
 
 	SetItemPtrData(newid, toshowdata);
+	AddDebugLogLineN(logSearch, wxT("=== SEARCH LIST DEBUG: Item data set successfully ==="));
 
 	// Filesize
 	SetItem(newid, ID_SEARCH_COL_SIZE, CastItoXBytes( toshow->GetFileSize() ) );
@@ -248,6 +252,12 @@ void CSearchListCtrl::AddResult(CSearchFile* toshow)
 
 	// Set the color of the item
 	UpdateItemColor( newid );
+	
+	AddDebugLogLineN(logSearch, wxT("=== SEARCH LIST DEBUG: AddResult completed successfully ==="));
+	
+	// Force UI refresh to ensure results are visible
+	Refresh();
+	Update();
 }
 
 
@@ -849,7 +859,7 @@ void CSearchListCtrl::OnDrawItem(
 		GetColumn(i, listitem);
 
 		if ( listitem.GetWidth() > 0 ) {
-			cur_rec.width = listitem.GetWidth() - 2*iOffset;
+			cur_rec.width = wxMax(listitem.GetWidth() - 2*iOffset, 10);
 
 			// Make a copy of the current rectangle so we can apply specific tweaks
 			wxRect target_rec = cur_rec;
@@ -890,7 +900,7 @@ void CSearchListCtrl::OnDrawItem(
 			cellitem.SetId(item);
 
 			// Force clipper (clip 2 px more than the rectangle from the right side)
-			wxDCClipper clipper(*dc, target_rec.x, target_rec.y, target_rec.width - 2, target_rec.height);
+			wxDCClipper clipper(*dc, target_rec.x, target_rec.y, wxMax(target_rec.width - 2, 10), target_rec.height);
 
 			if (GetItem(cellitem)) {
 				dc->DrawText(cellitem.GetText(), target_rec.GetX(), target_rec.GetY());

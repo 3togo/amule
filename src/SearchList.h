@@ -67,9 +67,9 @@ public:
 		//! The keyword selected for Kad search
 		wxString strKeyword;
 		//! The type of files to search for (may be empty), one of ED2KFTSTR_*
-		wxString typeText;
-		//! The filename extension. May be empty.
-		wxString extension;
+		wxString fileType;
+		//! The filename extension as numeric hash for network compatibility. Zero for any.
+		uint32_t extension;
 		//! The smallest filesize in bytes to accept, zero for any.
 		uint64_t minSize;
 		//! The largest filesize in bytes to accept, zero for any.

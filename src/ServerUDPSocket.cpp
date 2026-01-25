@@ -135,6 +135,7 @@ void CServerUDPSocket::ProcessPacket(CMemFile& packet, uint8 opcode, uint32 ip, 
 								wxT("Server search reply got additional bogus bytes.") );
 							break;
 						} else {
+							AddDebugLogLineN(logSearch, wxT("Processing server search reply packet"));
 							AddDebugLogLineC( logServerUDP,
 								wxT("Got server search reply with additional packet.") );
 						}

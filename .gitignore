@@ -1,5 +1,5 @@
 # Files created by the auto* tools
-build*/
+*build*/
 
 ABOUT-NLS
 aclocal.m4

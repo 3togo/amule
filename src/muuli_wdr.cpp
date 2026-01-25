@@ -492,7 +492,7 @@ wxSizer *messagePage( wxWindow *parent, bool call_fit, bool set_sizer )
     wxStaticBoxSizer *item0 = new wxStaticBoxSizer( item1, wxVERTICAL );
 
     wxSplitterWindow *item2 = new wxSplitterWindow( parent, ID_MESSAGESPLATTER, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE );
-    item2->SetMinimumPaneSize( 20 );
+    item2->SetMinimumPaneSize( wxMax(20, 10) );
     wxPanel *item3 = new wxPanel( item2, -1 );
     messagePageFriends( item3, FALSE, TRUE );
     wxPanel *item4 = new wxPanel( item2, -1 );
@@ -1019,7 +1019,7 @@ wxSizer *sharedfilesDlg( wxWindow *parent, bool call_fit, bool set_sizer )
     wxBoxSizer *item0 = new wxBoxSizer( wxVERTICAL );
 
     wxSplitterWindow *item1 = new wxSplitterWindow( parent, ID_SHARESSPLATTER, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE );
-    item1->SetMinimumPaneSize( 20 );
+    item1->SetMinimumPaneSize( wxMax(20, 10) );
     wxPanel *item2 = new wxPanel( item1, -1 );
     sharedfilesTopDlg( item2, FALSE, TRUE );
     wxPanel *item3 = new wxPanel( item1, -1 );
@@ -2459,7 +2459,7 @@ wxSizer *transferDlg( wxWindow *parent, bool call_fit, bool set_sizer )
     wxStaticBoxSizer *item0 = new wxStaticBoxSizer( item1, wxVERTICAL );
 
     wxSplitterWindow *item2 = new wxSplitterWindow( parent, ID_DOWNLOADSSPLATTER, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE );
-    item2->SetMinimumPaneSize( 20 );
+    item2->SetMinimumPaneSize( wxMax(20, 10) );
     wxPanel *item3 = new wxPanel( item2, -1 );
     transferTopPane( item3, FALSE, TRUE );
     wxPanel *item4 = new wxPanel( item2, -1 );

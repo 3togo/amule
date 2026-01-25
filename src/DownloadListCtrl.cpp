@@ -878,7 +878,7 @@ void CDownloadListCtrl::OnDrawItem(
 		GetColumn(i, listitem);
 
 		if (listitem.GetWidth() > 2*iOffset) {
-			cur_rec.width = listitem.GetWidth() - 2*iOffset;
+			cur_rec.width = wxMax(listitem.GetWidth() - 2*iOffset, 10);
 
 			// Make a copy of the current rectangle so we can apply specific tweaks
 			wxRect target_rec = cur_rec;

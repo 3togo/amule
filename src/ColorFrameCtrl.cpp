@@ -92,14 +92,14 @@ void CColorFrameCtrl::OnPaint(wxPaintEvent& WXUNUSED(evt))
   dc.DrawRectangle(rc);
 
   dc.SetPen(*wxBLACK_PEN);
-  dc.DrawLine(rc.x+1,rc.y+1,rc.x+rc.width-2,rc.y+1);
-  dc.DrawLine(rc.x+rc.width-2,rc.y+1,rc.x+rc.width-2,rc.y+rc.height-2);
-  dc.DrawLine(rc.x+rc.width-2,rc.y+rc.height-2,rc.x+1,rc.y+rc.height-2);
-  dc.DrawLine(rc.x+1,rc.y+rc.height-2,rc.x+1,rc.y+1);
+  dc.DrawLine(rc.x+1,rc.y+1,wxMax(rc.x+rc.width-2, rc.x+1),rc.y+1);
+  dc.DrawLine(wxMax(rc.x+rc.width-2, rc.x+1),rc.y+1,wxMax(rc.x+rc.width-2, rc.x+1),wxMax(rc.y+rc.height-2, rc.y+1));
+  dc.DrawLine(wxMax(rc.x+rc.width-2, rc.x+1),wxMax(rc.y+rc.height-2, rc.y+1),rc.x+1,wxMax(rc.y+rc.height-2, rc.y+1));
+  dc.DrawLine(rc.x+1,wxMax(rc.y+rc.height-2, rc.y+1),rc.x+1,rc.y+1);
 
   dc.SetPen(*wxWHITE_PEN);
-  dc.DrawLine(rc.x+rc.width-1,rc.y,rc.x+rc.width-1,rc.y+rc.height-1);
-  dc.DrawLine(rc.x+rc.width-1,rc.y+rc.height-1,rc.x,rc.y+rc.height-1);
+  dc.DrawLine(wxMax(rc.x+rc.width-1, rc.x),rc.y,wxMax(rc.x+rc.width-1, rc.x),wxMax(rc.y+rc.height-1, rc.y));
+  dc.DrawLine(wxMax(rc.x+rc.width-1, rc.x),wxMax(rc.y+rc.height-1, rc.y),rc.x,wxMax(rc.y+rc.height-1, rc.y));
 
   dc.SetPen(*wxGREY_PEN);
   dc.DrawLine(rc.x+rc.width,rc.y,rc.x,rc.y);
