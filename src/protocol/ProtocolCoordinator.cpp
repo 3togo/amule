@@ -85,7 +85,7 @@ public:
         m_stats.duplicate_sources_removed += removed_count;
     }
     
-    // ...其他实现方法...
+    // ...other implementation methods...
 };
 
 ProtocolCoordinator::ProtocolCoordinator() : 

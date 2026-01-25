@@ -23,7 +23,7 @@
 //
 
 #include "Logger.h"
-#include "common/ModernLogging.h"  // 新增头文件
+#include "common/ModernLogging.h"  // Added header file
 #include "amule.h"
 #include "Preferences.h"
 #include <common/Macros.h>
@@ -119,7 +119,7 @@ void CLogger::SetEnabled( DebugType type, bool enabled )
 }
 
 
-// 保持原始接口完全不变
+// Keep original interface completely unchanged
 void CLogger::AddLogLine(
 	const wxString& DEBUG_ONLY(file),
 	int DEBUG_ONLY(line),

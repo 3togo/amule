@@ -2,7 +2,7 @@
 #include "common/PerformanceUtils.h"
 #include <iostream>
 
-// 传统方式 - 多次字符串分配
+// Traditional method - multiple string allocations
 void traditional_logging() {
     modern_log::Log("Starting data processing");
     modern_log::Log("Processing file: data.txt");
@@ -10,7 +10,7 @@ void traditional_logging() {
     modern_log::Log("Processing completed");
 }
 
-// 优化方式 - 使用StringBuffer减少分配
+// Optimized method - using StringBuffer to reduce allocations
 void optimized_logging() {
     using namespace modern_utils;
     
@@ -31,7 +31,7 @@ void optimized_logging() {
     modern_log::Log(std::string_view(buf4.str()));
 }
 
-// 批量处理优化的例子
+// Batch processing optimization example
 void batch_processing_example() {
     using namespace modern_utils;
     
@@ -40,7 +40,7 @@ void batch_processing_example() {
     };
     
     for (int i = 0; i < 4; ++i) {
-        // 使用编译时哈希快速路由
+        // Use compile-time hash for fast routing
         switch (ct_hash(operations[i])) {
             case ct_hash("network_connect"):
                 modern_log::Log("Network connection established");
@@ -58,17 +58,17 @@ void batch_processing_example() {
     }
 }
 
-// 性能比较演示
+// Performance comparison demo
 void performance_comparison() {
     std::cout << "=== Performance Comparison ===" << std::endl;
     
-    // 这里可以添加实际的性能测量代码
-    // 在实际项目中会使用PerformanceTimer进行微秒级测量
+    // Here you can add actual performance measurement code
+    // In real projects, PerformanceTimer would be used for microsecond-level measurements
     
     using namespace modern_utils;
     PerformanceTimer timer("Logging operations");
     
-    // 执行一些日志操作
+    // Execute some logging operations
     for (int i = 0; i < 100; ++i) {
         StringBuffer buf(256);
         buf.append("Operation ").append(i).append(" completed");
