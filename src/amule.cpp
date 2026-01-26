@@ -1969,6 +1969,33 @@ void CamuleApp::OnUnhandledException()
 
 void CamuleApp::StartKad()
 {
+	// Check KAD prerequisites before starting
+	if (!thePrefs::IsUDPDisabled()) {
+		AddDebugLogLineN(logGeneral, wxT("KAD: Checking network prerequisites..."));
+		
+		// Warn about essential KAD requirements
+		wxString kadWarnings;
+		
+		if (thePrefs::GetNetworkKademlia()) {
+			AddDebugLogLineN(logGeneral, wxT("KAD: Network support enabled"));
+		} else {
+			kadWarnings += wxT("KAD network support disabled in preferences. ");
+		}
+		
+		// Check if UDP port might be blocked (basic check)
+		if (thePrefs::GetUDPPort() == 0) {
+			kadWarnings += wxT("UDP port not configured. ");
+		}
+		
+		// Display warnings if any
+		if (!kadWarnings.IsEmpty()) {
+			AddDebugLogLineC(logGeneral, wxT("KAD Warnings: ") + kadWarnings);
+			AddLogLineC(_("KAD prerequisites warning: ") + kadWarnings);
+		} else {
+			AddDebugLogLineN(logGeneral, wxT("KAD: All basic prerequisites met"));
+		}
+	}
+	
 	if (!Kademlia::CKademlia::IsRunning() && thePrefs::GetNetworkKademlia()) {
 		// Kad makes no sense without the Client-UDP socket.
 		if (!thePrefs::IsUDPDisabled()) {
