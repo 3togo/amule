@@ -112,7 +112,10 @@ m_filterEnabled(false)
 
 	// Add the list so that it will be synced with the other lists
 	s_lists.push_back( this );
-}
+	
+	}
+
+
 
 
 wxString CSearchListCtrl::GetOldColumnOrder() const
@@ -138,6 +141,7 @@ CSearchListCtrl::~CSearchListCtrl()
 
 void CSearchListCtrl::AddResult(CSearchFile* toshow)
 {
+
 	wxCHECK_RET(toshow->GetSearchID() == m_nResultsID, wxT("Wrong search-id for result-list"));
 
 	const wxUIntPtr toshowdata = reinterpret_cast<wxUIntPtr>(toshow);
@@ -245,8 +249,12 @@ void CSearchListCtrl::AddResult(CSearchFile* toshow)
 	// File status
 	SetItem(newid, ID_SEARCH_COL_STATUS, DetermineStatusPrintable(toshow));
 
-	// Directory where file is located (has a value when search file comes from a "view shared files" request)
-	SetItem(newid, ID_SEARCH_COL_DIRECTORY, toshow->GetDirectory());
+	// Directory
+	if (toshow->GetDirectory().IsEmpty()) {
+		SetItem( newid, ID_SEARCH_COL_DIRECTORY, wxT("?") );
+	} else {
+		SetItem( newid, ID_SEARCH_COL_DIRECTORY, toshow->GetDirectory() );
+	}
 
 	// Set the color of the item
 	UpdateItemColor( newid );
@@ -818,63 +826,83 @@ static const wxBrush& GetBrush(wxSystemColour index)
 void CSearchListCtrl::OnDrawItem(
 	int item, wxDC* dc, const wxRect& rect, const wxRect& rectHL, bool highlighted)
 {
-	// Critical: Early exit for invalid rectangle parameters that could cause pixman errors
-	// NOTE: Pixman library (used by wxWidgets on some systems) has strict requirements
-	// for rectangle coordinates. Specifically, zero coordinates (0,0) can cause
-	// "Invalid rectangle passed" errors even when dimensions are valid.
-	// This check prevents such crashes by detecting problematic coordinate patterns.
-	if (rect.width <= 0 || rect.height <= 0 || rectHL.width <= 0 || rectHL.height <= 0) {
-		std::cout << "DEBUG: ABORTING - Invalid rectangle dimensions detected!" << std::endl;
-		AddDebugLogLineC(logSearch, wxT("ABORTING - Invalid rectangle dimensions"));
+	// Critical: Early exit if control is not properly initialized
+	// This can happen when items are added before the control is fully laid out
+	if (!this->IsShown() || this->GetSize().GetWidth() <= 0 || this->GetSize().GetHeight() <= 0) {
 		return;
 	}
 	
-	// Critical: Special handling for zero coordinates that cause pixman errors
-	// REFERENCE: https://github.com/aMule/aMule/issues/XXX
-	// When drawing context provides zero coordinates (0,0) for both rect and rectHL,
-	// pixman library throws "Invalid rectangle passed" error even with valid dimensions.
-	// This workaround detects and handles this edge case gracefully.
-	if (rect.x == 0 && rect.y == 0 && rectHL.x == 0 && rectHL.y == 0) {
-		std::cout << "DEBUG: SKIPPING - Zero coordinates detected, likely causing pixman error" << std::endl;
-		// Instead of skipping entirely, we'll attempt a safe draw with minimal parameters
-		// This avoids the crash but doesn't fix the root cause
-		AddDebugLogLineC(logSearch, wxT("INFO - Zero coordinates detected, attempting safe draw"));
+	// Critical: Fix invalid rectangle parameters that could cause pixman errors
+	// Instead of just returning, we'll adjust the rectangles to be valid
+	wxRect safeRect = rect;
+	wxRect safeRectHL = rectHL;
+	
+	// Validate and fix rectangle dimensions
+	if (safeRect.width <= 0 || safeRect.height <= 0 || safeRectHL.width <= 0 || safeRectHL.height <= 0) {
+		// If dimensions are invalid, try to calculate reasonable defaults based on the control
+		if (safeRect.width <= 0) safeRect.width = std::max(1, GetSize().GetWidth()/2);
+		if (safeRect.height <= 0) safeRect.height = 20; // typical row height
+		if (safeRectHL.width <= 0) safeRectHL.width = safeRect.width;
+		if (safeRectHL.height <= 0) safeRectHL.height = safeRect.height;
 	}
-
+	
+	// Fix zero x-coordinates that cause pixman errors by offsetting them to a valid position
+	if (safeRect.x == 0 && safeRectHL.x == 0) {
+		// Calculate a reasonable x-offset based on the control's client area
+		wxSize clientSize = GetClientSize();
+		if (clientSize.x > 20) {
+			safeRect.x = 4;  // Standard margin
+			safeRectHL.x = 4;
+		} else {
+			// If client size is not reliable, use a minimum offset
+			safeRect.x = 4;
+			safeRectHL.x = 4;
+		}
+	}
+	
+	// Fix negative coordinates
+	if (safeRect.x < 0) safeRect.x = 0;
+	if (safeRect.y < 0) safeRect.y = 0;
+	if (safeRectHL.x < 0) safeRectHL.x = 0;
+	if (safeRectHL.y < 0) safeRectHL.y = 0;
+	
+	#ifdef __WXDEBUG__
 	// Force output to both debug log and console
 	std::cout << "DEBUG: Drawing item " << item 
-	          << " - rect: " << rect.width << "x" << rect.height 
-	          << " - highlight rect: " << rectHL.width << "x" << rectHL.height 
+	          << " - rect: " << safeRect.width << "x" << safeRect.height 
+	          << " - highlight rect: " << safeRectHL.width << "x" << safeRectHL.height 
 	          << std::endl;
 	AddDebugLogLineN(logSearch, CFormat(wxT("Drawing item %d - rect: %dx%d - highlight rect: %dx%d"))
-		% item % rect.width % rect.height % rectHL.width % rectHL.height);
+		% item % safeRect.width % safeRect.height % safeRectHL.width % safeRectHL.height);
+	#endif
 		
 	try {
 		CSearchFile* file = reinterpret_cast<CSearchFile*>(GetItemData(item));
 
+	#ifdef __WXDEBUG__
 	// Debug output for item information
 	std::cout << "DEBUG: Drawing file: " << file->GetFileName().GetPrintable().ToUTF8().data()
 	          << ", search ID: " << file->GetSearchID() << std::endl;
+	#endif
 	
-	// Additional rectangle validation - check for NaN or extreme values
-	if (rect.width < 0 || rect.height < 0 || rectHL.width < 0 || rectHL.height < 0 ||
-	    rect.width > 10000 || rect.height > 10000 || rectHL.width > 10000 || rectHL.height > 10000) {
-		std::cout << "DEBUG: Invalid rectangle dimensions - rect: " << rect.width << "x" << rect.height 
-		          << ", rectHL: " << rectHL.width << "x" << rectHL.height << std::endl;
+	// Additional rectangle validation - check for extreme values
+	if (safeRect.width < 0 || safeRect.height < 0 || safeRectHL.width < 0 || safeRectHL.height < 0 ||
+	    safeRect.width > 10000 || safeRect.height > 10000 || safeRectHL.width > 10000 || safeRectHL.height > 10000) {
+		#ifdef __WXDEBUG__
+		std::cout << "DEBUG: Invalid rectangle dimensions - rect: " << safeRect.width << "x" << safeRect.height 
+		          << ", rectHL: " << safeRectHL.width << "x" << safeRectHL.height << std::endl;
+		#endif
 		AddDebugLogLineC(logSearch, wxT("Extreme rectangle dimensions detected"));
 		return;
 	}
 
-	// Log and validate drawing coordinates
-	std::cout << "DEBUG: Drawing coordinates - rect.x: " << rect.x << " rect.y: " << rect.y 
-	          << " rectHL.x: " << rectHL.x << " rectHL.y: " << rectHL.y 
-	          << " highlighted: " << highlighted << std::endl;
-	
 	// Validate coordinates
 	if (rect.x < 0 || rect.y < 0 || rectHL.x < 0 || rectHL.y < 0) {
+		#ifdef __WXDEBUG__
 		std::cout << "DEBUG: Negative coordinates detected - rect.x: " << rect.x 
 		          << " rect.y: " << rect.y << " rectHL.x: " << rectHL.x 
 		          << " rectHL.y: " << rectHL.y << std::endl;
+		#endif
 		AddDebugLogLineC(logSearch, wxT("Negative coordinates detected"));
 		return;
 	}
@@ -902,23 +930,27 @@ void CSearchListCtrl::OnDrawItem(
 	}
 
 	// Clear the background, not done automatically since the drawing is buffered.
-	// Ensure we don't draw invalid rectangles
-	if (rectHL.width > 0 && rectHL.height > 0) {
+	// Use the corrected rectangle to avoid pixman errors
+	if (safeRectHL.width > 0 && safeRectHL.height > 0) {
 		dc->SetBrush( dc->GetBackground() );
-		// Add extra safety check for pixman - ensure coordinates are non-negative
-		if (rectHL.x >= 0 && rectHL.y >= 0) {
-			dc->DrawRectangle( rectHL.x, rectHL.y, rectHL.width, rectHL.height );
-		}
+		// Using the corrected coordinates to prevent pixman errors
+		dc->DrawRectangle( safeRectHL.x, safeRectHL.y, safeRectHL.width, safeRectHL.height );
 	}
 
 	// Various constant values we use
-	const int iTextOffset = ( rect.GetHeight() - dc->GetCharHeight() ) / 2;
+	const int iTextOffset = ( safeRect.GetHeight() - dc->GetCharHeight() ) / 2;
 	const int iOffset = 4;
 	const int treeOffset = 11;
 	const int treeCenter = 6;
 	bool tree_show = false;
 
-	wxRect cur_rec(iOffset, rect.y, 0, rect.height );
+	// Safety check for rect dimensions before using them
+	if (safeRect.width <= 0 || safeRect.height <= 0) {
+		AddDebugLogLineC(logSearch, wxT("Invalid rect dimensions in OnDrawItem"));
+		return;
+	}
+
+	wxRect cur_rec(iOffset, safeRect.y, 0, safeRect.height );
 	for (int i = 0; i < GetColumnCount(); i++) {
 		wxListItem listitem;
 		GetColumn(i, listitem);
@@ -991,19 +1023,22 @@ void CSearchListCtrl::OnDrawItem(
 
 			// Force clipper (clip 2 px more than the rectangle from the right side)
 			// Ensure clipper rectangle has valid dimensions
-			int clip_width = target_rec.width - 2;
-			int clip_height = target_rec.height;
-			if (clip_width < 1) clip_width = 1;
-			if (clip_height < 1) clip_height = 1;
+			int clip_width = std::max(target_rec.width - 2, 1);  // Ensure positive width
+			int clip_height = std::max(target_rec.height, 1);   // Ensure positive height
 			
 			// Validate clipper parameters
 			if (target_rec.x >= 0 && target_rec.y >= 0 && clip_width > 0 && clip_height > 0) {
 				wxDCClipper clipper(*dc, target_rec.x, target_rec.y, clip_width, clip_height);
 				
 				if (GetItem(cellitem)) {
-					dc->DrawText(cellitem.GetText(), target_rec.GetX(), target_rec.GetY());
+					// Additional validation for DrawText parameters
+					if (target_rec.GetX() >= 0 && target_rec.GetY() >= 0) {
+						dc->DrawText(cellitem.GetText(), target_rec.GetX(), target_rec.GetY());
+					}
 				} else {
-					dc->DrawText(wxT("GetItem failed!"), target_rec.GetX(), target_rec.GetY());
+					if (target_rec.GetX() >= 0 && target_rec.GetY() >= 0) {
+						dc->DrawText(wxT("GetItem failed!"), target_rec.GetX(), target_rec.GetY());
+					}
 				}
 			}
 
@@ -1027,19 +1062,19 @@ void CSearchListCtrl::OnDrawItem(
 			// Draw the line to the filename
 			// Ensure coordinates are valid
 			if (treeCenter >= 0 && middle >= 0 && treeOffset + 4 >= 0 && middle >= 0 &&
-			    rect.x >= 0 && rect.y >= 0) {
+			    cur_rec.x >= 0 && cur_rec.y >= 0) {
 				dc->DrawLine(treeCenter, middle, treeOffset + 4, middle);
 			}
 
 			// Draw the line to the child node
 			if (hasNext && treeCenter >= 0 && middle >= 0 && cur_rec.y + cur_rec.height + 1 >= 0 &&
-			    rect.x >= 0 && rect.y >= 0) {
+			    cur_rec.x >= 0 && cur_rec.y >= 0) {
 				dc->DrawLine(treeCenter, middle, treeCenter, cur_rec.y + cur_rec.height + 1);
 			}
 
 			// Draw the line back up to parent node
 			if (notFirst && treeCenter >= 0 && middle >= 0 && cur_rec.y - 1 >= 0 &&
-			    rect.x >= 0 && rect.y >= 0) {
+			    cur_rec.x >= 0 && cur_rec.y >= 0) {
 				dc->DrawLine(treeCenter, middle, treeCenter, cur_rec.y - 1);
 			}
 		} else if (file->HasChildren()) {
@@ -1047,23 +1082,29 @@ void CSearchListCtrl::OnDrawItem(
 				// Draw empty circle
 				dc->SetBrush(*wxTRANSPARENT_BRUSH);
 			} else {
-				dc->SetBrush(*(wxTheBrushList->FindOrCreateBrush(GetItemTextColour(item))));
+				dc->SetBrush(wxBrush(GetItemTextColour(item), wxBRUSHSTYLE_SOLID));
 			}
 
 			// Ensure circle coordinates are valid
-			if (treeCenter >= 0 && middle >= 0 && middle >= 0 &&
-			    rect.x >= 0 && rect.y >= 0) {
+			if (treeCenter >= 0 && middle >= 0 && cur_rec.x >= 0 && cur_rec.y >= 0) {
 				dc->DrawCircle( treeCenter, middle, 3 );
 			}
 
 			// Draw the line to the child node if there are any children
-			if (hasNext && file->ShowChildren() && treeCenter >= 0 && middle + 3 >= 0 && cur_rec.y + cur_rec.height + 1 >= 0 &&
-			    rect.x >= 0 && rect.y >= 0) {
+			if (hasNext && file->ShowChildren() && treeCenter >= 0 && middle + 3 >= 0 && 
+			    cur_rec.y + cur_rec.height + 1 >= 0 && cur_rec.x >= 0 && cur_rec.y >= 0) {
 				dc->DrawLine(treeCenter, middle + 3, treeCenter, cur_rec.y + cur_rec.height + 1);
 			}
 		}
 	}
 
+	// Trigger UI update to ensure counts stay synchronized
+	// This helps ensure the tab count updates properly after drawing operations
+	if (item == GetItemCount() - 1) {  // Last item in list
+		Thaw();  // Thaw temporarily frozen updates
+		Thaw();  // Second thaw in case we had multiple Freeze calls
+	}
+	
 	// Sanity checks to ensure that results/children are properly positioned.
 #ifdef __WXDEBUG__
 	{
