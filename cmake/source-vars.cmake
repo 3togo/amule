@@ -50,7 +50,6 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 # Current: Using BitTorrentSessionImpl.cpp which contains full Impl + BitTorrentSession
 # =============================================================================
 
-		protocol/bt/BitTorrentSessionImpl.cpp
 		protocol/MultiProtocolSocket.cpp
 		protocol/ProtocolCoordinator.cpp
 		protocol/ProtocolConversion.cpp
@@ -101,6 +100,7 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON OR BUILD_REMOTEGUI)
 		HTTPDownload.cpp
 		KnownFile.cpp
 		Logger.cpp
+		MagnetGenerator.cpp
 		PartFile.cpp
 		Preferences.cpp
 		Proxy.cpp

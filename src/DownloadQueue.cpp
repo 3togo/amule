@@ -58,7 +58,6 @@
 #include "MagnetProgressTracker.h" // Needed for CMagnetProgressTracker
 #include "ScopedPtr.h"		// Needed for CScopedPtr
 #include "PlatformSpecific.h"	// Needed for CanFSHandleLargeFiles
-#include "protocol/bt/BitTorrentSession.h" // Needed for BitTorrent magnet link support
 
 #include "kademlia/kademlia/Kademlia.h"
 
@@ -1428,21 +1427,13 @@ bool CDownloadQueue::AddLink( const wxString& link, uint8 category )
 				if (magnetLink && magnetLink->GetKind() == CED2KLink::kMagnetLink) {
 					CMagnetLink* btMagnet = static_cast<CMagnetLink*>(magnetLink);
 					
-					// Add to BitTorrent session instead of eD2k download queue
-					bool success = BitTorrent::BitTorrentSession::instance().add_magnet_link(
-						btMagnet->GetLink().ToUTF8().data(),
-						thePrefs::GetTempDir().GetPrintable().ToUTF8().data()
-					);
+					// BitTorrent support has been removed from this build
+					AddLogLineC(_("BitTorrent support has been removed from this build. Cannot add magnet link: ") + btMagnet->GetDisplayName());
 					
 					delete magnetLink;
 					
-					if (success) {
-						AddLogLineC(CFormat(_("Added BitTorrent magnet link: %s")) % link);
-						return true;
-					} else {
-						AddLogLineC(CFormat(_("Failed to add BitTorrent magnet link: %s")) % link);
-						return false;
-					}
+					// Return true to indicate this link has been processed (though not added)
+					return true;
 				}
 				delete magnetLink;
 			} catch (const wxString& e) {
@@ -1733,14 +1724,7 @@ bool CDownloadQueue::DoKademliaFileRequest()
 
 void CDownloadQueue::UpdateBitTorrentDownloads()
 {
-    // Get active BitTorrent downloads
-    auto torrents = BitTorrent::BitTorrentSession::instance().get_active_torrents();
-    
-    // TODO: Implement GUI integration to show BitTorrent downloads
-    // For now, just log the number of active torrents
-    if (!torrents.empty()) {
-        AddDebugLogLineN(logDownloadQueue, 
-            CFormat(wxT("Found %u active BitTorrent downloads")) % torrents.size());
-    }
+    // BitTorrent support has been removed from this build
+    // This function is kept for compatibility but does nothing
 }
 // File_checked_for_headers

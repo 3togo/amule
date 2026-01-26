@@ -30,7 +30,6 @@
 #include "ObservableQueue.h"	// Needed for CQueueObserver
 #include "SearchFile.h"		// Needed for CSearchFile
 #include <common/SmartPtr.h>	// Needed for CSmartPtr
-#include "protocol/bt/BitTorrentSession.h"  // For BitTorrent search support
 
 
 class CMemFile;
@@ -45,11 +44,9 @@ namespace Kademlia {
 
 
 enum SearchType {
-	LocalSearch,
+	LocalSearch = 0,
 	GlobalSearch,
-	KadSearch,
-	BitTorrentSearch,
-	HybridSearch  // Combined ED2K + BitTorrent
+	KadSearch
 };
 
 
@@ -168,15 +165,6 @@ public:
 	 */
 	void	KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt128 *fileID, const wxString& name, uint64_t size, const wxString& type, uint32_t kadPublishInfo, const TagPtrList& taglist);
 
-	/**
-	 * Converts a BitTorrent search result to a CSearchFile object.
-	 *
-	 * @param btResult The BitTorrent search result to convert.
-	 * @param searchID The search ID this result belongs to.
-	 * @return A new CSearchFile object or nullptr on failure.
-	 */
-	CSearchFile* CreateSearchFileFromBT(const BitTorrent::SearchResult& btResult, long searchID);
-
 	/** Update a certain search result in all lists */
 	void UpdateSearchFileByHash(const CMD4Hash& hash);
 
@@ -226,10 +214,6 @@ private:
 
 	//! If the current search is a KAD search this signals if it is finished.
 	bool		m_KadSearchFinished;
-
-	// BitTorrent search support
-	CSearchFile* ConvertBTSearchResult(const BitTorrent::SearchResult& btResult, long searchID);
-	void ProcessBTSearchResults(const std::vector<BitTorrent::SearchResult>& results, long searchID);
 
 	//! Queue of servers to ask when doing global searches.
 	//! TODO: Replace with 'cookie' system.

@@ -40,7 +40,6 @@
 #include "SearchList.h"		// Needed for CSearchList
 #include <common/Format.h>
 #include "Logger.h"
-#include "protocol/hybrid/HybridSearch.h"
 
 #define ID_SEARCHLISTCTRL wxID_HIGHEST+667
 
@@ -150,10 +149,6 @@ void CSearchDlg::FixSearchTypes()
 	if (thePrefs::GetNetworkKademlia()) {
 		searchchoice->Insert(m_searchchoices[2], pos++); // Kad
 	}
-
-	// BitTorrent search options (always available if BitTorrent is enabled)
-	searchchoice->Insert(_("BitTorrent"), pos++);
-	searchchoice->Insert(_("Hybrid (ED2K + BitTorrent)"), pos++);
 
 	searchchoice->SetSelection(0);
 }
@@ -503,48 +498,32 @@ void CSearchDlg::StartNewSearch()
 
 	int selection = CastChild( ID_SEARCHTYPE, wxChoice )->GetSelection();
 
-	if (!thePrefs::GetNetworkED2K()) {
-		selection += 2;
-	}
-
-	if (!thePrefs::GetNetworkKademlia()) {
-		selection += 1;
-	}
-
-	// Update selection accounting for BitTorrent and Hybrid search options
+	// Update selection accounting for removed BitTorrent and Hybrid search options
 	if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
-		// Full network support - all 5 options available
+		// Full network support - only 3 options available now (Local, Global, Kad)
 		switch (selection) {
 			case 0: search_type = LocalSearch; break;
 			case 1: search_type = GlobalSearch; break;
 			case 2: search_type = KadSearch; break;
-			case 3: search_type = BitTorrentSearch; break;
-			case 4: search_type = HybridSearch; break;
 			default: wxFAIL; break;
 		}
 	} else if (thePrefs::GetNetworkED2K()) {
-		// Only ED2K support - Local, Global, BitTorrent, Hybrid
+		// Only ED2K support - 2 options (Local, Global)
 		switch (selection) {
 			case 0: search_type = LocalSearch; break;
 			case 1: search_type = GlobalSearch; break;
-			case 2: search_type = BitTorrentSearch; break;
-			case 3: search_type = HybridSearch; break;
 			default: wxFAIL; break;
 		}
 	} else if (thePrefs::GetNetworkKademlia()) {
-		// Only Kad support - Kad, BitTorrent, Hybrid
+		// Only Kad support - 1 option (Kad)
 		switch (selection) {
 			case 0: search_type = KadSearch; break;
-			case 1: search_type = BitTorrentSearch; break;
-			case 2: search_type = HybridSearch; break;
 			default: wxFAIL; break;
 		}
 	} else {
-		// No network support - only BitTorrent
-		switch (selection) {
-			case 0: search_type = BitTorrentSearch; break;
-			default: wxFAIL; break;
-		}
+		// No network support
+		AddLogLineC(_("No networks are enabled."));
+		return;
 	}
 
 	uint32 real_id = m_nSearchID;

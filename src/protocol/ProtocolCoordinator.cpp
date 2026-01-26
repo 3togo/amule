@@ -23,7 +23,6 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 #include "protocol/ProtocolCoordinator.h"
-#include "protocol/bt/BitTorrentSession.h"
 #include "../amule.h"
 #include "../DownloadQueue.h"
 #include "../ClientList.h"
@@ -68,28 +67,6 @@ public:
             m_stats.total_sources_discovered += source_list.size();
         }
         
-        // 2. Get BT sources if hybrid enabled
-        if ((preferred == ProtocolType::BITTORRENT || preferred == ProtocolType::HYBRID_AUTO) && 
-            m_hybrid_mode) {
-            
-            auto& bt_session = BitTorrent::BitTorrentSession::instance();
-            std::string bt_hash = BitTorrent::ed2k_hash_to_info_hash(file->GetFileHash());
-            
-            // TODO: Implement proper peer discovery for BitTorrent
-            // For now, use placeholder empty list
-            std::vector<std::pair<std::string, uint16_t>> bt_peers;
-            
-            for (const auto& peer : bt_peers) {
-                SourceEndpoint endpoint;
-                endpoint.protocol = ProtocolType::BITTORRENT;
-                endpoint.address = peer.first;
-                endpoint.port = peer.second;
-                endpoint.info_hash = bt_hash;
-                sources.push_back(endpoint);
-            }
-            m_stats.total_sources_discovered += bt_peers.size();
-            m_stats.cross_protocol_sources += bt_peers.size();
-        }
         
         // 3. Remove duplicates
         remove_duplicates(sources);
