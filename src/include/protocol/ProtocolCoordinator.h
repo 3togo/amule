@@ -27,7 +27,6 @@
 #include "protocol/Protocols.h"
 #include "protocol/ed2k/Constants.h"
 #include "protocol/kad/Constants.h"
-#include "protocol/bt/Constants.h"
 #include "../../MD4Hash.h"
 #include "../../common/NetworkPerformanceMonitor.h"
 #include <vector>
@@ -55,7 +54,6 @@ struct NetworkConditions {
 enum class ProtocolType {
     ED2K,
     KADEMLIA,
-    BITTORRENT,
     HYBRID_AUTO
 };
 
@@ -116,9 +114,6 @@ public:
     BandwidthAllocation calculate_bandwidth_allocation() const;
     void apply_bandwidth_allocation(const BandwidthAllocation& allocation);
     
-    // Cross-protocol metadata conversion
-    bool convert_metadata_ed2k_to_bt(const CPartFile* ed2k_file, std::string& bt_metadata);
-    bool convert_metadata_bt_to_ed2k(const std::string& bt_metadata, CPartFile* ed2k_file);
     
     // Statistics and monitoring
     struct CoordinationStats {

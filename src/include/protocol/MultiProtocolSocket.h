@@ -42,8 +42,6 @@ enum class SocketProtocol {
     ED2K_TCP,
     ED2K_UDP, 
     KAD_UDP,
-    BT_TCP,
-    BT_UDP,
     HYBRID_AUTO
 };
 

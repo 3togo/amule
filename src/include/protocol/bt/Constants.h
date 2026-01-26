@@ -3,42 +3,8 @@
 #include <cstddef>
 #include <cstdint>
 
-// BitTorrent Protocol Constants
+// Essential constants that may still be referenced by the codebase
 namespace BitTorrent {
-
-// Protocol identifier
-constexpr const char* PROTOCOL_IDENTIFIER = "BitTorrent protocol";
-
-// Message types
-enum MessageType : uint8_t {
-    MSG_CHOKE = 0,
-    MSG_UNCHOKE = 1,
-    MSG_INTERESTED = 2,
-    MSG_NOT_INTERESTED = 3,
-    MSG_HAVE = 4,
-    MSG_BITFIELD = 5,
-    MSG_REQUEST = 6,
-    MSG_PIECE = 7,
-    MSG_CANCEL = 8,
-    MSG_PORT = 9,          // DHT port
-    MSG_EXTENDED = 20      // Extension protocol
-};
-
-// Extension protocol messages
-enum ExtendedMessage : uint8_t {
-    EXT_HANDSHAKE = 0,
-    EXT_UT_PEX = 1,        // Peer Exchange
-    EXT_UT_METADATA = 2,   // Metadata exchange
-    EXT_UT_DHT = 3         // DHT support
-};
-
-// Tracker event types
-enum TrackerEvent : uint8_t {
-    TRACKER_EVENT_NONE = 0,
-    TRACKER_EVENT_COMPLETED = 1,
-    TRACKER_EVENT_STARTED = 2,
-    TRACKER_EVENT_STOPPED = 3
-};
 
 // Protocol constants
 constexpr uint16_t DEFAULT_PORT = 6881;
