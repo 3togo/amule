@@ -69,7 +69,6 @@ public:
 	 * Destructor.
 	 */
 	~CDownloadQueue();
-
 	/** Loads met-files from the specified directory. */
 	void	LoadMetFiles(const CPath& path);
 
@@ -77,6 +76,12 @@ public:
 	 * Main worker function.
 	 */
 	void	Process();
+
+	/**
+	 * Update BitTorrent downloads from libtorrent session
+	 */
+	void	UpdateBitTorrentDownloads();
+
 
 
 	/**

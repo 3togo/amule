@@ -58,6 +58,7 @@
 #include "MagnetProgressTracker.h" // Needed for CMagnetProgressTracker
 #include "ScopedPtr.h"		// Needed for CScopedPtr
 #include "PlatformSpecific.h"	// Needed for CanFSHandleLargeFiles
+#include "protocol/bt/BitTorrentSession.h" // Needed for BitTorrent magnet link support
 
 #include "kademlia/kademlia/Kademlia.h"
 
@@ -553,6 +554,13 @@ void CDownloadQueue::Process()
 	if ((::GetTickCount() - m_nLastED2KLinkCheck) >= 1000) {
 		theApp->AddLinksFromFile();
 		m_nLastED2KLinkCheck = ::GetTickCount();
+	}
+	
+	// Check for BitTorrent download updates every 5 seconds
+	static uint32_t lastBTCheck = 0;
+	if ((::GetTickCount() - lastBTCheck) >= 5000) {
+		lastBTCheck = ::GetTickCount();
+		UpdateBitTorrentDownloads();
 	}
 }
 
@@ -1409,9 +1417,39 @@ bool CDownloadQueue::AddLink( const wxString& link, uint8 category )
 	wxString uri(link);
 
 	if (link.compare(0, 7, wxT("magnet:")) == 0) {
+		// First try to convert eD2k magnet links (urn:ed2k:)
 		uri = CMagnetED2KConverter(link);
-		if (uri.empty()) {
-			AddLogLineC(CFormat(_("Cannot convert magnet link to eD2k: %s")) % link);
+		if (!uri.empty()) {
+			// This is an eD2k magnet link, proceed with normal processing
+		} else {
+			// This might be a BitTorrent magnet link, handle it separately
+			try {
+				CED2KLink* magnetLink = CED2KLink::CreateLinkFromUrl(link);
+				if (magnetLink && magnetLink->GetKind() == CED2KLink::kMagnetLink) {
+					CMagnetLink* btMagnet = static_cast<CMagnetLink*>(magnetLink);
+					
+					// Add to BitTorrent session instead of eD2k download queue
+					bool success = BitTorrent::BitTorrentSession::instance().add_magnet_link(
+						btMagnet->GetLink().ToUTF8().data(),
+						thePrefs::GetTempDir().GetPrintable().ToUTF8().data()
+					);
+					
+					delete magnetLink;
+					
+					if (success) {
+						AddLogLineC(CFormat(_("Added BitTorrent magnet link: %s")) % link);
+						return true;
+					} else {
+						AddLogLineC(CFormat(_("Failed to add BitTorrent magnet link: %s")) % link);
+						return false;
+					}
+				}
+				delete magnetLink;
+			} catch (const wxString& e) {
+				AddLogLineC(CFormat(_("Invalid magnet link format: %s - %s")) % link % e);
+			} catch (...) {
+				AddLogLineC(CFormat(_("Cannot process magnet link: %s")) % link);
+			}
 			return false;
 		}
 	}
@@ -1690,5 +1728,19 @@ void CDownloadQueue::UpdateMagnetConversionProgress(const CMD4Hash& fileHash, fl
 bool CDownloadQueue::DoKademliaFileRequest()
 {
 	return ((::GetTickCount() - lastkademliafilerequest) > KADEMLIAASKTIME);
+}
+
+
+void CDownloadQueue::UpdateBitTorrentDownloads()
+{
+    // Get active BitTorrent downloads
+    auto torrents = BitTorrent::BitTorrentSession::instance().get_active_torrents();
+    
+    // TODO: Implement GUI integration to show BitTorrent downloads
+    // For now, just log the number of active torrents
+    if (!torrents.empty()) {
+        AddDebugLogLineN(logDownloadQueue, 
+            CFormat(wxT("Found %u active BitTorrent downloads")) % torrents.size());
+    }
 }
 // File_checked_for_headers

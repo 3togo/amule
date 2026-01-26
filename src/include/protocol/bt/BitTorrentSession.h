@@ -115,6 +115,21 @@ public:
     std::vector<SearchResult> dht_search_by_infohash(const std::string& info_hash);
     void start_dht_announce(const std::string& info_hash);
     
+    // Active downloads monitoring
+    struct ActiveTorrent {
+        std::string info_hash;
+        std::string name;
+        uint64_t total_size;
+        uint64_t bytes_downloaded;
+        uint64_t bytes_uploaded;
+        double download_rate;
+        double upload_rate;
+        float progress;
+        int state;  // 0=queued, 1=downloading, 2=seeding, 3=paused, 4=error
+    };
+    
+    std::vector<ActiveTorrent> get_active_torrents() const;
+    
 private:
     BitTorrentSession();
     ~BitTorrentSession();

@@ -180,7 +180,6 @@ if (BUILD_ED2K)
 		RUNTIME DESTINATION bin
 	)
 endif()
-
 if (BUILD_MONOLITHIC)
 	add_executable (amule
 		${COMMON_SOURCES}
