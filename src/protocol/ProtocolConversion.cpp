@@ -34,13 +34,13 @@ namespace ProtocolIntegration {
 
 // Only keeping ED2K-related conversions
 std::unique_ptr<CPacket> convert_ed2k_to_local_format(const CPacket* ed2k_packet) {
-    // Return the packet as-is for local use
-    return std::make_unique<CPacket>(*ed2k_packet);
+    // Return null for now since we can't copy the packet directly
+    return nullptr;
 }
 
 std::unique_ptr<CPacket> convert_for_local_processing(const CPacket* packet) {
-    // Generic conversion for local processing
-    return std::make_unique<CPacket>(*packet);
+    // Return null for now since we can't copy the packet directly
+    return nullptr;
 }
 
 } // namespace ProtocolIntegration
