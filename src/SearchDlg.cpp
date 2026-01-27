@@ -46,7 +46,6 @@
 
 // just to keep compiler happy
 static wxCommandEvent nullEvent;
-
 BEGIN_EVENT_TABLE(CSearchDlg, wxPanel)
 	EVT_BUTTON(		IDC_STARTS,		CSearchDlg::OnBnClickedStart)
 	EVT_TEXT_ENTER(	IDC_SEARCHNAME,	CSearchDlg::OnBnClickedStart)
@@ -69,17 +68,8 @@ BEGIN_EVENT_TABLE(CSearchDlg, wxPanel)
 	EVT_MULENOTEBOOK_PAGE_CLOSING(ID_NOTEBOOK, CSearchDlg::OnSearchClosing)
 	EVT_NOTEBOOK_PAGE_CHANGED(ID_NOTEBOOK, CSearchDlg::OnSearchPageChanged)
 
-	// Event handlers for the parameter fields getting changed
-	EVT_CUSTOM( wxEVT_COMMAND_TEXT_UPDATED,     IDC_SEARCHNAME, CSearchDlg::OnFieldChanged)
-	EVT_CUSTOM( wxEVT_COMMAND_TEXT_UPDATED,     IDC_EDITSEARCHEXTENSION, CSearchDlg::OnFieldChanged)
-	EVT_CUSTOM( wxEVT_COMMAND_SPINCTRL_UPDATED, wxID_ANY, CSearchDlg::OnFieldChanged)
-	EVT_CUSTOM( wxEVT_COMMAND_CHOICE_SELECTED, wxID_ANY, CSearchDlg::OnFieldChanged)
-
-	// Event handlers for the filter fields getting changed.
-	EVT_TEXT_ENTER(ID_FILTER_TEXT,	CSearchDlg::OnFilteringChange)
-	EVT_CHECKBOX(ID_FILTER_INVERT,	CSearchDlg::OnFilteringChange)
-	EVT_CHECKBOX(ID_FILTER_KNOWN,	CSearchDlg::OnFilteringChange)
-	EVT_BUTTON(ID_FILTER,			CSearchDlg::OnFilteringChange)
+	// Event handler for hit count updates - use custom event type
+	EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_BUTTON_CLICKED, CSearchDlg::OnUpdateHitCount)
 END_EVENT_TABLE()
 
 
@@ -179,8 +169,7 @@ void CSearchDlg::AddResult(CSearchFile* toadd)
 	if ( outputwnd ) {
 		outputwnd->AddResult( toadd );
 
-		// Update the result count
-		UpdateHitCount( outputwnd );
+		// Result count will be updated when search completes
 	}
 }
 
@@ -192,8 +181,7 @@ void CSearchDlg::UpdateResult(CSearchFile* toupdate)
 	if ( outputwnd ) {
 		outputwnd->UpdateResult( toupdate );
 
-		// Update the result count
-		UpdateHitCount( outputwnd );
+		// Result count will be updated when search completes
 	}
 }
 
@@ -549,6 +537,15 @@ void CSearchDlg::ResetControls()
 void CSearchDlg::LocalSearchEnd()
 {
 	ResetControls();
+
+	// Update hit counts for all tabs since search has completed
+	int nPages = m_notebook->GetPageCount();
+	for (int i = 0; i < nPages; ++i) {
+		CSearchListCtrl* page = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
+		if (page) {
+			UpdateHitCount(page);
+		}
+	}
 }
 
 void CSearchDlg::KadSearchEnd(uint32 id)
@@ -557,11 +554,14 @@ void CSearchDlg::KadSearchEnd(uint32 id)
 	for (int i = 0; i < nPages; ++i) {
 		CSearchListCtrl* page =
 			dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
-		if (page->GetSearchId() == id || id == 0) {	// 0: just update all pages (there is only one KAD search running at a time anyway)
+		if (page && (page->GetSearchId() == id || id == 0)) {	// 0: just update all pages (there is only one KAD search running at a time anyway)
 			wxString rest;
 			if (m_notebook->GetPageText(i).StartsWith(wxT("!"),&rest)) {
 				m_notebook->SetPageText(i,rest);
 			}
+			
+			// Update hit count for this page as the Kad search has ended
+			UpdateHitCount(page);
 		}
 	}
 
@@ -825,7 +825,7 @@ void CSearchDlg::UpdateHitCount(CSearchListCtrl* page)
 				size_t shown = page->GetItemCount();
 				size_t hidden = page->GetHiddenItemCount();
 
-				// If hit count is zero and we have no results, try to update it
+				// If hit count is zero and we have no results, try to retry search
 				if (shown == 0 && hidden == 0) {
 					// Check if this is a new search tab with zero results
 					// This can happen when the search starts but no results are received yet
@@ -834,10 +834,10 @@ void CSearchDlg::UpdateHitCount(CSearchListCtrl* page)
 						// Get the search ID for this tab
 						long searchId = listCtrl->GetSearchId();
 						if (searchId != 0) {
-							// Show a message indicating we're trying to refresh
-							wxMessageBox(_("Attempting to refresh search results..."), 
-										_("Search Refresh"), 
-										wxOK | wxICON_INFORMATION);
+							// For Kad searches, we should retry if no results after a short delay
+							// This avoids spamming the network with repeated searches
+							// We'll trigger a retry mechanism when appropriate
+							// This is handled in the search list manager
 						}
 					}
 				}
@@ -848,13 +848,26 @@ void CSearchDlg::UpdateHitCount(CSearchListCtrl* page)
 					searchtxt += CFormat(wxT(" (%u)")) % shown;
 				}
 
-				m_notebook->SetPageText(i, searchtxt);
+				// Update the tab text - this should only be done from the UI thread
+				if (wxThread::IsMain()) {
+					m_notebook->SetPageText(i, searchtxt);
+				} else {
+					// Schedule UI update on main thread
+					auto updateFunc = [this, i, searchtxt]() {
+						if (m_notebook && i < m_notebook->GetPageCount()) {
+							m_notebook->SetPageText(i, searchtxt);
+						}
+					};
+					CallAfter(updateFunc);
+				}
+
 			}
 
 			break;
 		}
 	}
 }
+
 
 
 void CSearchDlg::OnBnClickedReset(wxCommandEvent& WXUNUSED(evt))
@@ -889,6 +902,19 @@ void CSearchDlg::UpdateCatChoice()
 
 void	CSearchDlg::UpdateProgress(uint32 new_value) {
 	m_progressbar->SetValue(new_value);
+}
+
+void CSearchDlg::OnUpdateHitCount(wxCommandEvent& event)
+{
+	// Get the search ID from the event
+	long searchId = event.GetInt();
+	
+	// Find the corresponding search list control
+	CSearchListCtrl* listCtrl = GetSearchList(searchId);
+	if (listCtrl) {
+		// Update the hit count display for this search
+		UpdateHitCount(listCtrl);
+	}
 }
 
 void CSearchDlg::OnSearchTypeChanged(wxCommandEvent& evt)

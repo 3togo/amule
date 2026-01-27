@@ -264,17 +264,20 @@ protected:
 
 BEGIN_EVENT_TABLE(CSearchList, wxEvtHandler)
 	EVT_MULE_TIMER(wxID_ANY, CSearchList::OnGlobalSearchTimer)
+	EVT_MULE_TIMER(1, CSearchList::OnRetryTimer)
 END_EVENT_TABLE()
 
 
 CSearchList::CSearchList()
 	: m_searchTimer(this, 0 /* Timer-id doesn't matter. */ ),
+	  m_retryTimer(this, 1 /* Retry timer ID */ ),
 	  m_searchType(LocalSearch),
 	  m_searchInProgress(false),
 	  m_currentSearch(-1),
 	  m_searchPacket(NULL),
 	  m_64bitSearchPacket(false),
-	  m_KadSearchFinished(true)
+	  m_KadSearchFinished(true),
+	  m_KadSearchRetryCount(0)
 {}
 
 
@@ -290,6 +293,8 @@ CSearchList::~CSearchList()
 
 void CSearchList::RemoveResults(long searchID)
 {
+	wxMutexLocker lock(m_searchMutex);
+	
 	// A non-existent search id will just be ignored
 	Kademlia::CSearchManager::StopSearch(searchID, true);
 
@@ -507,6 +512,12 @@ void CSearchList::LocalSearchEnd()
 		m_searchTimer.Start(750);
 	} else {
 		m_searchInProgress = false;
+
+		// Check if we have any results for the current search
+		ResultMap::iterator it = m_results.find(m_currentSearch);
+		bool hasResults = (it != m_results.end()) && !it->second.empty();
+
+		// Only update hit count at the end of the search to avoid race conditions
 		Notify_SearchLocalEnd();
 	}
 }
@@ -660,6 +671,8 @@ void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, u
 
 bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 {
+	wxMutexLocker lock(m_searchMutex);
+	
 	const uint64 fileSize = toadd->GetFileSize();
 	// If filesize is 0, or file is too large for the network, drop it
 	if ((fileSize == 0) || (fileSize > MAX_FILE_SIZE)) {
@@ -681,8 +694,8 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 					% m_resultType
 					% toadd->GetFileName());
 
-			delete toadd;
-			return false;
+		delete toadd;
+		return false;
 		}
 	}
 
@@ -716,6 +729,8 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 
 const CSearchResultList& CSearchList::GetSearchResults(long searchID) const
 {
+	wxMutexLocker lock(m_searchMutex);
+	
 	ResultMap::const_iterator it = m_results.find(searchID);
 	if (it != m_results.end()) {
 		return it->second;
@@ -746,6 +761,8 @@ void CSearchList::AddFileToDownloadByHash(const CMD4Hash& hash, uint8 cat)
 
 void CSearchList::StopSearch(bool globalOnly)
 {
+	wxMutexLocker lock(m_searchMutex);
+	
 	if (m_searchType == GlobalSearch) {
 		m_currentSearch = -1;
 		delete m_searchPacket;
@@ -756,11 +773,13 @@ void CSearchList::StopSearch(bool globalOnly)
 		// So the packet has to be deleted first, so that OnGlobalSearchTimer() returns immediately
 		// without calling StopGlobalSearch() again.
 		m_searchTimer.Stop();
+		m_retryTimer.Stop();
 
 		CoreNotify_Search_Update_Progress(0xffff);
 	} else if (m_searchType == KadSearch && !globalOnly) {
 		Kademlia::CSearchManager::StopSearch(m_currentSearch, false);
 		m_currentSearch = -1;
+		m_retryTimer.Stop();
 	}
 }
 
@@ -1137,9 +1156,10 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt
 
 	AddToList(tempFile);
 }
-
 void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)
 {
+	wxMutexLocker lock(m_searchMutex);
+	
 	for (ResultMap::iterator it = m_results.begin(); it != m_results.end(); ++it) {
 		CSearchResultList& results = it->second;
 		for (size_t i = 0; i < results.size(); ++i) {
@@ -1154,17 +1174,21 @@ void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)
 	}
 }
 
-
-void CSearchList::SetKadSearchFinished()
+void CSearchList::OnRetryTimer(CTimerEvent& WXUNUSED(evt))
 {
-	// Check if we have any results for the current search
+	wxMutexLocker lock(m_searchMutex);
+	
+	uint32 currentTime = GetTickCount();
+	
+	// Check if we need to retry any Kad searches
 	ResultMap::iterator it = m_results.find(m_currentSearch);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
-
-	if (!hasResults && m_KadSearchRetryCount == 0) {
-		// No results and haven't retried yet - retry once
+	
+	if (!hasResults && m_KadSearchRetryCount < 2) {
+		// No results and retry count is less than max - retry
 		AddDebugLogLineN(logKadSearch, wxT("Kad search returned no results, retrying (search ID: ") +
-			CFormat(wxT("%u")) % m_currentSearch + wxT(")"));
+			CFormat(wxT("%u")) % m_currentSearch + wxT(", attempt: ") + 
+			CFormat(wxT("%u")) % (m_KadSearchRetryCount + 1) + wxT(")"));
 
 		// Increment retry count
 		m_KadSearchRetryCount++;
@@ -1200,8 +1224,50 @@ void CSearchList::SetKadSearchFinished()
 		}
 	}
 
+	// Mark search as finished if we've reached max retries or have results
+	m_KadSearchFinished = true;
+	m_retryTimer.Stop();
+	
+	// Notify search dialog to update hit count
+#ifndef AMULE_DAEMON
+	if (theApp->amuledlg) {
+		// Use public interface to update search results
+		wxCommandEvent updateEvent(wxEVT_COMMAND_BUTTON_CLICKED, SEARCH_UPDATE_HITCOUNT);
+		updateEvent.SetInt(m_currentSearch);
+		theApp->amuledlg->GetEventHandler()->AddPendingEvent(updateEvent);
+	}
+#endif
+}
+
+void CSearchList::SetKadSearchFinished()
+{
+	wxMutexLocker lock(m_searchMutex);
+	
+	// Check if we have any results for the current search
+	ResultMap::iterator it = m_results.find(m_currentSearch);
+	bool hasResults = (it != m_results.end()) && !it->second.empty();
+
+	if (!hasResults && m_KadSearchRetryCount == 0) {
+		// No results and haven't retried yet - schedule a retry
+		AddDebugLogLineN(logKadSearch, wxT("Scheduling Kad search retry for ID: ") + 
+			CFormat(wxT("%u")) % m_currentSearch);
+		
+		// Start retry timer instead of immediate retry to avoid race conditions
+		m_retryTimer.Start(1000); // 1 second delay
+		return;
+	}
+
 	// Mark search as finished
 	m_KadSearchFinished = true;
+	
+#ifndef AMULE_DAEMON
+	if (theApp->amuledlg) {
+		// Use public interface to update search results
+		wxCommandEvent updateEvent(wxEVT_COMMAND_BUTTON_CLICKED, SEARCH_UPDATE_HITCOUNT);
+		updateEvent.SetInt(m_currentSearch);
+		theApp->amuledlg->GetEventHandler()->AddPendingEvent(updateEvent);
+	}
+#endif
 }
 
 // File_checked_for_headers
