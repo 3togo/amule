@@ -456,7 +456,8 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 	}
 
 	// Create search data packet
-	CMemFilePtr data = CreateSearchData(params, GlobalSearch, server->SupportsLargeFilesUDP());
+	bool packetUsing64bit = false;
+	CMemFilePtr data = CreateSearchData(params, GlobalSearch, server->SupportsLargeFilesUDP(), packetUsing64bit);
 	if (!data) {
 		return _("Failed to create search data");
 	}
@@ -489,7 +490,8 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 
 	// Send the search request to the server
 	theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
-	theApp->serverconnect->SendUDPPacket(searchPacket, server, true);
+	// Cast away const because SendUDPPacket doesn't take const pointer
+	theApp->serverconnect->SendUDPPacket(searchPacket, const_cast<CServer*>(server), true);
 
 	return wxEmptyString;
 }
