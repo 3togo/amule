@@ -513,21 +513,25 @@ void CSearchList::LocalSearchEnd()
 		ResultMap::iterator it = m_results.find(m_currentSearch);
 		bool hasResults = (it != m_results.end()) && !it->second.empty();
 
-		if (!hasResults && !m_retryTimer.IsRunning()) {
-			// No results and retry timer is not running - schedule a retry
+		if (!hasResults && m_KadSearchRetryCount < 2) {
+		// Check if timer is already running using a more reliable method
+		bool timerWasRunning = false;
+		{
+			wxMutexLocker timerLock(m_searchMutex);
+			timerWasRunning = m_retryTimer.IsRunning();
+		}
+		
+		if (!timerWasRunning) {
+			// No results and retry count is less than max - schedule a retry
 			AddDebugLogLineN(logSearch, wxT("Scheduling Global search retry for ID: ") + 
 				CFormat(wxT("%u")) % m_currentSearch + wxT(" (retry count: ") +
 				CFormat(wxT("%u")) % m_KadSearchRetryCount + wxT(")"));
 			
-			// Reset retry count if we're starting a new retry sequence
-			if (m_KadSearchRetryCount >= 2) {
-				m_KadSearchRetryCount = 0;
-			}
-			
 			// Start retry timer instead of immediate retry
-			m_retryTimer.Start(1500); // 1.5 second delay for ED2K
+			m_retryTimer.Start(1500); // 1.5 second delay for Global search retry
 			return;
 		}
+	}
 
 		// Ensure that every global search starts over.
 		theApp->serverlist->RemoveObserver(&m_serverQueue);
@@ -539,21 +543,25 @@ void CSearchList::LocalSearchEnd()
 		ResultMap::iterator it = m_results.find(m_currentSearch);
 		bool hasResults = (it != m_results.end()) && !it->second.empty();
 
-		if (!hasResults && !m_retryTimer.IsRunning()) {
-			// No results and retry timer is not running - schedule a retry for local search
+		if (!hasResults && m_KadSearchRetryCount < 2) {
+		// Check if timer is already running using a more reliable method
+		bool timerWasRunning = false;
+		{
+			wxMutexLocker timerLock(m_searchMutex);
+			timerWasRunning = m_retryTimer.IsRunning();
+		}
+		
+		if (!timerWasRunning) {
+			// No results and retry count is less than max - schedule a retry
 			AddDebugLogLineN(logSearch, wxT("Scheduling Local search retry for ID: ") + 
 				CFormat(wxT("%u")) % m_currentSearch + wxT(" (retry count: ") +
 				CFormat(wxT("%u")) % m_KadSearchRetryCount + wxT(")"));
 			
-			// Reset retry count if we're starting a new retry sequence
-			if (m_KadSearchRetryCount >= 2) {
-				m_KadSearchRetryCount = 0;
-			}
-			
 			// Start retry timer instead of immediate retry
-			m_retryTimer.Start(1000); // 1 second delay for local search
+			m_retryTimer.Start(1000); // 1 second delay for Local search retry
 			return;
 		}
+	}
 
 		// Update hit count at the end of the search to avoid race conditions
 		// Use the same mechanism as KAD searches
@@ -659,16 +667,28 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
 	ResultMap::iterator it = m_results.find(m_currentSearch);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
 
-	if (!hasResults && !m_retryTimer.IsRunning() && m_KadSearchRetryCount < 2) {
-		// No results, retry timer is not running, and retry count is less than max - schedule a retry
-		AddDebugLogLineN(logSearch, wxT("Global search completed with no results, scheduling retry for ID: ") + 
-			CFormat(wxT("%u")) % m_currentSearch + wxT(" (retry count: ") +
-			CFormat(wxT("%u")) % m_KadSearchRetryCount + wxT(")"));
+	if (!hasResults && m_KadSearchRetryCount < 2) {
+		// Check if timer is already running using a more reliable method
+		bool timerWasRunning = false;
+		{
+			wxMutexLocker timerLock(m_searchMutex);
+			timerWasRunning = m_retryTimer.IsRunning();
+		}
 		
-		// Start retry timer instead of immediate retry
-		m_retryTimer.Start(2000); // 2 second delay for Global search retry
+		if (!timerWasRunning) {
+			// No results and retry count is less than max - schedule a retry
+			AddDebugLogLineN(logSearch, wxT("Global search completed with no results, scheduling retry for ID: ") + 
+				CFormat(wxT("%u")) % m_currentSearch + wxT(" (retry count: ") +
+				CFormat(wxT("%u")) % m_KadSearchRetryCount + wxT(")"));
+			
+			// Start retry timer instead of immediate retry
+			m_retryTimer.Start(2000); // 2 second delay for Global search retry
+		} else {
+			// Timer is already running, just stop the search normally
+			StopSearch(true);
+		}
 	} else {
-		// Either we have results, retry timer is already running, or reached max retries - stop the search
+		// Either we have results or reached max retries - stop the search
 		StopSearch(true);
 	}
 }
@@ -728,7 +748,6 @@ void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, u
 	AddToList(new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort), false);
 }
 
-
 bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 {
 	wxMutexLocker lock(m_searchMutex);
@@ -759,7 +778,6 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 		}
 	}
 
-
 	// Get, or implicitly create, the map of results for this search
 	CSearchResultList& results = m_results[toadd->GetSearchID()];
 
@@ -771,6 +789,16 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 			// Add the child, possibly updating the parents filename.
 			item->AddChild(toadd);
 			Notify_Search_Update_Sources(item);
+			
+			// Immediate hit count update for duplicates
+			#ifndef AMULE_DAEMON
+			if (theApp->amuledlg) {
+				wxCommandEvent updateEvent(wxEVT_COMMAND_BUTTON_CLICKED, SEARCH_UPDATE_HITCOUNT);
+				updateEvent.SetInt(toadd->GetSearchID());
+				theApp->amuledlg->GetEventHandler()->AddPendingEvent(updateEvent);
+			}
+			#endif
+			
 			return true;
 		}
 	}
@@ -782,14 +810,14 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 	// New unique result, simply add and display.
 	results.push_back(toadd);
 	
-	// Trigger UI update for the hit count
-#ifndef AMULE_DAEMON
+	// Immediate hit count update for new results
+	#ifndef AMULE_DAEMON
 	if (theApp->amuledlg) {
 		wxCommandEvent updateEvent(wxEVT_COMMAND_BUTTON_CLICKED, SEARCH_UPDATE_HITCOUNT);
 		updateEvent.SetInt(toadd->GetSearchID());
 		theApp->amuledlg->GetEventHandler()->AddPendingEvent(updateEvent);
 	}
-#endif
+	#endif
 	
 	Notify_Search_Add_Result(toadd);
 
@@ -1225,6 +1253,16 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt
 	tempFile->SetKadPublishInfo(kadPublishInfo);
 
 	AddToList(tempFile);
+	
+	// Force immediate UI update for KAD searches to prevent delayed hit count display
+#ifndef AMULE_DAEMON
+	if (theApp->amuledlg) {
+		wxCommandEvent updateEvent(wxEVT_COMMAND_BUTTON_CLICKED, SEARCH_UPDATE_HITCOUNT);
+		updateEvent.SetInt(searchID);
+		// Use ProcessEvent instead of AddPendingEvent for immediate UI update
+		theApp->amuledlg->GetEventHandler()->ProcessEvent(updateEvent);
+	}
+#endif
 }
 void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)
 {
