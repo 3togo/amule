@@ -38,6 +38,7 @@
 #include "Preferences.h"
 #include "amule.h"			// Needed for theApp
 #include "SearchList.h"		// Needed for CSearchList
+#include "OtherFunctions.h"		// Needed for GetTypeSize
 #include <common/Format.h>
 #include "Logger.h"
 
@@ -80,7 +81,6 @@ BEGIN_EVENT_TABLE(CSearchDlg, wxPanel)
 	EVT_CHECKBOX(ID_FILTER_KNOWN,	CSearchDlg::OnFilteringChange)
 	EVT_BUTTON(ID_FILTER,			CSearchDlg::OnFilteringChange)
 END_EVENT_TABLE()
-
 
 
 CSearchDlg::CSearchDlg(wxWindow* pParent)
@@ -268,6 +268,11 @@ void CSearchDlg::OnSearchPageChanged(wxBookCtrlEvent& WXUNUSED(evt))
 
 		bool enable = (ctrl->GetSelectedItemCount() > 0);
 		FindWindow(IDC_SDOWNLOAD)->Enable( enable );
+		
+		// Enable the More button only for eD2k searches (Local/Global), not for Kad
+		wxString tabText = m_notebook->GetPageText(selection);
+		bool isEd2kSearch = (tabText.StartsWith(wxT("[Local] ")) || tabText.StartsWith(wxT("[ED2K] ")));
+		FindWindow(IDC_SEARCHMORE)->Enable(isEd2kSearch);
 	}
 }
 
@@ -294,7 +299,7 @@ void CSearchDlg::OnBnClickedStart(wxCommandEvent& WXUNUSED(evt))
 	
 	// Determine which network corresponds to the selected search type
 	bool isSearchTypeConnected = false;
-	
+
 	if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
 		// Full network support - 3 options (Local, Global, Kad)
 		switch (selection) {
@@ -509,6 +514,11 @@ void CSearchDlg::CreateNewTab(const wxString& searchString, wxUIntPtr nSearchID)
 
 	Layout();
 	FindWindow(IDC_CLEAR_RESULTS)->Enable(true);
+	
+	// Enable the More button only for eD2k searches (Local/Global), not for Kad
+	// Kad searches are identified by having "!" at the beginning or containing "[Kad]" prefix
+	bool isEd2kSearch = (searchString.StartsWith(wxT("[Local] ")) || searchString.StartsWith(wxT("[ED2K] ")));
+	FindWindow(IDC_SEARCHMORE)->Enable(isEd2kSearch);
 }
 
 
@@ -525,6 +535,7 @@ void CSearchDlg::ResetControls()
 
 	FindWindow(IDC_CANCELS)->Disable();
 	FindWindow(IDC_STARTS)->Enable(!CastChild( IDC_SEARCHNAME, wxTextCtrl )->GetValue().IsEmpty());
+	FindWindow(IDC_SEARCHMORE)->Disable(); // Disable More button when no active search
 }
 
 
@@ -566,6 +577,13 @@ void CSearchDlg::OnBnClickedClear( wxCommandEvent& WXUNUSED(event) )
 		CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(m_notebook->GetSelection()));
 		list->DeleteAllItems();
 		UpdateHitCount(list);
+		
+		// Maintain the More button state based on the current tab's search type
+		if (m_notebook->GetSelection() != -1) {
+			wxString tabText = m_notebook->GetPageText(m_notebook->GetSelection());
+			bool isEd2kSearch = (tabText.StartsWith(wxT("[Local] ")) || tabText.StartsWith(wxT("[ED2K] ")));
+			FindWindow(IDC_SEARCHMORE)->Enable(isEd2kSearch);
+		}
 	}
 }
 
@@ -575,29 +593,45 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event))
 	// Get the currently selected search tab
 	if (m_notebook->GetPageCount() > 0) {
 		CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(m_notebook->GetSelection()));
-		
+
 		// Get the search ID for this tab
 		long searchId = list->GetSearchId();
-		
-		// Check if there are more results available for this search
-		if (searchId != 0) {
-			// Check if we have any results already
-			size_t totalItems = list->GetItemCount();
-			size_t hiddenItems = list->GetHiddenItemCount();
-			
-			// If we have zero items and haven't retried yet, try to refresh
-			if (totalItems == 0 && hiddenItems == 0) {
-				// Show a message indicating we're trying to refresh
-				wxMessageBox(_("Attempting to refresh search results..."), 
-							_("Search Refresh"), 
-							wxOK | wxICON_INFORMATION);
-			} else {
-				// If we already have results, just show the standard message
-				wxMessageBox(_("Requesting more results for this search..."), 
-							_("More Results"), 
-							wxOK | wxICON_INFORMATION);
-			}
+
+		// Get the tab text to determine the search type
+		wxString tabText = m_notebook->GetPageText(m_notebook->GetSelection());
+
+		// The "More" button should only work for eD2k network searches (Local/Global), not for Kad
+		if (tabText.StartsWith(wxT("[Kad]")) || tabText.StartsWith(wxT("!"))) {
+			wxMessageBox(_("The 'More' button does not work for Kad searches."),
+						_("Search Information"),
+						wxOK | wxICON_INFORMATION);
+			return;
 		}
+
+		// Request more results using the stored search parameters
+		// Note: RequestMoreResults will return the new search ID in the error string if successful
+		wxString error = theApp->searchlist->RequestMoreResults(searchId);
+		if (!error.IsEmpty()) {
+			wxMessageBox(error, _("Search Error"),
+						wxOK | wxICON_ERROR);
+			return;
+		}
+
+		// Get the new search ID from the search list
+		long newSearchId = theApp->searchlist->GetCurrentSearchID();
+		if (newSearchId != -1) {
+			// Update the tab to show results from the new search ID
+			list->ShowResults(newSearchId);
+		}
+
+		// Disable buttons during the search
+		FindWindow(IDC_STARTS)->Disable();
+		FindWindow(IDC_SDOWNLOAD)->Disable();
+		FindWindow(IDC_CANCELS)->Enable();
+
+		// Update the tab text to reflect that we're requesting more results
+		m_notebook->SetPageText(m_notebook->GetSelection(),
+			m_notebook->GetPageText(m_notebook->GetSelection()).BeforeLast(wxT('(')) + wxT("(updating...)"));
 	}
 }
 
@@ -748,10 +782,15 @@ void CSearchDlg::StartNewSearch()
 			existingListCtrl->ShowResults(real_id);
 			
 			// Update the tab text to show "0" results initially with the correct prefix
-			m_notebook->SetPageText(existingTabIndex, prefix + params.searchString + wxT(" (0)"));
+			wxString newTabText = prefix + params.searchString + wxT(" (0)");
+			m_notebook->SetPageText(existingTabIndex, newTabText);
 			
 			// Select the reused tab
 			m_notebook->SetSelection(existingTabIndex);
+			
+			// Update More button state based on search type
+			bool isEd2kSearch = (prefix == wxT("[Local] ") || prefix == wxT("[ED2K] "));
+			FindWindow(IDC_SEARCHMORE)->Enable(isEd2kSearch);
 		}
 	} else {
 		// Create a new tab as before
@@ -844,6 +883,5 @@ void CSearchDlg::OnSearchTypeChanged(wxCommandEvent& evt)
 	UpdateStartButtonState();
 	evt.Skip();
 }
-
 
 // File_checked_for_headers

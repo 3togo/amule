@@ -368,6 +368,9 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 			*searchID = search->GetSearchID();
 			m_currentSearch = *searchID;
 			m_KadSearchFinished = false;
+
+			// Store search parameters for this search ID
+			m_searchParams[*searchID] = params;
 		} catch (const wxString& what) {
 			AddLogLineC(what);
 			return _("Unexpected error while attempting Kad search: ") + what;
@@ -376,6 +379,9 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		// This is an ed2k search, local or global
 		m_currentSearch = *(searchID);
 		m_searchInProgress = true;
+
+		// Store search parameters for this search ID
+		m_searchParams[*searchID] = params;
 
 		CPacket* searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_SEARCHREQUEST);
 
@@ -391,6 +397,43 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 	}
 
 	return wxEmptyString;
+}
+
+
+CSearchList::CSearchParams CSearchList::GetSearchParams(long searchID)
+{
+	ParamMap::iterator it = m_searchParams.find(searchID);
+	if (it != m_searchParams.end()) {
+		return it->second;
+	}
+	return CSearchParams(); // Return empty params if not found
+}
+
+
+wxString CSearchList::RequestMoreResults(long searchID)
+{
+	// Check if we're connected to eD2k
+	if (!theApp->IsConnectedED2K()) {
+		return _("eD2k search can't be done if eD2k is not connected");
+	}
+
+	// Get the original search parameters
+	CSearchParams params = GetSearchParams(searchID);
+	if (params.searchString.IsEmpty()) {
+		return _("No search parameters available for this search");
+	}
+
+	// Stop any current search to prevent race conditions
+	StopSearch(true);
+
+	// Generate a unique search ID to avoid collisions
+	static uint32 s_nextSearchID = 0;
+	s_nextSearchID = (s_nextSearchID + 1) % 0xFFFFFFFE;
+	if (s_nextSearchID == 0) s_nextSearchID = 1;
+	uint32 newSearchID = s_nextSearchID;
+
+	// Create a new global search with the same parameters
+	return StartNewSearch(&newSearchID, GlobalSearch, params);
 }
 
 

@@ -171,6 +171,15 @@ public:
 	/** Mark current KAD search as finished */
 	void SetKadSearchFinished() { m_KadSearchFinished = true; }
 
+	/** Get the current search ID */
+	long GetCurrentSearchID() const { return m_currentSearch; }
+
+	/** Get the search parameters for a given search ID */
+	CSearchParams GetSearchParams(long searchID);
+
+	/** Request more results for a given search ID */
+	wxString RequestMoreResults(long searchID);
+
 private:
 	/** Event-handler for global searches. */
 	void OnGlobalSearchTimer(CTimerEvent& evt);
@@ -228,6 +237,10 @@ private:
 	//! Contains the results type desired in the current search.
 	//! If not empty, results of different types are filtered.
 	wxString	m_resultType;
+
+	//! Map of search parameters for each search ID.
+	typedef std::map<long, CSearchParams> ParamMap;
+	ParamMap	m_searchParams;
 
 
 	DECLARE_EVENT_TABLE()
