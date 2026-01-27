@@ -504,8 +504,30 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 
 void CSearchList::LocalSearchEnd()
 {
+	wxMutexLocker lock(m_searchMutex);
+	
 	if (m_searchType == GlobalSearch) {
 		wxCHECK_RET(m_searchPacket, wxT("Global search, but no packet"));
+
+		// Check if we have any results for the current search
+		ResultMap::iterator it = m_results.find(m_currentSearch);
+		bool hasResults = (it != m_results.end()) && !it->second.empty();
+
+		if (!hasResults && !m_retryTimer.IsRunning()) {
+			// No results and retry timer is not running - schedule a retry
+			AddDebugLogLineN(logSearch, wxT("Scheduling Global search retry for ID: ") + 
+				CFormat(wxT("%u")) % m_currentSearch + wxT(" (retry count: ") +
+				CFormat(wxT("%u")) % m_KadSearchRetryCount + wxT(")"));
+			
+			// Reset retry count if we're starting a new retry sequence
+			if (m_KadSearchRetryCount >= 2) {
+				m_KadSearchRetryCount = 0;
+			}
+			
+			// Start retry timer instead of immediate retry
+			m_retryTimer.Start(1500); // 1.5 second delay for ED2K
+			return;
+		}
 
 		// Ensure that every global search starts over.
 		theApp->serverlist->RemoveObserver(&m_serverQueue);
@@ -517,7 +539,31 @@ void CSearchList::LocalSearchEnd()
 		ResultMap::iterator it = m_results.find(m_currentSearch);
 		bool hasResults = (it != m_results.end()) && !it->second.empty();
 
-		// Only update hit count at the end of the search to avoid race conditions
+		if (!hasResults && !m_retryTimer.IsRunning()) {
+			// No results and retry timer is not running - schedule a retry for local search
+			AddDebugLogLineN(logSearch, wxT("Scheduling Local search retry for ID: ") + 
+				CFormat(wxT("%u")) % m_currentSearch + wxT(" (retry count: ") +
+				CFormat(wxT("%u")) % m_KadSearchRetryCount + wxT(")"));
+			
+			// Reset retry count if we're starting a new retry sequence
+			if (m_KadSearchRetryCount >= 2) {
+				m_KadSearchRetryCount = 0;
+			}
+			
+			// Start retry timer instead of immediate retry
+			m_retryTimer.Start(1000); // 1 second delay for local search
+			return;
+		}
+
+		// Update hit count at the end of the search to avoid race conditions
+		// Use the same mechanism as KAD searches
+#ifndef AMULE_DAEMON
+		if (theApp->amuledlg) {
+			wxCommandEvent updateEvent(wxEVT_COMMAND_BUTTON_CLICKED, SEARCH_UPDATE_HITCOUNT);
+			updateEvent.SetInt(m_currentSearch);
+			theApp->amuledlg->GetEventHandler()->AddPendingEvent(updateEvent);
+		}
+#endif
 		Notify_SearchLocalEnd();
 	}
 }
@@ -609,8 +655,22 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
 			}
 		}
 	}
-	// No more servers left to ask.
-	StopSearch(true);
+	// No more servers left to ask - check if we should retry
+	ResultMap::iterator it = m_results.find(m_currentSearch);
+	bool hasResults = (it != m_results.end()) && !it->second.empty();
+
+	if (!hasResults && !m_retryTimer.IsRunning() && m_KadSearchRetryCount < 2) {
+		// No results, retry timer is not running, and retry count is less than max - schedule a retry
+		AddDebugLogLineN(logSearch, wxT("Global search completed with no results, scheduling retry for ID: ") + 
+			CFormat(wxT("%u")) % m_currentSearch + wxT(" (retry count: ") +
+			CFormat(wxT("%u")) % m_KadSearchRetryCount + wxT(")"));
+		
+		// Start retry timer instead of immediate retry
+		m_retryTimer.Start(2000); // 2 second delay for Global search retry
+	} else {
+		// Either we have results, retry timer is already running, or reached max retries - stop the search
+		StopSearch(true);
+	}
 }
 
 
@@ -721,6 +781,16 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 
 	// New unique result, simply add and display.
 	results.push_back(toadd);
+	
+	// Trigger UI update for the hit count
+#ifndef AMULE_DAEMON
+	if (theApp->amuledlg) {
+		wxCommandEvent updateEvent(wxEVT_COMMAND_BUTTON_CLICKED, SEARCH_UPDATE_HITCOUNT);
+		updateEvent.SetInt(toadd->GetSearchID());
+		theApp->amuledlg->GetEventHandler()->AddPendingEvent(updateEvent);
+	}
+#endif
+	
 	Notify_Search_Add_Result(toadd);
 
 	return true;
@@ -1178,14 +1248,15 @@ void CSearchList::OnRetryTimer(CTimerEvent& WXUNUSED(evt))
 {
 	wxMutexLocker lock(m_searchMutex);
 	
-	// Check if we need to retry any Kad searches
+	// Check if we have any results
 	ResultMap::iterator it = m_results.find(m_currentSearch);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
 	
 	if (!hasResults && m_KadSearchRetryCount < 2) {
 		// No results and retry count is less than max - retry
-		AddDebugLogLineN(logKadSearch, wxT("Kad search returned no results, retrying (search ID: ") +
-			CFormat(wxT("%u")) % m_currentSearch + wxT(", attempt: ") + 
+		AddDebugLogLineN(logSearch, wxT("Search returned no results, retrying (search ID: ") +
+			CFormat(wxT("%u")) % m_currentSearch + wxT(", type: ") + 
+			CFormat(wxT("%u")) % (int)m_searchType + wxT(", attempt: ") + 
 			CFormat(wxT("%u")) % (m_KadSearchRetryCount + 1) + wxT(")"));
 
 		// Increment retry count
@@ -1197,8 +1268,10 @@ void CSearchList::OnRetryTimer(CTimerEvent& WXUNUSED(evt))
 			try {
 				// Create search data packet
 				bool packetUsing64bit = false;
-				CMemFilePtr data = CreateSearchData(params, KadSearch, true, packetUsing64bit);
-				if (data) {
+				CMemFilePtr data = CreateSearchData(params, m_searchType, true, packetUsing64bit);
+				
+				if (data && m_searchType == KadSearch) {
+					// KAD search retry
 					// Stop the current search
 					Kademlia::CSearchManager::StopSearch(m_currentSearch, false);
 
@@ -1206,18 +1279,26 @@ void CSearchList::OnRetryTimer(CTimerEvent& WXUNUSED(evt))
 					Kademlia::CSearch* search = Kademlia::CSearchManager::PrepareFindKeywords(
 						params.strKeyword, data->GetLength(), data->GetRawBuffer(), m_currentSearch);
 
-					if (search) {
-						// Start the search
-						if (Kademlia::CSearchManager::StartSearch(search)) {
-							m_currentSearch = search->GetSearchID();
-							m_KadSearchFinished = false;
-							// Don't mark as finished - search is retrying
-							return;
-						}
+					if (search && Kademlia::CSearchManager::StartSearch(search)) {
+						m_currentSearch = search->GetSearchID();
+						m_KadSearchFinished = false;
+						// Don't mark as finished - search is retrying
+						return;
+					}
+				} else if (data && (m_searchType == GlobalSearch || m_searchType == LocalSearch)) {
+					// ED2K search retry
+					uint32 newSearchID = m_currentSearch;
+					wxString error = StartNewSearch(&newSearchID, m_searchType, params);
+					
+					if (error.IsEmpty()) {
+						// Successfully started retry
+						return;
+					} else {
+						AddLogLineC(wxT("Error retrying ED2K search: ") + error);
 					}
 				}
 			} catch (const wxString& what) {
-				AddLogLineC(wxT("Error retrying Kad search: ") + what);
+				AddLogLineC(wxT("Error retrying search: ") + what);
 			}
 		}
 	}
@@ -1232,7 +1313,6 @@ void CSearchList::OnRetryTimer(CTimerEvent& WXUNUSED(evt))
 	// Notify search dialog to update hit count
 #ifndef AMULE_DAEMON
 	if (theApp->amuledlg) {
-		// Use public interface to update search results
 		wxCommandEvent updateEvent(wxEVT_COMMAND_BUTTON_CLICKED, SEARCH_UPDATE_HITCOUNT);
 		updateEvent.SetInt(m_currentSearch);
 		theApp->amuledlg->GetEventHandler()->AddPendingEvent(updateEvent);
