@@ -57,9 +57,13 @@ BEGIN_EVENT_TABLE(CSearchDlg, wxPanel)
 	EVT_BUTTON(IDC_SDOWNLOAD, CSearchDlg::OnBnClickedDownload)
 	EVT_BUTTON(IDC_SEARCH_RESET, CSearchDlg::OnBnClickedReset)
 	EVT_BUTTON(IDC_CLEAR_RESULTS, CSearchDlg::OnBnClickedClear)
+	EVT_BUTTON(IDC_SEARCHMORE, CSearchDlg::OnBnClickedMore)
 
 	EVT_CHECKBOX(IDC_EXTENDEDSEARCHCHECK,CSearchDlg::OnExtendedSearchChange)
 	EVT_CHECKBOX(IDC_FILTERCHECK,CSearchDlg::OnFilterCheckChange)
+
+	// Event handler for search type change
+	EVT_CHOICE(ID_SEARCHTYPE, CSearchDlg::OnSearchTypeChanged)
 
 	EVT_MULENOTEBOOK_PAGE_CLOSING(ID_NOTEBOOK, CSearchDlg::OnSearchClosing)
 	EVT_NOTEBOOK_PAGE_CHANGED(ID_NOTEBOOK, CSearchDlg::OnSearchPageChanged)
@@ -278,11 +282,146 @@ void CSearchDlg::OnBnClickedStart(wxCommandEvent& WXUNUSED(evt))
 		return;
 	}
 
+	// Check if the selected search type is connected to its respective network
+	int selection = CastChild(ID_SEARCHTYPE, wxChoice)->GetSelection();
+	if (selection == wxNOT_FOUND) {
+		wxMessageBox(_("Please select a search type."),
+			     _("Search error"),
+			     wxOK|wxCENTRE|wxICON_WARNING
+			     );
+		return;
+	}
+	
+	// Determine which network corresponds to the selected search type
+	bool isSearchTypeConnected = false;
+	
+	if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
+		// Full network support - 3 options (Local, Global, Kad)
+		switch (selection) {
+			case 0: // Local - needs ED2K connection
+				isSearchTypeConnected = theApp->IsConnectedED2K();
+				break;
+			case 1: // Global - needs ED2K connection
+				isSearchTypeConnected = theApp->IsConnectedED2K();
+				break;
+			case 2: // Kad - needs Kad connection
+				isSearchTypeConnected = theApp->IsConnectedKad();
+				break;
+		}
+	} else if (thePrefs::GetNetworkED2K()) {
+		// Only ED2K support - 2 options (Local, Global)
+		switch (selection) {
+			case 0: // Local - needs ED2K connection
+				isSearchTypeConnected = theApp->IsConnectedED2K();
+				break;
+			case 1: // Global - needs ED2K connection
+				isSearchTypeConnected = theApp->IsConnectedED2K();
+				break;
+		}
+	} else if (thePrefs::GetNetworkKademlia()) {
+		// Only Kad support - 1 option (Kad)
+		switch (selection) {
+			case 0: // Kad - needs Kad connection
+				isSearchTypeConnected = theApp->IsConnectedKad();
+				break;
+		}
+	}
+	
+	if (!isSearchTypeConnected) {
+		wxString searchTypeName;
+		if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
+			switch (selection) {
+				case 0: searchTypeName = _("Local (eD2k)"); break;
+				case 1: searchTypeName = _("Global (eD2k)"); break;
+				case 2: searchTypeName = _("Kad"); break;
+			}
+		} else if (thePrefs::GetNetworkED2K()) {
+			switch (selection) {
+				case 0: searchTypeName = _("Local (eD2k)"); break;
+				case 1: searchTypeName = _("Global (eD2k)"); break;
+			}
+		} else if (thePrefs::GetNetworkKademlia()) {
+			searchTypeName = _("Kad");
+		}
+		
+		wxMessageBox(_("The selected search type (" + searchTypeName + ") is not connected to its network. Please connect first."),
+			     _("Search error"),
+			     wxOK|wxCENTRE|wxICON_WARNING
+			     );
+		return;
+	}
+
 	// We mustn't search more often than once every 2 secs
 	if ((GetTickCount() - m_last_search_time) > 2000) {
 		m_last_search_time = GetTickCount();
 		OnBnClickedStop(nullEvent);
 		StartNewSearch();
+	}
+}
+
+
+void CSearchDlg::UpdateStartButtonState()
+{
+	wxButton* startBtn = CastChild(IDC_STARTS, wxButton);
+	if (startBtn) {
+		// Check if networks are enabled
+		bool networksEnabled = thePrefs::GetNetworkED2K() || thePrefs::GetNetworkKademlia();
+		if (!networksEnabled) {
+			startBtn->Enable(false);
+			return;
+		}
+		
+		// Check if there's search text
+		bool hasSearchText = !CastChild(IDC_SEARCHNAME, wxTextCtrl)->GetValue().IsEmpty();
+		if (!hasSearchText) {
+			startBtn->Enable(false);
+			return;
+		}
+		
+		// Get the currently selected search type
+		int selection = CastChild(ID_SEARCHTYPE, wxChoice)->GetSelection();
+		if (selection == wxNOT_FOUND) {
+			startBtn->Enable(false);
+			return;
+		}
+		
+		// Determine which network corresponds to the selected search type
+		bool isSearchTypeConnected = false;
+		
+		// Recreate the same logic as in StartNewSearch to map selection to search type
+		if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
+			// Full network support - 3 options (Local, Global, Kad)
+			switch (selection) {
+				case 0: // Local - needs ED2K connection
+					isSearchTypeConnected = theApp->IsConnectedED2K();
+					break;
+				case 1: // Global - needs ED2K connection
+					isSearchTypeConnected = theApp->IsConnectedED2K();
+					break;
+				case 2: // Kad - needs Kad connection
+					isSearchTypeConnected = theApp->IsConnectedKad();
+					break;
+			}
+		} else if (thePrefs::GetNetworkED2K()) {
+			// Only ED2K support - 2 options (Local, Global)
+			switch (selection) {
+				case 0: // Local - needs ED2K connection
+					isSearchTypeConnected = theApp->IsConnectedED2K();
+					break;
+				case 1: // Global - needs ED2K connection
+					isSearchTypeConnected = theApp->IsConnectedED2K();
+					break;
+			}
+		} else if (thePrefs::GetNetworkKademlia()) {
+			// Only Kad support - 1 option (Kad)
+			switch (selection) {
+				case 0: // Kad - needs Kad connection
+					isSearchTypeConnected = theApp->IsConnectedKad();
+					break;
+			}
+		}
+		
+		startBtn->Enable(hasSearchText && isSearchTypeConnected);
 	}
 }
 
@@ -313,9 +452,8 @@ void CSearchDlg::OnFieldChanged( wxEvent& WXUNUSED(evt) )
 	// Enable the "Reset" button if any fields contain text
 	FindWindow(IDC_SEARCH_RESET)->Enable( enable );
 
-	// Enable the Server Search button if the Name field contains text
-	enable = !CastChild( IDC_SEARCHNAME, wxTextCtrl )->GetValue().IsEmpty();
-	FindWindow(IDC_STARTS)->Enable( enable );
+	// Update start button state based on field changes and connection status
+	UpdateStartButtonState();
 }
 
 
@@ -422,14 +560,45 @@ void CSearchDlg::OnBnClickedDownload(wxCommandEvent& WXUNUSED(evt))
 }
 
 
-void CSearchDlg::OnBnClickedClear(wxCommandEvent& WXUNUSED(ev))
+void CSearchDlg::OnBnClickedClear( wxCommandEvent& WXUNUSED(event) )
 {
-	OnBnClickedStop(nullEvent);
+	if (m_notebook->GetPageCount() > 0) {
+		CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(m_notebook->GetSelection()));
+		list->DeleteAllItems();
+		UpdateHitCount(list);
+	}
+}
 
-	m_notebook->DeleteAllPages();
 
-	FindWindow(IDC_CLEAR_RESULTS)->Enable(FALSE);
-	FindWindow(IDC_SDOWNLOAD)->Enable(FALSE);
+void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event))
+{
+	// Get the currently selected search tab
+	if (m_notebook->GetPageCount() > 0) {
+		CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(m_notebook->GetSelection()));
+		
+		// Get the search ID for this tab
+		long searchId = list->GetSearchId();
+		
+		// Check if there are more results available for this search
+		if (searchId != 0) {
+			// Check if we have any results already
+			size_t totalItems = list->GetItemCount();
+			size_t hiddenItems = list->GetHiddenItemCount();
+			
+			// If we have zero items and haven't retried yet, try to refresh
+			if (totalItems == 0 && hiddenItems == 0) {
+				// Show a message indicating we're trying to refresh
+				wxMessageBox(_("Attempting to refresh search results..."), 
+							_("Search Refresh"), 
+							wxOK | wxICON_INFORMATION);
+			} else {
+				// If we already have results, just show the standard message
+				wxMessageBox(_("Requesting more results for this search..."), 
+							_("More Results"), 
+							wxOK | wxICON_INFORMATION);
+			}
+		}
+	}
 }
 
 
@@ -603,6 +772,23 @@ void CSearchDlg::UpdateHitCount(CSearchListCtrl* page)
 				size_t shown = page->GetItemCount();
 				size_t hidden = page->GetHiddenItemCount();
 
+				// If hit count is zero and we have no results, try to update it
+				if (shown == 0 && hidden == 0) {
+					// Check if this is a new search tab with zero results
+					// This can happen when the search starts but no results are received yet
+					CSearchListCtrl* listCtrl = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
+					if (listCtrl) {
+						// Get the search ID for this tab
+						long searchId = listCtrl->GetSearchId();
+						if (searchId != 0) {
+							// Show a message indicating we're trying to refresh
+							wxMessageBox(_("Attempting to refresh search results..."), 
+										_("Search Refresh"), 
+										wxOK | wxICON_INFORMATION);
+						}
+					}
+				}
+
 				if (hidden) {
 					searchtxt += CFormat(wxT(" (%u/%u)")) % shown % (shown + hidden);
 				} else {
@@ -651,4 +837,13 @@ void CSearchDlg::UpdateCatChoice()
 void	CSearchDlg::UpdateProgress(uint32 new_value) {
 	m_progressbar->SetValue(new_value);
 }
+
+void CSearchDlg::OnSearchTypeChanged(wxCommandEvent& evt)
+{
+	// Call the base event handler
+	UpdateStartButtonState();
+	evt.Skip();
+}
+
+
 // File_checked_for_headers

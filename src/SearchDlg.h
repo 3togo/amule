@@ -108,30 +108,40 @@ public:
 	 */
 	void		KadSearchEnd(uint32 id);
 
+	/**
+	 * Updates the hit count display for the given search list control.
+	 */
+	void		UpdateHitCount(CSearchListCtrl* list);
+
+	/**
+	 * Updates the enabled state of the start button based on connection status.
+	 */
+	void		UpdateStartButtonState();
 
 	/**
 	 * This function updates the category list according to existing categories.
 	 */
 	void		UpdateCatChoice();
 
-
-	/**
-	 * This function displays the the hit-count in the heading for the specified page.
-	 *
-	 * @param page The page to have its heading updated.
-	 */
-	void		UpdateHitCount(CSearchListCtrl* page);
-
 	/**
 	 * Helper function which resets the controls.
 	 */
 	void		ResetControls();
 
+	/**
+	 * Helper function to get the search list control for a given ID.
+	 */
+	CSearchListCtrl* GetSearchList(wxUIntPtr id);
+
 	// Event handler and helper function
-	void		OnBnClickedDownload(wxCommandEvent& ev);
+	void		OnBnClickedDownload(wxCommandEvent& event);
+	void		OnBnClickedReset(wxCommandEvent& event);
+	void		OnBnClickedClear(wxCommandEvent& event);
+	void		OnBnClickedMore(wxCommandEvent& event);
 
-	CSearchListCtrl* GetSearchList( wxUIntPtr id );
-
+	/**
+	 * Updates the progress bar.
+	 */
 	void	UpdateProgress(uint32 new_value);
 
 	void	StartNewSearch();
@@ -143,8 +153,6 @@ private:
 	void		OnFieldChanged(wxEvent& evt);
 
 	void		OnListItemSelected(wxListEvent& ev);
-	void		OnBnClickedReset(wxCommandEvent& ev);
-	void		OnBnClickedClear(wxCommandEvent& ev);
 	void		OnExtendedSearchChange(wxCommandEvent& ev);
 	void		OnFilterCheckChange(wxCommandEvent& ev);
 	void		OnFilteringChange(wxCommandEvent& ev);
@@ -154,9 +162,13 @@ private:
 	void		OnBnClickedStart(wxCommandEvent& evt);
 	void		OnBnClickedStop(wxCommandEvent& evt);
 
+	/**
+	 * Called when the search type selection changes.
+	 */
+	void		OnSearchTypeChanged(wxCommandEvent& evt);
 
 	/**
-	 * Event-handler for page-chages which takes care of enabling/disabling the download button.
+	 * Event-handler for page-changes which takes care of enabling/disabling the download button.
 	 */
 	void		OnSearchPageChanged(wxBookCtrlEvent& evt);
 

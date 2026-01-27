@@ -386,8 +386,23 @@ void CSearchListCtrl::ShowResults( long ResultsID )
 	m_nResultsID = ResultsID;
 	if (ResultsID) {
 		const CSearchResultList& list = theApp->searchlist->GetSearchResults(ResultsID);
+		
+		// Update the hit count before populating the list with the total number of results
+		CSearchDlg* parentDlg = wxDynamicCast(GetParent(), CSearchDlg);
+		if (parentDlg) {
+			// Update hit count immediately with the total number of results available
+			parentDlg->UpdateHitCount(this);
+		}
+		
+		Freeze();  // Freeze UI updates during bulk operations
 		for (unsigned int i = 0; i < list.size(); ++i) {
 			AddResult( list[i] );
+		}
+		Thaw();  // Thaw UI updates after bulk operations
+		
+		// Update the hit count again after populating to ensure accuracy
+		if (parentDlg) {
+			parentDlg->UpdateHitCount(this);
 		}
 	}
 }

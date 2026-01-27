@@ -867,6 +867,11 @@ void CamuleDlg::ShowConnectionState(bool skinChanged)
 
 		connBitmap->SetBitmap(statusIcon);
 	}
+	
+	// Update search dialog's start button state based on connection status
+	if (m_searchwnd) {
+		m_searchwnd->UpdateStartButtonState();
+	}
 }
 
 
