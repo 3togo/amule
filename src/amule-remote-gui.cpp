@@ -29,6 +29,7 @@
 #include <wx/fileconf.h>		// Needed for wxFileConfig
 #include <wx/socket.h>			// Needed for wxSocketBase
 
+#include <memory>				// Needed for smart pointers
 
 #include <common/Format.h>
 #include <common/StringFunctions.h>
@@ -235,8 +236,9 @@ void CamuleRemoteGuiApp::ShutDown(wxCloseEvent &WXUNUSED(evt))
 		amuledlg->Destroy();
 		amuledlg = NULL;
 	}
-	delete m_allUploadingKnownFile;
-	delete stattree;
+	// Smart pointers will be automatically cleaned up
+	m_allUploadingKnownFile.reset();
+	stattree.reset();
 }
 
 
@@ -369,23 +371,22 @@ void CamuleRemoteGuiApp::Startup() {
 	m_ConnState = 0;
 	m_clientID  = 0;
 
-	serverconnect = new CServerConnectRem(m_connect);
-	m_statistics = new CStatistics(*m_connect);
-	stattree = new CStatTreeRem(m_connect);
+	serverconnect = std::make_unique<CServerConnectRem>(m_connect);
+	m_statistics = std::make_unique<CStatistics>(*m_connect);
+	stattree = std::make_unique<CStatTreeRem>(m_connect);
 
-	clientlist = new CUpDownClientListRem(m_connect);
-	searchlist = new CSearchListRem(m_connect);
-	serverlist = new CServerListRem(m_connect);
-	friendlist = new CFriendListRem(m_connect);
+	clientlist = std::make_unique<CUpDownClientListRem>(m_connect);
+	searchlist = std::make_unique<CSearchListRem>(m_connect);
+	serverlist = std::make_unique<CServerListRem>(m_connect);
+	friendlist = std::make_unique<CFriendListRem>(m_connect);
 
+	sharedfiles = std::make_unique<CSharedFilesRem>(m_connect);
+	knownfiles = std::make_unique<CKnownFilesRem>(m_connect);
 
-	sharedfiles	= new CSharedFilesRem(m_connect);
-	knownfiles = new CKnownFilesRem(m_connect);
+	downloadqueue = std::make_unique<CDownQueueRem>(m_connect);
+	ipfilter = std::make_unique<CIPFilterRem>(m_connect);
 
-	downloadqueue = new CDownQueueRem(m_connect);
-	ipfilter = new CIPFilterRem(m_connect);
-
-	m_allUploadingKnownFile = new CKnownFile;
+	m_allUploadingKnownFile = std::make_unique<CKnownFile>();
 
 	// Create main dialog
 	InitGui(m_geometryEnabled, m_geometryString);

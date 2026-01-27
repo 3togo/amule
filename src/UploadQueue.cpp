@@ -31,6 +31,7 @@
 #include <common/Constants.h>
 
 #include <cmath>
+#include <memory>           // For smart pointers
 
 #include "Types.h"		// Do_not_auto_remove (win32)
 
@@ -69,7 +70,7 @@ CUploadQueue::CUploadQueue()
 	m_lastSort = 0;
 	lastupslotHighID = true;
 	m_allowKicking = true;
-	m_allUploadingKnownFile = new CKnownFile;
+	m_allUploadingKnownFile = std::make_unique<CKnownFile>();
 }
 
 
@@ -323,7 +324,7 @@ CUploadQueue::~CUploadQueue()
 {
 	wxASSERT(m_waitinglist.empty());
 	wxASSERT(m_uploadinglist.empty());
-	delete m_allUploadingKnownFile;
+	// m_allUploadingKnownFile will be automatically deleted by unique_ptr
 }
 
 

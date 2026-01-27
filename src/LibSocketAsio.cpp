@@ -467,6 +467,8 @@ private:
 
 	void HandleSend(const error_code& err, size_t DEBUG_ONLY(bytes_transferred) )
 	{
+		(void)err;              // Suppress unused parameter warning in release builds
+		(void)bytes_transferred; // Suppress unused parameter warning
 		delete[] m_sendBuffer;
 		m_sendBuffer = NULL;
 
@@ -554,6 +556,7 @@ private:
 
 	void PostReadEvent(int DEBUG_ONLY(from) )
 	{
+		(void)from;  // Suppress unused parameter warning
 		if (!m_eventPending) {
 			AddDebugLogLineF(logAsio, CFormat(wxT("Post read event %d %s")) % from % m_IP);
 			m_eventPending = true;

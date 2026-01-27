@@ -12,12 +12,12 @@ if(DISABLE_REGISTER_WARNING AND (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang"))
     add_compile_options(-Wno-register)
 endif()
 
-# 现代C++配置
+# Modern C++ configuration
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# 协程支持检查
+# Coroutine support check
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     include(CheckCXXCompilerFlag)
     check_cxx_compiler_flag(-fcoroutines HAS_COROUTINES)
@@ -28,6 +28,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         message(WARNING "Compiler does not support coroutines")
     endif()
 endif()
+
+# Enforce C++20 features and best practices
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 
 # Suppress 'register' keyword warnings in generated C++ lexer files
 # if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")

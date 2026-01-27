@@ -30,6 +30,7 @@
 #include "../updownclient.h"
 #include "../common/NetworkPerformanceMonitor.h"
 #include <arpa/inet.h>  // For inet_addr
+#include <netdb.h>      // For gethostbyname
 
 namespace ProtocolIntegration {
 
@@ -102,9 +103,40 @@ public:
     
     bool add_ed2k_source(const SourceEndpoint& source, CPartFile* file) {
         try {
-            // Use the correct method to add a source to the download queue
-            // Since we can't directly create a CUpDownClient, we'll just return true for now
-            // The actual implementation would need to go through the proper channels
+            // Validate inputs
+            if (!file || source.address.empty() || source.port == 0) {
+                return false;
+            }
+
+            // Convert address string to IP
+            uint32_t ip = inet_addr(source.address.c_str());
+            if (ip == INADDR_NONE) {
+                // Try to resolve hostname if it's not an IP address
+                struct hostent* host_entry = gethostbyname(source.address.c_str());
+                if (host_entry != NULL) {
+                    ip = *((uint32_t*) host_entry->h_addr_list[0]);
+                }
+            }
+
+            if (ip == INADDR_NONE) {
+                return false; // Could not resolve address
+            }
+
+            // Create a new client from the source information
+            // Using the constructor: CUpDownClient(uint16 in_port, uint32 in_userid, uint32 in_serverup, uint16 in_serverport, CPartFile* in_reqfile, bool ed2kID, bool checkfriend)
+            CUpDownClient* newSource = new CUpDownClient(
+                source.port,              // port
+                ip,                       // userid (converted from address)
+                0,                        // server IP (not applicable for search result sources)
+                0,                        // server port (not applicable for search result sources)
+                file,                     // part file
+                true,                     // ed2k ID
+                true                      // check friend
+            );
+
+            // Add the source to the download queue
+            theApp->downloadqueue->CheckAndAddSource(file, newSource);
+            
             return true;
         } catch (...) {
             return false;
@@ -112,10 +144,45 @@ public:
     }
     
     bool add_kad_source(const SourceEndpoint& source, CPartFile* file) {
-        // Implementation for adding Kad sources
-        // This would involve calling Kad-specific functions
-        // which are not detailed here
-        return true;
+        try {
+            // Validate inputs
+            if (!file || source.address.empty() || source.port == 0) {
+                return false;
+            }
+
+            // Convert address string to IP
+            uint32_t ip = inet_addr(source.address.c_str());
+            if (ip == INADDR_NONE) {
+                // Try to resolve hostname if it's not an IP address
+                struct hostent* host_entry = gethostbyname(source.address.c_str());
+                if (host_entry != NULL) {
+                    ip = *((uint32_t*) host_entry->h_addr_list[0]);
+                }
+            }
+
+            if (ip == INADDR_NONE) {
+                return false; // Could not resolve address
+            }
+
+            // Create a new client from the source information
+            // For Kad sources, we pass different flags to distinguish from eD2k
+            CUpDownClient* newSource = new CUpDownClient(
+                source.port,              // port
+                ip,                       // userid (converted from address)
+                0,                        // server IP (Kad sources typically don't have server IP)
+                0,                        // server port (Kad sources typically don't have server port)
+                file,                     // part file
+                false,                    // not an eD2k ID, this is Kad
+                true                      // check friend
+            );
+
+            // Add the source to the download queue
+            theApp->downloadqueue->CheckAndAddSource(file, newSource);
+            
+            return true;
+        } catch (...) {
+            return false;
+        }
     }
     
     void remove_duplicates(std::vector<SourceEndpoint>& sources) {

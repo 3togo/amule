@@ -83,6 +83,7 @@ public:
     
     bool process_ed2k_packet(CPacket* packet) {
         // TODO: Implement ED2K packet processing
+        (void)packet; // Avoid unused parameter warning
         return false;
     }
     
@@ -104,14 +105,17 @@ bool MultiProtocolSocket::process_packet(CPacket* packet) {
 
 // Virtual function implementations
 void MultiProtocolSocket::OnConnect(int nErrorCode) {
+    (void)nErrorCode; // Avoid unused parameter warning
     // Default implementation - do nothing
 }
 
 void MultiProtocolSocket::OnSend(int nErrorCode) {
+    (void)nErrorCode; // Avoid unused parameter warning
     // Default implementation - do nothing
 }
 
 void MultiProtocolSocket::OnReceive(int nErrorCode) {
+    (void)nErrorCode; // Avoid unused parameter warning
     // Default implementation - do nothing
 }
 

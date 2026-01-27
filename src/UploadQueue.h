@@ -29,6 +29,8 @@
 #include "ClientRef.h"		// Needed for CClientRefList
 #include "MD4Hash.h"		// Needed for CMD4Hash
 
+#include <memory>           // For smart pointers
+
 // Experimental extended upload queue population
 //
 // When a client is set up from scratch (no shares, all downloads empty)
@@ -65,7 +67,7 @@ public:
 
 	uint16	SuspendUpload(const CMD4Hash &, bool terminate);
 	void	ResumeUpload(const CMD4Hash &);
-	CKnownFile* GetAllUploadingKnownFile() { return m_allUploadingKnownFile; }
+	CKnownFile* GetAllUploadingKnownFile() { return m_allUploadingKnownFile.get(); }
 
 private:
 	void	RemoveFromWaitingQueue(CClientRefList::iterator pos);
@@ -88,7 +90,7 @@ private:
 	bool	lastupslotHighID; // VQB lowID alternation
 	bool	m_allowKicking;
 	// This KnownFile collects all currently uploading clients for display in the upload list control
-	CKnownFile * m_allUploadingKnownFile;
+	std::unique_ptr<CKnownFile> m_allUploadingKnownFile;
 };
 
 #endif // UPLOADQUEUE_H

@@ -1419,6 +1419,9 @@ void PrefsUnifiedDlg::OnGeoIPDownload(wxCommandEvent &WXUNUSED(event))
 	size_t totalSize = downloadedFile.Length();
 	downloadedFile.Close();
 	
+	// Use the variable to avoid the warning (could be helpful for debugging or future enhancement)
+	(void)totalSize;  // Explicitly mark as unused but available for future use
+	
 	// Decompress the gzip file
 	progressDialog.Update(90, _("Decompressing database..."));
 	

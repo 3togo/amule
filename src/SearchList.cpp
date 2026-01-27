@@ -269,12 +269,17 @@ END_EVENT_TABLE()
 
 CSearchList::CSearchList()
 	: m_searchTimer(this, 0 /* Timer-id doesn't matter. */ ),
-	  m_searchType(LocalSearch),
+	  m_searchType(UnknownSearch),
 	  m_searchInProgress(false),
 	  m_currentSearch(-1),
 	  m_searchPacket(NULL),
 	  m_64bitSearchPacket(false),
 	  m_KadSearchFinished(true)
+	// Initialize retry tracking variables
+	, m_lastKadSearchID(0)
+	, m_lastSearchTerm(wxEmptyString)
+	, m_lastSearchTime(0)
+	, m_searchHadResults(false)
 {}
 
 
@@ -368,6 +373,9 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 			*searchID = search->GetSearchID();
 			m_currentSearch = *searchID;
 			m_KadSearchFinished = false;
+			
+			// Track this Kad search for potential retries
+			KadSearchStart(params.searchString);
 		} catch (const wxString& what) {
 			AddLogLineC(what);
 			return _("Unexpected error while attempting Kad search: ") + what;
@@ -402,6 +410,9 @@ void CSearchList::LocalSearchEnd()
 		// Ensure that every global search starts over.
 		theApp->serverlist->RemoveObserver(&m_serverQueue);
 		m_searchTimer.Start(750);
+	} else if (m_searchType == KadSearch) {
+		// Check if we should retry the Kad search
+		RetryKadSearchIfNeeded();
 	} else {
 		m_searchInProgress = false;
 		Notify_SearchLocalEnd();
@@ -1033,6 +1044,9 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt
 	tempFile->SetKadPublishInfo(kadPublishInfo);
 
 	AddToList(tempFile);
+	
+	// Notify that we received a Kad search result
+	OnKadSearchResult();
 }
 
 void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)
@@ -1051,5 +1065,35 @@ void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)
 	}
 }
 
+void CSearchList::KadSearchStart(const wxString& searchTerm)
+{
+	m_KadSearchFinished = false;
+	
+	// Store information about this search for potential retry
+	m_lastSearchTerm = searchTerm;
+	m_lastSearchTime = time(NULL);
+	m_searchHadResults = false; // Will be set to true if results are found
+	// Use a fixed ID for retries or generate new one
+	m_lastKadSearchID = 0xffffffff; // Standard ID for keyword searches
+}
+
+void CSearchList::OnKadSearchResult()
+{
+	// Mark that this search produced results
+	m_searchHadResults = true;
+}
+
+void CSearchList::RetryKadSearchIfNeeded()
+{
+	// Check if the last Kad search finished without results
+	if (!m_searchHadResults && m_lastSearchTerm != wxEmptyString) {
+		time_t now = time(NULL);
+		
+		// Only show the retry suggestion if enough time has passed since the last search
+		if (now - m_lastSearchTime > 120) {  // Wait at least 2 minutes after the last search
+			AddLogLineC(CFormat(_("Kad search for '%s' returned no results. You may want to try searching again later.")) % m_lastSearchTerm);
+		}
+	}
+}
 
 // File_checked_for_headers

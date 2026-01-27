@@ -1100,11 +1100,14 @@ void CSearchListCtrl::OnDrawItem(
 
 	// Trigger UI update to ensure counts stay synchronized
 	// This helps ensure the tab count updates properly after drawing operations
-	if (item == GetItemCount() - 1) {  // Last item in list
-		Thaw();  // Thaw temporarily frozen updates
-		Thaw();  // Second thaw in case we had multiple Freeze calls
-	}
+	// Note: Removed unsafe Thaw calls that were causing "thawing unfrozen list control" assertion
+	// Thaw() calls should only happen when there's a corresponding Freeze() in the same scope
+	// if (item == GetItemCount() - 1) {  // Last item in list
+	// 	Thaw();  // Thaw temporarily frozen updates
+	// 	Thaw();  // Second thaw in case we had multiple Freeze calls
+	// }
 	
+	// Instead, rely on the caller to handle freezing/thawing appropriately
 	// Sanity checks to ensure that results/children are properly positioned.
 #ifdef __WXDEBUG__
 	{

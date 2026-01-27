@@ -27,7 +27,6 @@
 #include "protocol/Protocols.h"
 #include "protocol/ed2k/Constants.h"
 #include "protocol/kad/Constants.h"
-#include "protocol/bt/Constants.h"
 #include "../LibSocket.h"
 #include "../Packet.h"
 #include "../MD4Hash.h"

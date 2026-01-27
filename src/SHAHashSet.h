@@ -212,6 +212,12 @@ public:
 		m_nPart = 0;
 		m_pPartFile = NULL;
 	}
+	CAICHRequestedData(const CAICHRequestedData& k1) : 
+		m_nPart(k1.m_nPart),
+		m_pPartFile(k1.m_pPartFile),
+		m_pClient(k1.m_pClient)
+	{
+	}
 	CAICHRequestedData& operator=(const CAICHRequestedData& k1)
 	{
 		m_nPart = k1.m_nPart;
