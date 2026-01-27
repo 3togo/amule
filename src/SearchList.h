@@ -169,7 +169,7 @@ public:
 	void UpdateSearchFileByHash(const CMD4Hash& hash);
 
 	/** Mark current KAD search as finished */
-	void SetKadSearchFinished() { m_KadSearchFinished = true; }
+	void SetKadSearchFinished();
 
 	/** Get the current search ID */
 	long GetCurrentSearchID() const { return m_currentSearch; }
@@ -226,6 +226,9 @@ private:
 
 	//! If the current search is a KAD search this signals if it is finished.
 	bool		m_KadSearchFinished;
+
+	//! Retry count for Kad searches (to retry if no results)
+	int		m_KadSearchRetryCount;
 
 	//! Queue of servers to ask when doing global searches.
 	//! TODO: Replace with 'cookie' system.

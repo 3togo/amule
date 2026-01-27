@@ -1155,4 +1155,52 @@ void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)
 }
 
 
+void CSearchList::SetKadSearchFinished()
+{
+	// Check if we have any results for the current search
+	ResultMap::iterator it = m_results.find(m_currentSearch);
+	bool hasResults = (it != m_results.end()) && !it->second.empty();
+
+	if (!hasResults && m_KadSearchRetryCount == 0) {
+		// No results and haven't retried yet - retry once
+		AddDebugLogLineN(logKadSearch, wxT("Kad search returned no results, retrying (search ID: ") +
+			CFormat(wxT("%u")) % m_currentSearch + wxT(")"));
+
+		// Increment retry count
+		m_KadSearchRetryCount++;
+
+		// Get the search parameters for the current search
+		CSearchParams params = GetSearchParams(m_currentSearch);
+		if (!params.searchString.IsEmpty()) {
+			try {
+				// Create search data packet
+				bool packetUsing64bit = false;
+				CMemFilePtr data = CreateSearchData(params, KadSearch, true, packetUsing64bit);
+				if (data) {
+					// Stop the current search
+					Kademlia::CSearchManager::StopSearch(m_currentSearch, false);
+
+					// Prepare to find keywords again
+					Kademlia::CSearch* search = Kademlia::CSearchManager::PrepareFindKeywords(
+						params.strKeyword, data->GetLength(), data->GetRawBuffer(), m_currentSearch);
+
+					if (search) {
+						// Start the search
+						if (Kademlia::CSearchManager::StartSearch(search)) {
+							m_currentSearch = search->GetSearchID();
+							m_KadSearchFinished = false;
+							// Don't mark as finished - search is retrying
+							return;
+					}
+				}
+			} catch (const wxString& what) {
+				AddLogLineC(wxT("Error retrying Kad search: ") + what);
+			}
+		}
+	}
+
+	// Mark search as finished
+	m_KadSearchFinished = true;
+}
+
 // File_checked_for_headers
