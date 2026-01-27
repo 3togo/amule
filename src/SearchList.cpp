@@ -1191,6 +1191,7 @@ void CSearchList::SetKadSearchFinished()
 							m_KadSearchFinished = false;
 							// Don't mark as finished - search is retrying
 							return;
+						}
 					}
 				}
 			} catch (const wxString& what) {
