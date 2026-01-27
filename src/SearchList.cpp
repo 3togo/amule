@@ -1178,8 +1178,6 @@ void CSearchList::OnRetryTimer(CTimerEvent& WXUNUSED(evt))
 {
 	wxMutexLocker lock(m_searchMutex);
 	
-	uint32 currentTime = GetTickCount();
-	
 	// Check if we need to retry any Kad searches
 	ResultMap::iterator it = m_results.find(m_currentSearch);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
@@ -1228,6 +1226,9 @@ void CSearchList::OnRetryTimer(CTimerEvent& WXUNUSED(evt))
 	m_KadSearchFinished = true;
 	m_retryTimer.Stop();
 	
+	// Reset retry count for future searches
+	m_KadSearchRetryCount = 0;
+	
 	// Notify search dialog to update hit count
 #ifndef AMULE_DAEMON
 	if (theApp->amuledlg) {
@@ -1247,10 +1248,16 @@ void CSearchList::SetKadSearchFinished()
 	ResultMap::iterator it = m_results.find(m_currentSearch);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
 
-	if (!hasResults && m_KadSearchRetryCount == 0) {
-		// No results and haven't retried yet - schedule a retry
+	if (!hasResults && !m_retryTimer.IsRunning()) {
+		// No results and retry timer is not running - schedule a retry
 		AddDebugLogLineN(logKadSearch, wxT("Scheduling Kad search retry for ID: ") + 
-			CFormat(wxT("%u")) % m_currentSearch);
+			CFormat(wxT("%u")) % m_currentSearch + wxT(" (retry count: ") +
+			CFormat(wxT("%u")) % m_KadSearchRetryCount + wxT(")"));
+		
+		// Reset retry count if we're starting a new retry sequence
+		if (m_KadSearchRetryCount >= 2) {
+			m_KadSearchRetryCount = 0;
+		}
 		
 		// Start retry timer instead of immediate retry to avoid race conditions
 		m_retryTimer.Start(1000); // 1 second delay
