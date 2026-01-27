@@ -27,7 +27,7 @@
 #include <string_view>
 #include <source_location>
 
-// Compatibility layer
+// 兼容层
 namespace modern_log {
     #ifdef USE_CPP20
     void Log(std::string_view msg, 

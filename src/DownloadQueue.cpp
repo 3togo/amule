@@ -554,13 +554,6 @@ void CDownloadQueue::Process()
 		theApp->AddLinksFromFile();
 		m_nLastED2KLinkCheck = ::GetTickCount();
 	}
-	
-	// Check for BitTorrent download updates every 5 seconds
-	static uint32_t lastBTCheck = 0;
-	if ((::GetTickCount() - lastBTCheck) >= 5000) {
-		lastBTCheck = ::GetTickCount();
-		UpdateBitTorrentDownloads();
-	}
 }
 
 
@@ -1421,27 +1414,11 @@ bool CDownloadQueue::AddLink( const wxString& link, uint8 category )
 		if (!uri.empty()) {
 			// This is an eD2k magnet link, proceed with normal processing
 		} else {
-			// This might be a BitTorrent magnet link, handle it separately
-			try {
-				CED2KLink* magnetLink = CED2KLink::CreateLinkFromUrl(link);
-				if (magnetLink && magnetLink->GetKind() == CED2KLink::kMagnetLink) {
-					CMagnetLink* btMagnet = static_cast<CMagnetLink*>(magnetLink);
-					
-					// BitTorrent support has been removed from this build
-					AddLogLineC(_("BitTorrent support has been removed from this build. Cannot add magnet link: ") + btMagnet->GetDisplayName());
-					
-					delete magnetLink;
-					
-					// Return true to indicate this link has been processed (though not added)
-					return true;
-				}
-				delete magnetLink;
-			} catch (const wxString& e) {
-				AddLogLineC(CFormat(_("Invalid magnet link format: %s - %s")) % link % e);
-			} catch (...) {
-				AddLogLineC(CFormat(_("Cannot process magnet link: %s")) % link);
-			}
-			return false;
+			// Non-eD2k magnet links are not supported in this build
+			AddLogLineC(_("Non-eD2k magnet links are not supported in this build. Cannot add link: ") + link);
+			
+			// Return true to indicate this link has been processed (though not added)
+			return true;
 		}
 	}
 
@@ -1721,10 +1698,11 @@ bool CDownloadQueue::DoKademliaFileRequest()
 	return ((::GetTickCount() - lastkademliafilerequest) > KADEMLIAASKTIME);
 }
 
-
-void CDownloadQueue::UpdateBitTorrentDownloads()
+bool CDownloadQueue::RequestKademliaFileReasks()
 {
-    // BitTorrent support has been removed from this build
-    // This function is kept for compatibility but does nothing
+	return ((::GetTickCount() - lastkademliafilerequest) > KADEMLIAASKTIME);
 }
+
+// Removed UpdateBitTorrentDownloads function as BitTorrent support has been removed
+
 // File_checked_for_headers

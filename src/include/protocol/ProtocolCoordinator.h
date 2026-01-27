@@ -54,17 +54,7 @@ struct NetworkConditions {
 enum class ProtocolType {
     ED2K,
     KADEMLIA,
-    HYBRID_AUTO  // Removed BITTORRENT
-};
-
-// Statistics and monitoring
-struct CoordinationStats {
-    uint32_t total_sources_discovered;
-    uint32_t cross_protocol_sources;
-    uint32_t protocol_switches;
-    uint32_t duplicate_sources_removed;
-    double avg_discovery_time_ms;
-    double cross_protocol_success_rate;
+    HYBRID_AUTO
 };
 
 struct SourceEndpoint {
@@ -76,7 +66,6 @@ struct SourceEndpoint {
     uint32_t latency_ms;
     
     // Cross-protocol metadata
-    std::string info_hash;      // For BitTorrent (now unused)
     CMD4Hash ed2k_hash;         // For ED2K
     bool supports_hybrid;       // Supports cross-protocol transfers
     
@@ -94,7 +83,6 @@ public:
         ProtocolType preferred = ProtocolType::HYBRID_AUTO,
         uint32_t max_sources = 50);
     
-    // Removed cross-protocol source discovery for BT
     
     bool add_source(const SourceEndpoint& source, CPartFile* file);
     bool remove_duplicate_sources(CPartFile* file);
@@ -106,29 +94,25 @@ public:
     
     bool should_switch_protocol(
         const CPartFile* file,
-        ProtocolType current,
-        ProtocolType proposed) const;
+        ProtocolType new_protocol,
+        const NetworkConditions& conditions) const;
     
     // Bandwidth management
-    struct BandwidthAllocation {
-        uint32_t ed2k_download_kbps;
-        uint32_t ed2k_upload_kbps;
-        uint32_t kad_download_kbps;
-        uint32_t kad_upload_kbps;
-    };
-    
-    BandwidthAllocation calculate_bandwidth_allocation() const;
-    void apply_bandwidth_allocation(const BandwidthAllocation& allocation);
-    
-    // Cross-protocol metadata conversion
-    // Removed BT conversion functions
     
     // Statistics and monitoring
+    struct CoordinationStats {
+        uint32_t total_sources_discovered;
+        uint32_t cross_protocol_sources;
+        uint32_t protocol_switches;
+        uint32_t duplicate_sources_removed;
+        double avg_discovery_time_ms;
+        double cross_protocol_success_rate;
+    };
+    
     CoordinationStats get_stats() const;
-    void reset_stats();
     
     // Configuration
-    void set_hybrid_mode_enabled(bool enabled);
+    void enable_hybrid_mode(bool enable);
     bool is_hybrid_mode_enabled() const;
     
     void set_max_cross_protocol_sources(uint32_t max);
@@ -147,7 +131,8 @@ private:
 };
 
 // Helper functions
-bool is_hybrid_transfer_supported(const SourceEndpoint& source);
-double calculate_protocol_efficiency(ProtocolType protocol, const NetworkConditions& conditions);
+double calculate_client_reliability(const CUpDownClient* client);
+bool add_ed2k_source(const SourceEndpoint& source, CPartFile* file);
+bool add_kad_source(const SourceEndpoint& source, CPartFile* file);
 
 } // namespace ProtocolIntegration

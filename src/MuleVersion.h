@@ -72,8 +72,10 @@ inline wxString GetMuleVersion()
 #if defined(__WXGTK__)
 #	if defined(__WXGTK3__)
 #		define MULEVERSION_WXTOOLKIT	wxT("GTK3")
+#	elif defined(__WXGTK2__)
+#		define MULEVERSION_WXTOOLKIT	wxT("GTK2")
 #	else
-#		define MULEVERSION_WXTOOLKIT	wxT("GTK")  // Removed GTK2 support
+#		define MULEVERSION_WXTOOLKIT	wxT("GTK")
 #	endif
 #elif defined(__WXOSX__)
 #	if defined(__WXOSX_CARBON__)

@@ -92,18 +92,10 @@ private:
     alignas(64) std::atomic<uint64_t> udp_packets_sent{0};        ///< UDP packets sent
     alignas(64) std::atomic<uint64_t> udp_packets_received{0};    ///< UDP packets received
     
-    // BitTorrent protocol tracking
-    alignas(64) std::atomic<uint64_t> bt_bytes_sent{0};           ///< BitTorrent bytes sent
-    alignas(64) std::atomic<uint64_t> bt_bytes_received{0};       ///< BitTorrent bytes received
-    alignas(64) std::atomic<uint64_t> bt_packets_sent{0};         ///< BitTorrent packets sent
-    alignas(64) std::atomic<uint64_t> bt_packets_received{0};     ///< BitTorrent packets received
-    alignas(64) std::atomic<uint64_t> bt_peers_connected{0};      ///< Active BitTorrent peers
-    alignas(64) std::atomic<uint64_t> bt_trackers_active{0};      ///< Active BitTorrent trackers
-    
     // Adaptive throughput tracking (aligned to prevent false sharing)
     alignas(64) std::atomic<double> m_avg_send_throughput_kbs{0.0};      ///< Moving average of send throughput (KB/s)
     alignas(64) std::atomic<double> m_avg_recv_throughput_kbs{0.0};      ///< Moving average of receive throughput (KB/s)
-    alignas(64) std::atomic<std::chrono::steady_clock::time_point> m_last_update_time{std::chrono::steady_clock::now()}; ///< Last throughput update time
+    alignas(64) std::chrono::steady_clock::time_point m_last_throughput_update; ///< Last throughput update time
     alignas(64) std::atomic<uint64_t> m_send_bytes_window{0};            ///< Send bytes in current measurement window
     alignas(64) std::atomic<uint64_t> m_recv_bytes_window{0};            ///< Receive bytes in current measurement window
     
@@ -160,7 +152,6 @@ private:
      * Uses exponential moving average for smooth throughput values.
      */
     void update_throughput(uint64_t bytes, bool is_send) {
-        (void)is_send; // Avoid unused parameter warning
         // Adaptive sampling - skip some updates during high traffic to reduce overhead
         if (m_sampling_rate.load(std::memory_order_relaxed) > 1) {
             if (++m_sampling_counter % m_sampling_rate != 0) {
@@ -170,27 +161,31 @@ private:
         }
         
         auto now = std::chrono::steady_clock::now();
-        
-        // Calculate time elapsed since last update
-        auto last_time = m_last_update_time.exchange(now, std::memory_order_relaxed);
-        auto time_diff = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_time).count();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now - m_last_throughput_update).count();
             
-        if (time_diff < 1) {
-            return; // Prevent division by zero
-        }
-        
-        // Calculate throughput in KB/s 
-        double throughput_kbs = static_cast<double>(bytes) / (time_diff * 1.024); // Convert B/ms to KB/s
-        
-        // Update appropriate throughput average based on direction
-        if (is_send) {
-            auto current_avg = m_avg_send_throughput_kbs.load(std::memory_order_relaxed);
-            // Exponential moving average with smoothing factor 0.2
-            m_avg_send_throughput_kbs.store(current_avg * 0.8 + throughput_kbs * 0.2, std::memory_order_relaxed);
-        } else {
-            auto current_avg = m_avg_recv_throughput_kbs.load(std::memory_order_relaxed);
-            // Exponential moving average with smoothing factor 0.2
-            m_avg_recv_throughput_kbs.store(current_avg * 0.8 + throughput_kbs * 0.2, std::memory_order_relaxed);
+        if (elapsed > 1000) { // Update throughput calculations every second
+            // Adjust sampling rate dynamically based on current traffic
+            uint64_t total_traffic = m_send_bytes_window + m_recv_bytes_window;
+            if (total_traffic > m_high_traffic_threshold) {
+                m_sampling_rate.store(2, std::memory_order_relaxed); // Reduce to 50% sampling
+            } else {
+                m_sampling_rate.store(1, std::memory_order_relaxed); // Full 100% sampling
+            }
+            
+            // Calculate and store exponential moving average for throughput
+            if (is_send) {
+                double new_throughput = m_send_bytes_window.exchange(0, std::memory_order_relaxed) / 1024.0;
+                m_avg_send_throughput_kbs.store(
+                    0.7 * m_avg_send_throughput_kbs.load(std::memory_order_relaxed) + 0.3 * new_throughput,
+                    std::memory_order_relaxed);
+            } else {
+                double new_throughput = m_recv_bytes_window.exchange(0, std::memory_order_relaxed) / 1024.0;
+                m_avg_recv_throughput_kbs.store(
+                    0.7 * m_avg_recv_throughput_kbs.load(std::memory_order_relaxed) + 0.3 * new_throughput,
+                    std::memory_order_relaxed);
+            }
+            m_last_throughput_update = now;
         }
     }
     
@@ -220,22 +215,6 @@ public:
     void record_udp_sent(size_t bytes) { record_sent(bytes, false); }
     void record_udp_received(size_t bytes) { record_received(bytes, false); }
     
-    // BitTorrent specific recording
-    void record_bt_sent(size_t bytes) { 
-        bt_bytes_sent.fetch_add(bytes, std::memory_order_relaxed);
-        bt_packets_sent.fetch_add(1, std::memory_order_relaxed);
-        record_sent(bytes, true); // BT primarily uses TCP
-    }
-    void record_bt_received(size_t bytes) { 
-        bt_bytes_received.fetch_add(bytes, std::memory_order_relaxed);
-        bt_packets_received.fetch_add(1, std::memory_order_relaxed);
-        record_received(bytes, true);
-    }
-    void record_bt_peer_connected() { bt_peers_connected.fetch_add(1, std::memory_order_relaxed); }
-    void record_bt_peer_disconnected() { bt_peers_connected.fetch_sub(1, std::memory_order_relaxed); }
-    void record_bt_tracker_active() { bt_trackers_active.fetch_add(1, std::memory_order_relaxed); }
-    void record_bt_tracker_inactive() { bt_trackers_active.fetch_sub(1, std::memory_order_relaxed); }
-    
     // Get performance statistics
     struct Statistics {
         uint64_t bytes_sent;
@@ -250,12 +229,6 @@ public:
         uint64_t udp_bytes_received;
         uint64_t udp_packets_sent;
         uint64_t udp_packets_received;
-        uint64_t bt_bytes_sent;
-        uint64_t bt_bytes_received;
-        uint64_t bt_packets_sent;
-        uint64_t bt_packets_received;
-        uint64_t bt_peers_connected;
-        uint64_t bt_trackers_active;
         double elapsed_seconds;
         double bytes_per_second;
         double packets_per_second;
@@ -279,12 +252,6 @@ public:
         stats.udp_bytes_received = udp_bytes_received.load(std::memory_order_relaxed);
         stats.udp_packets_sent = udp_packets_sent.load(std::memory_order_relaxed);
         stats.udp_packets_received = udp_packets_received.load(std::memory_order_relaxed);
-        stats.bt_bytes_sent = bt_bytes_sent.load(std::memory_order_relaxed);
-        stats.bt_bytes_received = bt_bytes_received.load(std::memory_order_relaxed);
-        stats.bt_packets_sent = bt_packets_sent.load(std::memory_order_relaxed);
-        stats.bt_packets_received = bt_packets_received.load(std::memory_order_relaxed);
-        stats.bt_peers_connected = bt_peers_connected.load(std::memory_order_relaxed);
-        stats.bt_trackers_active = bt_trackers_active.load(std::memory_order_relaxed);
         
         auto elapsed = global_timer.elapsed_time();
         stats.elapsed_seconds = elapsed.count() / 1000000.0; // μs to seconds

@@ -1497,7 +1497,7 @@ void CamuleDlg::OnGeoIPConfig(wxCommandEvent& WXUNUSED(evt))
 	}
 	
 	// Unselect all other toolbar buttons and select the GeoIP button
-	for (size_t i = 0; i < m_wndToolbar->GetToolsCount(); i++) {
+	for (int i = 0; i < m_wndToolbar->GetToolsCount(); i++) {
 		wxToolBarToolBase* tool = m_wndToolbar->GetToolByPos(i);
 		if (tool && tool->GetId() != MP_GEOIP_CONFIG) {
 			m_wndToolbar->ToggleTool(tool->GetId(), false);

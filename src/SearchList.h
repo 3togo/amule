@@ -46,8 +46,7 @@ namespace Kademlia {
 enum SearchType {
 	LocalSearch = 0,
 	GlobalSearch,
-	KadSearch,
-	UnknownSearch
+	KadSearch
 };
 
 
@@ -171,17 +170,7 @@ public:
 
 	/** Mark current KAD search as finished */
 	void SetKadSearchFinished() { m_KadSearchFinished = true; }
-	
-	// Variables to track search retries
-	uint32 m_lastKadSearchID;
-	wxString m_lastSearchTerm;
-	time_t m_lastSearchTime;
-	bool m_searchHadResults;
-	
-public:
-	void RetryKadSearchIfNeeded();
-	void KadSearchStart(const wxString& searchTerm);
-	void OnKadSearchResult();
+
 private:
 	/** Event-handler for global searches. */
 	void OnGlobalSearchTimer(CTimerEvent& evt);

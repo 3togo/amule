@@ -23,7 +23,7 @@
 //
 
 #include "Logger.h"
-#include "common/ModernLogging.h"  // New header file
+#include "common/ModernLogging.h"  // 新增头文件
 #include "amule.h"
 #include "Preferences.h"
 #include <common/Macros.h>

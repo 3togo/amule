@@ -28,20 +28,32 @@
 #include "../MD4Hash.h"
 #include <openssl/sha.h>
 
-// Removed BitTorrent namespace and related conversions
-
 namespace ProtocolIntegration {
 
-// Only keeping ED2K-related conversions
-std::unique_ptr<CPacket> convert_ed2k_to_local_format(const CPacket* ed2k_packet) {
-    // Return null for now since we can't copy the packet directly
-    (void)ed2k_packet; // Avoid unused parameter warning
+// Cross-protocol helper functions (placeholder implementations)
+std::string ed2k_hash_to_info_hash(const CMD4Hash& ed2k_hash) {
+    // Placeholder implementation - in reality, this would be more complex
+    // since ED2K uses MD4 and BT uses SHA-1 hashes
+    (void)ed2k_hash;
+    return std::string(); // Return empty string for now
+}
+
+CMD4Hash info_hash_to_ed2k_hash(const std::string& info_hash) {
+    // Placeholder implementation
+    (void)info_hash;
+    CMD4Hash empty_hash;
+    return empty_hash;
+}
+
+std::unique_ptr<CPacket> convert_ed2k_to_bt(const CPacket* ed2k_packet) {
+    // Placeholder implementation - returning nullptr as we're removing BT support
+    (void)ed2k_packet;
     return nullptr;
 }
 
-std::unique_ptr<CPacket> convert_for_local_processing(const CPacket* packet) {
-    // Return null for now since we can't copy the packet directly
-    (void)packet; // Avoid unused parameter warning
+std::unique_ptr<CPacket> convert_bt_to_ed2k(const CPacket* bt_packet) {
+    // Placeholder implementation - returning nullptr as we're removing BT support
+    (void)bt_packet;
     return nullptr;
 }
 

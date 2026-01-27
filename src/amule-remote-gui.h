@@ -27,7 +27,6 @@
 
 
 #include <ec/cpp/RemoteConnect.h>		// Needed for CRemoteConnect
-#include <memory>		// Needed for smart pointers
 
 
 #include "Statistics.h"
@@ -741,7 +740,7 @@ public:
 
 	wxLocale	m_locale;
 	// This KnownFile collects all currently uploading clients for display in the upload list control
-	std::unique_ptr<CKnownFile> m_allUploadingKnownFile;
+	CKnownFile * m_allUploadingKnownFile;
 
 	CUInt128	m_kadID;
 

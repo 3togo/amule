@@ -78,11 +78,13 @@ public:
 	void	Process();
 
 	/**
-	 * Update BitTorrent downloads from libtorrent session
+	 * Removed BitTorrent downloads update function as support has been removed
 	 */
-	void	UpdateBitTorrentDownloads();
 
-
+	/**
+	 * Returns true if Kad file reasks can be made
+	 */
+	bool	RequestKademliaFileReasks();
 
 	/**
 	 * Returns a pointer to the file with the specified hash, or NULL.

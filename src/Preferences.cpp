@@ -228,7 +228,8 @@ wxString	CPreferences::s_KadURL;
 uint8_t		CPreferences::s_MagnetProtocolPreference;
 bool		CPreferences::s_MagnetShowProtocolIndicator;
 bool		CPreferences::s_MagnetAutoConvertToED2K;
-bool		CPreferences::s_MagnetEnableBitTorrent;
+bool		CPreferences::s_MagnetEnableBitTorrent = false; // Changed default to false to disable BT support
+
 bool		CPreferences::s_GeoIPEnabled;
 wxString	CPreferences::s_GeoIPUpdateUrl;
 bool		CPreferences::s_preventSleepWhileDownloading;

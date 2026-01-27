@@ -22,33 +22,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
+#pragma once
 
-#ifndef ED2KPROTOCOLS_H
-#define ED2KPROTOCOLS_H
+#include "protocol/Protocols.h"
+#include "../MD4Hash.h"
+#include "../Packet.h"
+#include <string>
+#include <memory>
 
-// For MuleInfoPacket (OLD - DEPRECATED.)
-#define	EMULE_PROTOCOL				0x01
+namespace ProtocolIntegration {
 
-// Known protocols
-enum Protocols {
-	OP_EDONKEYHEADER		= 0xE3,
-	OP_EDONKEYPROT			= OP_EDONKEYHEADER,
-	OP_PACKEDPROT			= 0xD4,
-	OP_EMULEPROT			= 0xC5,
+// Hash conversion functions (placeholder implementations)
+std::string ed2k_hash_to_info_hash(const CMD4Hash& ed2k_hash);
+CMD4Hash info_hash_to_ed2k_hash(const std::string& info_hash);
 
-	// Reserved for later UDP headers (important for EncryptedDatagramSocket)
-	OP_UDPRESERVEDPROT1 = 0xA3,
-	OP_UDPRESERVEDPROT2 = 0xB2,
+// Packet conversion functions (placeholder implementations)
+std::unique_ptr<CPacket> convert_ed2k_to_bt(const CPacket* ed2k_packet);
+std::unique_ptr<CPacket> convert_bt_to_ed2k(const CPacket* bt_packet);
 
-	// Kademlia 1/2
-	OP_KADEMLIAHEADER		= 0xE4,
-	OP_KADEMLIAPACKEDPROT	= 0xE5,
-
-	// Kry tests
-	OP_ED2KV2HEADER			= 0xF4,
-	OP_ED2KV2PACKEDPROT		= 0xF5,
-
-	OP_MLDONKEYPROT			= 0x00
-};
-
-#endif // ED2KPROTOCOLS_H
+} // namespace ProtocolIntegration

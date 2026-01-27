@@ -526,6 +526,35 @@ void CSearchDlg::StartNewSearch()
 		return;
 	}
 
+	// Determine the search type prefix
+	wxString prefix;
+	switch (search_type) {
+		case LocalSearch: prefix = wxT("[Local] "); break;
+		case GlobalSearch: prefix = wxT("[ED2K] "); break;
+		case KadSearch: prefix = wxT("[Kad] "); break;
+		default: prefix = wxEmptyString; break;
+	}
+
+	// Check if a tab already exists for this search term and type
+	int existingTabIndex = -1;
+	int nPages = m_notebook->GetPageCount();
+	
+	// Look for an existing tab with the same search term and type
+	for (int i = 0; i < nPages; i++) {
+		wxString pageText = m_notebook->GetPageText(i);
+		
+		// Extract the search term from the page text by removing prefix and count
+		if (pageText.StartsWith(prefix)) {
+			wxString searchPart = pageText.Mid(prefix.length()); // Remove prefix
+			wxString searchTerm = searchPart.BeforeLast(wxT('(')).Trim(); // Remove "(count)" part
+			
+			if (searchTerm == params.searchString) {
+				existingTabIndex = i;
+				break;
+			}
+		}
+	}
+
 	uint32 real_id = m_nSearchID;
 	wxString error = theApp->searchlist->StartNewSearch(&real_id, search_type, params);
 	if (!error.IsEmpty()) {
@@ -535,10 +564,30 @@ void CSearchDlg::StartNewSearch()
 		FindWindow(IDC_STARTS)->Enable();
 		FindWindow(IDC_SDOWNLOAD)->Disable();
 		FindWindow(IDC_CANCELS)->Disable();
+		return;
+	}
+
+	// Search started successfully, now handle tab creation/reuse
+	if (existingTabIndex != -1) {
+		// Just select the existing tab and reset its search ID
+		CSearchListCtrl* existingListCtrl = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(existingTabIndex));
+		if (existingListCtrl) {
+			// Clear the existing results
+			existingListCtrl->DeleteAllItems();
+			
+			// Associate this control with the new search ID
+			existingListCtrl->ShowResults(real_id);
+			
+			// Update the tab text to show "0" results initially with the correct prefix
+			m_notebook->SetPageText(existingTabIndex, prefix + params.searchString + wxT(" (0)"));
+			
+			// Select the reused tab
+			m_notebook->SetSelection(existingTabIndex);
+		}
 	} else {
+		// Create a new tab as before
 		CreateNewTab(
-			((search_type == KadSearch) ? wxT("!") : wxEmptyString) +
-				params.searchString + wxT(" (0)"),
+			prefix + params.searchString + wxT(" (0)"),
 			real_id);
 	}
 }

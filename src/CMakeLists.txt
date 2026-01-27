@@ -127,6 +127,7 @@ if (BUILD_DAEMON)
 	)
 
 	target_link_libraries (amuled
+		PRIVATE LibtorrentRasterbar::torrent-rasterbar
 		PRIVATE ec
 		PRIVATE muleappcommon
 		PRIVATE muleappcore
@@ -197,6 +198,7 @@ if (BUILD_MONOLITHIC)
 	endif()
 
 	target_link_libraries (amule
+		PRIVATE LibtorrentRasterbar::torrent-rasterbar
 		PRIVATE ec
 		PRIVATE muleappcommon
 		PRIVATE muleappcore
@@ -478,7 +480,7 @@ if (NEED_LIB_MULEAPPGUI)
 	endif()
 endif()
 
-IF (NEED_LIB_MULESOCKET)
+if (NEED_LIB_MULESOCKET)
 	add_library (mulesocket STATIC
 		LibSocket.cpp
 	)

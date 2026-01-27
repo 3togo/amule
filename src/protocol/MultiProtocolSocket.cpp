@@ -24,6 +24,7 @@
 //
 #include "protocol/MultiProtocolSocket.h"
 #include "protocol/Protocols.h"
+#include "protocol/ed2k/Constants.h"
 #include "protocol/ed2k/Client2Client/TCP.h"
 #include "../LibSocket.h"
 #include "../MemFile.h"
@@ -51,6 +52,8 @@ public:
         switch(m_protocol) {
             case SocketProtocol::ED2K_TCP:
                 return perform_ed2k_handshake();
+            case SocketProtocol::KAD_UDP:
+                return perform_kad_handshake();
             default:
                 return false;
         }
@@ -68,6 +71,24 @@ public:
         return m_handshake_complete;
     }
     
+    bool perform_kad_handshake() {
+        // KAD protocol handshake implementation
+        // This is a simplified version - actual KAD handshake would be more complex
+        uint8_t kad_hello[2] = {0x00, 0x01}; // KAD_HELLO equivalent
+        
+        if (m_socket->Write(kad_hello, 2) != 2) {
+            return false;
+        }
+        
+        uint8_t response[2];
+        if (m_socket->Read(response, 2) != 2) {
+            return false;
+        }
+        
+        m_handshake_complete = (response[1] == 0x01); // Check for KAD_HELLO_ACK
+        return m_handshake_complete;
+    }
+    
     bool process_packet(CPacket* packet) {
         if (!m_handshake_complete) {
             return false;
@@ -76,6 +97,8 @@ public:
         switch(m_protocol) {
             case SocketProtocol::ED2K_TCP:
                 return process_ed2k_packet(packet);
+            case SocketProtocol::KAD_UDP:
+                return process_kad_packet(packet);
             default:
                 return false;
         }
@@ -83,7 +106,11 @@ public:
     
     bool process_ed2k_packet(CPacket* packet) {
         // TODO: Implement ED2K packet processing
-        (void)packet; // Avoid unused parameter warning
+        return false;
+    }
+    
+    bool process_kad_packet(CPacket* packet) {
+        // TODO: Implement KAD packet processing
         return false;
     }
     
@@ -105,17 +132,14 @@ bool MultiProtocolSocket::process_packet(CPacket* packet) {
 
 // Virtual function implementations
 void MultiProtocolSocket::OnConnect(int nErrorCode) {
-    (void)nErrorCode; // Avoid unused parameter warning
     // Default implementation - do nothing
 }
 
 void MultiProtocolSocket::OnSend(int nErrorCode) {
-    (void)nErrorCode; // Avoid unused parameter warning
     // Default implementation - do nothing
 }
 
 void MultiProtocolSocket::OnReceive(int nErrorCode) {
-    (void)nErrorCode; // Avoid unused parameter warning
     // Default implementation - do nothing
 }
 

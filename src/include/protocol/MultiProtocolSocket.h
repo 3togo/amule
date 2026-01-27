@@ -58,12 +58,7 @@ public:
     bool process_packet(CPacket* packet);
     bool send_packet(CPacket* packet, bool delpacket = true);
     
-    // Cross-protocol packet conversion
-    static std::unique_ptr<CPacket> convert_ed2k_to_bt(const CPacket* ed2k_packet);
-    static std::unique_ptr<CPacket> convert_bt_to_ed2k(const CPacket* bt_packet);
-    
     // Protocol-specific operations
-    bool setup_bt_connection(const std::string& info_hash, uint16_t port = 6881);
     bool setup_ed2k_connection(const CMD4Hash& file_hash, uint16_t port = 4662);
     bool setup_kad_connection(uint16_t port = 4672);
     
