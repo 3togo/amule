@@ -180,6 +180,9 @@ public:
 	/** Request more results for a given search ID */
 	wxString RequestMoreResults(long searchID);
 
+	/** Request more results from a specific server */
+	wxString RequestMoreResultsFromServer(const CServer* server, long searchID);
+
 private:
 	/** Event-handler for global searches. */
 	void OnGlobalSearchTimer(CTimerEvent& evt);

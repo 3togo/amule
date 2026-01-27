@@ -437,6 +437,64 @@ wxString CSearchList::RequestMoreResults(long searchID)
 }
 
 
+wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long searchID)
+{
+	// Check if we're connected to eD2k
+	if (!theApp->IsConnectedED2K()) {
+		return _("eD2k search can't be done if eD2k is not connected");
+	}
+
+	// Check if server is valid
+	if (!server) {
+		return _("Invalid server");
+	}
+
+	// Get the original search parameters
+	CSearchParams params = GetSearchParams(searchID);
+	if (params.searchString.IsEmpty()) {
+		return _("No search parameters available for this search");
+	}
+
+	// Create search data packet
+	CMemFilePtr data = CreateSearchData(params, GlobalSearch, server->SupportsLargeFilesUDP());
+	if (!data) {
+		return _("Failed to create search data");
+	}
+
+	// Determine which search request type to use based on server capabilities
+	CPacket* searchPacket = NULL;
+	if (server->SupportsLargeFilesUDP() && (server->GetUDPFlags() & SRV_UDPFLG_EXT_GETFILES)) {
+		// Use OP_GLOBSEARCHREQ3 for servers that support large files and extended getfiles
+		CMemFile extData(50);
+		uint32_t tagCount = 1;
+		extData.WriteUInt32(tagCount);
+		CTagVarInt flags(CT_SERVER_UDPSEARCH_FLAGS, SRVCAP_UDP_NEWTAGS_LARGEFILES);
+		flags.WriteNewEd2kTag(&extData);
+		searchPacket = new CPacket(OP_GLOBSEARCHREQ3, data->GetLength() + (uint32_t)extData.GetLength(), OP_EDONKEYPROT);
+		searchPacket->CopyToDataBuffer(0, extData.GetRawBuffer(), extData.GetLength());
+		searchPacket->CopyToDataBuffer(extData.GetLength(), data->GetRawBuffer(), data->GetLength());
+		AddDebugLogLineN(logServerUDP, wxT("Requesting more results from server using OP_GLOBSEARCHREQ3: ") + 
+			Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
+	} else if (server->GetUDPFlags() & SRV_UDPFLG_EXT_GETFILES) {
+		// Use OP_GLOBSEARCHREQ2 for servers that support extended getfiles
+		searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_GLOBSEARCHREQ2);
+		AddDebugLogLineN(logServerUDP, wxT("Requesting more results from server using OP_GLOBSEARCHREQ2: ") + 
+			Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
+	} else {
+		// Use OP_GLOBSEARCHREQ for basic servers
+		searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_GLOBSEARCHREQ);
+		AddDebugLogLineN(logServerUDP, wxT("Requesting more results from server using OP_GLOBSEARCHREQ: ") + 
+			Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
+	}
+
+	// Send the search request to the server
+	theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
+	theApp->serverconnect->SendUDPPacket(searchPacket, server, true);
+
+	return wxEmptyString;
+}
+
+
 void CSearchList::LocalSearchEnd()
 {
 	if (m_searchType == GlobalSearch) {
