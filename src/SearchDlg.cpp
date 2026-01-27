@@ -535,7 +535,14 @@ void CSearchDlg::ResetControls()
 
 	FindWindow(IDC_CANCELS)->Disable();
 	FindWindow(IDC_STARTS)->Enable(!CastChild( IDC_SEARCHNAME, wxTextCtrl )->GetValue().IsEmpty());
-	FindWindow(IDC_SEARCHMORE)->Disable(); // Disable More button when no active search
+
+	// Enable More button for eD2k searches (Local/Global), not for Kad
+	// Search completion is when users want to click "More" to get more results
+	if (m_notebook->GetSelection() != -1) {
+		wxString tabText = m_notebook->GetPageText(m_notebook->GetSelection());
+		bool isEd2kSearch = (tabText.StartsWith(wxT("[Local] ")) || tabText.StartsWith(wxT("[ED2K] ")));
+		FindWindow(IDC_SEARCHMORE)->Enable(isEd2kSearch);
+	}
 }
 
 
@@ -556,6 +563,13 @@ void CSearchDlg::KadSearchEnd(uint32 id)
 				m_notebook->SetPageText(i,rest);
 			}
 		}
+	}
+
+	// Update More button state based on current tab's search type
+	if (m_notebook->GetSelection() != -1) {
+		wxString tabText = m_notebook->GetPageText(m_notebook->GetSelection());
+		bool isEd2kSearch = (tabText.StartsWith(wxT("[Local] ")) || tabText.StartsWith(wxT("[ED2K] ")));
+		FindWindow(IDC_SEARCHMORE)->Enable(isEd2kSearch);
 	}
 }
 
