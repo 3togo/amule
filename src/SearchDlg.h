@@ -32,6 +32,7 @@
 #include <map>			// Needed for std::map
 
 #include "Types.h"		// Needed for uint16 and uint32
+#include "SearchStateManager.h"	// Needed for SearchStateManager and ISearchStateObserver
 
 
 class CMuleNotebook;
@@ -48,7 +49,7 @@ class CSearchFile;
  * enabling the user to search and to display results in a readable
  * manner.
  */
-class CSearchDlg : public wxPanel
+class CSearchDlg : public wxPanel, public ISearchStateObserver
 {
 public:
 	/**
@@ -119,6 +120,25 @@ public:
 	 * Updates the tab label with state information for the given search list control.
 	 */
 	void		UpdateTabLabelWithState(CSearchListCtrl* list, const wxString& state);
+
+	/**
+	 * Implementation of ISearchStateObserver interface.
+	 * Called when the search state changes.
+	 *
+	 * @param searchId The search ID
+	 * @param state The new search state
+	 * @param retryCount The current retry count
+	 */
+	void		OnSearchStateChanged(uint32_t searchId, SearchState state, int retryCount);
+
+	/**
+	 * Implementation of ISearchStateObserver interface.
+	 * Called when a retry is requested for a search.
+	 *
+	 * @param searchId The search ID to retry
+	 * @return true if the retry was initiated, false otherwise
+	 */
+	bool		OnRetryRequested(uint32_t searchId);
 
 	/**
 	 * Gets the notebook widget containing search result tabs.
@@ -206,6 +226,9 @@ private:
 
 	// Handle "More" button timeout
 	void		HandleMoreButtonTimeout(int tabIndex);
+
+	// Search state manager
+	SearchStateManager			m_stateManager;
 
 	DECLARE_EVENT_TABLE()
 };

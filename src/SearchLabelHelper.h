@@ -61,4 +61,29 @@ void UpdateSearchState(CSearchListCtrl* list, CSearchDlg* parentDlg, const wxStr
  */
 void UpdateHitCountWithState(CSearchListCtrl* page, CSearchDlg* parentDlg);
 
+/**
+ * Helper function to retry a search that returned no results.
+ * 
+ * This function attempts to retry a search when no results are found.
+ * It works for both ED2K and Kad searches, updating the tab state
+ * appropriately.
+ * 
+ * @param page The search list control to retry
+ * @param parentDlg The parent search dialog
+ * @return true if retry was initiated, false otherwise
+ */
+bool RetrySearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg);
+
+/**
+ * Helper function to retry a Kad search that returned no results.
+ *
+ * This function attempts to retry a Kad search when no results are found.
+ * It uses the same search ID, keyword, and search type for the retry.
+ *
+ * @param page The search list control to retry
+ * @param parentDlg The parent search dialog
+ * @return true if retry was initiated, false otherwise
+ */
+bool RetryKadSearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg);
+
 #endif // SEARCHLABELHELPER_H

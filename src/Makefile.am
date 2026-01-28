@@ -196,6 +196,7 @@ gui_sources = \
 	PrefsUnifiedDlg.cpp \
 	SearchDlg.cpp \
 	SearchLabelHelper.cpp \
+	SearchStateManager.cpp \
 	ServerWnd.cpp \
 	SharedFilesWnd.cpp \
 	StatisticsDlg.cpp \

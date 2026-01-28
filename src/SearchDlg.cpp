@@ -119,6 +119,9 @@ CSearchDlg::CSearchDlg(wxWindow* pParent) : wxPanel(pParent, -1) {
 	m_timeoutCheckTimer.SetOwner(this);
 	m_timeoutCheckTimer.Start(5000);
 
+	// Register as observer with search state manager
+	m_stateManager.RegisterObserver(this);
+
 	// Let's break it now.
 
 	FixSearchTypes();
@@ -176,8 +179,10 @@ void CSearchDlg::AddResult(CSearchFile* toadd) {
 	if (outputwnd) {
 		outputwnd->AddResult(toadd);
 
-		// Update the result count
-		UpdateHitCount(outputwnd);
+		// Update the result count in the state manager
+		size_t shown = outputwnd->GetItemCount();
+		size_t hidden = outputwnd->GetHiddenItemCount();
+		m_stateManager.UpdateResultCount(toadd->GetSearchID(), shown, hidden);
 	}
 }
 
@@ -187,8 +192,10 @@ void CSearchDlg::UpdateResult(CSearchFile* toupdate) {
 	if (outputwnd) {
 		outputwnd->UpdateResult(toupdate);
 
-		// Update the result count
-		UpdateHitCount(outputwnd);
+		// Update the result count in the state manager
+		size_t shown = outputwnd->GetItemCount();
+		size_t hidden = outputwnd->GetHiddenItemCount();
+		m_stateManager.UpdateResultCount(toupdate->GetSearchID(), shown, hidden);
 	}
 }
 
@@ -490,8 +497,31 @@ void CSearchDlg::CreateNewTab(const wxString& searchString, wxUIntPtr nSearchID)
 	list->EnableFiltering(enable);
 	list->ShowResults(nSearchID);
 
-	// Set initial state to "Searching"
-	UpdateSearchState(list, this, wxT("Searching"));
+	// Initialize search state manager with this search
+	// Extract search type from the search string
+	wxString searchType;
+	if (searchString.StartsWith(wxT("[Local] "))) {
+		searchType = wxT("Local");
+	} else if (searchString.StartsWith(wxT("[ED2K] "))) {
+		searchType = wxT("ED2K");
+	} else if (searchString.StartsWith(wxT("[Kad] "))) {
+		searchType = wxT("Kad");
+	}
+
+	// Extract keyword from the search string (remove prefix)
+	wxString keyword = searchString;
+	if (!searchType.IsEmpty()) {
+		if (searchType == wxT("Local")) {
+			keyword = keyword.Mid(8); // Remove "[Local] "
+		} else if (searchType == wxT("ED2K")) {
+			keyword = keyword.Mid(7); // Remove "[ED2K] "
+		} else if (searchType == wxT("Kad")) {
+			keyword = keyword.Mid(6); // Remove "[Kad] "
+		}
+	}
+
+	// Initialize the search in the state manager
+	m_stateManager.InitializeSearch(nSearchID, searchType, keyword);
 
 	Layout();
 	FindWindow(IDC_CLEAR_RESULTS)->Enable(true);
@@ -514,7 +544,27 @@ void CSearchDlg::ResetControls() {
 	FindWindow(IDC_SEARCHMORE)->Disable();
 }
 
-void CSearchDlg::LocalSearchEnd() { ResetControls(); }
+void CSearchDlg::LocalSearchEnd() {
+	// Update all search tabs to show proper state when local search ends
+	int nPages = m_notebook->GetPageCount();
+	for (int i = 0; i < nPages; ++i) {
+		CSearchListCtrl* page = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
+		if (page) {
+			// Check if this is an ED2K search tab (Local or Global)
+			wxString tabText = m_notebook->GetPageText(i);
+			if (tabText.StartsWith(wxT("[Local] ")) || tabText.StartsWith(wxT("[ED2K] "))) {
+				// Update result count in state manager
+				size_t shown = page->GetItemCount();
+				size_t hidden = page->GetHiddenItemCount();
+				m_stateManager.UpdateResultCount(page->GetSearchId(), shown, hidden);
+				
+				// End the search in the state manager
+				m_stateManager.EndSearch(page->GetSearchId());
+			}
+		}
+	}
+	ResetControls();
+}
 
 void CSearchDlg::KadSearchEnd(uint32 id) {
 	int nPages = m_notebook->GetPageCount();
@@ -522,8 +572,13 @@ void CSearchDlg::KadSearchEnd(uint32 id) {
 		CSearchListCtrl* page = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
 		if (page->GetSearchId() == id ||
 			id == 0) {	// 0: just update all pages (there is only one KAD search running at a time anyway)
-			// Clear the state label when search ends
-			UpdateSearchState(page, this, wxEmptyString);
+			// Update result count in state manager
+			size_t shown = page->GetItemCount();
+			size_t hidden = page->GetHiddenItemCount();
+			m_stateManager.UpdateResultCount(page->GetSearchId(), shown, hidden);
+			
+			// End the search in the state manager
+			m_stateManager.EndSearch(page->GetSearchId());
 
 			// Remove the "!" prefix if present
 			wxString rest;
@@ -978,6 +1033,76 @@ void CSearchDlg::OnSearchTypeChanged(wxCommandEvent& evt) {
 	// Call the base event handler
 	UpdateStartButtonState();
 	evt.Skip();
+}
+
+void CSearchDlg::OnSearchStateChanged(uint32_t searchId, SearchState state, int retryCount)
+{
+	// Find the search list control for this search ID
+	CSearchListCtrl* list = GetSearchList(searchId);
+	if (!list) {
+		return;
+	}
+
+	// Convert the state to a string for the tab label
+	wxString stateStr;
+	switch (state) {
+		case STATE_IDLE:
+			stateStr = wxEmptyString;
+			break;
+		case STATE_SEARCHING:
+			stateStr = wxT("Searching");
+			break;
+		case STATE_POPULATING:
+			stateStr = wxT("Populating");
+			break;
+		case STATE_RETRYING:
+			stateStr = CFormat(wxT("Retrying %d")) % retryCount;
+			break;
+		case STATE_NO_RESULTS:
+			stateStr = wxT("No Results");
+			break;
+		case STATE_HAS_RESULTS:
+			stateStr = wxEmptyString;
+			break;
+		default:
+			stateStr = wxEmptyString;
+			break;
+	}
+
+	// Update the tab label with the state
+	UpdateTabLabelWithState(list, stateStr);
+}
+
+bool CSearchDlg::OnRetryRequested(uint32_t searchId)
+{
+	// Find the search list control for this search ID
+	CSearchListCtrl* list = GetSearchList(searchId);
+	if (!list) {
+		return false;
+	}
+
+	// Get the search parameters for this search
+	CSearchList::CSearchParams params = theApp->searchlist->GetSearchParams(searchId);
+	if (params.searchString.IsEmpty()) {
+		// No search parameters available - cannot retry
+		return false;
+	}
+
+	// Start a new Kad search with the same parameters
+	// Use the same search ID to keep results in the same tab
+	uint32 newSearchId = searchId;
+	wxString error = theApp->searchlist->StartNewSearch(&newSearchId, KadSearch, params);
+
+	if (!error.IsEmpty()) {
+		// Retry failed
+		return false;
+	}
+
+	// Update the page to show results from the new search
+	list->ShowResults(newSearchId);
+
+	// Retry initiated successfully
+	return true;
 }
 
 // File_checked_for_headers
