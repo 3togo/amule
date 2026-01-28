@@ -30,6 +30,7 @@
 #include "ObservableQueue.h"	// Needed for CQueueObserver
 #include "SearchFile.h"		// Needed for CSearchFile
 #include <common/SmartPtr.h>	// Needed for CSmartPtr
+#include <memory>		// Needed for std::unique_ptr
 
 // Forward declarations
 namespace search {
@@ -231,7 +232,7 @@ private:
 	long		m_currentSearch;
 
 	//! The current packet used for searches.
-	CPacket*	m_searchPacket;
+	std::unique_ptr<CPacket>	m_searchPacket;
 
 	//! Does the current search packet contain 64bit values?
 	bool		m_64bitSearchPacket;

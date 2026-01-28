@@ -275,7 +275,6 @@ CSearchList::CSearchList()
 	  m_searchType(LocalSearch),
 	  m_searchInProgress(false),
 	  m_currentSearch(-1),
-	  m_searchPacket(NULL),
 	  m_64bitSearchPacket(false),
 	  m_KadSearchFinished(true),
 	  m_autoRetry(new search::SearchAutoRetry()),
@@ -422,8 +421,7 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		theApp->serverconnect->SendPacket(searchPacket, (type == LocalSearch));
 
 		if (type == GlobalSearch) {
-			delete m_searchPacket;
-			m_searchPacket = searchPacket;
+			m_searchPacket.reset(searchPacket);
 			m_64bitSearchPacket = packetUsing64bit;
 			m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ); // will be changed later when actually sending the packet!!
 		}
@@ -587,7 +585,7 @@ uint32 CSearchList::GetSearchProgress() const
 void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
 {
 	// Ensure that the server-queue contains the current servers.
-	if (m_searchPacket == NULL) {
+	if (!m_searchPacket) {
 		// This was a pending event, handled after 'Stop' was pressed.
 		return;
 	} else if (!m_serverQueue.IsActive()) {
@@ -804,11 +802,8 @@ void CSearchList::StopSearch(bool globalOnly)
 	if (m_searchType == GlobalSearch) {
 		m_currentSearch = -1;
 		
-		// Safely delete search packet
-		if (m_searchPacket) {
-			delete m_searchPacket;
-			m_searchPacket = NULL;
-		}
+		// Reset search packet (unique_ptr handles deletion automatically)
+		m_searchPacket.reset();
 		
 		m_searchInProgress = false;
 
