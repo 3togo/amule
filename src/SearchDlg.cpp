@@ -585,130 +585,40 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event))
 	// Get the currently selected search tab
 	if (m_notebook->GetPageCount() > 0) {
 		CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(m_notebook->GetSelection()));
-		
+
 		// Get the search ID for this tab
 		long searchId = list->GetSearchId();
-		
+
 		// Get the tab text to determine the search type
 		wxString tabText = m_notebook->GetPageText(m_notebook->GetSelection());
-		
+
 		// The "More" button should only work for eD2k network searches (Local/Global), not for Kad
 		if (tabText.StartsWith(wxT("[Kad]")) || tabText.StartsWith(wxT("!"))) {
-			wxMessageBox(_("The 'More' button does not work for Kad searches."), 
-						_("Search Information"), 
+			wxMessageBox(_("The 'More' button does not work for Kad searches."),
+						_("Search Information"),
 						wxOK | wxICON_INFORMATION);
 			return;
 		}
-		
-		// Extract search term from tab text (remove prefix like [Local], [ED2K] and count)
-		wxString searchTerm = tabText;
-		if (tabText.StartsWith(wxT("[Local] ")) || tabText.StartsWith(wxT("[ED2K] "))) {
-			searchTerm = tabText.Mid(8); // Remove prefix "[Local] " or "[ED2K] "
-		}
-		
-		// Remove the count part like " (0)" or " (5)"
-		if (searchTerm.Contains(wxT(" ("))) {
-			searchTerm = searchTerm.BeforeFirst(wxT('(')).Trim(); // Remove " (count)" part
-		}
-		
-		if (!searchTerm.IsEmpty()) {
-			// Get the original search type based on the tab prefix
-			SearchType search_type = GlobalSearch; // Default to Global
-			if (tabText.StartsWith(wxT("[Local] "))) {
-				search_type = LocalSearch;
-			} else if (tabText.StartsWith(wxT("[ED2K] "))) {
-				search_type = GlobalSearch;
-			}
-			
-			// Prepare search parameters similar to StartNewSearch
-			CSearchList::CSearchParams params;
-			params.searchString = searchTerm;
-			params.searchString.Trim(true);
-			params.searchString.Trim(false);
 
-			if (params.searchString.IsEmpty()) {
-				wxMessageBox(_("Unable to perform 'More' search - no search text available."), 
-							_("Search Error"), 
-							wxOK | wxICON_ERROR);
-				return;
-			}
+		// Use the RequestMoreResults method from CSearchList
+		// This method properly handles retrieving original parameters and creating a new search
+		wxString error = theApp->searchlist->RequestMoreResults(searchId);
 
-			// Copy extended search parameters from current UI state if needed
-			if (CastChild(IDC_EXTENDEDSEARCHCHECK, wxCheckBox)->GetValue()) {
-				params.extension = CastChild( IDC_EDITSEARCHEXTENSION, wxTextCtrl )->GetValue();
-
-				uint32 sizemin = GetTypeSize( (uint8) CastChild( IDC_SEARCHMINSIZE, wxChoice )->GetSelection() );
-				uint32 sizemax = GetTypeSize( (uint8) CastChild( IDC_SEARCHMAXSIZE, wxChoice )->GetSelection() );
-
-				// Parameter Minimum Size
-				params.minSize = (uint64_t)(CastChild( IDC_SPINSEARCHMIN, wxSpinCtrl )->GetValue()) * (uint64_t)sizemin;
-
-				// Parameter Maximum Size
-				params.maxSize = (uint64_t)(CastChild( IDC_SPINSEARCHMAX, wxSpinCtrl )->GetValue()) * (uint64_t)sizemax;
-
-				if ((params.maxSize < params.minSize) && (params.maxSize)) {
-					wxMessageDialog dlg(this,
-						_("Min size must be smaller than max size. Max size ignored."),
-						_("Search warning"), wxOK|wxCENTRE|wxICON_INFORMATION);
-					dlg.ShowModal();
-
-					params.maxSize = 0;
-				}
-
-				// Parameter Availability
-				params.availability = CastChild( IDC_SPINSEARCHAVAIBILITY, wxSpinCtrl )->GetValue();
-
-				switch ( CastChild( IDC_TypeSearch, wxChoice )->GetSelection() ) {
-				case 0:	params.typeText.Clear();	break;
-				case 1:	params.typeText = ED2KFTSTR_ARCHIVE;	break;
-				case 2: params.typeText = ED2KFTSTR_AUDIO;	break;
-				case 3:	params.typeText = ED2KFTSTR_CDIMAGE;	break;
-				case 4: params.typeText = ED2KFTSTR_IMAGE;	break;
-				case 5: params.typeText = ED2KFTSTR_PROGRAM;	break;
-				case 6:	params.typeText = ED2KFTSTR_DOCUMENT;	break;
-				case 7:	params.typeText = ED2KFTSTR_VIDEO;	break;
-				default:
-					AddDebugLogLineC( logGeneral,
-						CFormat( wxT("Warning! Unknown search-category selected!") )
-					);
-					break;
-				}
-			}
-
-			// Generate a new search ID for the "More" search
-			static uint32 m_nSearchID = 0;
-			m_nSearchID++;
-			uint32 newSearchID = m_nSearchID;
-
-			// Disable buttons during the new search
-			FindWindow(IDC_STARTS)->Disable();
-			FindWindow(IDC_SDOWNLOAD)->Disable();
-			FindWindow(IDC_CANCELS)->Enable();
-
-			// Perform the new search with the same parameters
-			wxString error = theApp->searchlist->StartNewSearch(&newSearchID, search_type, params);
-			if (!error.IsEmpty()) {
-				// Search failed
-				wxMessageBox(error, _("Search warning"),
-					wxOK | wxCENTRE | wxICON_INFORMATION, this);
-				FindWindow(IDC_STARTS)->Enable();
-				FindWindow(IDC_SDOWNLOAD)->Disable();
-				FindWindow(IDC_CANCELS)->Disable();
-				return;
-			}
-
-			// Create a new tab or reuse the existing one with the new search ID
-			// Reusing the same tab with updated search ID
-			list->ShowResults(newSearchID);
-			
-			// Update the tab text to reflect that we're requesting more results
-			m_notebook->SetPageText(m_notebook->GetSelection(), 
-				m_notebook->GetPageText(m_notebook->GetSelection()).BeforeLast(wxT('(')) + wxT("(updating...)"));
-		} else {
-			wxMessageBox(_("Unable to perform 'More' search - no search text available."), 
-						_("Search Error"), 
+		if (!error.IsEmpty()) {
+			// Show error message if request failed
+			wxMessageBox(error, _("Search Error"),
 						wxOK | wxICON_ERROR);
+			return;
 		}
+
+		// Disable buttons during the new search
+		FindWindow(IDC_STARTS)->Disable();
+		FindWindow(IDC_SDOWNLOAD)->Disable();
+		FindWindow(IDC_CANCELS)->Enable();
+
+		// Update the tab text to reflect that we're requesting more results
+		m_notebook->SetPageText(m_notebook->GetSelection(),
+			m_notebook->GetPageText(m_notebook->GetSelection()).BeforeLast(wxT('(')) + wxT("(updating...)"));
 	}
 }
 
