@@ -127,7 +127,6 @@ if (BUILD_DAEMON)
 	)
 
 	target_link_libraries (amuled
-		PRIVATE LibtorrentRasterbar::torrent-rasterbar
 		PRIVATE ec
 		PRIVATE muleappcommon
 		PRIVATE muleappcore
@@ -201,7 +200,6 @@ if (BUILD_MONOLITHIC)
 	endif()
 
 	target_link_libraries (amule
-		PRIVATE LibtorrentRasterbar::torrent-rasterbar
 		PRIVATE ec
 		PRIVATE muleappcommon
 		PRIVATE muleappcore
@@ -250,6 +248,13 @@ if (BUILD_REMOTEGUI)
 		kademlia/utils/UInt128.cpp
 		amule-remote-gui.cpp
 	)
+
+	# Use optimized UInt128 implementation if enabled and available
+	if (USE_OPTIMIZED_UINT128)
+		target_sources (amulegui
+			PRIVATE kademlia/utils/UInt128Optimized.cpp
+		)
+	endif()
 
 	if (WIN32)
 		target_sources (amulegui
@@ -397,6 +402,9 @@ if (NEED_LIB_MULEAPPCORE)
 		kademlia/kademlia/Entry.cpp
 		kademlia/kademlia/Indexed.cpp
 		kademlia/kademlia/SearchManager.cpp
+		kademlia/kademlia/ParallelSearch.cpp
+		kademlia/kademlia/SearchCache.cpp
+		kademlia/kademlia/BootstrapManager.cpp
 		kademlia/routing/RoutingBin.cpp
 		kademlia/utils/UInt128.cpp
 		AsyncDNS.cpp
@@ -436,6 +444,13 @@ if (NEED_LIB_MULEAPPCORE)
 		PUBLIC wxWidgets::BASE
 		PRIVATE CRYPTOPP::CRYPTOPP
 	)
+
+	# Use optimized UInt128 implementation if enabled and available
+	if (USE_OPTIMIZED_UINT128)
+		target_sources (muleappcore
+			PRIVATE kademlia/utils/UInt128Optimized.cpp
+		)
+	endif()
 endif()
 
 if (NEED_LIB_MULEAPPGUI)
