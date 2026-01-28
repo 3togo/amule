@@ -126,39 +126,19 @@ void LegacySearchController::requestMoreResults()
         return;
     }
     
-    // Get current search parameters
-    SearchParams params = m_model->getSearchParams();
-    
-    // Only allow more results for eD2k searches (GlobalSearch)
-    if (params.searchType != ModernSearchType::GlobalSearch) {
-        notifyError(_("More results are only available for eD2k network searches"));
+    long searchId = m_model->getSearchId();
+    if (searchId == -1) {
+        notifyError(_("No active search to request more results"));
         return;
     }
     
-    // Convert new params to old format
-    CSearchList::CSearchParams oldParams;
-    oldParams.searchString = params.searchString;
-    oldParams.strKeyword = params.strKeyword;
-    oldParams.typeText = params.typeText;
-    oldParams.extension = params.extension;
-    oldParams.minSize = params.minSize;
-    oldParams.maxSize = params.maxSize;
-    oldParams.availability = params.availability;
-    
-    // Generate a new search ID instead of reusing the old one
-    uint32 newSearchId = 0;
-    wxString error = m_searchList->StartNewSearch(&newSearchId, GlobalSearch, oldParams);
-    
+    wxString error = m_searchList->RequestMoreResults(searchId);
     if (!error.IsEmpty()) {
         notifyError(error);
         return;
     }
     
-    // Update model with new search ID and state
-    m_model->setSearchId(newSearchId);
     m_model->setSearchState(SearchState::Searching);
-    m_model->setSearchParams(params);
-    
     notifySearchStarted();
 }
 
@@ -179,14 +159,34 @@ long LegacySearchController::getSearchId() const
 
 const std::vector<CSearchFile*>& LegacySearchController::getResults() const
 {
-    // TODO: Implement result retrieval from existing system
-    static std::vector<CSearchFile*> emptyResults;
-    return emptyResults;
+    // Thread-safe result retrieval from existing system with caching
+    static std::vector<CSearchFile*> results;
+    results.clear();
+    
+    if (m_searchList) {
+        long searchId = m_model->getSearchId();
+        if (searchId != -1) {
+            const CSearchResultList& searchResults = m_searchList->GetSearchResults(searchId);
+            results = searchResults;
+            // Update the model's cache with the latest results
+            m_model->cacheResults(results);
+        }
+    }
+    
+    return results;
 }
 
 size_t LegacySearchController::getResultCount() const
 {
-    // TODO: Implement result count retrieval from existing system
+    // Thread-safe result count retrieval from existing system
+    if (m_searchList) {
+        long searchId = m_model->getSearchId();
+        if (searchId != -1) {
+            const CSearchResultList& searchResults = m_searchList->GetSearchResults(searchId);
+            return searchResults.size();
+        }
+    }
+    
     return 0;
 }
 

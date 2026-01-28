@@ -75,7 +75,44 @@ void SearchModel::clearResults()
 size_t SearchModel::getResultCount() const
 {
     wxMutexLocker lock(m_mutex);
+    // Return cached results count if available, otherwise return internal count
+    if (m_hasCachedResults) {
+        return m_cachedResults.size();
+    }
     return m_results.size();
+}
+
+std::vector<CSearchFile*> SearchModel::getResults() const
+{
+    wxMutexLocker lock(m_mutex);
+    // Return cached results if available, otherwise return internal results
+    if (m_hasCachedResults) {
+        return m_cachedResults;
+    }
+    return m_results;
+}
+
+bool SearchModel::hasResults() const
+{
+    wxMutexLocker lock(m_mutex);
+    if (m_hasCachedResults) {
+        return !m_cachedResults.empty();
+    }
+    return !m_results.empty();
+}
+
+void SearchModel::cacheResults(const std::vector<CSearchFile*>& results)
+{
+    wxMutexLocker lock(m_mutex);
+    m_cachedResults = results;
+    m_hasCachedResults = true;
+}
+
+void SearchModel::clearCachedResults()
+{
+    wxMutexLocker lock(m_mutex);
+    m_cachedResults.clear();
+    m_hasCachedResults = false;
 }
 
 void SearchModel::setSearchState(SearchState state)

@@ -32,6 +32,11 @@
 
 namespace search {
 
+// Forward declarations
+class ED2KSearchController;
+class KadSearchController;
+class LegacySearchController;
+
 class SearchControllerFactory {
 public:
     static std::unique_ptr<SearchController> createController(ModernSearchType type);
@@ -39,6 +44,10 @@ public:
     
     // Factory method with modern implementation (for future use)
     static std::unique_ptr<SearchController> createModernController(ModernSearchType type);
+
+    // Modern controllers - network-specific implementations
+    static std::unique_ptr<ED2KSearchController> createED2KController();
+    static std::unique_ptr<KadSearchController> createKadController();
 };
 
 } // namespace search

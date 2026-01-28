@@ -25,6 +25,8 @@
 
 #include "SearchControllerFactory.h"
 #include "LegacySearchController.h"
+#include "ED2KSearchController.h"
+#include "KadSearchController.h"
 // #include "ModernSearchController.h" // For future implementation
 
 namespace search {

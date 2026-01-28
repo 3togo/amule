@@ -99,6 +99,16 @@ public:
     void clearResults();
     size_t getResultCount() const;
     
+    // Result access (thread-safe)
+    std::vector<CSearchFile*> getResults() const;
+    
+    // Result filtering
+    bool hasResults() const;
+    
+    // Result caching - stores reference to external results
+    void cacheResults(const std::vector<CSearchFile*>& results);
+    void clearCachedResults();
+    
     // State management
     void setSearchState(SearchState state);
     SearchState getSearchState() const;
@@ -118,8 +128,12 @@ private:
     SearchState m_state = SearchState::Idle;
     long m_searchId = -1;
     
-    // Results storage - TODO: Replace with more efficient structure
+    // Results storage - using vector for now, can be optimized later
     std::vector<CSearchFile*> m_results;
+    
+    // Cache for external results (from CSearchList)
+    mutable std::vector<CSearchFile*> m_cachedResults;
+    bool m_hasCachedResults = false;
 };
 
 } // namespace search

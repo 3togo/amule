@@ -42,6 +42,15 @@ public:
     using ResultsReceivedCallback = std::function<void(const std::vector<CSearchFile*>&)>;
     using ErrorCallback = std::function<void(const wxString&)>;
     using ProgressCallback = std::function<void(int)>;
+    
+    // Detailed progress information
+    struct ProgressInfo {
+        int percentage = 0;
+        int serversContacted = 0;
+        int resultsReceived = 0;
+        wxString currentStatus;
+    };
+    using DetailedProgressCallback = std::function<void(const ProgressInfo&)>;
 
     virtual ~SearchController() = default;
     
@@ -65,6 +74,7 @@ public:
     void setOnResultsReceived(ResultsReceivedCallback callback) { m_onResultsReceived = callback; }
     void setOnError(ErrorCallback callback) { m_onError = callback; }
     void setOnProgress(ProgressCallback callback) { m_onProgress = callback; }
+    void setOnDetailedProgress(DetailedProgressCallback callback) { m_onDetailedProgress = callback; }
     
 protected:
     // Protected callbacks for derived classes to trigger
@@ -75,6 +85,7 @@ protected:
     }
     void notifyError(const wxString& error) { if (m_onError) m_onError(error); }
     void notifyProgress(int progress) { if (m_onProgress) m_onProgress(progress); }
+    void notifyDetailedProgress(const ProgressInfo& info) { if (m_onDetailedProgress) m_onDetailedProgress(info); }
     
 private:
     SearchStartedCallback m_onSearchStarted;
@@ -82,6 +93,7 @@ private:
     ResultsReceivedCallback m_onResultsReceived;
     ErrorCallback m_onError;
     ProgressCallback m_onProgress;
+    DetailedProgressCallback m_onDetailedProgress;
 };
 
 } // namespace search
