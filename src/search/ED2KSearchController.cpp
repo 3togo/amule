@@ -26,57 +26,85 @@
 
 #include "ED2KSearchController.h"
 #include "../SearchList.h"
+#include "../ServerList.h"
 #include "../amule.h"
 #include <wx/utils.h>
 
 namespace search {
 
-ED2KSearchController::ED2KSearchController()
-    : m_model(std::make_unique<SearchModel>())
-    , m_searchList(nullptr)
-    , m_maxServersToQuery(100)
-    , m_retryCount(3)
-    , m_currentRetry(0)
+ED2KSearchController::ED2KSearchController(CSearchList* searchList)
+    : SearchControllerBase(searchList)
+    , m_maxServersToQuery(DEFAULT_MAX_SERVERS)
     , m_serversContacted(0)
     , m_resultsSinceLastUpdate(0)
 {
-    connectToSearchSystem();
 }
 
 ED2KSearchController::~ED2KSearchController()
 {
-    disconnectFromSearchSystem();
-}
-
-void ED2KSearchController::connectToSearchSystem()
-{
-    if (theApp) {
-        m_searchList = theApp->searchlist;
-    }
-}
-
-void ED2KSearchController::disconnectFromSearchSystem()
-{
-    m_searchList = nullptr;
 }
 
 void ED2KSearchController::startSearch(const SearchParams& params)
 {
-    if (!m_searchList) {
-        handleSearchError(_("ED2K search system not available"));
-        return;
+    // Step 1: Validate prerequisites
+    if (!validatePrerequisites()) {
+	return;
     }
 
-    // Validate parameters
-    if (!params.isValid()) {
-        handleSearchError(_("Invalid search parameters"));
-        return;
+    // Step 2: Validate search parameters
+    if (!validateSearchParams(params)) {
+	return;
     }
 
-    // Initialize progress tracking
+    // Step 3: Prepare search
     initializeProgress();
+    resetSearchState();
 
+    // Step 4: Convert parameters and execute search
+    auto [searchId, error] = executeSearch(params);
+
+    // Step 5: Handle result
+    if (error.IsEmpty()) {
+	updateSearchState(params, searchId, SearchState::Searching);
+	notifySearchStarted();
+    } else {
+	handleSearchError(error);
+    }
+}
+
+bool ED2KSearchController::validatePrerequisites()
+{
+    if (!SearchControllerBase::validatePrerequisites()) {
+	return false;
+    }
+
+    if (!isValidServerList()) {
+	handleSearchError(_("No servers available for search"));
+	return false;
+    }
+
+    return true;
+}
+
+std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchParams& params)
+{
     // Convert to old parameter format
+    CSearchList::CSearchParams oldParams = convertParams(params);
+
+    // Determine search type
+    SearchType oldSearchType = (params.searchType == ModernSearchType::LocalSearch)
+			      ? LocalSearch
+			      : GlobalSearch;
+
+    // Execute search
+    uint32_t searchId = 0;
+    wxString error = m_searchList->StartNewSearch(&searchId, oldSearchType, oldParams);
+
+    return {searchId, error};
+}
+
+CSearchList::CSearchParams ED2KSearchController::convertParams(const SearchParams& params) const
+{
     CSearchList::CSearchParams oldParams;
     oldParams.searchString = params.searchString;
     oldParams.strKeyword = params.strKeyword;
@@ -85,133 +113,80 @@ void ED2KSearchController::startSearch(const SearchParams& params)
     oldParams.minSize = params.minSize;
     oldParams.maxSize = params.maxSize;
     oldParams.availability = params.availability;
-
-    // Determine search type
-    SearchType oldSearchType = (params.searchType == ModernSearchType::LocalSearch) 
-                              ? LocalSearch 
-                              : GlobalSearch;
-
-    // Start the search
-    uint32 searchId = 0;
-    wxString error = m_searchList->StartNewSearch(&searchId, oldSearchType, oldParams);
-
-    if (!error.IsEmpty()) {
-        handleSearchError(error);
-        return;
-    }
-
-    // Update model
-    m_model->setSearchParams(params);
-    m_model->setSearchId(searchId);
-    m_model->setSearchState(SearchState::Searching);
-
-    notifySearchStarted();
+    return oldParams;
 }
 
 void ED2KSearchController::stopSearch()
 {
-    if (m_searchList) {
-        m_searchList->StopSearch(true); // Stop global search
-        m_model->setSearchState(SearchState::Idle);
-        notifySearchCompleted();
+    // Step 1: Validate prerequisites
+    if (!m_searchList) {
+	return;
     }
+
+    // Step 2: Stop the search
+    m_searchList->StopSearch(true);
+
+    // Step 3: Update state
+    m_model->setSearchState(SearchState::Idle);
+    resetSearchState();
+
+    // Step 4: Notify completion
+    notifySearchCompleted();
 }
 
 void ED2KSearchController::requestMoreResults()
 {
-    if (!m_searchList) {
-        handleSearchError(_("ED2K search system not available"));
-        return;
+    // Step 1: Validate prerequisites
+    if (!validatePrerequisites()) {
+	return;
     }
 
-    // Get current search parameters
-    SearchParams params = m_model->getSearchParams();
-
-    // Only allow more results for global searches
-    if (params.searchType != ModernSearchType::GlobalSearch) {
-        handleSearchError(_("More results are only available for global eD2k searches"));
-        return;
+    // Step 2: Validate search state
+    wxString error;
+    if (!validateSearchStateForMoreResults(error)) {
+	handleSearchError(error);
+	return;
     }
 
-    // Check retry limit
-    if (m_currentRetry >= m_retryCount) {
-        handleSearchError(_("Maximum retry limit reached"));
-        return;
+    // Step 3: Check retry limit
+    if (!validateRetryLimit(error)) {
+	handleSearchError(error);
+	return;
     }
 
-    // Initialize progress tracking
+    // Step 4: Prepare for retry
     initializeProgress();
     m_currentRetry++;
 
-    // Convert to old parameter format
-    CSearchList::CSearchParams oldParams;
-    oldParams.searchString = params.searchString;
-    oldParams.strKeyword = params.strKeyword;
-    oldParams.typeText = params.typeText;
-    oldParams.extension = params.extension;
-    oldParams.minSize = params.minSize;
-    oldParams.maxSize = params.maxSize;
-    oldParams.availability = params.availability;
+    // Step 5: Execute search with same parameters
+    auto [newSearchId, execError] = executeSearch(m_model->getSearchParams());
 
-    // Start new search with same parameters
-    uint32 newSearchId = 0;
-    wxString error = m_searchList->StartNewSearch(&newSearchId, GlobalSearch, oldParams);
+    // Step 6: Handle result
+    if (execError.IsEmpty()) {
+	m_model->setSearchId(newSearchId);
+	m_model->setSearchState(SearchState::Retrying);
+	notifySearchStarted();
+    } else {
+	handleSearchError(execError);
+    }
+}
 
-    if (!error.IsEmpty()) {
-        handleSearchError(error);
-        return;
+bool ED2KSearchController::validateSearchStateForMoreResults(wxString& error) const
+{
+    SearchParams params = m_model->getSearchParams();
+
+    if (params.searchType != ModernSearchType::GlobalSearch) {
+	error = _("More results are only available for global eD2k searches");
+	return false;
     }
 
-    // Update model
-    m_model->setSearchId(newSearchId);
-    m_model->setSearchState(SearchState::Retrying);
-
-    notifySearchStarted();
-}
-
-SearchState ED2KSearchController::getState() const
-{
-    return m_model->getSearchState();
-}
-
-SearchParams ED2KSearchController::getSearchParams() const
-{
-    return m_model->getSearchParams();
-}
-
-long ED2KSearchController::getSearchId() const
-{
-    return m_model->getSearchId();
-}
-
-const std::vector<CSearchFile*>& ED2KSearchController::getResults() const
-{
-    static std::vector<CSearchFile*> results;
-    results.clear();
-
-    if (m_searchList) {
-        long searchId = m_model->getSearchId();
-        if (searchId != -1) {
-            const CSearchResultList& searchResults = m_searchList->GetSearchResults(searchId);
-            results = searchResults;
-            m_model->cacheResults(results);
-        }
+    SearchState currentState = m_model->getSearchState();
+    if (currentState == SearchState::Searching) {
+	error = _("Cannot request more results while search is in progress");
+	return false;
     }
 
-    return results;
-}
-
-size_t ED2KSearchController::getResultCount() const
-{
-    if (m_searchList) {
-        long searchId = m_model->getSearchId();
-        if (searchId != -1) {
-            const CSearchResultList& searchResults = m_searchList->GetSearchResults(searchId);
-            return searchResults.size();
-        }
-    }
-
-    return 0;
+    return true;
 }
 
 void ED2KSearchController::setMaxServersToQuery(int maxServers)
@@ -237,14 +212,14 @@ int ED2KSearchController::getRetryCount() const
 void ED2KSearchController::updateProgress()
 {
     if (!m_searchList) {
-        return;
+	return;
     }
 
     ProgressInfo info;
 
     // Calculate percentage based on servers contacted vs max
     if (m_maxServersToQuery > 0) {
-        info.percentage = (m_serversContacted * 100) / m_maxServersToQuery;
+	info.percentage = (m_serversContacted * 100) / m_maxServersToQuery;
     }
 
     info.serversContacted = m_serversContacted;
@@ -252,29 +227,23 @@ void ED2KSearchController::updateProgress()
 
     // Set status based on state
     switch (getState()) {
-        case SearchState::Searching:
-            info.currentStatus = _("Searching eD2k network...");
-            break;
-        case SearchState::Retrying:
-            info.currentStatus = wxString::Format(_("Retrying search (%d/%d)..."), 
-                                                m_currentRetry, m_retryCount);
-            break;
-        case SearchState::Completed:
-            info.currentStatus = _("Search completed");
-            break;
-        default:
-            info.currentStatus = _("Idle");
-            break;
+	case SearchState::Searching:
+	    info.currentStatus = _("Searching eD2k network...");
+	    break;
+	case SearchState::Retrying:
+	    info.currentStatus = wxString::Format(_("Retrying search (%d/%d)..."),
+				                m_currentRetry, m_retryCount);
+	    break;
+	case SearchState::Completed:
+	    info.currentStatus = _("Search completed");
+	    break;
+	default:
+	    info.currentStatus = _("Idle");
+	    break;
     }
 
     notifyDetailedProgress(info);
     notifyProgress(info.percentage);
-}
-
-void ED2KSearchController::handleSearchError(const wxString& error)
-{
-    m_model->setSearchState(SearchState::Error);
-    notifyError(error);
 }
 
 void ED2KSearchController::initializeProgress()
@@ -282,6 +251,34 @@ void ED2KSearchController::initializeProgress()
     m_serversContacted = 0;
     m_resultsSinceLastUpdate = 0;
     updateProgress();
+}
+
+bool ED2KSearchController::validateConfiguration() const
+{
+    if (!SearchControllerBase::validateConfiguration()) {
+	return false;
+    }
+
+    if (m_maxServersToQuery <= 0) {
+	return false;
+    }
+
+    return true;
+}
+
+bool ED2KSearchController::isValidServerList() const
+{
+    if (!theApp) {
+	return false;
+    }
+
+    // Check if there are servers available
+    CServerList* serverList = theApp->serverlist;
+    if (!serverList) {
+	return false;
+    }
+
+    return serverList->GetServerCount() > 0;
 }
 
 } // namespace search

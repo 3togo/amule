@@ -27,41 +27,40 @@
 #ifndef ED2KSEARCHCONTROLLER_H
 #define ED2KSEARCHCONTROLLER_H
 
-#include "SearchController.h"
-#include "SearchModel.h"
+#include "SearchControllerBase.h"
+#include "../SearchList.h"
 #include <memory>
+#include <cstdint>
+#include <utility>
+#include <wx/string.h>
 
 // Forward declarations
-class CSearchList;
 class CServer;
 
 namespace search {
 
 /**
  * ED2KSearchController - Specialized controller for eD2k network searches
- * 
+ *
  * This controller handles both local and global eD2k searches with:
  * - Optimized server communication
  * - Efficient result aggregation
  * - Detailed progress reporting
  * - Automatic retry logic
  */
-class ED2KSearchController : public SearchController {
+class ED2KSearchController : public SearchControllerBase {
 public:
-    ED2KSearchController();
+    explicit ED2KSearchController(CSearchList* searchList = nullptr);
     virtual ~ED2KSearchController();
+
+    // Delete copy constructor and copy assignment operator
+    ED2KSearchController(const ED2KSearchController&) = delete;
+    ED2KSearchController& operator=(const ED2KSearchController&) = delete;
 
     // SearchController implementation
     void startSearch(const SearchParams& params) override;
     void stopSearch() override;
     void requestMoreResults() override;
-
-    SearchState getState() const override;
-    SearchParams getSearchParams() const override;
-    long getSearchId() const override;
-
-    const std::vector<CSearchFile*>& getResults() const override;
-    size_t getResultCount() const override;
 
     // ED2K-specific methods
     void setMaxServersToQuery(int maxServers);
@@ -70,25 +69,31 @@ public:
     void setRetryCount(int retryCount);
     int getRetryCount() const;
 
-private:
-    std::unique_ptr<SearchModel> m_model;
-    CSearchList* m_searchList;
+    // Configuration validation
+    bool validateConfiguration() const;
 
+private:
     // ED2K-specific settings
     int m_maxServersToQuery;
-    int m_retryCount;
-    int m_currentRetry;
 
     // Progress tracking
     int m_serversContacted;
     int m_resultsSinceLastUpdate;
+    static constexpr int DEFAULT_MAX_SERVERS = 100;
+    static constexpr int PROGRESS_UPDATE_INTERVAL = 5;
 
     // Helper methods
-    void connectToSearchSystem();
-    void disconnectFromSearchSystem();
     void updateProgress();
-    void handleSearchError(const wxString& error);
     void initializeProgress();
+    bool isValidServerList() const;
+
+    // Validation methods
+    bool validatePrerequisites();
+    bool validateSearchStateForMoreResults(wxString& error) const;
+
+    // Execution methods
+    std::pair<uint32_t, wxString> executeSearch(const SearchParams& params);
+    CSearchList::CSearchParams convertParams(const SearchParams& params) const;
 };
 
 } // namespace search

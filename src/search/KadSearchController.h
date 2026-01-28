@@ -27,40 +27,33 @@
 #ifndef KADSEARCHCONTROLLER_H
 #define KADSEARCHCONTROLLER_H
 
-#include "SearchController.h"
-#include "SearchModel.h"
+#include "SearchControllerBase.h"
 #include <memory>
-
-// Forward declarations
-class CSearchList;
 
 namespace search {
 
 /**
  * KadSearchController - Specialized controller for Kademlia network searches
- * 
+ *
  * This controller handles Kad searches with:
  * - Optimized keyword-based searches
  * - Efficient result aggregation from Kad nodes
  * - Detailed progress reporting
  * - Automatic retry logic for failed searches
  */
-class KadSearchController : public SearchController {
+class KadSearchController : public SearchControllerBase {
 public:
-    KadSearchController();
+    explicit KadSearchController(CSearchList* searchList = nullptr);
     virtual ~KadSearchController();
+
+    // Delete copy constructor and copy assignment operator
+    KadSearchController(const KadSearchController&) = delete;
+    KadSearchController& operator=(const KadSearchController&) = delete;
 
     // SearchController implementation
     void startSearch(const SearchParams& params) override;
     void stopSearch() override;
     void requestMoreResults() override;
-
-    SearchState getState() const override;
-    SearchParams getSearchParams() const override;
-    long getSearchId() const override;
-
-    const std::vector<CSearchFile*>& getResults() const override;
-    size_t getResultCount() const override;
 
     // Kad-specific methods
     void setMaxNodesToQuery(int maxNodes);
@@ -69,24 +62,25 @@ public:
     void setRetryCount(int retryCount);
     int getRetryCount() const;
 
-private:
-    std::unique_ptr<SearchModel> m_model;
-    CSearchList* m_searchList;
+    // Configuration validation
+    bool validateConfiguration() const;
 
+private:
     // Kad-specific settings
     int m_maxNodesToQuery;
-    int m_retryCount;
-    int m_currentRetry;
 
     // Progress tracking
     int m_nodesContacted;
+    static constexpr int DEFAULT_MAX_NODES = 500;
+    static constexpr int PROGRESS_UPDATE_INTERVAL = 10;
 
     // Helper methods
-    void connectToSearchSystem();
-    void disconnectFromSearchSystem();
     void updateProgress();
-    void handleSearchError(const wxString& error);
     void initializeProgress();
+    bool isValidKadNetwork() const;
+
+    // Validation methods
+    bool validatePrerequisites();
 };
 
 } // namespace search

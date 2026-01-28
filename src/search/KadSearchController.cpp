@@ -31,51 +31,34 @@
 
 namespace search {
 
-KadSearchController::KadSearchController()
-    : m_model(std::make_unique<SearchModel>())
-    , m_searchList(nullptr)
-    , m_maxNodesToQuery(500)
-    , m_retryCount(3)
-    , m_currentRetry(0)
+KadSearchController::KadSearchController(CSearchList* searchList)
+    : SearchControllerBase(searchList)
+    , m_maxNodesToQuery(DEFAULT_MAX_NODES)
     , m_nodesContacted(0)
 {
-    connectToSearchSystem();
 }
 
 KadSearchController::~KadSearchController()
 {
-    disconnectFromSearchSystem();
-}
-
-void KadSearchController::connectToSearchSystem()
-{
-    if (theApp) {
-        m_searchList = theApp->searchlist;
-    }
-}
-
-void KadSearchController::disconnectFromSearchSystem()
-{
-    m_searchList = nullptr;
 }
 
 void KadSearchController::startSearch(const SearchParams& params)
 {
-    if (!m_searchList) {
-        handleSearchError(_("Kad search system not available"));
-        return;
+    // Step 1: Validate prerequisites
+    if (!validatePrerequisites()) {
+	return;
     }
 
-    // Validate parameters
-    if (!params.isValid()) {
-        handleSearchError(_("Invalid search parameters"));
-        return;
+    // Step 2: Validate search parameters
+    if (!validateSearchParams(params)) {
+	return;
     }
 
-    // Initialize progress tracking
+    // Step 3: Prepare search
     initializeProgress();
+    resetSearchState();
 
-    // Convert to old parameter format
+    // Step 4: Convert to old parameter format
     CSearchList::CSearchParams oldParams;
     oldParams.searchString = params.searchString;
     oldParams.strKeyword = params.strKeyword;
@@ -85,30 +68,36 @@ void KadSearchController::startSearch(const SearchParams& params)
     oldParams.maxSize = params.maxSize;
     oldParams.availability = params.availability;
 
-    // Start Kad search
-    uint32 searchId = 0;
+    // Step 5: Start Kad search
+    // Use 0xffffffff (UINT32_MAX) to indicate a new Kad search
+    uint32 searchId = 0xffffffff;
     wxString error = m_searchList->StartNewSearch(&searchId, KadSearch, oldParams);
 
-    if (!error.IsEmpty()) {
-        handleSearchError(error);
-        return;
+    // Step 6: Handle result
+    if (error.IsEmpty()) {
+	updateSearchState(params, searchId, SearchState::Searching);
+	notifySearchStarted();
+    } else {
+	handleSearchError(error);
     }
-
-    // Update model
-    m_model->setSearchParams(params);
-    m_model->setSearchId(searchId);
-    m_model->setSearchState(SearchState::Searching);
-
-    notifySearchStarted();
 }
 
 void KadSearchController::stopSearch()
 {
-    if (m_searchList) {
-        m_searchList->StopSearch(false); // Stop Kad search
-        m_model->setSearchState(SearchState::Idle);
-        notifySearchCompleted();
+    // Step 1: Validate prerequisites
+    if (!m_searchList) {
+	return;
     }
+
+    // Step 2: Stop the search
+    m_searchList->StopSearch(false); // Stop Kad search
+
+    // Step 3: Update state
+    m_model->setSearchState(SearchState::Idle);
+    resetSearchState();
+
+    // Step 4: Notify completion
+    notifySearchCompleted();
 }
 
 void KadSearchController::requestMoreResults()
@@ -116,51 +105,6 @@ void KadSearchController::requestMoreResults()
     // Kad searches don't support "more results" in the traditional sense
     // as they are keyword-based and query the entire network
     handleSearchError(_("Kad searches query the entire network and don't support requesting more results"));
-}
-
-SearchState KadSearchController::getState() const
-{
-    return m_model->getSearchState();
-}
-
-SearchParams KadSearchController::getSearchParams() const
-{
-    return m_model->getSearchParams();
-}
-
-long KadSearchController::getSearchId() const
-{
-    return m_model->getSearchId();
-}
-
-const std::vector<CSearchFile*>& KadSearchController::getResults() const
-{
-    static std::vector<CSearchFile*> results;
-    results.clear();
-
-    if (m_searchList) {
-        long searchId = m_model->getSearchId();
-        if (searchId != -1) {
-            const CSearchResultList& searchResults = m_searchList->GetSearchResults(searchId);
-            results = searchResults;
-            m_model->cacheResults(results);
-        }
-    }
-
-    return results;
-}
-
-size_t KadSearchController::getResultCount() const
-{
-    if (m_searchList) {
-        long searchId = m_model->getSearchId();
-        if (searchId != -1) {
-            const CSearchResultList& searchResults = m_searchList->GetSearchResults(searchId);
-            return searchResults.size();
-        }
-    }
-
-    return 0;
 }
 
 void KadSearchController::setMaxNodesToQuery(int maxNodes)
@@ -183,17 +127,30 @@ int KadSearchController::getRetryCount() const
     return m_retryCount;
 }
 
+bool KadSearchController::validateConfiguration() const
+{
+    if (!SearchControllerBase::validateConfiguration()) {
+	return false;
+    }
+
+    if (m_maxNodesToQuery <= 0) {
+	return false;
+    }
+
+    return true;
+}
+
 void KadSearchController::updateProgress()
 {
     if (!m_searchList) {
-        return;
+	return;
     }
 
     ProgressInfo info;
 
     // Calculate percentage based on nodes contacted vs max
     if (m_maxNodesToQuery > 0) {
-        info.percentage = (m_nodesContacted * 100) / m_maxNodesToQuery;
+	info.percentage = (m_nodesContacted * 100) / m_maxNodesToQuery;
     }
 
     info.serversContacted = 0; // Not applicable for Kad
@@ -201,35 +158,53 @@ void KadSearchController::updateProgress()
 
     // Set status based on state
     switch (getState()) {
-        case SearchState::Searching:
-            info.currentStatus = _("Searching Kad network...");
-            break;
-        case SearchState::Retrying:
-            info.currentStatus = wxString::Format(_("Retrying search (%d/%d)..."), 
-                                                m_currentRetry, m_retryCount);
-            break;
-        case SearchState::Completed:
-            info.currentStatus = _("Search completed");
-            break;
-        default:
-            info.currentStatus = _("Idle");
-            break;
+	case SearchState::Searching:
+	    info.currentStatus = _("Searching Kad network...");
+	    break;
+	case SearchState::Retrying:
+	    info.currentStatus = wxString::Format(_("Retrying search (%d/%d)..."),
+				                m_currentRetry, m_retryCount);
+	    break;
+	case SearchState::Completed:
+	    info.currentStatus = _("Search completed");
+	    break;
+	default:
+	    info.currentStatus = _("Idle");
+	    break;
     }
 
     notifyDetailedProgress(info);
     notifyProgress(info.percentage);
 }
 
-void KadSearchController::handleSearchError(const wxString& error)
-{
-    m_model->setSearchState(SearchState::Error);
-    notifyError(error);
-}
-
 void KadSearchController::initializeProgress()
 {
     m_nodesContacted = 0;
     updateProgress();
+}
+
+bool KadSearchController::validatePrerequisites()
+{
+    if (!SearchControllerBase::validatePrerequisites()) {
+	return false;
+    }
+
+    if (!isValidKadNetwork()) {
+	handleSearchError(_("Kad network not available"));
+	return false;
+    }
+
+    return true;
+}
+
+bool KadSearchController::isValidKadNetwork() const
+{
+    if (!theApp) {
+	return false;
+    }
+
+    // Check if Kad is running
+    return theApp->IsKadRunning();
 }
 
 } // namespace search

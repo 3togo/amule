@@ -189,6 +189,9 @@ if (BUILD_MONOLITHIC)
 		CaptchaGenerator.cpp
 		PartFileConvert.cpp
 		PartFileConvertDlg.cpp
+		search/SearchControllerBase.cpp
+		search/SearchPackageValidator.cpp
+		search/SearchPackageException.cpp
 	)
 
 	if (WIN32)

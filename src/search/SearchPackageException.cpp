@@ -23,24 +23,34 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
-#include "SearchControllerFactory.h"
-#include "ED2KSearchController.h"
-#include "KadSearchController.h"
+#include "SearchPackageException.h"
+#include "../Logger.h"
+#include <common/Format.h>
 
 namespace search {
 
-std::unique_ptr<SearchController> SearchControllerFactory::createController(ModernSearchType type)
+SearchPackageException::SearchPackageException(const wxString& message, uint32_t searchId)
+	: m_message(message)
+	, m_searchId(searchId)
+	, m_timestamp(wxDateTime::Now())
 {
-    switch (type) {
-	case ModernSearchType::LocalSearch:
-	    return std::make_unique<ED2KSearchController>();
-	case ModernSearchType::GlobalSearch:
-	    return std::make_unique<ED2KSearchController>();
-	case ModernSearchType::KadSearch:
-	    return std::make_unique<KadSearchController>();
-	default:
-	    return std::make_unique<ED2KSearchController>();
-    }
+	// Log immediately on creation
+	LogException();
+}
+
+SearchPackageException::~SearchPackageException() throw()
+{
+}
+
+void SearchPackageException::LogException() const
+{
+	wxString logMsg = CFormat(wxT("SearchPackageException: SearchID=%u, Message='%s', Timestamp='%s'"))
+		% m_searchId % m_message % m_timestamp.FormatISOCombined();
+
+	AddDebugLogLineC(logSearch, logMsg);
+
+	// Also write to error log
+	AddLogLineC(logMsg);
 }
 
 } // namespace search
