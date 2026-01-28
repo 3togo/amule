@@ -24,6 +24,7 @@
 //
 
 #include "SearchList.h"		// Interface declarations.
+#include "search/SearchAutoRetry.h"	// Auto-retry manager
 
 #include <protocol/Protocols.h>
 #include <protocol/kad/Constants.h>
@@ -274,13 +275,28 @@ CSearchList::CSearchList()
 	  m_currentSearch(-1),
 	  m_searchPacket(NULL),
 	  m_64bitSearchPacket(false),
-	  m_KadSearchFinished(true)
-{}
+	  m_KadSearchFinished(true),
+	  m_autoRetry(new search::SearchAutoRetry())
+{
+	// Set up retry callback
+	m_autoRetry->SetOnRetry(
+		[this](long searchId, search::ModernSearchType type, int retryNum) {
+			OnSearchRetry(searchId, 
+				type == search::ModernSearchType::KadSearch ? KadSearch :
+				type == search::ModernSearchType::LocalSearch ? LocalSearch :
+				GlobalSearch,
+				retryNum);
+		});
+}
 
 
 CSearchList::~CSearchList()
 {
 	StopSearch();
+
+	// Clean up auto-retry manager
+	delete m_autoRetry;
+	m_autoRetry = NULL;
 
 	while (!m_results.empty()) {
 		RemoveResults(m_results.begin()->first);
@@ -506,8 +522,10 @@ void CSearchList::LocalSearchEnd()
 		theApp->serverlist->RemoveObserver(&m_serverQueue);
 		m_searchTimer.Start(750);
 	} else {
-		m_searchInProgress = false;
-		Notify_SearchLocalEnd();
+		// Check for auto-retry before marking as finished
+		ResultMap::iterator it = m_results.find(m_currentSearch);
+		bool hasResults = (it != m_results.end()) && !it->second.empty();
+		OnSearchComplete(m_currentSearch, m_searchType, hasResults);
 	}
 }
 
@@ -1161,47 +1179,89 @@ void CSearchList::SetKadSearchFinished()
 	ResultMap::iterator it = m_results.find(m_currentSearch);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
 
-	if (!hasResults && m_KadSearchRetryCount == 0) {
-		// No results and haven't retried yet - retry once
-		AddDebugLogLineN(logKadSearch, wxT("Kad search returned no results, retrying (search ID: ") +
-			CFormat(wxT("%u")) % m_currentSearch + wxT(")"));
+	// Use the new auto-retry mechanism
+	OnSearchComplete(m_currentSearch, KadSearch, hasResults);
+}
 
+
+void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResults)
+{
+	// Update result count
+	ResultMap::iterator it = m_results.find(searchId);
+	int resultCount = (it != m_results.end()) ? it->second.size() : 0;
+	m_resultCounts[searchId] = resultCount;
+	
+	// Check if we should retry
+	if (!hasResults && m_autoRetry->ShouldRetry(searchId)) {
 		// Increment retry count
-		m_KadSearchRetryCount++;
-
-		// Get the search parameters for the current search
-		CSearchParams params = GetSearchParams(m_currentSearch);
-		if (!params.searchString.IsEmpty()) {
-			try {
-				// Create search data packet
-				bool packetUsing64bit = false;
-				CMemFilePtr data = CreateSearchData(params, KadSearch, true, packetUsing64bit);
-				if (data) {
-					// Stop the current search
-					Kademlia::CSearchManager::StopSearch(m_currentSearch, false);
-
-					// Prepare to find keywords again
-					Kademlia::CSearch* search = Kademlia::CSearchManager::PrepareFindKeywords(
-						params.strKeyword, data->GetLength(), data->GetRawBuffer(), m_currentSearch);
-
-					if (search) {
-						// Start the search
-						if (Kademlia::CSearchManager::StartSearch(search)) {
-							m_currentSearch = search->GetSearchID();
-							m_KadSearchFinished = false;
-							// Don't mark as finished - search is retrying
-							return;
-						}
-					}
-				}
-			} catch (const wxString& what) {
-				AddLogLineC(wxT("Error retrying Kad search: ") + what);
-			}
+		m_autoRetry->IncrementRetryCount(searchId);
+		
+		// Schedule retry
+		search::ModernSearchType modernType;
+		switch (type) {
+			case KadSearch:
+				modernType = search::ModernSearchType::KadSearch;
+				break;
+			case LocalSearch:
+				modernType = search::ModernSearchType::LocalSearch;
+				break;
+			case GlobalSearch:
+			default:
+				modernType = search::ModernSearchType::GlobalSearch;
+				break;
 		}
+		
+		m_autoRetry->StartRetry(searchId, modernType);
+		
+		// Log retry
+		AddDebugLogLineC(logSearch, 
+			wxString::Format(wxT("Search %ld returned no results, scheduling retry (%d/%d)"),
+				searchId, m_autoRetry->GetRetryCount(searchId), 
+				m_autoRetry->GetMaxRetryCount()));
+		
+		return; // Don't mark as finished yet
 	}
-
+	
 	// Mark search as finished
-	m_KadSearchFinished = true;
+	if (type == KadSearch) {
+		m_KadSearchFinished = true;
+	} else {
+		m_searchInProgress = false;
+		Notify_SearchLocalEnd();
+	}
+}
+
+
+void CSearchList::OnSearchRetry(long searchId, SearchType type, int retryNum)
+{
+	// Get original parameters
+	CSearchParams params = GetSearchParams(searchId);
+	if (params.searchString.IsEmpty()) {
+		AddDebugLogLineC(logSearch, 
+			wxString::Format(wxT("Retry %d for search %ld failed: no parameters"),
+				retryNum, searchId));
+		return;
+	}
+	
+	// Start new search with same parameters
+	uint32 newSearchId = 0;
+	wxString error = StartNewSearch(&newSearchId, type, params);
+	
+	if (!error.IsEmpty()) {
+		AddDebugLogLineC(logSearch, 
+			wxString::Format(wxT("Retry %d for search %ld failed: %s"),
+				retryNum, searchId, error.c_str()));
+		return;
+	}
+	
+	// Update search ID mapping
+	m_resultCounts[newSearchId] = m_resultCounts[searchId];
+	m_resultCounts.erase(searchId);
+	
+	// Log success
+	AddDebugLogLineC(logSearch, 
+		wxString::Format(wxT("Retry %d started for search %ld (new ID: %u)"),
+			retryNum, searchId, newSearchId));
 }
 
 // File_checked_for_headers

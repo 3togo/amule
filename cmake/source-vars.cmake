@@ -32,6 +32,7 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		search/LegacySearchController.cpp
 		search/ED2KSearchController.cpp
 		search/KadSearchController.cpp
+		search/SearchAutoRetry.cpp
 		search/SearchController.cpp
 		search/SearchControllerFactory.cpp
 		search/SearchModel.cpp

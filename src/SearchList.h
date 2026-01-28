@@ -31,6 +31,11 @@
 #include "SearchFile.h"		// Needed for CSearchFile
 #include <common/SmartPtr.h>	// Needed for CSmartPtr
 
+// Forward declarations
+namespace search {
+	class SearchAutoRetry;
+}
+
 
 class CMemFile;
 class CMD4Hash;
@@ -248,6 +253,17 @@ private:
 	typedef std::map<long, CSearchParams> ParamMap;
 	ParamMap	m_searchParams;
 
+	//! Auto-retry manager for searches
+	search::SearchAutoRetry*	m_autoRetry;
+
+	//! Track result counts per search ID
+	std::map<long, int>	m_resultCounts;
+
+	//! Handle search completion with auto-retry
+	void OnSearchComplete(long searchId, SearchType type, bool hasResults);
+
+	//! Handle retry callback from auto-retry manager
+	void OnSearchRetry(long searchId, SearchType type, int retryNum);
 
 	DECLARE_EVENT_TABLE()
 };
