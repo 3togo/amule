@@ -803,8 +803,13 @@ void CSearchList::StopSearch(bool globalOnly)
 {
 	if (m_searchType == GlobalSearch) {
 		m_currentSearch = -1;
-		delete m_searchPacket;
-		m_searchPacket = NULL;
+		
+		// Safely delete search packet
+		if (m_searchPacket) {
+			delete m_searchPacket;
+			m_searchPacket = NULL;
+		}
+		
 		m_searchInProgress = false;
 
 		// Order is crucial here: on wx_MSW an additional event can be generated during the stop.
@@ -814,8 +819,12 @@ void CSearchList::StopSearch(bool globalOnly)
 
 		CoreNotify_Search_Update_Progress(0xffff);
 	} else if (m_searchType == KadSearch && !globalOnly) {
-		Kademlia::CSearchManager::StopSearch(m_currentSearch, false);
-		m_currentSearch = -1;
+		// Check if we have a valid search ID before stopping
+		if (m_currentSearch != -1) {
+			Kademlia::CSearchManager::StopSearch(m_currentSearch, false);
+			m_currentSearch = -1;
+		}
+		m_KadSearchFinished = true;
 	}
 }
 

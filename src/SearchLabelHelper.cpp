@@ -30,9 +30,26 @@
 #include <common/Format.h>
 #include "amule.h"
 #include "SearchList.h"
+#include "Logger.h"
+#include <cassert>
 
 void UpdateSearchState(CSearchListCtrl* list, CSearchDlg* parentDlg, const wxString& state)
 {
+	if (!list || !parentDlg) {
+		return;
+	}
+
+	// Get the result counts from the list
+	size_t shown = list->GetItemCount();
+	size_t hidden = list->GetHiddenItemCount();
+
+	// Call the version that takes counts
+	UpdateSearchStateWithCount(list, parentDlg, state, shown, hidden);
+}
+
+void UpdateSearchStateWithCount(CSearchListCtrl* list, CSearchDlg* parentDlg, const wxString& state, size_t shown, size_t hidden)
+{
+	// Check for null pointers before proceeding
 	if (!list || !parentDlg) {
 		return;
 	}
@@ -42,6 +59,9 @@ void UpdateSearchState(CSearchListCtrl* list, CSearchDlg* parentDlg, const wxStr
 	if (!notebook) {
 		return;
 	}
+
+	// Log the values for debugging
+	theLogger.AddLogLine(wxT("SearchLabelHelper.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateSearchStateWithCount: state='%s', shown=%u, hidden=%u")) % state % shown % hidden);
 
 	for (uint32 i = 0; i < (uint32)notebook->GetPageCount(); ++i) {
 		if (notebook->GetPage(i) == list) {
@@ -75,10 +95,6 @@ void UpdateSearchState(CSearchListCtrl* list, CSearchDlg* parentDlg, const wxStr
 				tabText = tabText.Left(parenPos);
 			}
 
-			// Get the result counts
-			size_t shown = list->GetItemCount();
-			size_t hidden = list->GetHiddenItemCount();
-
 			// Build the new tab text with type prefix and state
 			wxString newText = typePrefix;
 			if (!state.IsEmpty()) {
@@ -88,11 +104,18 @@ void UpdateSearchState(CSearchListCtrl* list, CSearchDlg* parentDlg, const wxStr
 			}
 
 			// Add count information
-			if (hidden) {
-				newText += CFormat(wxT(" (%u/%u)")) % shown % (shown + hidden);
-			} else {
-				newText += CFormat(wxT(" (%u)")) % shown;
+			// Always show count when there is a state (e.g., "No Results", "Retrying 1")
+			// or when there are actual results
+			if (!state.IsEmpty() || shown > 0 || hidden > 0) {
+				if (hidden) {
+					newText += (CFormat(wxT(" (%u/%u)")) % shown % (shown + hidden)).GetString();
+				} else {
+					newText += (CFormat(wxT(" (%u)")) % shown).GetString();
+				}
 			}
+
+			// Log the final tab text for debugging
+			theLogger.AddLogLine(wxT("SearchLabelHelper.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateSearchStateWithCount: Setting tab text to '%s'")) % newText);
 
 			notebook->SetPageText(i, newText);
 			break;
@@ -102,6 +125,7 @@ void UpdateSearchState(CSearchListCtrl* list, CSearchDlg* parentDlg, const wxStr
 
 void UpdateHitCountWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 {
+	// Check for null pointers before proceeding
 	if (!page || !parentDlg) {
 		return;
 	}
@@ -109,6 +133,9 @@ void UpdateHitCountWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 	// Determine the search state based on result count
 	size_t shown = page->GetItemCount();
 	size_t hidden = page->GetHiddenItemCount();
+
+	// Validate counts - hidden should not exceed shown
+	assert(shown >= hidden);
 
 	wxString stateStr;
 	if (shown == 0 && hidden == 0) {
@@ -123,10 +150,9 @@ void UpdateHitCountWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 		}
 	} else {
 		// Results are being populated or already populated
-		// Reset retry counter when results are found
-		page->ResetRetryCount();
 		// Clear state when results are shown - this removes [Searching], [Retrying N], etc.
 		// Even if the search is still active, we clear the state when results are present
+		// Note: SearchStateManager automatically resets retry count when results are found
 		stateStr = wxEmptyString;
 	}
 
@@ -136,6 +162,7 @@ void UpdateHitCountWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 
 bool RetrySearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 {
+	// Check for null pointers before proceeding
 	if (!page || !parentDlg) {
 		return false;
 	}
@@ -155,13 +182,17 @@ bool RetrySearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 		}
 	}
 
+	// Check if page was found in notebook
 	if (pageIndex == -1) {
 		return false;
 	}
 
 	// Get the search ID and tab text
 	long searchId = page->GetSearchId();
+	assert(searchId > 0);
+
 	wxString tabText = notebook->GetPageText(pageIndex);
+	assert(!tabText.IsEmpty());
 
 	// Determine search type from tab text
 	bool isKadSearch = tabText.StartsWith(wxT("[Kad]")) || tabText.StartsWith(wxT("!"));
@@ -174,23 +205,42 @@ bool RetrySearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 
 	// Check retry limit (max 3 retries)
 	const int MAX_RETRIES = 3;
-	if (page->GetRetryCount() >= MAX_RETRIES) {
+	int retryCount = parentDlg->GetStateManager().GetRetryCount(searchId);
+	if (retryCount >= MAX_RETRIES) {
 		// Maximum retries reached - show final state
 		UpdateSearchState(page, parentDlg, wxT("No Results"));
 		return false;
 	}
 
-	// Increment retry counter
-	page->IncrementRetryCount();
+	// Start retry - this increments the retry counter
+	if (!parentDlg->GetStateManager().StartRetry(searchId)) {
+		// Failed to start retry
+		return false;
+	}
 
 	// Update state to show retry is in progress with count
-	wxString retryState = CFormat(wxT("Retrying %d")) % page->GetRetryCount();
+	retryCount = parentDlg->GetStateManager().GetRetryCount(searchId);
+	wxString retryState = CFormat(wxT("Retrying %d")) % retryCount;
 	UpdateSearchState(page, parentDlg, retryState);
 
-	// Request more results for this search
-	// Note: RequestMoreResults creates a new search with a new ID
-	// We need to update the page's search ID to match the new search
-	wxString error = theApp->searchlist->RequestMoreResults(searchId);
+	// Get the search parameters for this search
+	CSearchList::CSearchParams params = theApp->searchlist->GetSearchParams(searchId);
+	if (params.searchString.IsEmpty()) {
+		// No search parameters available - cannot retry
+		UpdateSearchState(page, parentDlg, wxT("Retry Failed"));
+		return false;
+	}
+
+	// Start a new ED2K search with the same parameters
+	// Use the same search ID to keep results in the same tab
+	uint32 newSearchId = searchId;
+	// Determine if this is a Local or Global search
+	SearchType searchType = LocalSearch;
+	if (tabText.StartsWith(wxT("[ED2K] "))) {
+		searchType = GlobalSearch;
+	}
+	
+	wxString error = theApp->searchlist->StartNewSearch(&newSearchId, searchType, params);
 
 	if (!error.IsEmpty()) {
 		// Retry failed - update state to show error
@@ -198,19 +248,14 @@ bool RetrySearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 		return false;
 	}
 
-	// Get the new search ID from the search list
-	// The new search should be the most recent one with the same parameters
-	CSearchList::CSearchParams params = theApp->searchlist->GetSearchParams(searchId);
-	if (!params.searchString.IsEmpty()) {
-		// Find the new search ID by getting the current search ID
-		// RequestMoreResults creates a new search and updates the current search ID
-		long newSearchId = theApp->searchlist->GetCurrentSearchID();
+
+// Update the page to show results from the new search
+	page->ShowResults(newSearchId);
+
+
+
 		
-		if (newSearchId != searchId && newSearchId != 0) {
-			// Update the page's search ID to match the new search
-			page->ShowResults(newSearchId);
-		}
-	}
+
 
 	// Retry initiated successfully - state will be updated to "Searching"
 	// when the search starts
@@ -219,12 +264,17 @@ bool RetrySearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 
 bool RetryKadSearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 {
+	assert(page != nullptr);
+	assert(parentDlg != nullptr);
+
 	if (!page || !parentDlg) {
 		return false;
 	}
 
 	// Get the notebook from parent dialog
 	CMuleNotebook* notebook = parentDlg->GetNotebook();
+	assert(notebook != nullptr);
+
 	if (!notebook) {
 		return false;
 	}
@@ -238,13 +288,18 @@ bool RetryKadSearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 		}
 	}
 
+	assert(pageIndex != -1);
+
 	if (pageIndex == -1) {
 		return false;
 	}
 
 	// Get the search ID and tab text
 	long searchId = page->GetSearchId();
+	assert(searchId > 0);
+
 	wxString tabText = notebook->GetPageText(pageIndex);
+	assert(!tabText.IsEmpty());
 
 	// Determine search type from tab text
 	// Check for [Kad] prefix or ! prefix (which indicates Kad search in progress)
@@ -260,17 +315,22 @@ bool RetryKadSearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 
 	// Check retry limit (max 3 retries)
 	const int MAX_RETRIES = 3;
-	if (page->GetRetryCount() >= MAX_RETRIES) {
+	int retryCount = parentDlg->GetStateManager().GetRetryCount(searchId);
+	if (retryCount >= MAX_RETRIES) {
 		// Maximum retries reached - show final state
 		UpdateSearchState(page, parentDlg, wxT("No Results"));
 		return false;
 	}
 
-	// Increment retry counter
-	page->IncrementRetryCount();
+	// Start retry - this increments the retry counter
+	if (!parentDlg->GetStateManager().StartRetry(searchId)) {
+		// Failed to start retry
+		return false;
+	}
 
 	// Update state to show retry is in progress with count
-	wxString retryState = CFormat(wxT("Retrying %d")) % page->GetRetryCount();
+	retryCount = parentDlg->GetStateManager().GetRetryCount(searchId);
+	wxString retryState = CFormat(wxT("Retrying %d")) % retryCount;
 	UpdateSearchState(page, parentDlg, retryState);
 
 	// Get the search parameters for this search

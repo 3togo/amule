@@ -128,15 +128,25 @@ CSearch::~CSearch()
 
 	// Decrease the use count for any contacts that are in our contact list.
 	for (ContactMap::iterator it = m_inUse.begin(); it != m_inUse.end(); ++it) {
-		it->second->DecUse();
+		if (it->second) {
+			it->second->DecUse();
+		}
 	}
 
 	// Delete any temp contacts...
 	for (ContactList::const_iterator it = m_delete.begin(); it != m_delete.end(); ++it) {
-		if (!(*it)->InUse()) {
+		if (*it && !(*it)->InUse()) {
 			delete *it;
 		}
 	}
+
+	// Clear all contact maps to prevent accessing invalid pointers
+	m_possible.clear();
+	m_tried.clear();
+	m_responded.clear();
+	m_best.clear();
+	m_delete.clear();
+	m_inUse.clear();
 
 	// Check if this search was containing an overload node and adjust time of next time we use that node.
 	if (CKademlia::IsRunning() && GetNodeLoad() > 20) {
