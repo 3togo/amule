@@ -635,7 +635,11 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event))
 		long newSearchId = theApp->searchlist->GetCurrentSearchID();
 		if (newSearchId != -1) {
 			// Update the tab to show results from the new search ID
+			// This will automatically update the internal search ID in the list control
 			list->ShowResults(newSearchId);
+			
+			// Update hit count immediately
+			UpdateHitCount(list);
 		}
 
 		// Disable buttons during the search
@@ -644,8 +648,9 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event))
 		FindWindow(IDC_CANCELS)->Enable();
 
 		// Update the tab text to reflect that we're requesting more results
-		m_notebook->SetPageText(m_notebook->GetSelection(),
-			m_notebook->GetPageText(m_notebook->GetSelection()).BeforeLast(wxT('(')) + wxT("(updating...)"));
+		wxString currentText = m_notebook->GetPageText(m_notebook->GetSelection());
+		wxString baseText = currentText.BeforeLast(wxT('(')).Trim();
+		m_notebook->SetPageText(m_notebook->GetSelection(), baseText + wxT(" (updating...)"));
 	}
 }
 
