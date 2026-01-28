@@ -29,6 +29,7 @@
 #include <tags/FileTags.h>
 #include <wx/app.h>
 #include <wx/gauge.h>  // Do_not_auto_remove (win32)
+#include <cassert>
 
 #include "GetTickCount.h"
 #include "Logger.h"
@@ -115,6 +116,9 @@ CSearchDlg::CSearchDlg(wxWindow* pParent) : wxPanel(pParent, -1) {
 
 	m_searchchoices = searchchoice->GetStrings();
 
+	// Register as observer for search state changes
+	m_stateManager.RegisterObserver(this);
+
 	// Initialize timeout check timer (check every 5 seconds)
 	m_timeoutCheckTimer.SetOwner(this);
 	m_timeoutCheckTimer.Start(5000);
@@ -137,7 +141,11 @@ CSearchDlg::CSearchDlg(wxWindow* pParent) : wxPanel(pParent, -1) {
 	Layout();
 }
 
-CSearchDlg::~CSearchDlg() {}
+CSearchDlg::~CSearchDlg()
+{
+	// Unregister as observer for search state changes
+	m_stateManager.UnregisterObserver(this);
+}
 
 void CSearchDlg::FixSearchTypes() {
 	wxChoice* searchchoice = CastChild(ID_SEARCHTYPE, wxChoice);
@@ -183,6 +191,9 @@ void CSearchDlg::AddResult(CSearchFile* toadd) {
 		size_t shown = outputwnd->GetItemCount();
 		size_t hidden = outputwnd->GetHiddenItemCount();
 		m_stateManager.UpdateResultCount(toadd->GetSearchID(), shown, hidden);
+
+		// Update the hit count in the tab label
+		UpdateHitCount(outputwnd);
 	}
 }
 
@@ -196,6 +207,9 @@ void CSearchDlg::UpdateResult(CSearchFile* toupdate) {
 		size_t shown = outputwnd->GetItemCount();
 		size_t hidden = outputwnd->GetHiddenItemCount();
 		m_stateManager.UpdateResultCount(toupdate->GetSearchID(), shown, hidden);
+
+		// Update the hit count in the tab label
+		UpdateHitCount(outputwnd);
 	}
 }
 
@@ -497,31 +511,8 @@ void CSearchDlg::CreateNewTab(const wxString& searchString, wxUIntPtr nSearchID)
 	list->EnableFiltering(enable);
 	list->ShowResults(nSearchID);
 
-	// Initialize search state manager with this search
-	// Extract search type from the search string
-	wxString searchType;
-	if (searchString.StartsWith(wxT("[Local] "))) {
-		searchType = wxT("Local");
-	} else if (searchString.StartsWith(wxT("[ED2K] "))) {
-		searchType = wxT("ED2K");
-	} else if (searchString.StartsWith(wxT("[Kad] "))) {
-		searchType = wxT("Kad");
-	}
-
-	// Extract keyword from the search string (remove prefix)
-	wxString keyword = searchString;
-	if (!searchType.IsEmpty()) {
-		if (searchType == wxT("Local")) {
-			keyword = keyword.Mid(8); // Remove "[Local] "
-		} else if (searchType == wxT("ED2K")) {
-			keyword = keyword.Mid(7); // Remove "[ED2K] "
-		} else if (searchType == wxT("Kad")) {
-			keyword = keyword.Mid(6); // Remove "[Kad] "
-		}
-	}
-
-	// Initialize the search in the state manager
-	m_stateManager.InitializeSearch(nSearchID, searchType, keyword);
+	// The search should already be initialized in SearchStateManager
+	// from StartNewSearch, so we don't need to do it here
 
 	Layout();
 	FindWindow(IDC_CLEAR_RESULTS)->Enable(true);
@@ -557,7 +548,7 @@ void CSearchDlg::LocalSearchEnd() {
 				size_t shown = page->GetItemCount();
 				size_t hidden = page->GetHiddenItemCount();
 				m_stateManager.UpdateResultCount(page->GetSearchId(), shown, hidden);
-				
+
 				// End the search in the state manager
 				m_stateManager.EndSearch(page->GetSearchId());
 			}
@@ -576,7 +567,7 @@ void CSearchDlg::KadSearchEnd(uint32 id) {
 			size_t shown = page->GetItemCount();
 			size_t hidden = page->GetHiddenItemCount();
 			m_stateManager.UpdateResultCount(page->GetSearchId(), shown, hidden);
-			
+
 			// End the search in the state manager
 			m_stateManager.EndSearch(page->GetSearchId());
 
@@ -824,6 +815,24 @@ void CSearchDlg::StartNewSearch() {
 		return;
 	}
 
+	// Initialize the search in SearchStateManager
+	wxString searchTypeStr;
+	switch (search_type) {
+		case LocalSearch:
+			searchTypeStr = wxT("Local");
+			break;
+		case GlobalSearch:
+			searchTypeStr = wxT("ED2K");
+			break;
+		case KadSearch:
+			searchTypeStr = wxT("Kad");
+			break;
+		default:
+			searchTypeStr = wxT("Local");
+			break;
+	}
+	m_stateManager.InitializeSearch(real_id, searchTypeStr, params.searchString);
+
 	// Search started successfully, now handle tab creation/reuse
 	if (existingTabIndex != -1) {
 		// Just select the existing tab and reset its search ID
@@ -835,8 +844,8 @@ void CSearchDlg::StartNewSearch() {
 			// Associate this control with the new search ID
 			existingListCtrl->ShowResults(real_id);
 
-			// Update the tab text to show "0" results initially with the correct prefix
-			m_notebook->SetPageText(existingTabIndex, prefix + params.searchString + wxT(" (0)"));
+			// Update the hit count to show the correct number of results
+			UpdateHitCount(existingListCtrl);
 
 			// Select the reused tab
 			m_notebook->SetSelection(existingTabIndex);
@@ -847,55 +856,124 @@ void CSearchDlg::StartNewSearch() {
 		}
 	} else {
 		// Create a new tab as before
-		CreateNewTab(prefix + params.searchString + wxT(" (0)"), real_id);
+		CreateNewTab(prefix + params.searchString, real_id);
 	}
 }
 
 void CSearchDlg::UpdateHitCount(CSearchListCtrl* page) {
-	for (uint32 i = 0; i < (uint32)m_notebook->GetPageCount(); ++i) {
-		if (m_notebook->GetPage(i) == page) {
-			wxString searchtxt = m_notebook->GetPageText(i).BeforeLast(wxT(' '));
-
-			if (!searchtxt.IsEmpty()) {
-				size_t shown = page->GetItemCount();
-				size_t hidden = page->GetHiddenItemCount();
-
-				// If hit count is zero and we have no results, try to update it
-				if (shown == 0 && hidden == 0) {
-					// Check if this is a new search tab with zero results
-					// This can happen when the search starts but no results are received yet
-					CSearchListCtrl* listCtrl = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
-					if (listCtrl) {
-						// Get the search ID for this tab
-						long searchId = listCtrl->GetSearchId();
-						if (searchId != 0) {
-							// Show a message indicating we're trying to refresh
-							wxMessageBox(_("Attempting to refresh search results..."), _("Search Refresh"),
-										 wxOK | wxICON_INFORMATION);
-						}
-					}
-				}
-
-				if (hidden) {
-					searchtxt += CFormat(wxT(" (%u/%u)")) % shown % (shown + hidden);
-				} else {
-					searchtxt += CFormat(wxT(" (%u)")) % shown;
-				}
-
-				// Use UpdateSearchState to update the tab label
-				UpdateSearchState(page, this, wxEmptyString);
-			}
-
-			break;
-		}
+	if (!page) {
+		return;
 	}
+
+	// Get the search ID
+	long searchId = page->GetSearchId();
+	if (searchId == 0) {
+		return;
+	}
+
+	// Update result count in SearchStateManager
+	size_t shown = page->GetItemCount();
+	size_t hidden = page->GetHiddenItemCount();
+
+	// Log the hit count values for debugging
+	theLogger.AddLogLine(wxT("SearchDlg.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateHitCount: searchId=%ld, shown=%u, hidden=%u")) % searchId % shown % hidden);
+
+	m_stateManager.UpdateResultCount(searchId, shown, hidden);
+
+	// Update the tab label with current state from SearchStateManager
+	SearchState state = m_stateManager.GetSearchState(searchId);
+	int retryCount = m_stateManager.GetRetryCount(searchId);
+
+	wxString stateStr;
+	switch (state) {
+		case STATE_SEARCHING:
+			stateStr = wxT("Searching");
+			break;
+		case STATE_RETRYING:
+			stateStr = (CFormat(wxT("Retrying %d")) % retryCount).GetString();
+			break;
+		case STATE_NO_RESULTS:
+			stateStr = wxT("No Results");
+			break;
+		case STATE_HAS_RESULTS:
+		case STATE_POPULATING:
+		case STATE_IDLE:
+			stateStr = wxEmptyString;
+			break;
+	}
+
+	// Update the tab label with state information using counts from SearchStateManager
+	UpdateSearchStateWithCount(page, this, stateStr, shown, hidden);
+}
+
+void CSearchDlg::OnSearchStateChanged(uint32_t searchId, SearchState state, int retryCount)
+{
+	// Find the search list control for this search ID
+	CSearchListCtrl* list = GetSearchList(searchId);
+	if (!list) {
+		return;
+	}
+
+	// Convert state to string
+	wxString stateStr;
+	switch (state) {
+		case STATE_SEARCHING:
+			stateStr = wxT("Searching");
+			break;
+		case STATE_RETRYING:
+			stateStr = (CFormat(wxT("Retrying %d")) % retryCount).GetString();
+			break;
+		case STATE_NO_RESULTS:
+			stateStr = wxT("No Results");
+			break;
+		case STATE_HAS_RESULTS:
+		case STATE_POPULATING:
+		case STATE_IDLE:
+			stateStr = wxEmptyString;
+			break;
+	}
+
+	// Get the result counts from SearchStateManager
+	size_t shown, hidden;
+	m_stateManager.GetResultCount(searchId, shown, hidden);
+
+	// Update the tab label with state information and correct counts
+	UpdateSearchStateWithCount(list, this, stateStr, shown, hidden);
+}
+
+bool CSearchDlg::OnRetryRequested(uint32_t searchId)
+{
+	// Find the search list control for this search ID
+	CSearchListCtrl* list = GetSearchList(searchId);
+	if (!list) {
+		return false;
+	}
+
+	// Get the search type from SearchStateManager
+	wxString searchType = m_stateManager.GetSearchType(searchId);
+
+	// Retry based on search type
+	if (searchType == wxT("Kad")) {
+		return RetryKadSearchWithState(list, this);
+	} else if (searchType == wxT("Local") || searchType == wxT("ED2K") || searchType == wxT("Global")) {
+		return RetrySearchWithState(list, this);
+	}
+
+	return false;
 }
 
 void CSearchDlg::UpdateTabLabelWithState(CSearchListCtrl* list, const wxString& state) {
+	assert(list != nullptr);
+	assert(m_notebook != nullptr);
+
 	for (uint32 i = 0; i < (uint32)m_notebook->GetPageCount(); ++i) {
 		if (m_notebook->GetPage(i) == list) {
 			// Get the current tab text
 			wxString tabText = m_notebook->GetPageText(i);
+			assert(!tabText.IsEmpty());
+
+			// Log the values for debugging
+			theLogger.AddLogLine(wxT("SearchDlg.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateTabLabelWithState: state='%s', tabText='%s'")) % state % tabText);
 
 			// Remove any existing state prefix
 			if (tabText.StartsWith(wxT("["))) {
@@ -915,6 +993,9 @@ void CSearchDlg::UpdateTabLabelWithState(CSearchListCtrl* list, const wxString& 
 			size_t shown = list->GetItemCount();
 			size_t hidden = list->GetHiddenItemCount();
 
+			// Validate counts - hidden should not exceed shown
+			assert(shown >= hidden);
+
 			// Build the new tab text with state
 			wxString newText;
 			if (!state.IsEmpty()) {
@@ -925,10 +1006,13 @@ void CSearchDlg::UpdateTabLabelWithState(CSearchListCtrl* list, const wxString& 
 
 			// Add count information
 			if (hidden) {
-				newText += CFormat(wxT(" (%u/%u)")) % shown % (shown + hidden);
+				newText += (CFormat(wxT(" (%u/%u)")) % shown % (shown + hidden)).GetString();
 			} else {
-				newText += CFormat(wxT(" (%u)")) % shown;
+				newText += (CFormat(wxT(" (%u)")) % shown).GetString();
 			}
+
+			// Log the final tab text for debugging
+			theLogger.AddLogLine(wxT("SearchDlg.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateTabLabelWithState: Setting tab text to '%s'")) % newText);
 
 			m_notebook->SetPageText(i, newText);
 			break;
@@ -1033,76 +1117,6 @@ void CSearchDlg::OnSearchTypeChanged(wxCommandEvent& evt) {
 	// Call the base event handler
 	UpdateStartButtonState();
 	evt.Skip();
-}
-
-void CSearchDlg::OnSearchStateChanged(uint32_t searchId, SearchState state, int retryCount)
-{
-	// Find the search list control for this search ID
-	CSearchListCtrl* list = GetSearchList(searchId);
-	if (!list) {
-		return;
-	}
-
-	// Convert the state to a string for the tab label
-	wxString stateStr;
-	switch (state) {
-		case STATE_IDLE:
-			stateStr = wxEmptyString;
-			break;
-		case STATE_SEARCHING:
-			stateStr = wxT("Searching");
-			break;
-		case STATE_POPULATING:
-			stateStr = wxT("Populating");
-			break;
-		case STATE_RETRYING:
-			stateStr = CFormat(wxT("Retrying %d")) % retryCount;
-			break;
-		case STATE_NO_RESULTS:
-			stateStr = wxT("No Results");
-			break;
-		case STATE_HAS_RESULTS:
-			stateStr = wxEmptyString;
-			break;
-		default:
-			stateStr = wxEmptyString;
-			break;
-	}
-
-	// Update the tab label with the state
-	UpdateTabLabelWithState(list, stateStr);
-}
-
-bool CSearchDlg::OnRetryRequested(uint32_t searchId)
-{
-	// Find the search list control for this search ID
-	CSearchListCtrl* list = GetSearchList(searchId);
-	if (!list) {
-		return false;
-	}
-
-	// Get the search parameters for this search
-	CSearchList::CSearchParams params = theApp->searchlist->GetSearchParams(searchId);
-	if (params.searchString.IsEmpty()) {
-		// No search parameters available - cannot retry
-		return false;
-	}
-
-	// Start a new Kad search with the same parameters
-	// Use the same search ID to keep results in the same tab
-	uint32 newSearchId = searchId;
-	wxString error = theApp->searchlist->StartNewSearch(&newSearchId, KadSearch, params);
-
-	if (!error.IsEmpty()) {
-		// Retry failed
-		return false;
-	}
-
-	// Update the page to show results from the new search
-	list->ShowResults(newSearchId);
-
-	// Retry initiated successfully
-	return true;
 }
 
 // File_checked_for_headers
