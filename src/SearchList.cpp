@@ -622,7 +622,7 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
 						m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ2);
 						AddDebugLogLineN(logServerUDP, wxT("Sending OP_GLOBSEARCHREQ2 to server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
 						theStats::AddUpOverheadServer(m_searchPacket->GetPacketSize());
-						theApp->serverconnect->SendUDPPacket(m_searchPacket, server, false);
+						theApp->serverconnect->SendUDPPacket(m_searchPacket.get(), server, false);
 					} else {
 						AddDebugLogLineN(logServerUDP, wxT("Skipped UDP search on server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()) + wxT(": No large file support"));
 					}
@@ -631,7 +631,7 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
 						m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ);
 						AddDebugLogLineN(logServerUDP, wxT("Sending OP_GLOBSEARCHREQ to server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
 						theStats::AddUpOverheadServer(m_searchPacket->GetPacketSize());
-						theApp->serverconnect->SendUDPPacket(m_searchPacket, server, false);
+						theApp->serverconnect->SendUDPPacket(m_searchPacket.get(), server, false);
 					} else {
 						AddDebugLogLineN(logServerUDP, wxT("Skipped UDP search on server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()) + wxT(": No large file support"));
 					}
