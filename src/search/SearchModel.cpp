@@ -26,6 +26,8 @@
 #include "SearchModel.h"
 #include "../SearchFile.h" // For CSearchFile
 
+namespace search {
+
 SearchModel::SearchModel()
     : m_state(SearchState::Idle)
     , m_searchId(-1)
@@ -111,3 +113,5 @@ long SearchModel::getSearchIdThreadSafe() const
     wxMutexLocker lock(m_mutex);
     return m_searchId;
 }
+
+} // namespace search

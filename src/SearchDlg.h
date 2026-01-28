@@ -26,13 +26,8 @@
 #ifndef SEARCHDLG_H
 #define SEARCHDLG_H
 
-// Search dialog event IDs
-enum {
-	SEARCH_UPDATE_HITCOUNT = wxID_HIGHEST + 1
-};
 #include <wx/panel.h>		// Needed for wxPanel
 #include <wx/notebook.h>	// needed for wxBookCtrlEvent in wx 2.8
-#include <memory>
 
 #include "Types.h"		// Needed for uint16 and uint32
 
@@ -44,18 +39,6 @@ class wxListEvent;
 class wxSpinEvent;
 class wxGauge;
 class CSearchFile;
-
-// Forward declarations for new search architecture
-namespace search {
-    class SearchController;
-    class SearchModel;
-}
-
-// Forward declarations for new search architecture
-namespace search {
-    class SearchController;
-    class SearchModel;
-}
 
 
 /**
@@ -131,11 +114,6 @@ public:
 	void		UpdateHitCount(CSearchListCtrl* list);
 
 	/**
-	 * Attempts to retry a search if no results were found.
-	 */
-	void		RetrySearchIfNeeded(CSearchListCtrl* list);
-
-	/**
 	 * Updates the enabled state of the start button based on connection status.
 	 */
 	void		UpdateStartButtonState();
@@ -165,11 +143,6 @@ public:
 	 * Updates the progress bar.
 	 */
 	void	UpdateProgress(uint32 new_value);
-
-	/**
-	 * Handles hit count update events.
-	 */
-	void	OnUpdateHitCount(wxCommandEvent& event);
 
 	void	StartNewSearch();
 
@@ -207,9 +180,8 @@ private:
 
 	wxArrayString m_searchchoices;
 
-	DECLARE_EVENT_TABLE();
+	DECLARE_EVENT_TABLE()
 };
-
 
 #endif
 // File_checked_for_headers

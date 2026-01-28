@@ -34,6 +34,8 @@
 // Forward declarations
 class CSearchFile;
 
+namespace search {
+
 enum class ModernSearchType {
     LocalSearch = 0,
     GlobalSearch,
@@ -119,5 +121,7 @@ private:
     // Results storage - TODO: Replace with more efficient structure
     std::vector<CSearchFile*> m_results;
 };
+
+} // namespace search
 
 #endif // SEARCHMODEL_H

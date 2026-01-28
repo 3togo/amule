@@ -402,8 +402,14 @@ void CServerConnect::ConnectionFailed(CServerSocket* sender)
 				connectedsocket->Close();
 			}
 			connectedsocket = NULL;
-			theApp->searchlist->StopSearch(true);
-			Notify_SearchCancel();
+			
+			// Only stop searches if we're not going to auto-reconnect
+			// This allows retry mechanisms to continue working during temporary disconnects
+			if (!thePrefs::Reconnect() || connecting) {
+				theApp->searchlist->StopSearch(true);
+				Notify_SearchCancel();
+			}
+			
 			theStats::GetServerConnectTimer()->StopTimer();
 			if (thePrefs::Reconnect() && !connecting){
 				ConnectToAnyServer();

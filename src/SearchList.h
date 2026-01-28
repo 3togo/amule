@@ -171,9 +171,6 @@ public:
 	/** Mark current KAD search as finished */
 	void SetKadSearchFinished();
 
-	/** Handle retry timer events */
-	void OnRetryTimer(CTimerEvent& evt);
-
 	/** Get the current search ID */
 	long GetCurrentSearchID() const { return m_currentSearch; }
 
@@ -232,12 +229,6 @@ private:
 
 	//! Retry count for Kad searches (to retry if no results)
 	int		m_KadSearchRetryCount;
-
-	//! Mutex for thread-safe access to search results and state
-	mutable wxMutex		m_searchMutex;
-
-	//! Timer for delayed search retries
-	CTimer				m_retryTimer;
 
 	//! Queue of servers to ask when doing global searches.
 	//! TODO: Replace with 'cookie' system.

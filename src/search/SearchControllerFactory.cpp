@@ -27,6 +27,8 @@
 #include "LegacySearchController.h"
 // #include "ModernSearchController.h" // For future implementation
 
+namespace search {
+
 std::unique_ptr<SearchController> SearchControllerFactory::createController(ModernSearchType type)
 {
     // Currently default to legacy implementation
@@ -46,3 +48,5 @@ std::unique_ptr<SearchController> SearchControllerFactory::createModernControlle
     // Fallback to legacy for now
     return createLegacyController(type);
 }
+
+} // namespace search

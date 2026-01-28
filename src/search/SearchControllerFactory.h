@@ -28,6 +28,9 @@
 
 #include <memory>
 #include "SearchController.h"
+#include "SearchModel.h"  // Include for ModernSearchType definition
+
+namespace search {
 
 class SearchControllerFactory {
 public:
@@ -37,5 +40,7 @@ public:
     // Factory method with modern implementation (for future use)
     static std::unique_ptr<SearchController> createModernController(ModernSearchType type);
 };
+
+} // namespace search
 
 #endif // SEARCHCONTROLLERFACTORY_H

@@ -32,7 +32,8 @@
 
 // Forward declarations
 class CSearchFile;
-class SearchModel;
+
+namespace search {
 
 class SearchController {
 public:
@@ -82,5 +83,7 @@ private:
     ErrorCallback m_onError;
     ProgressCallback m_onProgress;
 };
+
+} // namespace search
 
 #endif // SEARCHCONTROLLER_H

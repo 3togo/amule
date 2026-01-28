@@ -30,6 +30,8 @@
 #include "../libs/common/Format.h"
 #include <wx/utils.h>
 
+namespace search {
+
 LegacySearchController::LegacySearchController()
     : m_model(std::make_unique<SearchModel>())
     , m_searchList(nullptr)
@@ -124,19 +126,39 @@ void LegacySearchController::requestMoreResults()
         return;
     }
     
-    long searchId = m_model->getSearchId();
-    if (searchId == -1) {
-        notifyError(_("No active search to request more results"));
+    // Get current search parameters
+    SearchParams params = m_model->getSearchParams();
+    
+    // Only allow more results for eD2k searches (GlobalSearch)
+    if (params.searchType != ModernSearchType::GlobalSearch) {
+        notifyError(_("More results are only available for eD2k network searches"));
         return;
     }
     
-    wxString error = m_searchList->RequestMoreResults(searchId);
+    // Convert new params to old format
+    CSearchList::CSearchParams oldParams;
+    oldParams.searchString = params.searchString;
+    oldParams.strKeyword = params.strKeyword;
+    oldParams.typeText = params.typeText;
+    oldParams.extension = params.extension;
+    oldParams.minSize = params.minSize;
+    oldParams.maxSize = params.maxSize;
+    oldParams.availability = params.availability;
+    
+    // Generate a new search ID instead of reusing the old one
+    uint32 newSearchId = 0;
+    wxString error = m_searchList->StartNewSearch(&newSearchId, GlobalSearch, oldParams);
+    
     if (!error.IsEmpty()) {
         notifyError(error);
         return;
     }
     
+    // Update model with new search ID and state
+    m_model->setSearchId(newSearchId);
     m_model->setSearchState(SearchState::Searching);
+    m_model->setSearchParams(params);
+    
     notifySearchStarted();
 }
 
@@ -167,3 +189,5 @@ size_t LegacySearchController::getResultCount() const
     // TODO: Implement result count retrieval from existing system
     return 0;
 }
+
+} // namespace search

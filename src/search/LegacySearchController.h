@@ -31,7 +31,8 @@
 
 // Forward declarations
 class CSearchList;
-class SearchModel;
+
+namespace search {
 
 class LegacySearchController : public SearchController {
 public:
@@ -61,5 +62,7 @@ private:
     void connectToExistingSystem();
     void disconnectFromExistingSystem();
 };
+
+} // namespace search
 
 #endif // LEGACYSEARCHCONTROLLER_H
