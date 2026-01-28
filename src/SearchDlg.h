@@ -30,9 +30,9 @@
 enum {
 	SEARCH_UPDATE_HITCOUNT = wxID_HIGHEST + 1
 };
-
 #include <wx/panel.h>		// Needed for wxPanel
 #include <wx/notebook.h>	// needed for wxBookCtrlEvent in wx 2.8
+#include <memory>
 
 #include "Types.h"		// Needed for uint16 and uint32
 
@@ -44,6 +44,18 @@ class wxListEvent;
 class wxSpinEvent;
 class wxGauge;
 class CSearchFile;
+
+// Forward declarations for new search architecture
+namespace search {
+    class SearchController;
+    class SearchModel;
+}
+
+// Forward declarations for new search architecture
+namespace search {
+    class SearchController;
+    class SearchModel;
+}
 
 
 /**

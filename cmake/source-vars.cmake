@@ -29,6 +29,10 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		MuleUDPSocket.cpp
 		SearchFile.cpp
 		SearchList.cpp
+		search/LegacySearchController.cpp
+		search/SearchController.cpp
+		search/SearchControllerFactory.cpp
+		search/SearchModel.cpp
 		ServerConnect.cpp
 		ServerList.cpp
 		ServerSocket.cpp
