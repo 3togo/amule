@@ -277,8 +277,8 @@ CSearchList::CSearchList()
 	  m_currentSearch(-1),
 	  m_64bitSearchPacket(false),
 	  m_KadSearchFinished(true),
-	  m_autoRetry(new search::SearchAutoRetry()),
-	  m_packageValidator(new search::SearchPackageValidator())
+	  m_autoRetry(std::make_unique<search::SearchAutoRetry>()),
+	  m_packageValidator(std::make_unique<search::SearchPackageValidator>())
 {
 	// Set up retry callback
 	m_autoRetry->SetOnRetry(
@@ -296,13 +296,7 @@ CSearchList::~CSearchList()
 {
 	StopSearch();
 
-	// Clean up auto-retry manager
-	delete m_autoRetry;
-	m_autoRetry = NULL;
-
-	// Clean up package validator
-	delete m_packageValidator;
-	m_packageValidator = NULL;
+	// unique_ptr automatically handles cleanup of m_autoRetry and m_packageValidator
 
 	while (!m_results.empty()) {
 		RemoveResults(m_results.begin()->first);

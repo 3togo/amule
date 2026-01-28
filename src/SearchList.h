@@ -262,10 +262,10 @@ private:
 	ParamMap	m_searchParams;
 
 	//! Auto-retry manager for searches
-	search::SearchAutoRetry*	m_autoRetry;
+	std::unique_ptr<search::SearchAutoRetry>	m_autoRetry;
 
 	//! Package validator for search results
-	search::SearchPackageValidator*	m_packageValidator;
+	std::unique_ptr<search::SearchPackageValidator>	m_packageValidator;
 
 	//! Track result counts per search ID
 	std::map<long, int>	m_resultCounts;
