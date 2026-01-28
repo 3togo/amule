@@ -28,6 +28,8 @@
 
 #include <wx/panel.h>		// Needed for wxPanel
 #include <wx/notebook.h>	// needed for wxBookCtrlEvent in wx 2.8
+#include <wx/timer.h>		// Needed for wxTimer
+#include <map>			// Needed for std::map
 
 #include "Types.h"		// Needed for uint16 and uint32
 
@@ -114,6 +116,16 @@ public:
 	void		UpdateHitCount(CSearchListCtrl* list);
 
 	/**
+	 * Updates the tab label with state information for the given search list control.
+	 */
+	void		UpdateTabLabelWithState(CSearchListCtrl* list, const wxString& state);
+
+	/**
+	 * Gets the notebook widget containing search result tabs.
+	 */
+	CMuleNotebook* GetNotebook() const { return m_notebook; }
+
+	/**
 	 * Updates the enabled state of the start button based on connection status.
 	 */
 	void		UpdateStartButtonState();
@@ -179,6 +191,21 @@ private:
 	CMuleNotebook*	m_notebook;
 
 	wxArrayString m_searchchoices;
+
+	// Timer for checking "More" button timeouts
+	wxTimer		m_timeoutCheckTimer;
+
+	// Track active "More" button searches by tab index
+	std::map<int, wxDateTime> m_moreButtonSearches;
+
+	// Store original tab texts for "More" button searches by tab index
+	std::map<int, wxString> m_originalTabTexts;
+
+	// Handle timeout checks
+	void		OnTimeoutCheck(wxTimerEvent& event);
+
+	// Handle "More" button timeout
+	void		HandleMoreButtonTimeout(int tabIndex);
 
 	DECLARE_EVENT_TABLE()
 };

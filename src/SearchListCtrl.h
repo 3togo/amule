@@ -58,13 +58,13 @@ public:
 	 * @see CMuleListCtrl::CMuleListCtrl for documentation of parameters.
 	 */
 	 CSearchListCtrl(
-	            wxWindow *parent,
-                wxWindowID winid = -1,
-                const wxPoint &pos = wxDefaultPosition,
-                const wxSize &size = wxDefaultSize,
-                long style = wxLC_ICON,
-                const wxValidator& validator = wxDefaultValidator,
-                const wxString &name = wxT("mulelistctrl") );
+		    wxWindow *parent,
+		wxWindowID winid = -1,
+		const wxPoint &pos = wxDefaultPosition,
+		const wxSize &size = wxDefaultSize,
+		long style = wxLC_ICON,
+		const wxValidator& validator = wxDefaultValidator,
+		const wxString &name = wxT("mulelistctrl") );
 
 	/**
 	 * Destructor.

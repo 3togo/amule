@@ -195,6 +195,7 @@ gui_sources = \
 	OScopeCtrl.cpp \
 	PrefsUnifiedDlg.cpp \
 	SearchDlg.cpp \
+	SearchLabelHelper.cpp \
 	ServerWnd.cpp \
 	SharedFilesWnd.cpp \
 	StatisticsDlg.cpp \

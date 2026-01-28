@@ -77,6 +77,7 @@ if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 		OScopeCtrl.cpp
 		PrefsUnifiedDlg.cpp
 		SearchDlg.cpp
+		SearchLabelHelper.cpp
 		SearchListCtrl.cpp
 		ServerListCtrl.cpp
 		ServerWnd.cpp
