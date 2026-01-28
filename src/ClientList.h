@@ -28,6 +28,7 @@
 
 #include "DeadSourceList.h"	// Needed for CDeadSourceList
 #include "ClientRef.h"
+#include <memory>		// Needed for std::unique_ptr
 
 #include <deque>
 #include <set>
@@ -419,8 +420,8 @@ private:
 	//! This variable is used to keep track of the last time the banned-list was pruned.
 	uint32	m_dwLastBannCleanUp;
 
-	//! This is the map of tracked clients.
-	std::map<uint32, CDeletedClient*> m_trackedClientsList;
+	//! This is the map of tracked clients. Ownership managed by unique_ptr for automatic cleanup.
+	std::map<uint32, std::unique_ptr<CDeletedClient>> m_trackedClientsList;
 	//! This keeps track of the last time the tracked-list was pruned.
 	uint32	m_dwLastTrackedCleanUp;
 

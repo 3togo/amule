@@ -263,7 +263,7 @@ CPartFile::~CPartFile()
 	}
 
 	DeleteContents(m_BufferedData_list);
-	delete m_CorruptionBlackBox;
+	// unique_ptr automatically deletes m_CorruptionBlackBox
 
 	wxASSERT(m_SrcList.empty());
 	wxASSERT(m_A4AFsrclist.empty());
@@ -3694,7 +3694,7 @@ void CPartFile::Init()
 	m_TotalSearchesKad = 0;
 
 #ifndef CLIENT_GUI
-	m_CorruptionBlackBox = new CCorruptionBlackBox();
+	m_CorruptionBlackBox = std::make_unique<CCorruptionBlackBox>();
 #endif
 }
 

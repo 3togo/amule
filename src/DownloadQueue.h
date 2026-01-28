@@ -396,7 +396,8 @@ private:
 
 	std::deque<Hostname_Entry>	m_toresolve;
 
-	typedef std::deque<CPartFile*> FileQueue;
+	// FileQueue owns CPartFile objects, using unique_ptr for automatic memory management
+	typedef std::deque<std::unique_ptr<CPartFile>> FileQueue;
 	FileQueue m_filelist;
 
 	typedef std::list<CPartFile*> FileList;

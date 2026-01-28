@@ -95,7 +95,8 @@ CClientList::CClientList()
 
 CClientList::~CClientList()
 {
-	DeleteContents(m_trackedClientsList);
+	// unique_ptr automatically deletes CDeletedClient objects
+	m_trackedClientsList.clear();
 
 	wxASSERT(m_clientList.empty());
 }
@@ -460,10 +461,10 @@ bool CClientList::IsIPAlreadyKnown(uint32_t ip)
 
 bool CClientList::ComparePriorUserhash(uint32 dwIP, uint16 nPort, void* pNewHash)
 {
-	std::map<uint32, CDeletedClient*>::iterator it = m_trackedClientsList.find( dwIP );
+	std::map<uint32, std::unique_ptr<CDeletedClient>>::iterator it = m_trackedClientsList.find( dwIP );
 
 	if ( it != m_trackedClientsList.end() ) {
-		CDeletedClient* pResult = it->second;
+		CDeletedClient* pResult = it->second.get();
 
 		CDeletedClient::PaHList::iterator it2 = pResult->m_ItemsList.begin();
 		for ( ; it2 != pResult->m_ItemsList.end(); ++it2 ) {
@@ -482,10 +483,10 @@ bool CClientList::ComparePriorUserhash(uint32 dwIP, uint16 nPort, void* pNewHash
 
 void CClientList::AddTrackClient(CUpDownClient* toadd)
 {
-	std::map<uint32, CDeletedClient*>::iterator it = m_trackedClientsList.find( toadd->GetIP() );
+	std::map<uint32, std::unique_ptr<CDeletedClient>>::iterator it = m_trackedClientsList.find( toadd->GetIP() );
 
 	if ( it != m_trackedClientsList.end() ) {
-		CDeletedClient* pResult = it->second;
+		CDeletedClient* pResult = it->second.get();
 
 		pResult->m_dwInserted = ::GetTickCount();
 
@@ -502,17 +503,17 @@ void CClientList::AddTrackClient(CUpDownClient* toadd)
 		CDeletedClient::PortAndHash porthash = { toadd->GetUserPort(), toadd->GetCreditsHash()};
 		pResult->m_ItemsList.push_back(porthash);
 	} else {
-		m_trackedClientsList[ toadd->GetIP() ] = new CDeletedClient(toadd);
+		m_trackedClientsList[ toadd->GetIP() ] = std::make_unique<CDeletedClient>(toadd);
 	}
 }
 
 
 uint16 CClientList::GetClientsFromIP(uint32 dwIP)
 {
-	std::map<uint32, CDeletedClient*>::iterator it = m_trackedClientsList.find( dwIP );
+	std::map<uint32, std::unique_ptr<CDeletedClient>>::iterator it = m_trackedClientsList.find( dwIP );
 
 	if ( it != m_trackedClientsList.end() ) {
-		return it->second->m_ItemsList.size();
+		return it->second.get()->m_ItemsList.size();
 	} else {
 		return 0;
 	}
@@ -543,12 +544,12 @@ void CClientList::Process()
 	if ( m_dwLastTrackedCleanUp + TRACKED_CLEANUP_TIME < cur_tick ) {
 		m_dwLastTrackedCleanUp = cur_tick;
 
-		std::map<uint32, CDeletedClient*>::iterator it = m_trackedClientsList.begin();
+		std::map<uint32, std::unique_ptr<CDeletedClient>>::iterator it = m_trackedClientsList.begin();
 		while ( it != m_trackedClientsList.end() ) {
-			std::map<uint32, CDeletedClient*>::iterator cur_src = it++;
+			std::map<uint32, std::unique_ptr<CDeletedClient>>::iterator cur_src = it++;
 
 			if ( cur_src->second->m_dwInserted + KEEPTRACK_TIME < cur_tick ) {
-				delete cur_src->second;
+				// unique_ptr automatically deletes the object when erased
 				m_trackedClientsList.erase( cur_src );
 			}
 		}
