@@ -25,6 +25,8 @@
 
 #include "SearchList.h"		// Interface declarations.
 #include "search/SearchAutoRetry.h"	// Auto-retry manager
+#include "search/SearchPackageValidator.h"	// Package validator
+#include "search/SearchPackageException.h"	// Package exception
 
 #include <protocol/Protocols.h>
 #include <protocol/kad/Constants.h>
@@ -276,12 +278,13 @@ CSearchList::CSearchList()
 	  m_searchPacket(NULL),
 	  m_64bitSearchPacket(false),
 	  m_KadSearchFinished(true),
-	  m_autoRetry(new search::SearchAutoRetry())
+	  m_autoRetry(new search::SearchAutoRetry()),
+	  m_packageValidator(new search::SearchPackageValidator())
 {
 	// Set up retry callback
 	m_autoRetry->SetOnRetry(
 		[this](long searchId, search::ModernSearchType type, int retryNum) {
-			OnSearchRetry(searchId, 
+			OnSearchRetry(searchId,
 				type == search::ModernSearchType::KadSearch ? KadSearch :
 				type == search::ModernSearchType::LocalSearch ? LocalSearch :
 				GlobalSearch,
@@ -297,6 +300,10 @@ CSearchList::~CSearchList()
 	// Clean up auto-retry manager
 	delete m_autoRetry;
 	m_autoRetry = NULL;
+
+	// Clean up package validator
+	delete m_packageValidator;
+	m_packageValidator = NULL;
 
 	while (!m_results.empty()) {
 		RemoveResults(m_results.begin()->first);
@@ -322,6 +329,12 @@ void CSearchList::RemoveResults(long searchID)
 }
 
 
+uint32 CSearchList::GetNextSearchID()
+{
+	static uint32 nextID = 0;
+	return ++nextID;
+}
+
 wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchParams& params)
 {
 	// Check that we can actually perform the specified desired search.
@@ -332,7 +345,7 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 	}
 
 	if (params.typeText != ED2KFTSTR_PROGRAM) {
-		if (params.typeText.CmpNoCase(wxT("Any"))) {
+		if (params.typeText.CmpNoCase(wxT("Any")) != 0) {
 			m_resultType = params.typeText;
 		} else {
 			m_resultType.Clear();
@@ -393,7 +406,11 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		}
 	} else if (type == LocalSearch || type == GlobalSearch) {
 		// This is an ed2k search, local or global
-		m_currentSearch = *(searchID);
+		// Initialize search ID if not already set
+		if (*searchID == 0) {
+			*searchID = GetNextSearchID();
+		}
+		m_currentSearch = *searchID;
 		m_searchInProgress = true;
 
 		// Store search parameters for this search ID
@@ -410,6 +427,16 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 			m_64bitSearchPacket = packetUsing64bit;
 			m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ); // will be changed later when actually sending the packet!!
 		}
+	}
+
+	// Log search start
+	AddDebugLogLineC(logSearch, CFormat(wxT("Search started: ID=%u, Type=%d, String='%s'"))
+		% *searchID % (int)type % params.searchString);
+
+	// Log Kad-specific info
+	if (type == KadSearch) {
+		AddDebugLogLineC(logSearch, CFormat(wxT("Kad search prepared: ID=%u, Keyword='%s'"))
+			% *searchID % params.strKeyword);
 	}
 
 	return wxEmptyString;
@@ -490,17 +517,17 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 		searchPacket = new CPacket(OP_GLOBSEARCHREQ3, data->GetLength() + (uint32_t)extData.GetLength(), OP_EDONKEYPROT);
 		searchPacket->CopyToDataBuffer(0, extData.GetRawBuffer(), extData.GetLength());
 		searchPacket->CopyToDataBuffer(extData.GetLength(), data->GetRawBuffer(), data->GetLength());
-		AddDebugLogLineN(logServerUDP, wxT("Requesting more results from server using OP_GLOBSEARCHREQ3: ") + 
+		AddDebugLogLineN(logServerUDP, wxT("Requesting more results from server using OP_GLOBSEARCHREQ3: ") +
 			Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
 	} else if (server->GetUDPFlags() & SRV_UDPFLG_EXT_GETFILES) {
 		// Use OP_GLOBSEARCHREQ2 for servers that support extended getfiles
 		searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_GLOBSEARCHREQ2);
-		AddDebugLogLineN(logServerUDP, wxT("Requesting more results from server using OP_GLOBSEARCHREQ2: ") + 
+		AddDebugLogLineN(logServerUDP, wxT("Requesting more results from server using OP_GLOBSEARCHREQ2: ") +
 			Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
 	} else {
 		// Use OP_GLOBSEARCHREQ for basic servers
 		searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_GLOBSEARCHREQ);
-		AddDebugLogLineN(logServerUDP, wxT("Requesting more results from server using OP_GLOBSEARCHREQ: ") + 
+		AddDebugLogLineN(logServerUDP, wxT("Requesting more results from server using OP_GLOBSEARCHREQ: ") +
 			Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
 	}
 
@@ -664,15 +691,25 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 	CMemFile packet(in_packet, size);
 
 	uint32_t results = packet.ReadUInt32();
+
+	// Collect all results first
+	std::vector<CSearchFile*> resultVector;
 	for (; results > 0; --results) {
-		AddToList(new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort), false);
+		resultVector.push_back(new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort));
+	}
+
+	// Process results through validator
+	if (!resultVector.empty()) {
+		m_packageValidator->ProcessResults(resultVector, this);
 	}
 }
 
 
 void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, uint32_t serverIP, uint16_t serverPort)
 {
-	AddToList(new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort), false);
+	// Create result and process through validator
+	CSearchFile* result = new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort);
+	m_packageValidator->ProcessResult(result, this);
 }
 
 
@@ -684,7 +721,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 		AddDebugLogLineN(logSearch,
 				CFormat(wxT("Dropped result with filesize %u: %s"))
 					% fileSize
-					% toadd->GetFileName());
+					% toadd->GetFileName().GetPrintable());
 
 		delete toadd;
 		return false;
@@ -697,7 +734,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 				CFormat( wxT("Dropped result type %s != %s, file %s") )
 					% GetFileTypeByName(toadd->GetFileName())
 					% m_resultType
-					% toadd->GetFileName());
+					% toadd->GetFileName().GetPrintable());
 
 			delete toadd;
 			return false;
@@ -712,7 +749,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 		CSearchFile* item = results.at(i);
 
 		if ((toadd->GetFileHash() == item->GetFileHash()) && (toadd->GetFileSize() == item->GetFileSize())) {
-			AddDebugLogLineN(logSearch, CFormat(wxT("Received duplicate results for '%s' : %s")) % item->GetFileName() % item->GetFileHash().Encode());
+			AddDebugLogLineN(logSearch, CFormat(wxT("Received duplicate results for '%s' : %s")) % item->GetFileName().GetPrintable() % item->GetFileHash().Encode());
 			// Add the child, possibly updating the parents filename.
 			item->AddChild(toadd);
 			Notify_Search_Update_Sources(item);
@@ -722,7 +759,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 
 	AddDebugLogLineN(logSearch,
 		CFormat(wxT("Added new result '%s' : %s"))
-			% toadd->GetFileName() % toadd->GetFileHash().Encode());
+			% toadd->GetFileName().GetPrintable() % toadd->GetFileHash().Encode());
 
 	// New unique result, simply add and display.
 	results.push_back(toadd);
@@ -1153,7 +1190,8 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt
 	CSearchFile *tempFile = new CSearchFile(temp, (eStrEncode == utf8strRaw), searchID, 0, 0, wxEmptyString, true);
 	tempFile->SetKadPublishInfo(kadPublishInfo);
 
-	AddToList(tempFile);
+	// Process result through validator
+	m_packageValidator->ProcessResult(tempFile, this);
 }
 
 void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)
@@ -1190,12 +1228,16 @@ void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResul
 	ResultMap::iterator it = m_results.find(searchId);
 	int resultCount = (it != m_results.end()) ? it->second.size() : 0;
 	m_resultCounts[searchId] = resultCount;
-	
+
+	// Log search completion
+	AddDebugLogLineC(logSearch, CFormat(wxT("Search complete: ID=%ld, Type=%d, HasResults=%d, ResultCount=%d"))
+		% searchId % (int)type % hasResults % resultCount);
+
 	// Check if we should retry
 	if (!hasResults && m_autoRetry->ShouldRetry(searchId)) {
 		// Increment retry count
 		m_autoRetry->IncrementRetryCount(searchId);
-		
+
 		// Schedule retry
 		search::ModernSearchType modernType;
 		switch (type) {
@@ -1210,18 +1252,21 @@ void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResul
 				modernType = search::ModernSearchType::GlobalSearch;
 				break;
 		}
-		
+
 		m_autoRetry->StartRetry(searchId, modernType);
-		
+
 		// Log retry
-		AddDebugLogLineC(logSearch, 
-			wxString::Format(wxT("Search %ld returned no results, scheduling retry (%d/%d)"),
-				searchId, m_autoRetry->GetRetryCount(searchId), 
-				m_autoRetry->GetMaxRetryCount()));
-		
+		AddDebugLogLineC(logSearch,
+			CFormat(wxT("Scheduling retry: SearchID=%ld, RetryCount=%d/%d"))
+				% searchId % m_autoRetry->GetRetryCount(searchId) % m_autoRetry->GetMaxRetryCount());
+
 		return; // Don't mark as finished yet
 	}
-	
+
+	// Log marking search as finished
+	AddDebugLogLineC(logSearch, CFormat(wxT("Marking search finished: ID=%ld, Type=%d"))
+		% searchId % (int)type);
+
 	// Mark search as finished
 	if (type == KadSearch) {
 		m_KadSearchFinished = true;
@@ -1234,32 +1279,36 @@ void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResul
 
 void CSearchList::OnSearchRetry(long searchId, SearchType type, int retryNum)
 {
+	// Log retry attempt
+	AddDebugLogLineC(logSearch, CFormat(wxT("OnSearchRetry: SearchID=%ld, Type=%d, RetryNum=%d"))
+		% searchId % (int)type % retryNum);
+
 	// Get original parameters
 	CSearchParams params = GetSearchParams(searchId);
 	if (params.searchString.IsEmpty()) {
-		AddDebugLogLineC(logSearch, 
-			wxString::Format(wxT("Retry %d for search %ld failed: no parameters"),
-				retryNum, searchId));
+		AddDebugLogLineC(logSearch,
+			CFormat(wxT("Retry %d for search %ld failed: no parameters"))
+				% retryNum % searchId);
 		return;
 	}
-	
+
 	// Start new search with same parameters
 	uint32 newSearchId = 0;
 	wxString error = StartNewSearch(&newSearchId, type, params);
-	
+
 	if (!error.IsEmpty()) {
-		AddDebugLogLineC(logSearch, 
+		AddDebugLogLineC(logSearch,
 			wxString::Format(wxT("Retry %d for search %ld failed: %s"),
 				retryNum, searchId, error.c_str()));
 		return;
 	}
-	
+
 	// Update search ID mapping
 	m_resultCounts[newSearchId] = m_resultCounts[searchId];
 	m_resultCounts.erase(searchId);
-	
+
 	// Log success
-	AddDebugLogLineC(logSearch, 
+	AddDebugLogLineC(logSearch,
 		wxString::Format(wxT("Retry %d started for search %ld (new ID: %u)"),
 			retryNum, searchId, newSearchId));
 }

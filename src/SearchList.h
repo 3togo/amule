@@ -34,6 +34,7 @@
 // Forward declarations
 namespace search {
 	class SearchAutoRetry;
+	class SearchPackageValidator;
 }
 
 
@@ -179,6 +180,9 @@ public:
 	/** Get the current search ID */
 	long GetCurrentSearchID() const { return m_currentSearch; }
 
+	/** Get the next unique search ID */
+	uint32 GetNextSearchID();
+
 	/** Get the search parameters for a given search ID */
 	CSearchParams GetSearchParams(long searchID);
 
@@ -187,6 +191,9 @@ public:
 
 	/** Request more results from a specific server */
 	wxString RequestMoreResultsFromServer(const CServer* server, long searchID);
+
+	// Allow SearchPackageValidator to access private AddToList method
+	friend class search::SearchPackageValidator;
 
 private:
 	/** Event-handler for global searches. */
@@ -255,6 +262,9 @@ private:
 
 	//! Auto-retry manager for searches
 	search::SearchAutoRetry*	m_autoRetry;
+
+	//! Package validator for search results
+	search::SearchPackageValidator*	m_packageValidator;
 
 	//! Track result counts per search ID
 	std::map<long, int>	m_resultCounts;

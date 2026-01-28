@@ -75,6 +75,7 @@ CSearch::CSearch()
 	m_totalRequestAnswers = 0;
 	m_searchID = (uint32_t)-1;
 	m_stopping = false;
+	m_destructing = false;
 	m_totalLoad = 0;
 	m_totalLoadResponses = 0;
 	m_lastResponse = m_created;
@@ -87,6 +88,12 @@ CSearch::CSearch()
 
 CSearch::~CSearch()
 {
+	// Prevent recursive deletion
+	if (m_destructing) {
+		return;
+	}
+	m_destructing = true;
+
 	// remember the closest node we found and tried to contact (if any) during this search
 	// for statistical caluclations, but only if its a certain type
 	switch (m_type) {
