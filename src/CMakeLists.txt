@@ -311,11 +311,12 @@ if (NEED_LIB_MULEAPPCOMMON)
 		Timer.cpp
 	)
 	
-	if(ENABLE_UPNP)
-		list(APPEND MULEAPPCOMMON_SOURCES ${UPNP_SOURCES})
-	endif()
+	# UPNP sources are now handled via generator expression in add_library()
 	
-	add_library (muleappcommon STATIC ${MULEAPPCOMMON_SOURCES})
+	add_library(muleappcommon STATIC
+		${MULEAPPCOMMON_SOURCES}
+		$<$<BOOL:${ENABLE_UPNP}>:${UPNP_SOURCES}>
+	)
 
 	add_dependencies (muleappcommon
 		generate_ECCodes.h
