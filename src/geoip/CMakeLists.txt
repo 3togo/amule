@@ -2,16 +2,8 @@
 # CMakeLists.txt for geoip module
 #
 
-# Find required packages using pkg-config if CMake config not found
-find_package(maxminddb QUIET)
-if (NOT maxminddb_FOUND)
-    # Fall back to pkg-config
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(MAXMINDDB REQUIRED libmaxminddb)
-    set(maxminddb_INCLUDE_DIRS ${MAXMINDDB_INCLUDE_DIRS})
-    set(maxminddb_LIBRARIES ${MAXMINDDB_LIBRARIES})
-    set(maxminddb_FOUND ${MAXMINDDB_FOUND})
-endif()
+# maxminddb is already found by cmake/ip2country.cmake which is included in the main CMakeLists.txt
+# The geoip module is only built when ENABLE_IP2COUNTRY is enabled, so maxminddb is guaranteed to be available
 
 # Create geoip library
 add_library(mulegeoip STATIC
