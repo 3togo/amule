@@ -2,7 +2,7 @@
 #include "common/PerformanceUtils.h"
 #include <iostream>
 
-// Traditional method - multiple string allocations
+// Traditional approach - multiple string allocations
 void traditional_logging() {
     modern_log::Log("Starting data processing");
     modern_log::Log("Processing file: data.txt");
@@ -10,7 +10,7 @@ void traditional_logging() {
     modern_log::Log("Processing completed");
 }
 
-// Optimized method - using StringBuffer to reduce allocations
+// Optimized approach - use StringBuffer to reduce allocations
 void optimized_logging() {
     using namespace modern_utils;
     
@@ -31,7 +31,7 @@ void optimized_logging() {
     modern_log::Log(std::string_view(buf4.str()));
 }
 
-// Batch processing optimization example
+// Example of batch processing optimization
 void batch_processing_example() {
     using namespace modern_utils;
     
@@ -40,7 +40,7 @@ void batch_processing_example() {
     };
     
     for (int i = 0; i < 4; ++i) {
-        // Use compile-time hash for fast routing
+        // Use compile-time hashing for fast routing
         switch (ct_hash(operations[i])) {
             case ct_hash("network_connect"):
                 modern_log::Log("Network connection established");
@@ -58,12 +58,12 @@ void batch_processing_example() {
     }
 }
 
-// Performance comparison demo
+// Performance comparison demonstration
 void performance_comparison() {
     std::cout << "=== Performance Comparison ===" << std::endl;
     
-    // Here you can add actual performance measurement code
-    // In real projects, PerformanceTimer would be used for microsecond-level measurements
+    // Actual performance measurement code can be added here
+    // In production, PerformanceTimer would be used for microsecond-level measurements
     
     using namespace modern_utils;
     PerformanceTimer timer("Logging operations");
