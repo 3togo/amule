@@ -199,7 +199,6 @@ if (BUILD_MONOLITHIC)
 	endif()
 
 	target_link_libraries (amule
-		# PRIVATE LibtorrentRasterbar::torrent-rasterbar
 		PRIVATE ec
 		PRIVATE muleappcommon
 		PRIVATE muleappcore
@@ -456,7 +455,6 @@ if (NEED_LIB_MULEAPPGUI)
 	if (ENABLE_IP2COUNTRY)
 		target_link_libraries (muleappgui
 			PUBLIC mulegeoip
-			PUBLIC maxminddb::maxminddb
 		)
 	endif()
 

@@ -12,12 +12,12 @@ if(DISABLE_REGISTER_WARNING AND (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang"))
     add_compile_options(-Wno-register)
 endif()
 
-# 现代C++配置
+# Modern C++ configuration
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# 协程支持检查
+# Coroutine support check
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     include(CheckCXXCompilerFlag)
     check_cxx_compiler_flag(-fcoroutines HAS_COROUTINES)
@@ -103,10 +103,6 @@ endif()
 if (ENABLE_BOOST)
     include (cmake/boost.cmake)
 endif()
-
-# Add BitTorrent protocol support
-# find_package(LibtorrentRasterbar 2.0 REQUIRED)
-# message(STATUS "Found libtorrent: ${LibtorrentRasterbar_VERSION}")
 
 if (ENABLE_IP2COUNTRY)
 	include (cmake/ip2country.cmake)
