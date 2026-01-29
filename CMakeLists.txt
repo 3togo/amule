@@ -105,8 +105,8 @@ if (ENABLE_BOOST)
 endif()
 
 # Add BitTorrent protocol support
-find_package(LibtorrentRasterbar 2.0 REQUIRED)
-message(STATUS "Found libtorrent: ${LibtorrentRasterbar_VERSION}")
+# find_package(LibtorrentRasterbar 2.0 REQUIRED)
+# message(STATUS "Found libtorrent: ${LibtorrentRasterbar_VERSION}")
 
 if (ENABLE_IP2COUNTRY)
 	include (cmake/ip2country.cmake)
