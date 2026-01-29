@@ -75,3 +75,4 @@ platforms/Windows/*/libs/libGeoIP/GeoIP_X.c
 Makefile.user
 *.vcxproj.user
 cpp20_build/
+.vscode/
