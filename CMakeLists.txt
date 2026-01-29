@@ -36,7 +36,6 @@ endif()
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mtune=pentium4")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=pentium4")
-set(ENABLE_UPNP OFF CACHE BOOL "" FORCE)
 set (MIN_BOOST_VERSION 1.47)
 set (MIN_CRYPTOPP_VERSION 5.6)
 set (MIN_GDLIB_VERSION 2.0.0)
@@ -121,7 +120,7 @@ if (NEED_GLIB_CHECK)
 endif()
 
 if (NEED_LIB_CRYPTO)
-    include (cmake/cryptopp.cmake)
+	include (cmake/cryptopp.cmake)
 endif()
 
 # Add BitTorrent source files
