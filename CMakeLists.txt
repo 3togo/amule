@@ -29,43 +29,42 @@ endif()
 #    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-Wno-register>")
 # endif()
 
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mtune=pentium4")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=pentium4")
-set (MIN_BOOST_VERSION 1.47)
-set (MIN_CRYPTOPP_VERSION 5.6)
-set (MIN_GDLIB_VERSION 2.0.0)
-set (MIN_WX_VERSION 3.1.0)
-set (PACKAGE "amule")
-set (PACKAGE_BUGREPORT "admin@amule.org")
-set (PACKAGE_NAME "aMule")
-set (PACKAGE_STRING "aMule SVN")
-set (PACKAGE_TARNAME "amule")
-set (PACKAGE_URL \"\")
-set (PACKAGE_VERSION "SVN")
-set (VERSION "GIT")
-set (DEFAULT_BUILD_TYPE "Release")
-set (RECONF_COMMAND ${CMAKE_COMMAND})
+# Package configuration
+set(MIN_BOOST_VERSION 1.47)
+set(MIN_CRYPTOPP_VERSION 5.6)
+set(MIN_GDLIB_VERSION 2.0.0)
+set(MIN_WX_VERSION 3.1.0)
+set(PACKAGE "amule")
+set(PACKAGE_BUGREPORT "admin@amule.org")
+set(PACKAGE_NAME "aMule")
+set(PACKAGE_STRING "aMule SVN")
+set(PACKAGE_TARNAME "amule")
+set(PACKAGE_URL "")
+set(PACKAGE_VERSION "SVN")
+set(VERSION "GIT")
+set(DEFAULT_BUILD_TYPE "Release")
+set(RECONF_COMMAND ${CMAKE_COMMAND})
 
-if (EXISTS "${CMAKE_SOURCE_DIR}/.git")
-	set (DEFAULT_BUILD_TYPE "Debug")
+if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+    set(DEFAULT_BUILD_TYPE "Debug")
 endif()
 
 # Set the possible values of build type for cmake-gui
-if (CMAKE_CONFIGURATION_TYPES)
-	set (CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE
-		STRING "Semicolon separated list of supported configuration types, only supports debug and release, anything else will be ignored" FORCE
-	)
+if(CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE
+        STRING "Semicolon separated list of supported configuration types, only supports debug and release, anything else will be ignored" FORCE
+    )
 
-	set_property (CACHE CMAKE_CONFIGURATION_TYPES PROPERTY STRINGS
-		"Debug" "Release"
-	)
+    set_property(CACHE CMAKE_CONFIGURATION_TYPES PROPERTY STRINGS
+        "Debug" "Release"
+    )
 endif()
 
-if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-	message (STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
-	set (CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE
-		STRING "Choose the type of build." FORCE
-	)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
+    set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE
+        STRING "Choose the type of build." FORCE
+    )
 endif()
 
 include (cmake/CmDaB.cmake)
@@ -117,14 +116,6 @@ endif()
 if (NEED_LIB_CRYPTO)
 	include (cmake/cryptopp.cmake)
 endif()
-
-# Add BitTorrent source files
-set(BITTORRENT_SOURCES
-    src/protocol/bt/BitTorrentSession.cpp
-    src/protocol/MultiProtocolSocket.cpp
-    src/protocol/ProtocolCoordinator.cpp
-    src/protocol/ProtocolConversion.cpp
-)
 
 if (wx_NEEDED)
 	include (cmake/wx.cmake)
