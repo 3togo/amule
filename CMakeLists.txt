@@ -1,7 +1,7 @@
-cmake_minimum_required (VERSION 3.20)
-project (amule)
+cmake_minimum_required(VERSION 3.20)
+project(amule)
 
-# Set C++ standard for modern C++ support
+# Modern C++ configuration
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -11,11 +11,6 @@ option(DISABLE_REGISTER_WARNING "Disable warnings about deprecated 'register' ke
 if(DISABLE_REGISTER_WARNING AND (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang"))
     add_compile_options(-Wno-register)
 endif()
-
-# Modern C++ configuration
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Coroutine support check
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
