@@ -178,8 +178,7 @@ wxString CamuleDlg::GetKadStatusMessage(EKadState& state) const {
 #include "IP2Country.h"				// Needed for IP2Country
 #endif
 
-#ifdef ENABLE_IP2COUNTRY			// That's no bug. MSVC has ENABLE_IP2COUNTRY always on,
-						// but dummy GeoIP.h turns ENABLE_IP2COUNTRY off again.
+#ifdef ENABLE_IP2COUNTRY
 void CamuleDlg::IP2CountryDownloadFinished(uint32 result)
 {
 	m_IP2Country->DownloadFinished(result);
