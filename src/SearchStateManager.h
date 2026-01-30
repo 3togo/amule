@@ -32,6 +32,10 @@
 #include <cstdint>
 
 // Forward declarations
+class CSearchList;
+
+// Include SearchList.h to access CSearchParams
+#include "SearchList.h"
 class CSearchListCtrl;
 class CSearchDlg;
 
@@ -118,6 +122,16 @@ public:
 	void InitializeSearch(uint32_t searchId, const wxString& searchType, const wxString& keyword);
 
 	/**
+	 * Initialize a new search with parameters
+	 *
+	 * @param searchId The search ID
+	 * @param searchType The search type (e.g., "Local", "Global", "Kad")
+	 * @param keyword The search keyword
+	 * @param params The search parameters to store
+	 */
+	void InitializeSearch(uint32_t searchId, const wxString& searchType, const wxString& keyword, const CSearchList::CSearchParams& params);
+
+	/**
 	 * Update the result count for a search
 	 *
 	 * @param searchId The search ID
@@ -197,6 +211,31 @@ public:
 	 */
 	void RemoveSearch(uint32_t searchId);
 
+	/**
+	 * Update the state of a search
+	 *
+	 * @param searchId The search ID
+	 * @param newState The new state
+	 */
+	void UpdateState(uint32_t searchId, SearchState newState);
+
+	/**
+	 * Store search parameters for retry
+	 *
+	 * @param searchId The search ID
+	 * @param params The search parameters to store
+	 */
+	void StoreSearchParams(uint32_t searchId, const CSearchList::CSearchParams& params);
+
+	/**
+	 * Get stored search parameters for retry
+	 *
+	 * @param searchId The search ID
+	 * @param params Output parameter for search parameters
+	 * @return true if parameters were found, false otherwise
+	 */
+	bool GetSearchParams(uint32_t searchId, CSearchList::CSearchParams& params) const;
+
 private:
 	/**
 	 * Search data structure
@@ -209,6 +248,15 @@ private:
 		int retryCount;
 		size_t shownCount;
 		size_t hiddenCount;
+		
+		// Store search parameters for retry
+		wxString searchString;
+		wxString strKeyword;
+		wxString typeText;
+		wxString extension;
+		uint64_t minSize;
+		uint64_t maxSize;
+		uint32_t availability;
 
 		SearchData()
 			: searchId(0)
@@ -216,16 +264,11 @@ private:
 			, retryCount(0)
 			, shownCount(0)
 			, hiddenCount(0)
+			, minSize(0)
+			, maxSize(0)
+			, availability(0)
 		{}
 	};
-
-	/**
-	 * Update the state of a search
-	 *
-	 * @param searchId The search ID
-	 * @param newState The new state
-	 */
-	void UpdateState(uint32_t searchId, SearchState newState);
 
 	/**
 	 * Notify observers of a state change

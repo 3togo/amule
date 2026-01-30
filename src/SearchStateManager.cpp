@@ -56,6 +56,11 @@ void SearchStateManager::UnregisterObserver(ISearchStateObserver* observer)
 
 void SearchStateManager::InitializeSearch(uint32_t searchId, const wxString& searchType, const wxString& keyword)
 {
+	InitializeSearch(searchId, searchType, keyword, CSearchList::CSearchParams());
+}
+
+void SearchStateManager::InitializeSearch(uint32_t searchId, const wxString& searchType, const wxString& keyword, const CSearchList::CSearchParams& params)
+{
 	SearchData data;
 	data.searchId = searchId;
 	data.searchType = searchType;
@@ -64,6 +69,16 @@ void SearchStateManager::InitializeSearch(uint32_t searchId, const wxString& sea
 	data.retryCount = 0;
 	data.shownCount = 0;
 	data.hiddenCount = 0;
+	
+	// Store search parameters for retry
+	data.searchString = params.searchString;
+	data.strKeyword = params.strKeyword;
+	data.typeText = params.typeText;
+	data.extension = params.extension;
+	data.minSize = params.minSize;
+	data.maxSize = params.maxSize;
+	data.availability = params.availability;
+	
 	m_searches[searchId] = data;
 
 	// Notify observers of the new search
@@ -109,7 +124,15 @@ void SearchStateManager::EndSearch(uint32_t searchId)
 	if (data.shownCount > 0 || data.hiddenCount > 0) {
 		UpdateState(searchId, STATE_HAS_RESULTS);
 	} else {
-		UpdateState(searchId, STATE_NO_RESULTS);
+		// No results - check if we should retry
+		if (data.retryCount < MAX_RETRIES) {
+			// Don't set to NO_RESULTS yet, let retry mechanism handle it
+			// The retry will be initiated by the caller
+			return;
+		} else {
+			// Max retries reached, set to NO_RESULTS
+			UpdateState(searchId, STATE_NO_RESULTS);
+		}
 	}
 }
 
@@ -146,6 +169,43 @@ SearchState SearchStateManager::GetSearchState(uint32_t searchId) const
 		return STATE_IDLE;
 	}
 	return it->second.state;
+}
+
+void SearchStateManager::StoreSearchParams(uint32_t searchId, const CSearchList::CSearchParams& params)
+{
+	SearchMap::iterator it = m_searches.find(searchId);
+	if (it == m_searches.end()) {
+		return;
+	}
+
+	SearchData& data = it->second;
+	// Store all search parameters for retry
+	data.searchString = params.searchString;
+	data.strKeyword = params.strKeyword;
+	data.typeText = params.typeText;
+	data.extension = params.extension;
+	data.minSize = params.minSize;
+	data.maxSize = params.maxSize;
+	data.availability = params.availability;
+}
+
+bool SearchStateManager::GetSearchParams(uint32_t searchId, CSearchList::CSearchParams& params) const
+{
+	SearchMap::const_iterator it = m_searches.find(searchId);
+	if (it == m_searches.end()) {
+		return false;
+	}
+
+	const SearchData& data = it->second;
+	// Retrieve all stored search parameters
+	params.searchString = data.searchString;
+	params.strKeyword = data.strKeyword;
+	params.typeText = data.typeText;
+	params.extension = data.extension;
+	params.minSize = data.minSize;
+	params.maxSize = data.maxSize;
+	params.availability = data.availability;
+	return true;
 }
 
 int SearchStateManager::GetRetryCount(uint32_t searchId) const

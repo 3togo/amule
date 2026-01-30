@@ -542,10 +542,19 @@ void CSearchList::LocalSearchEnd()
 		theApp->serverlist->RemoveObserver(&m_serverQueue);
 		m_searchTimer.Start(750);
 	} else {
-		// Check for auto-retry before marking as finished
+		// Don't trigger retry here - let the UI (SearchDlg/SearchStateManager) handle it
+		// The retry mechanism is now managed by SearchStateManager to ensure proper state transitions
 		ResultMap::iterator it = m_results.find(m_currentSearch);
 		bool hasResults = (it != m_results.end()) && !it->second.empty();
-		OnSearchComplete(m_currentSearch, m_searchType, hasResults);
+		
+		// Only mark the search as finished if we have results
+		if (hasResults) {
+			OnSearchComplete(m_currentSearch, m_searchType, hasResults);
+		} else {
+			// No results - let the UI handle retry through SearchStateManager
+			// Just mark the search as finished internally
+			m_searchInProgress = false;
+		}
 	}
 }
 
@@ -638,14 +647,24 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
 	}
 	// No more servers left to ask.
 
-	// Check for auto-retry before stopping
+	// Don't trigger retry here - let the UI (SearchDlg/SearchStateManager) handle it
+	// The retry mechanism is now managed by SearchStateManager to ensure proper state transitions
 	ResultMap::iterator it = m_results.find(m_currentSearch);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
-	OnSearchComplete(m_currentSearch, m_searchType, hasResults);
 
-	// Only stop if not retrying
-	if (m_searchInProgress) {
-		StopSearch(true);
+	// Only mark the search as finished if we have results
+	if (hasResults) {
+		OnSearchComplete(m_currentSearch, m_searchType, hasResults);
+		// Only stop if not retrying
+		if (m_searchInProgress) {
+			StopSearch(true);
+		}
+	} else {
+		// No results - let the UI handle retry through SearchStateManager
+		// Notify the UI that global search has ended
+		Notify_GlobalSearchEnd();
+		// Just mark the search as finished internally
+		m_searchInProgress = false;
 	}
 }
 
@@ -1250,8 +1269,16 @@ void CSearchList::SetKadSearchFinished()
 	ResultMap::iterator it = m_results.find(m_currentSearch);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
 
-	// Use the new auto-retry mechanism
-	OnSearchComplete(m_currentSearch, KadSearch, hasResults);
+	// Don't trigger retry here - let the UI (SearchDlg/SearchStateManager) handle it
+	// The retry mechanism is now managed by SearchStateManager to ensure proper state transitions
+	// Only mark the search as finished if we have results
+	if (hasResults) {
+		OnSearchComplete(m_currentSearch, KadSearch, hasResults);
+	} else {
+		// No results - let the UI handle retry through SearchStateManager
+		// Just mark the Kad search as finished internally
+		m_KadSearchFinished = true;
+	}
 }
 
 

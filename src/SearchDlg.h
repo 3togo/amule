@@ -105,10 +105,14 @@ public:
 
 
 	/**
+	 * Call this function to signify that the global search is over.
+	 */
+	void		GlobalSearchEnd();
+
+	/**
 	 * Call this function to signify that the local search is over.
 	 */
 	void		LocalSearchEnd();
-
 
 	/**
 	 * Call this function to signify that the kad search is over.

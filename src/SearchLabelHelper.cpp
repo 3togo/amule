@@ -224,8 +224,10 @@ bool RetrySearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 	UpdateSearchState(page, parentDlg, retryState);
 
 	// Get the search parameters for this search
-	CSearchList::CSearchParams params = theApp->searchlist->GetSearchParams(searchId);
-	if (params.searchString.IsEmpty()) {
+	// clang-format off
+	CSearchList::CSearchParams params;
+	// clang-format on
+	if (!parentDlg->GetStateManager().GetSearchParams(searchId, params)) {
 		// No search parameters available - cannot retry
 		UpdateSearchState(page, parentDlg, wxT("Retry Failed"));
 		return false;
@@ -334,8 +336,10 @@ bool RetryKadSearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 	UpdateSearchState(page, parentDlg, retryState);
 
 	// Get the search parameters for this search
-	CSearchList::CSearchParams params = theApp->searchlist->GetSearchParams(searchId);
-	if (params.searchString.IsEmpty()) {
+	// clang-format off
+	CSearchList::CSearchParams params;
+	// clang-format on
+	if (!parentDlg->GetStateManager().GetSearchParams(searchId, params)) {
 		// No search parameters available - cannot retry
 		UpdateSearchState(page, parentDlg, wxT("Retry Failed"));
 		return false;

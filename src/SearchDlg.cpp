@@ -590,6 +590,40 @@ void CSearchDlg::ResetControls() {
 	FindWindow(IDC_SEARCHMORE)->Disable();
 }
 
+void CSearchDlg::GlobalSearchEnd() {
+	// Update all search tabs to show proper state when global search ends
+	int nPages = m_notebook->GetPageCount();
+	for (int i = 0; i < nPages; ++i) {
+		CSearchListCtrl* page = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
+		if (page) {
+			long searchId = page->GetSearchId();
+			// Check if this is a Global search tab
+			wxString searchType = m_stateManager.GetSearchType(searchId);
+			if (searchType == wxT("Global")) {
+				// Update result count in state manager
+				size_t shown = page->GetItemCount();
+				size_t hidden = page->GetHiddenItemCount();
+				m_stateManager.UpdateResultCount(searchId, shown, hidden);
+
+				// Check if we need to retry (no results and retry count not exceeded)
+				if (shown == 0 && hidden == 0) {
+					// Request retry through state manager
+					if (m_stateManager.RequestRetry(searchId)) {
+						// Trigger the actual retry
+						OnRetryRequested(searchId);
+						// Retry initiated, don't mark as finished yet
+						continue;
+					}
+				}
+
+				// End the search in the state manager (only if not retrying)
+				m_stateManager.EndSearch(searchId);
+			}
+		}
+	}
+	ResetControls();
+}
+
 void CSearchDlg::LocalSearchEnd() {
 	// Update all search tabs to show proper state when local search ends
 	int nPages = m_notebook->GetPageCount();
@@ -606,7 +640,18 @@ void CSearchDlg::LocalSearchEnd() {
 				size_t hidden = page->GetHiddenItemCount();
 				m_stateManager.UpdateResultCount(searchId, shown, hidden);
 
-				// End the search in the state manager
+				// Check if we need to retry (no results and retry count not exceeded)
+				if (shown == 0 && hidden == 0) {
+					// Request retry through state manager
+					if (m_stateManager.RequestRetry(searchId)) {
+						// Trigger the actual retry
+						OnRetryRequested(searchId);
+						// Retry initiated, don't mark as finished yet
+						continue;
+					}
+				}
+
+				// End the search in the state manager (only if not retrying)
 				m_stateManager.EndSearch(searchId);
 			}
 		}
@@ -629,7 +674,18 @@ void CSearchDlg::KadSearchEnd(uint32 id) {
 				size_t hidden = page->GetHiddenItemCount();
 				m_stateManager.UpdateResultCount(searchId, shown, hidden);
 
-				// End the search in the state manager
+				// Check if we need to retry (no results and retry count not exceeded)
+				if (shown == 0 && hidden == 0) {
+					// Request retry through state manager
+					if (m_stateManager.RequestRetry(searchId)) {
+						// Trigger the actual retry
+						OnRetryRequested(searchId);
+						// Retry initiated, don't mark as finished yet
+						continue;
+					}
+				}
+
+				// End the search in the state manager (only if not retrying)
 				m_stateManager.EndSearch(searchId);
 			}
 		}
@@ -985,7 +1041,8 @@ void CSearchDlg::StartNewSearch() {
 			searchTypeStr = wxT("Local");
 			break;
 	}
-	m_stateManager.InitializeSearch(real_id, searchTypeStr, params.searchString);
+	// Store search parameters for retry
+	m_stateManager.InitializeSearch(real_id, searchTypeStr, params.searchString, params);
 
 	// Search started successfully, now handle tab creation/reuse
 	if (existingTabIndex != -1) {
@@ -1112,6 +1169,10 @@ bool CSearchDlg::OnRetryRequested(uint32_t searchId)
 
 	// Get the search type from SearchStateManager
 	wxString searchType = m_stateManager.GetSearchType(searchId);
+
+	// Reset state to Searching before triggering retry
+	// This ensures the UI shows "Searching" instead of jumping to "No Results"
+	m_stateManager.UpdateState(searchId, STATE_SEARCHING);
 
 	// Retry based on search type
 	if (searchType == wxT("Kad")) {

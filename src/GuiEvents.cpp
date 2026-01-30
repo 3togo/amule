@@ -507,6 +507,15 @@ namespace MuleNotify
 #endif
 	}
 
+	void GlobalSearchEnd()
+	{
+#ifndef AMULE_DAEMON
+		if (theApp->amuledlg->m_searchwnd) {
+			theApp->amuledlg->m_searchwnd->GlobalSearchEnd();
+		}
+#endif
+	}
+
 	void KadSearchEnd(uint32 NOT_ON_DAEMON(id))
 	{
 #ifndef AMULE_DAEMON
