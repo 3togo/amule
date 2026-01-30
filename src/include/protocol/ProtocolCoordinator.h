@@ -50,8 +50,10 @@ struct NetworkConditions {
     bool supports_nat_traversal;    // Supports NAT traversal techniques
     bool high_bandwidth_mode;       // High bandwidth mode available
 };
+
 enum class ProtocolType {
     ED2K,
+    KADEMLIA,
     HYBRID_AUTO
 };
 
@@ -62,11 +64,11 @@ struct SourceEndpoint {
     double reliability_score;
     double bandwidth_estimate;
     uint32_t latency_ms;
-    
+
     // Cross-protocol metadata
-    CMD4Hash ed2k_hash;         // For ED2K protocol
-    bool supports_ed2k;         // Supports ED2K protocol transfers
-    
+    CMD4Hash ed2k_hash;         // For ED2K
+    bool supports_hybrid;       // Supports cross-protocol transfers
+
     bool operator==(const SourceEndpoint& other) const;
     bool is_duplicate(const SourceEndpoint& other) const;
 };
@@ -74,74 +76,63 @@ struct SourceEndpoint {
 class ProtocolCoordinator {
 public:
     static ProtocolCoordinator& instance();
-    
+
     // Source discovery and management
     std::vector<SourceEndpoint> discover_sources(
-        const CPartFile* file, 
-        ProtocolType preferred = ProtocolType::HYBRID_AUTO,
-        uint32_t max_sources = 50);
-    
-    std::vector<SourceEndpoint> find_ed2k_sources(
-        const CPartFile* ed2k_file);
-    
+	const CPartFile* file,
+	ProtocolType preferred = ProtocolType::HYBRID_AUTO,
+	uint32_t max_sources = 50);
+
+
     bool add_source(const SourceEndpoint& source, CPartFile* file);
     bool remove_duplicate_sources(CPartFile* file);
-    
+
     // Protocol selection and optimization
     ProtocolType select_optimal_protocol(
-        const CPartFile* file,
-        const NetworkConditions& conditions) const;
-    
+	const CPartFile* file,
+	const NetworkConditions& conditions) const;
+
     bool should_switch_protocol(
-        const CPartFile* file,
-        ProtocolType current,
-        ProtocolType proposed) const;
-    
+	const CPartFile* file,
+	ProtocolType new_protocol,
+	const NetworkConditions& conditions) const;
+
     // Bandwidth management
-    struct BandwidthAllocation {
-        uint32_t ed2k_download_kbps;
-        uint32_t ed2k_upload_kbps;
-        uint32_t kad_download_kbps;
-        uint32_t kad_upload_kbps;
-    };
-    
-    BandwidthAllocation calculate_bandwidth_allocation() const;
-    void apply_bandwidth_allocation(const BandwidthAllocation& allocation);
-    
-    // Metadata handling
-    bool validate_ed2k_metadata(const CPartFile* ed2k_file);
-    
+
     // Statistics and monitoring
     struct CoordinationStats {
-        uint32_t total_sources_discovered;
-        uint32_t cross_protocol_sources;
-        uint32_t protocol_switches;
-        uint32_t duplicate_sources_removed;
-        double avg_discovery_time_ms;
-        double cross_protocol_success_rate;
+	uint32_t total_sources_discovered;
+	uint32_t cross_protocol_sources;
+	uint32_t protocol_switches;
+	uint32_t duplicate_sources_removed;
+	double avg_discovery_time_ms;
+	double cross_protocol_success_rate;
     };
-    
+
     CoordinationStats get_stats() const;
-    void reset_stats();
-    
+
     // Configuration
-    void set_max_ed2k_sources(uint32_t max);
-    uint32_t get_max_ed2k_sources() const;
-    
+    void enable_hybrid_mode(bool enable);
+    bool is_hybrid_mode_enabled() const;
+
+    void set_max_cross_protocol_sources(uint32_t max);
+    uint32_t get_max_cross_protocol_sources() const;
+
 private:
     ProtocolCoordinator();
     ~ProtocolCoordinator();
-    
+
     class Impl;
     std::unique_ptr<Impl> pimpl_;
-    
+
     // Disable copying
     ProtocolCoordinator(const ProtocolCoordinator&) = delete;
     ProtocolCoordinator& operator=(const ProtocolCoordinator&) = delete;
 };
 
 // Helper functions
-bool is_ed2k_transfer_supported(const SourceEndpoint& source);
-double calculate_protocol_efficiency(ProtocolType protocol, const NetworkConditions& conditions);
+double calculate_client_reliability(const CUpDownClient* client);
+bool add_ed2k_source(const SourceEndpoint& source, CPartFile* file);
+bool add_kad_source(const SourceEndpoint& source, CPartFile* file);
 
 } // namespace ProtocolIntegration

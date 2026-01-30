@@ -75,6 +75,7 @@ CSearch::CSearch()
 	m_totalRequestAnswers = 0;
 	m_searchID = (uint32_t)-1;
 	m_stopping = false;
+	m_destructing = false;
 	m_totalLoad = 0;
 	m_totalLoadResponses = 0;
 	m_lastResponse = m_created;
@@ -87,6 +88,12 @@ CSearch::CSearch()
 
 CSearch::~CSearch()
 {
+	// Prevent recursive deletion
+	if (m_destructing) {
+		return;
+	}
+	m_destructing = true;
+
 	// remember the closest node we found and tried to contact (if any) during this search
 	// for statistical caluclations, but only if its a certain type
 	switch (m_type) {
@@ -121,15 +128,25 @@ CSearch::~CSearch()
 
 	// Decrease the use count for any contacts that are in our contact list.
 	for (ContactMap::iterator it = m_inUse.begin(); it != m_inUse.end(); ++it) {
-		it->second->DecUse();
+		if (it->second) {
+			it->second->DecUse();
+		}
 	}
 
 	// Delete any temp contacts...
 	for (ContactList::const_iterator it = m_delete.begin(); it != m_delete.end(); ++it) {
-		if (!(*it)->InUse()) {
+		if (*it && !(*it)->InUse()) {
 			delete *it;
 		}
 	}
+
+	// Clear all contact maps to prevent accessing invalid pointers
+	m_possible.clear();
+	m_tried.clear();
+	m_responded.clear();
+	m_best.clear();
+	m_delete.clear();
+	m_inUse.clear();
 
 	// Check if this search was containing an overload node and adjust time of next time we use that node.
 	if (CKademlia::IsRunning() && GetNodeLoad() > 20) {
@@ -1079,8 +1096,7 @@ void CSearch::ProcessResultKeyword(const CUInt128& answer, TagPtrList *info)
 	}
 
 	m_answers++;
-	// Pass nullptr instead of CUInt128* - proper implementation needed
-	theApp->searchlist->KademliaSearchKeyword(m_searchID, nullptr, name, size, type, publishInfo, taglist);
+	theApp->searchlist->KademliaSearchKeyword(m_searchID, &answer, name, size, type, publishInfo, taglist);
 
 	// Free tags memory
 	deleteTagPtrListEntries(&taglist);

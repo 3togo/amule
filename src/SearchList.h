@@ -1,75 +1,284 @@
 //
-// SearchList.h - Search results management class
+// This file is part of the aMule Project.
+//
+// Copyright (c) 2003-2011 aMule Team ( admin@amule.org / http://www.amule.org )
+// Copyright (c) 2002-2011 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//
+// Any parts of this program derived from the xMule, lMule or eMule project,
+// or contributed by third-party developers are copyrighted by their
+// respective authors.
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
 #ifndef SEARCHLIST_H
 #define SEARCHLIST_H
 
-#include "MD4Hash.h"
-#include "SearchFile.h"
-#include <vector>
-#include <map>
+#include "Timer.h"		// Needed for CTimer
+#include "ObservableQueue.h"	// Needed for CQueueObserver
+#include "SearchFile.h"		// Needed for CSearchFile
+#include <common/SmartPtr.h>	// Needed for CSmartPtr
+#include <memory>		// Needed for std::unique_ptr
 
 // Forward declarations
-class CUpDownClient;
-class CServer;
+namespace search {
+	class SearchAutoRetry;
+	class SearchPackageValidator;
+}
 
-// Search types enumeration
+
+class CMemFile;
+class CMD4Hash;
+class CPacket;
+class CServer;
+class CSearchFile;
+
+namespace Kademlia {
+	class CUInt128;
+}
+
+
 enum SearchType {
-    LocalSearch = 0,
-    GlobalSearch = 1,
-    KadSearch = 2
+	LocalSearch = 0,
+	GlobalSearch,
+	KadSearch
 };
 
-class CSearchList
+
+typedef std::vector<CSearchFile*> CSearchResultList;
+
+
+class CSearchList : public wxEvtHandler
 {
 public:
-    // Nested parameter class
-    class CSearchParams
-    {
-    public:
-        wxString searchString;
-        wxString fileType;
-        uint64 minSize;
-        uint64 maxSize;
-        uint32 availability;
-        uint32 extension;
-        bool completeSourcesOnly;
-        uint32 minBitrate;
-        uint32 maxBitrate;
-        uint32 duration;
-        uint32 codec;
-    };
+	//! Structure used to pass search-parameters.
+	struct CSearchParams
+	{
+		/** Prevents accidental use of uninitialized variables. */
+		CSearchParams() { minSize = maxSize = availability = 0; }
 
-    // Search results type
-    typedef std::vector<CSearchFile*> CSearchResultList;
+		//! The actual string to search for.
+		wxString searchString;
+		//! The keyword selected for Kad search
+		wxString strKeyword;
+		//! The type of files to search for (may be empty), one of ED2KFTSTR_*
+		wxString typeText;
+		//! The filename extension. May be empty.
+		wxString extension;
+		//! The smallest filesize in bytes to accept, zero for any.
+		uint64_t minSize;
+		//! The largest filesize in bytes to accept, zero for any.
+		uint64_t maxSize;
+		//! The minimum available (source-count), zero for any.
+		uint32_t availability;
+	};
 
-    // Minimal implementation to satisfy dependencies
-    void UpdateSearchFileByHash(const CMD4Hash& hash) {}
-    CSearchFile* GetSearchFileByHash(const CMD4Hash& hash) { return nullptr; }
-    
-    // Methods needed for compilation
-    const CSearchResultList& GetSearchResults(uint32 searchID) const;
-    void AddFileToDownloadByHash(const CMD4Hash& hash, uint8 category);
-    void StopSearch(bool globalOnly = false);
-    void RemoveResults(uint32 searchID);
-    wxString StartNewSearch(uint32* searchID, SearchType searchType, const CSearchParams& params);
-    uint32 GetSearchProgress() const;
-    void ProcessSharedFileList(const uint8_t* data, uint32 size, CUpDownClient* client, CServer* server, const wxString& directory);
-    void SetKadSearchFinished();
-    void ProcessSearchAnswer(const uint8_t* packet, uint32 size, CServer* server, uint32 ip, uint16 port);
-    void ProcessUDPSearchAnswer(const uint8_t* packet, bool isExtended, uint32 ip, uint16 port);
-    void LocalSearchEnd();
-    void KademliaSearchKeyword(uint32 searchID, CSearchFile* answer, const wxString& name, uint64 size, const wxString& type, uint32 publishInfo, const TagPtrList& taglist);
-    
-    // Additional methods needed from search results
-    CSearchFile* GetByID(uint32 id) { return nullptr; }
-    
-    // Member variables needed for compilation
-    int m_curr_search;
-    
+	/** Constructor. */
+	CSearchList();
+
+	/** Frees any remaining search-results. */
+	~CSearchList();
+
+	/**
+	 * Starts a new search.
+	 *
+	 * @param searchID The ID of the search, which may be modified.
+	 * @param type The type of search, see SearchType.
+	 * @param params The search parameters, see CSearchParams.
+	 * @return An empty string on success, otherwise an error-message.
+	 */
+	wxString StartNewSearch(uint32* searchID, SearchType type, CSearchParams& params);
+
+	/** Stops the current search (global or Kad), if any is in progress. */
+	void StopSearch(bool globalOnly = false);
+
+	/** Returns the completion percentage of the current search. */
+	uint32 GetSearchProgress() const;
+
+	/** This function is called once the local (ed2k) search has ended. */
+	void	LocalSearchEnd();
+
+
+	/**
+	 * Returns the list of results for the specified search.
+	 *
+	 * If the search is not valid, an empty list is returned.
+	 */
+	const	CSearchResultList& GetSearchResults(long searchID) const;
+
+	/** Removes all results for the specified search. */
+	void	RemoveResults(long searchID);
+
+
+	/** Finds the search-result (by hash) and downloads it in the given category. */
+	void	AddFileToDownloadByHash(const CMD4Hash& hash, uint8 category = 0);
+
+
+	/**
+	 * Processes a list of shared files from a client.
+	 *
+	 * @param packet The raw packet received from the client.
+	 * @param size the length of the packet.
+	 * @param sender The sender of the packet.
+	 * @param moreResultsAvailable Set to a value specifying if more results are available.
+	 * @param directory The directory containing the shared files.
+	 */
+	void	ProcessSharedFileList(const uint8_t* packet, uint32 size, CUpDownClient* sender, bool* moreResultsAvailable, const wxString& directory);
+
+	/**
+	 * Processes a search-result sent via TCP from the local server. All results are added.
+	 *
+	 * @param packet The packet containing one or more search-results.
+	 * @param size the length of the packet.
+	 * @param optUTF8 Specifies if the server supports UTF8.
+	 * @param serverIP The IP of the server sending the results.
+	 * @param serverPort The Port of the server sending the results.
+	 */
+	void	ProcessSearchAnswer(const uint8_t* packet, uint32_t size, bool optUTF8, uint32_t serverIP, uint16_t serverPort);
+
+	/**
+	 * Processes a search-result sent via UDP. Only one result is read from the packet.
+	 *
+	 * @param packet The packet containing one or more search-results.
+	 * @param optUTF8 Specifies if the server supports UTF8.
+	 * @param serverIP The IP of the server sending the results.
+	 * @param serverPort The Port of the server sending the results.
+	 */
+	void	ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, uint32 serverIP, uint16 serverPort);
+
+
+	/**
+	 * Adds a result in the form of a kad search-keyword to the specified result-list.
+	 *
+	 * @param searchID The search to which this result belongs.
+	 * @param fileID The hash of the result-file.
+	 * @param name The filename of the result.
+	 * @param size The filesize of the result.
+	 * @param type The filetype of the result (TODO: Not used?)
+	 * @param kadPublishInfo The kademlia publish information of the result.
+	 * @param taglist List of additional tags associated with the search-result.
+	 */
+	void	KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt128 *fileID, const wxString& name, uint64_t size, const wxString& type, uint32_t kadPublishInfo, const TagPtrList& taglist);
+
+	/** Update a certain search result in all lists */
+	void UpdateSearchFileByHash(const CMD4Hash& hash);
+
+	/** Mark current KAD search as finished */
+	void SetKadSearchFinished();
+
+	/** Get the current search ID */
+	long GetCurrentSearchID() const { return m_currentSearch; }
+
+	/** Get the next unique search ID */
+	uint32 GetNextSearchID();
+
+	/** Get the search parameters for a given search ID */
+	CSearchParams GetSearchParams(long searchID);
+
+	/** Request more results for a given search ID */
+	wxString RequestMoreResults(long searchID);
+
+	/** Request more results from a specific server */
+	wxString RequestMoreResultsFromServer(const CServer* server, long searchID);
+
+	// Allow SearchPackageValidator to access private AddToList method
+	friend class search::SearchPackageValidator;
+
 private:
-    std::map<uint32, CSearchResultList> m_results;
+	/** Event-handler for global searches. */
+	void OnGlobalSearchTimer(CTimerEvent& evt);
+
+	/**
+	 * Adds the specified file to the current search's results.
+	 *
+	 * @param toadd The result to add.
+	 * @param clientResponse Is the result sent by a client (shared-files list).
+	 * @return True if the results were added, false otherwise.
+	 *
+	 * Note that this function takes ownership of the CSearchFile object,
+	 * regardless of whenever or not it was actually added to the results list.
+	 */
+	bool AddToList(CSearchFile* toadd, bool clientResponse = false);
+
+	//! This smart pointer is used to safely prevent leaks.
+	typedef CSmartPtr<CMemFile> CMemFilePtr;
+
+	/** Create a basic search-packet for the given search-type. */
+	CMemFilePtr CreateSearchData(CSearchParams& params, SearchType type, bool supports64bit, bool& packetUsing64bit);
+
+
+	//! Timer used for global search intervals.
+	CTimer	m_searchTimer;
+
+	//! The current search-type, regarding the last/current search.
+	SearchType	m_searchType;
+
+	//! Specifies if a search is being performed.
+	bool		m_searchInProgress;
+
+	//! The ID of the current search.
+	long		m_currentSearch;
+
+	//! The current packet used for searches.
+	std::unique_ptr<CPacket>	m_searchPacket;
+
+	//! Does the current search packet contain 64bit values?
+	bool		m_64bitSearchPacket;
+
+	//! If the current search is a KAD search this signals if it is finished.
+	bool		m_KadSearchFinished;
+
+	//! Retry count for Kad searches (to retry if no results)
+	int		m_KadSearchRetryCount;
+
+	//! Queue of servers to ask when doing global searches.
+	//! TODO: Replace with 'cookie' system.
+	CQueueObserver<CServer*> m_serverQueue;
+
+	//! Shorthand for the map of results (key is a SearchID).
+	typedef std::map<long, CSearchResultList> ResultMap;
+
+	//! Map of all search-results added.
+	ResultMap	m_results;
+
+	//! Contains the results type desired in the current search.
+	//! If not empty, results of different types are filtered.
+	wxString	m_resultType;
+
+	//! Map of search parameters for each search ID.
+	typedef std::map<long, CSearchParams> ParamMap;
+	ParamMap	m_searchParams;
+
+	//! Auto-retry manager for searches
+	std::unique_ptr<search::SearchAutoRetry>	m_autoRetry;
+
+	//! Package validator for search results
+	std::unique_ptr<search::SearchPackageValidator>	m_packageValidator;
+
+	//! Track result counts per search ID
+	std::map<long, int>	m_resultCounts;
+
+	//! Handle search completion with auto-retry
+	void OnSearchComplete(long searchId, SearchType type, bool hasResults);
+
+	//! Handle retry callback from auto-retry manager
+	void OnSearchRetry(long searchId, SearchType type, int retryNum);
+
+	DECLARE_EVENT_TABLE()
 };
 
+
 #endif // SEARCHLIST_H
+// File_checked_for_headers

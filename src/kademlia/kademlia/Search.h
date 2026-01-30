@@ -115,6 +115,7 @@ private:
 	uint8_t	GetRequestContactCount() const;
 
 	bool		m_stopping;
+	bool		m_destructing;	// Flag to prevent recursive deletion
 	time_t		m_created;
 	uint32_t	m_type;
 	uint32_t	m_answers;

@@ -215,7 +215,7 @@ void CKademliaUDPListener::ProcessPacket(const uint8_t* data, uint32_t lenData, 
 {
 	// Performance monitoring: Record incoming UDP packet
 	network_perf::g_network_perf_monitor.record_udp_received(lenData);
-	
+
 	// we do not accept (<= 0.48a) unencrypted incoming packets on port 53 (DNS) to avoid attacks based on DNS protocol confusion
 	if (port == 53 && senderKey.IsEmpty()) {
 		AddDebugLogLineN(logKadPacketTracking, wxT("Dropping incoming unencrypted packet on port 53 (DNS), IP: ") + KadIPToString(ip));
@@ -1588,7 +1588,7 @@ void CKademliaUDPListener::SendPacket(const CMemFile &data, uint8_t opcode, uint
 {
 	// Performance monitoring: Record outgoing UDP packet
 	network_perf::g_network_perf_monitor.record_udp_sent(data.GetLength());
-	
+
 	AddTrackedOutPacket(destinationHost, opcode);
 	CPacket* packet = new CPacket(data, OP_KADEMLIAHEADER, opcode);
 	if (packet->GetPacketSize() > 200) {

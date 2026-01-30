@@ -334,31 +334,31 @@ void CEMSocket::SendPacket(CPacket* packet, bool delpacket, bool controlpacket, 
 
 	if (byConnected == ES_DISCONNECTED) {
 		//printf("* Disconnected, drop packet\n");
-        if(delpacket) {
+	if(delpacket) {
 			delete packet;
-        }
+	}
     } else {
-        if (!delpacket){
-            packet = new CPacket(*packet);
+	if (!delpacket){
+	    packet = new CPacket(*packet);
 	    }
 
-        if (controlpacket) {
+	if (controlpacket) {
 			//printf("* Adding a control packet\n");
-	        m_control_queue.push_back(packet);
+		m_control_queue.push_back(packet);
 
-            // queue up for controlpacket
-            theApp->uploadBandwidthThrottler->QueueForSendingControlPacket(this, HasSent());
+	    // queue up for controlpacket
+	    theApp->uploadBandwidthThrottler->QueueForSendingControlPacket(this, HasSent());
 	    } else {
 			//printf("* Adding a normal packet to the queue\n");
-            bool first = !((sendbuffer && !m_currentPacket_is_controlpacket) || !m_standard_queue.empty());
-            StandardPacketQueueEntry queueEntry = { actualPayloadSize, packet };
+	    bool first = !((sendbuffer && !m_currentPacket_is_controlpacket) || !m_standard_queue.empty());
+	    StandardPacketQueueEntry queueEntry = { actualPayloadSize, packet };
 		    m_standard_queue.push_back(queueEntry);
 
-            // reset timeout for the first time
-            if (first) {
-                lastFinishedStandard = ::GetTickCount();
-                m_bAccelerateUpload = true;	// Always accelerate first packet in a block
-            }
+	    // reset timeout for the first time
+	    if (first) {
+		lastFinishedStandard = ::GetTickCount();
+		m_bAccelerateUpload = true;	// Always accelerate first packet in a block
+	    }
 	    }
     }
 }
@@ -422,7 +422,7 @@ void CEMSocket::OnSend(int nErrorCode)
 		byConnected = ES_CONNECTED;
 
 	    if (m_currentPacket_is_controlpacket) {
-	        // queue up for control packet
+		// queue up for control packet
 	    theApp->uploadBandwidthThrottler->QueueForSendingControlPacket(this, HasSent());
 		}
     }
@@ -457,12 +457,12 @@ SocketSentBytes CEMSocket::Send(uint32 maxNumberOfBytesToSend, uint32 minFragSiz
 
 	if (byConnected == ES_DISCONNECTED) {
 		//printf("* Disconnected socket %p\n", this);
-        SocketSentBytes returnVal = { false, 0, 0 };
-        return returnVal;
+	SocketSentBytes returnVal = { false, 0, 0 };
+	return returnVal;
     } else if (m_bBusy && onlyAllowedToSendControlPacket) {
 		//printf("* Busy socket %p\n", this);
-        SocketSentBytes returnVal = { true, 0, 0 };
-        return returnVal;
+	SocketSentBytes returnVal = { true, 0, 0 };
+	return returnVal;
     }
 
     bool anErrorHasOccured = false;
@@ -634,9 +634,9 @@ SocketSentBytes CEMSocket::Send(uint32 maxNumberOfBytesToSend, uint32 minFragSiz
 uint32 CEMSocket::GetNextFragSize(uint32 current, uint32 minFragSize)
 {
     if(current % minFragSize == 0) {
-        return current;
+	return current;
     } else {
-        return minFragSize*(current/minFragSize+1);
+	return minFragSize*(current/minFragSize+1);
     }
 }
 

@@ -60,7 +60,7 @@ class CListenSocket;
 class CClientList;
 class CKnownFileList;
 class CCanceledFileList;
-#include "SearchList.h"
+class CSearchList;
 class CClientCreditsList;
 class CFriendList;
 class CClientUDPSocket;
@@ -412,10 +412,10 @@ public:
 	wxString GetLog(bool reset = false);
 	wxString GetServerLog(bool reset = false);
 	void AddServerMessageLine(wxString &msg);
-	
+
 	// Network performance monitoring
 	network_perf::NetworkPerformanceMonitor networkPerformanceMonitor;
-	
+
 	DECLARE_EVENT_TABLE()
 };
 

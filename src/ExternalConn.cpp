@@ -1086,19 +1086,8 @@ static CECPacket *Get_EC_Response_Search(const CECPacket *request)
 
 	CSearchList::CSearchParams params;
 	params.searchString	= search_request->SearchText();
-	params.fileType		= search_request->SearchFileType();
-	// Convert file extension string to numeric representation
-	wxString ext = search_request->SearchExt();
-	if (!ext.IsEmpty()) {
-		// Simple hash conversion for extension
-		uint32 extHash = 0;
-		for (size_t i = 0; i < ext.Length(); i++) {
-			extHash = (extHash << 5) + extHash + static_cast<unsigned char>(ext[i]);
-		}
-		params.extension = extHash;
-	} else {
-		params.extension = 0;
-	}
+	params.typeText		= search_request->SearchFileType();
+	params.extension	= search_request->SearchExt();
 	params.minSize		= search_request->MinSize();
 	params.maxSize		= search_request->MaxSize();
 	params.availability	= search_request->Avail();

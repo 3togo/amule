@@ -55,8 +55,8 @@
 #include "GuiEvents.h"		// Needed for Notify_*
 #include "UserEvents.h"
 #include "MagnetURI.h"		// Needed for CMagnetED2KConverter
+#include "MagnetProgressTracker.h" // Needed for CMagnetProgressTracker
 #include "ScopedPtr.h"		// Needed for CScopedPtr
-#include "GuiEvents.h"		// Needed for CoreNotify_Download_*
 #include "PlatformSpecific.h"	// Needed for CanFSHandleLargeFiles
 
 #include "kademlia/kademlia/Kademlia.h"
@@ -102,7 +102,7 @@ CDownloadQueue::~CDownloadQueue()
 	if ( !m_filelist.empty() ) {
 		for ( unsigned int i = 0; i < m_filelist.size(); i++ ) {
 			AddLogLineNS(CFormat(_("Saving PartFile %u of %u")) % (i + 1) % m_filelist.size());
-			delete m_filelist[i];
+			// unique_ptr will automatically delete the CPartFile objects
 		}
 		AddLogLineNS(_("All PartFiles Saved."));
 	}
@@ -141,7 +141,7 @@ void CDownloadQueue::LoadMetFiles(const CPath& path)
 		if (result && !IsFileExisting(toadd->GetFileHash())) {
 			{
 				wxMutexLocker lock(m_mutex);
-				m_filelist.push_back(toadd);
+				m_filelist.push_back(std::unique_ptr<CPartFile>(toadd));
 			}
 			NotifyObservers(EventType(EventType::INSERTED, toadd));
 			Notify_DownloadCtrlAddFile(toadd);
@@ -192,7 +192,7 @@ void CDownloadQueue::CopyFileList(std::vector<CPartFile*>& out_list, bool includ
 	}
 	out_list.reserve(reserve);
 	for (FileQueue::const_iterator it = m_filelist.begin(); it != m_filelist.end(); ++it) {
-		out_list.push_back(*it);
+		out_list.push_back(it->get());
 	}
 	if (includeCompleted) {
 		for (FileList::const_iterator it = m_completedDownloads.begin(); it != m_completedDownloads.end(); ++it) {
@@ -253,6 +253,15 @@ void CDownloadQueue::AddSearchToDownload(CSearchFile* toadd, uint8 category)
 	CPartFile* newfile = NULL;
 	try {
 		newfile = new CPartFile(toadd);
+
+		// If it's a magnet link, set conversion status
+		if (newfile) {
+			newfile->SetFromMagnet(toadd->IsFromMagnet());
+			if (toadd->IsFromMagnet()) {
+				newfile->SetStatus(PS_CONVERTING_MAGNET);
+				newfile->SetMagnetConversionProgress(0.0f);
+			}
+		}
 	} catch (const CInvalidPacket& WXUNUSED(e)) {
 		AddDebugLogLineC(logDownloadQueue, wxT("Search-result contained invalid tags, could not add"));
 	}
@@ -284,26 +293,27 @@ void CDownloadQueue::AddSearchToDownload(CSearchFile* toadd, uint8 category)
 
 struct SFindBestPF
 {
-	void operator()(CPartFile* file) {
+	void operator()(std::unique_ptr<CPartFile>& file) {
+		CPartFile* filePtr = file.get();
 		// Check if we should filter out other categories
 		int alphaorder = 0;
 
-		if ((m_category != -1) && (file->GetCategory() != m_category)) {
+		if ((m_category != -1) && (filePtr->GetCategory() != m_category)) {
 			return;
-		} else if (file->GetStatus() != PS_PAUSED) {
+		} else if (filePtr->GetStatus() != PS_PAUSED) {
 			return;
-		} else if (m_alpha && m_result && ((alphaorder = file->GetFileName().GetPrintable().CmpNoCase(m_result->GetFileName().GetPrintable())) > 0)) {
+		} else if (m_alpha && m_result && ((alphaorder = filePtr->GetFileName().GetPrintable().CmpNoCase(m_result->GetFileName().GetPrintable())) > 0)) {
 			return;
 		}
 
 		if (!m_result) {
-			m_result = file;
+			m_result = filePtr;
 		} else {
 			if (m_alpha && (alphaorder < 0)) {
-				m_result = file;
-			} else if (file->GetDownPriority() > m_result->GetDownPriority()) {
+				m_result = filePtr;
+			} else if (filePtr->GetDownPriority() > m_result->GetDownPriority()) {
 				// Either not alpha ordered, or they have the same alpha ordering (could happen if they have same name)
-				m_result = file;
+				m_result = filePtr;
 			} else {
 				// Lower priority file
 			}
@@ -363,7 +373,7 @@ void CDownloadQueue::AddDownload(CPartFile* file, bool paused, uint8 category)
 
 	{
 		wxMutexLocker lock(m_mutex);
-		m_filelist.push_back( file );
+		m_filelist.push_back( std::unique_ptr<CPartFile>(file) );
 		DoSortByPriority();
 	}
 
@@ -439,7 +449,7 @@ void CDownloadQueue::Process()
 		bool mustPreventSleep = false;
 
 		for ( uint16 i = 0; i < m_filelist.size(); i++ ) {
-			CPartFile* file = m_filelist[i];
+			CPartFile* file = m_filelist[i].get();
 
 			CMutexUnlocker unlocker(m_mutex);
 
@@ -553,8 +563,8 @@ CPartFile* CDownloadQueue::GetFileByID(const CMD4Hash& filehash) const
 	wxMutexLocker lock( m_mutex );
 
 	for ( uint16 i = 0; i < m_filelist.size(); ++i ) {
-		if ( filehash == m_filelist[i]->GetFileHash()) {
-			return m_filelist[ i ];
+		if ( filehash == m_filelist[i].get()->GetFileHash()) {
+			return m_filelist[ i ].get();
 		}
 	}
 	// Check completed too so we can execute remote commands (like change cat) on them
@@ -573,7 +583,7 @@ CPartFile* CDownloadQueue::GetFileByIndex(unsigned int index)  const
 	wxMutexLocker lock( m_mutex );
 
 	if ( index < m_filelist.size() ) {
-		return m_filelist[ index ];
+		return m_filelist[ index ].get();
 	}
 
 	wxFAIL;
@@ -586,7 +596,7 @@ bool CDownloadQueue::IsPartFile(const CKnownFile* file) const
 	wxMutexLocker lock(m_mutex);
 
 	for (uint16 i = 0; i < m_filelist.size(); ++i) {
-		if (file == m_filelist[i]) {
+		if (file == m_filelist[i].get()) {
 			return true;
 		}
 	}
@@ -600,9 +610,9 @@ void CDownloadQueue::OnConnectionState(bool bConnected)
 	wxMutexLocker lock(m_mutex);
 
 	for (uint16 i = 0; i < m_filelist.size(); ++i) {
-		if (	m_filelist[i]->GetStatus() == PS_READY ||
-			m_filelist[i]->GetStatus() == PS_EMPTY) {
-			m_filelist[i]->SetActive(bConnected);
+		if (	m_filelist[i].get()->GetStatus() == PS_READY ||
+			m_filelist[i].get()->GetStatus() == PS_EMPTY) {
+			m_filelist[i].get()->SetActive(bConnected);
 		}
 	}
 }
@@ -807,10 +817,17 @@ void CDownloadQueue::RemoveFile(CPartFile* file, bool keepAsCompleted)
 
 	wxMutexLocker lock( m_mutex );
 
-	EraseValue( m_filelist, file );
-
-	if (keepAsCompleted) {
-		m_completedDownloads.push_back(file);
+	// Find and remove the file from m_filelist, releasing ownership
+	for (FileQueue::iterator it = m_filelist.begin(); it != m_filelist.end(); ++it) {
+		if (it->get() == file) {
+			if (keepAsCompleted) {
+				// Transfer ownership to m_completedDownloads
+				m_completedDownloads.push_back(it->release());
+			}
+			// unique_ptr will automatically delete the file if not released
+			m_filelist.erase(it);
+			break;
+		}
 	}
 }
 
@@ -838,7 +855,7 @@ CUpDownClient* CDownloadQueue::GetDownloadClientByIP_UDP(uint32 dwIP, uint16 nUD
 	wxMutexLocker lock( m_mutex );
 
 	for ( unsigned int i = 0; i < m_filelist.size(); i++ ) {
-		const CKnownFile::SourceSet& set = m_filelist[i]->GetSourceList();
+		const CKnownFile::SourceSet& set = m_filelist[i].get()->GetSourceList();
 
 		for ( CKnownFile::SourceSet::const_iterator it = set.begin(); it != set.end(); ++it ) {
 			if ( it->GetIP() == dwIP && it->GetUDPPort() == nUDPPort ) {
@@ -1005,7 +1022,11 @@ static bool ComparePartFiles(const CPartFile* file1, const CPartFile* file2) {
 void CDownloadQueue::DoSortByPriority()
 {
 	m_lastsorttime = ::GetTickCount();
-	sort( m_filelist.begin(), m_filelist.end(), ComparePartFiles );
+	sort( m_filelist.begin(), m_filelist.end(), 
+		[](const std::unique_ptr<CPartFile>& a, const std::unique_ptr<CPartFile>& b) {
+			return ComparePartFiles(a.get(), b.get());
+		}
+	);
 }
 
 
@@ -1017,7 +1038,7 @@ void CDownloadQueue::ResetLocalServerRequests()
 	m_localServerReqQueue.clear();
 
 	for ( uint16 i = 0; i < m_filelist.size(); i++ ) {
-		m_filelist[i]->SetLocalSrcRequestQueued(false);
+		m_filelist[i].get()->SetLocalSrcRequestQueued(false);
 	}
 }
 
@@ -1142,7 +1163,7 @@ void CDownloadQueue::SendLocalSrcRequest(CPartFile* sender)
 void CDownloadQueue::ResetCatParts(uint8 cat)
 {
 	for (FileQueue::iterator it = m_filelist.begin(); it != m_filelist.end(); ++it) {
-		CPartFile* file = *it;
+		CPartFile* file = it->get();
 		file->RemoveCategory(cat);
 	}
 	for (FileList::iterator it = m_completedDownloads.begin(); it != m_completedDownloads.end(); ++it) {
@@ -1178,7 +1199,7 @@ void CDownloadQueue::SetCatStatus(uint8 cat, int newstatus)
 
 		for ( uint16 i = 0; i < m_filelist.size(); i++ ) {
 			if ( m_filelist[i]->CheckShowItemInGivenCat(cat) ) {
-				files.push_back( m_filelist[i] );
+				files.push_back( m_filelist[i].get() );
 			}
 		}
 	}
@@ -1256,7 +1277,7 @@ void CDownloadQueue::CheckDiskspace( const CPath& path )
 	}
 
 	for (unsigned int i = 0; i < m_filelist.size(); ++i) {
-		CPartFile* file = m_filelist[i];
+		CPartFile* file = m_filelist[i].get();
 
 		switch ( file->GetStatus() ) {
 			case PS_ERROR:
@@ -1398,40 +1419,25 @@ void CDownloadQueue::OnHostnameResolved(uint32 ip)
 bool CDownloadQueue::AddLink( const wxString& link, uint8 category )
 {
 	wxString uri(link);
-	bool isMagnetLink = false;
 
 	if (link.compare(0, 7, wxT("magnet:")) == 0) {
-		isMagnetLink = true;
-		AddLogLineN(CFormat(_("Processing magnet link: %s")) % link);
-		
-		// Track conversion progress
-		AddLogLineN(CFormat(_("Converting magnet link to eD2k format...")) % link);
-		
+		// First try to convert eD2k magnet links (urn:ed2k:)
 		uri = CMagnetED2KConverter(link);
-		if (uri.empty()) {
-			AddLogLineC(CFormat(_("Failed to convert magnet link: %s")) % link);
-			CoreNotify_Download_Failed(link, isMagnetLink, _("Conversion failed"));
-			return false;
+		if (!uri.empty()) {
+			// This is an eD2k magnet link, proceed with normal processing
+		} else {
+			// Non-eD2k magnet links are not supported in this build
+			AddLogLineC(_("Non-eD2k magnet links are not supported in this build. Cannot add link: ") + link);
+
+			// Return true to indicate this link has been processed (though not added)
+			return true;
 		}
-		AddLogLineN(CFormat(_("Successfully converted magnet link to eD2k format")));
-		AddLogLineN(CFormat(_("Converted link: %s")) % uri);
 	}
 
 	if (uri.compare(0, 7, wxT("ed2k://")) == 0) {
-		bool result = AddED2KLink(uri, category);
-		if (result) {
-			if (isMagnetLink) {
-				AddLogLineN(_("Magnet link successfully queued for download"));
-			}
-			// Notify GUI for real-time status update
-			CoreNotify_Download_Added(uri, isMagnetLink);
-		} else {
-			CoreNotify_Download_Failed(link, isMagnetLink, _("Failed to add to queue"));
-		}
-		return result;
+		return AddED2KLink(uri, category);
 	} else {
-		AddLogLineC(CFormat(_("Unsupported link protocol: %s")) % link);
-		CoreNotify_Download_Failed(link, isMagnetLink, _("Unknown protocol"));
+		AddLogLineC(CFormat(_("Unknown protocol of link: %s")) % link);
 		return false;
 	}
 }
@@ -1504,6 +1510,12 @@ bool CDownloadQueue::AddED2KLink( const CED2KFileLink* link, uint8 category )
 			return false;
 		}
 
+		// If this was a magnet link, update status
+		if (link->IsFromMagnet()) {
+			file->SetStatus(PS_READY);
+			file->SetMagnetConversionProgress(1.0f);
+		}
+
 		AddDownload(file, thePrefs::AddNewFilesPaused(), category);
 	}
 
@@ -1557,7 +1569,10 @@ void CDownloadQueue::ObserverAdded( ObserverType* o )
 	{
 		wxMutexLocker lock(m_mutex);
 		list.reserve( m_filelist.size() );
-		list.insert( list.begin(), m_filelist.begin(), m_filelist.end() );
+		// Convert unique_ptr to raw pointers for observer notification
+		for (const auto& file : m_filelist) {
+			list.push_back(file.get());
+		}
 	}
 
 	NotifyObservers( EventType( EventType::INITIAL, &list ), o );
@@ -1677,15 +1692,32 @@ CPartFile* CDownloadQueue::GetFileByKadFileSearchID(uint32 id) const
 
 	for ( uint16 i = 0; i < m_filelist.size(); ++i ) {
 		if ( id == m_filelist[i]->GetKadFileSearchID()) {
-			return m_filelist[ i ];
+			return m_filelist[ i ].get();
 		}
 	}
 
 	return NULL;
 }
 
+void CDownloadQueue::UpdateMagnetConversionProgress(const CMD4Hash& fileHash, float progress)
+{
+	CPartFile* file = GetFileByID(fileHash);
+	if (file && file->GetStatus() == PS_CONVERTING_MAGNET) {
+		file->SetMagnetConversionProgress(progress);
+		Notify_DownloadCtrlUpdateItem(file);
+	}
+}
+
 bool CDownloadQueue::DoKademliaFileRequest()
 {
 	return ((::GetTickCount() - lastkademliafilerequest) > KADEMLIAASKTIME);
 }
+
+bool CDownloadQueue::RequestKademliaFileReasks()
+{
+	return ((::GetTickCount() - lastkademliafilerequest) > KADEMLIAASKTIME);
+}
+
+// Removed UpdateBitTorrentDownloads function as BitTorrent support has been removed
+
 // File_checked_for_headers

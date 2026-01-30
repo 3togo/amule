@@ -216,11 +216,11 @@ private:
 	bool IsConnectingOrConnected() const;
 	bool IsConnected() const;
 	bool IsConnecting() const;
-	
+
 	// Network state enums
 	enum ED2KState { ED2KOff = 0, ED2KLowID = 1, ED2KConnecting = 2, ED2KHighID = 3, ED2KUndef = -1 };
 	enum EKadState { EKadOff = 4, EKadFW = 5, EKadConnecting = 5, EKadOK = 6, EKadUndef = -1 };
-	
+
 	wxString GetED2KStatusMessage(ED2KState& state) const;
 	wxString GetKadStatusMessage(EKadState& state) const;
 
@@ -256,7 +256,7 @@ private:
 	void ToogleED2KLinksHandler();
 	void SetMessagesTool();
 	void OnKeyPressed(wxKeyEvent& evt);
-	
+
 	// GeoIP Configuration
 	void OnGeoIPConfig(wxCommandEvent& evt);
 

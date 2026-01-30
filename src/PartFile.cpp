@@ -60,7 +60,7 @@
 #include "amule.h"		// Needed for theApp
 #include "ED2KLink.h"		// Needed for CED2KLink
 #include "Packet.h"		// Needed for CTag
-// SearchList.h removed - minimal implementation provided
+#include "SearchList.h"		// Needed for CSearchFile
 #include "ClientList.h"		// Needed for clientlist
 #include "Statistics.h"		// Needed for theStats
 #include "Logger.h"
@@ -151,7 +151,7 @@ CPartFile::CPartFile(CSearchFile* searchresult)
 	SetFileSize(searchresult->GetFileSize());
 
 	for (unsigned int i = 0; i < searchresult->m_taglist.size(); ++i){
-		const CTag& pTag = *searchresult->m_taglist[i];
+		const CTag& pTag = searchresult->m_taglist[i];
 
 		bool bTagAdded = false;
 		if (pTag.GetNameID() == 0 && !pTag.GetName().IsEmpty() && (pTag.IsStr() || pTag.IsInt())) {
@@ -263,7 +263,7 @@ CPartFile::~CPartFile()
 	}
 
 	DeleteContents(m_BufferedData_list);
-	delete m_CorruptionBlackBox;
+	// unique_ptr automatically deletes m_CorruptionBlackBox
 
 	wxASSERT(m_SrcList.empty());
 	wxASSERT(m_A4AFsrclist.empty());
@@ -3694,7 +3694,7 @@ void CPartFile::Init()
 	m_TotalSearchesKad = 0;
 
 #ifndef CLIENT_GUI
-	m_CorruptionBlackBox = new CCorruptionBlackBox();
+	m_CorruptionBlackBox = std::make_unique<CCorruptionBlackBox>();
 #endif
 }
 

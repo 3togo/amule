@@ -127,7 +127,6 @@ if (BUILD_DAEMON)
 	)
 
 	target_link_libraries (amuled
-		# PRIVATE LibtorrentRasterbar::torrent-rasterbar
 		PRIVATE ec
 		PRIVATE muleappcommon
 		PRIVATE muleappcore
@@ -180,7 +179,6 @@ if (BUILD_ED2K)
 		RUNTIME DESTINATION bin
 	)
 endif()
-
 if (BUILD_MONOLITHIC)
 	add_executable (amule
 		${COMMON_SOURCES}
@@ -190,6 +188,9 @@ if (BUILD_MONOLITHIC)
 		CaptchaGenerator.cpp
 		PartFileConvert.cpp
 		PartFileConvertDlg.cpp
+		search/SearchControllerBase.cpp
+		search/SearchPackageValidator.cpp
+		search/SearchPackageException.cpp
 	)
 
 	if (WIN32)
@@ -247,6 +248,13 @@ if (BUILD_REMOTEGUI)
 		kademlia/utils/UInt128.cpp
 		amule-remote-gui.cpp
 	)
+
+	# Use optimized UInt128 implementation if enabled and available
+	if (USE_OPTIMIZED_UINT128)
+		target_sources (amulegui
+			PRIVATE kademlia/utils/UInt128Optimized.cpp
+		)
+	endif()
 
 	if (WIN32)
 		target_sources (amulegui
@@ -311,12 +319,11 @@ if (NEED_LIB_MULEAPPCOMMON)
 		Timer.cpp
 	)
 	
-	# UPNP sources are now handled via generator expression in add_library()
+	if(ENABLE_UPNP)
+		list(APPEND MULEAPPCOMMON_SOURCES ${UPNP_SOURCES})
+	endif()
 	
-	add_library(muleappcommon STATIC
-		${MULEAPPCOMMON_SOURCES}
-		$<$<BOOL:${ENABLE_UPNP}>:${UPNP_SOURCES}>
-	)
+	add_library (muleappcommon STATIC ${MULEAPPCOMMON_SOURCES})
 
 	add_dependencies (muleappcommon
 		generate_ECCodes.h
@@ -395,6 +402,9 @@ if (NEED_LIB_MULEAPPCORE)
 		kademlia/kademlia/Entry.cpp
 		kademlia/kademlia/Indexed.cpp
 		kademlia/kademlia/SearchManager.cpp
+		kademlia/kademlia/ParallelSearch.cpp
+		kademlia/kademlia/SearchCache.cpp
+		kademlia/kademlia/BootstrapManager.cpp
 		kademlia/routing/RoutingBin.cpp
 		kademlia/utils/UInt128.cpp
 		AsyncDNS.cpp
@@ -434,6 +444,13 @@ if (NEED_LIB_MULEAPPCORE)
 		PUBLIC wxWidgets::BASE
 		PRIVATE CRYPTOPP::CRYPTOPP
 	)
+
+	# Use optimized UInt128 implementation if enabled and available
+	if (USE_OPTIMIZED_UINT128)
+		target_sources (muleappcore
+			PRIVATE kademlia/utils/UInt128Optimized.cpp
+		)
+	endif()
 endif()
 
 if (NEED_LIB_MULEAPPGUI)
@@ -456,6 +473,7 @@ if (NEED_LIB_MULEAPPGUI)
 	if (ENABLE_IP2COUNTRY)
 		target_link_libraries (muleappgui
 			PUBLIC mulegeoip
+			PUBLIC maxminddb::maxminddb
 		)
 	endif()
 
@@ -465,9 +483,8 @@ if (NEED_LIB_MULEAPPGUI)
 
 	target_include_directories (muleappgui
 		PUBLIC ${amule_BINARY_DIR}
-		PUBLIC ${INCLUDE_INCLUDE_DIR} 
+		PUBLIC ${INCLUDE_INCLUDE_DIR}
 		PUBLIC ${LIBS_INCLUDE_DIR}
-		PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/common
 	)
 
 	target_link_libraries (muleappgui
@@ -481,7 +498,7 @@ if (NEED_LIB_MULEAPPGUI)
 	endif()
 endif()
 
-IF (NEED_LIB_MULESOCKET)
+if (NEED_LIB_MULESOCKET)
 	add_library (mulesocket STATIC
 		LibSocket.cpp
 	)

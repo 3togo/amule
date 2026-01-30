@@ -123,7 +123,7 @@ void CServerUDPSocket::ProcessPacket(CMemFile& packet, uint8 opcode, uint32 ip, 
 				// process all search result packets
 
 				do{
-					theApp->searchlist->ProcessUDPSearchAnswer(packet.GetRawBuffer(), true, ip, port - 4);
+					theApp->searchlist->ProcessUDPSearchAnswer(packet, true, ip, port - 4);
 
 					if (packet.GetPosition() + 2 < size) {
 						// An additional packet?
@@ -135,8 +135,7 @@ void CServerUDPSocket::ProcessPacket(CMemFile& packet, uint8 opcode, uint32 ip, 
 								wxT("Server search reply got additional bogus bytes.") );
 							break;
 						} else {
-							AddDebugLogLineC( logServerUDP,
-								wxT("Got server search reply with additional packet.") );
+							// Skip logging to prevent repetitive messages
 						}
 					}
 

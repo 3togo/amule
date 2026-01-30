@@ -30,14 +30,10 @@
 #include "Preferences.h"
 #include "ExternalConn.h"
 #include "SearchFile.h"
-// SearchList.h removed - minimal implementation provided
+#include "SearchList.h"
 #include "IPFilter.h"
 #include "Friend.h"
 #include "Logger.h"
-
-#ifndef AMULE_DAEMON
-#include <wx/notifmsg.h>	// Needed for wxNotificationMessage
-#endif
 
 #ifndef AMULE_DAEMON
 #	include "ChatWnd.h"
@@ -710,59 +706,15 @@ namespace MuleNotify
 	}
 
 
-void Download_Added(const wxString& link, bool isMagnet)
-{
-	if (theApp->amuledlg) {
-		wxString msg = isMagnet ? 
-			wxString::Format(_("Magnet link added: %s"), link.c_str()) :
-			wxString::Format(_("eD2k link added: %s"), link.c_str());
-		theApp->amuledlg->AddLogLine(msg);
-		
-		// Show toast notification if enabled and not in daemon mode
-#ifndef AMULE_DAEMON
-		if (thePrefs::ShowNotifications()) {
-			wxNotificationMessage *notification = new wxNotificationMessage();
-			notification->SetTitle(isMagnet ? _("Magnet Link Added") : _("Download Added"));
-			notification->SetMessage(msg);
-			notification->SetFlags(wxICON_INFORMATION);
-			notification->Show(5); // Show for 5 seconds
-			delete notification;
-		}
-#endif
+	void Download_Set_Cat_Prio(uint8 cat, uint8 newprio)
+	{
+		theApp->downloadqueue->SetCatPrio(cat, newprio);
 	}
-}
 
-void Download_Failed(const wxString& link, bool isMagnet, const wxString& error)
-{
-	if (theApp->amuledlg) {
-		wxString msg = isMagnet ?
-			wxString::Format(_("Failed to add magnet link: %s - %s"), link.c_str(), error.c_str()) :
-			wxString::Format(_("Failed to add download: %s - %s"), link.c_str(), error.c_str());
-		theApp->amuledlg->AddLogLine(msg);
-		
-		// Show error notification if enabled and not in daemon mode
-#ifndef AMULE_DAEMON
-		if (thePrefs::ShowNotifications()) {
-			wxNotificationMessage *notification = new wxNotificationMessage();
-			notification->SetTitle(isMagnet ? _("Magnet Link Failed") : _("Download Failed"));
-			notification->SetMessage(msg);
-			notification->SetFlags(wxICON_ERROR);
-			notification->Show(7); // Show for 7 seconds for errors
-			delete notification;
-		}
-#endif
+	void Download_Set_Cat_Status(uint8 cat, int newstatus)
+	{
+		theApp->downloadqueue->SetCatStatus(cat, newstatus);
 	}
-}
-
-void Download_Set_Cat_Prio(uint8 cat, uint8 newprio)
-{
-	theApp->downloadqueue->SetCatPrio(cat, newprio);
-}
-
-void Download_Set_Cat_Status(uint8 cat, int newstatus)
-{
-	theApp->downloadqueue->SetCatStatus(cat, newstatus);
-}
 
 	void Upload_Resort_Queue()
 	{
