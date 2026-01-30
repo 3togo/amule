@@ -658,7 +658,7 @@ void CSearchList::ProcessSharedFileList(const uint8_t* in_packet, uint32 size,
 	long searchID = reinterpret_cast<wxUIntPtr>(sender);
 
 #ifndef AMULE_DAEMON
-	if (!theApp->amuledlg->m_searchwnd->CheckTabNameExists(sender->GetUserName())) {
+	if (!theApp->amuledlg->m_searchwnd->CheckTabNameExists(LocalSearch, sender->GetUserName())) {
 		theApp->amuledlg->m_searchwnd->CreateNewTab(sender->GetUserName() + wxT(" (0)"), searchID);
 	}
 #endif
@@ -1267,7 +1267,8 @@ void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResul
 		% searchId % (int)type % hasResults % resultCount);
 
 	// Check if we should retry
-	if (!hasResults && m_autoRetry->ShouldRetry(searchId)) {
+	// Retry if we have no results OR if the result count is zero (all results were filtered out)
+	if ((!hasResults || resultCount == 0) && m_autoRetry->ShouldRetry(searchId)) {
 		// Increment retry count
 		m_autoRetry->IncrementRetryCount(searchId);
 
@@ -1339,6 +1340,20 @@ void CSearchList::OnSearchRetry(long searchId, SearchType type, int retryNum)
 	// Update search ID mapping
 	m_resultCounts[newSearchId] = m_resultCounts[searchId];
 	m_resultCounts.erase(searchId);
+
+	// Move results from old search ID to new search ID
+	ResultMap::iterator resultsIt = m_results.find(searchId);
+	if (resultsIt != m_results.end()) {
+		// Update the search ID for all results
+		CSearchResultList& results = resultsIt->second;
+		for (size_t i = 0; i < results.size(); ++i) {
+			results[i]->SetSearchID(newSearchId);
+		}
+		// Move the results to the new search ID
+		m_results[newSearchId] = results;
+		m_results.erase(searchId);
+		AddDebugLogLineC(logSearch, wxString::Format(wxT("Moved %zu results from search %ld to %ld"), results.size(), searchId, newSearchId));
+	}
 
 	// Update result handler mapping if exists
 	HandlerMap::iterator handlerIt = m_resultHandlers.find(searchId);

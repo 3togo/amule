@@ -33,6 +33,7 @@
 #include <memory>		// Needed for std::unique_ptr
 
 #include "Types.h"		// Needed for uint16 and uint32
+#include "SearchList.h"		// Needed for SearchType
 #include "SearchStateManager.h"	// Needed for SearchStateManager and ISearchStateObserver
 #include "search/SearchController.h"	// Needed for SearchController
 #include "search/SearchControllerFactory.h"	// Needed for SearchControllerFactory
@@ -92,7 +93,7 @@ public:
 	 *
 	 * @param searchString The heading to look for.
 	 */
-	bool		CheckTabNameExists(const wxString& searchString);
+	bool		CheckTabNameExists(SearchType searchType, const wxString& searchString);
 
 	/**
 	 * Creates a new tab and displays the specified results.

@@ -506,12 +506,36 @@ void CSearchDlg::OnFilteringChange(wxCommandEvent& WXUNUSED(evt)) {
 	}
 }
 
-bool CSearchDlg::CheckTabNameExists(const wxString& searchString) {
+bool CSearchDlg::CheckTabNameExists(SearchType searchType, const wxString& searchString) {
+	// Determine the prefix for this search type
+	wxString prefix;
+	switch (searchType) {
+		case LocalSearch:
+			prefix = wxT("[Local] ");
+			break;
+		case GlobalSearch:
+			prefix = wxT("[ED2K] ");
+			break;
+		case KadSearch:
+			prefix = wxT("[Kad] ");
+			break;
+		default:
+			prefix = wxEmptyString;
+			break;
+	}
+
 	int nPages = m_notebook->GetPageCount();
 	for (int i = 0; i < nPages; i++) {
-		// The BeforeLast(' ') is to strip the hit-count from the name
-		if (m_notebook->GetPageText(i).BeforeLast(wxT(' ')) == searchString) {
-			return true;
+		wxString pageText = m_notebook->GetPageText(i);
+
+		// Extract the search term from the page text by removing prefix and count
+		if (pageText.StartsWith(prefix)) {
+			wxString searchPart = pageText.Mid(prefix.length());		  // Remove prefix
+			wxString searchTerm = searchPart.BeforeLast(wxT('(')).Trim();  // Remove "(count)" part
+
+			if (searchTerm == searchString) {
+				return true;
+			}
 		}
 	}
 
