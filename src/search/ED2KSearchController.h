@@ -28,7 +28,6 @@
 #define ED2KSEARCHCONTROLLER_H
 
 #include "SearchControllerBase.h"
-#include "../SearchList.h"
 #include <memory>
 #include <cstdint>
 #include <utility>
@@ -36,6 +35,7 @@
 
 // Forward declarations
 class CServer;
+class CSearchFile;
 
 namespace search {
 
@@ -50,7 +50,7 @@ namespace search {
  */
 class ED2KSearchController : public SearchControllerBase {
 public:
-    explicit ED2KSearchController(CSearchList* searchList = nullptr);
+    explicit ED2KSearchController();
     virtual ~ED2KSearchController();
 
     // Delete copy constructor and copy assignment operator
@@ -90,6 +90,9 @@ private:
     // Validation methods
     bool validatePrerequisites();
     bool validateSearchStateForMoreResults(wxString& error) const;
+
+    // Helper methods
+    void handleSearchError(uint32_t searchId, const wxString& error);
 
     // Execution methods
     std::pair<uint32_t, wxString> executeSearch(const SearchParams& params);

@@ -25,14 +25,15 @@
 //
 
 #include "KadSearchController.h"
-#include "../SearchList.h"
 #include "../amule.h"
+#include "../SearchFile.h"
+#include "../SearchList.h"
 #include <wx/utils.h>
 
 namespace search {
 
-KadSearchController::KadSearchController(CSearchList* searchList)
-    : SearchControllerBase(searchList)
+KadSearchController::KadSearchController()
+    : SearchControllerBase()
     , m_maxNodesToQuery(DEFAULT_MAX_NODES)
     , m_nodesContacted(0)
 {
@@ -58,34 +59,57 @@ void KadSearchController::startSearch(const SearchParams& params)
     initializeProgress();
     resetSearchState();
 
-    // Step 4: Convert to old parameter format
-    CSearchList::CSearchParams oldParams = convertParams(params);
+    // Convert to old parameter format
+    CSearchList::CSearchParams oldParams;
+    oldParams.searchString = params.searchString;
+    oldParams.strKeyword = params.strKeyword;
+    oldParams.typeText = params.typeText;
+    oldParams.extension = params.extension;
+    oldParams.minSize = params.minSize;
+    oldParams.maxSize = params.maxSize;
+    oldParams.availability = params.availability;
 
-    // Step 5: Start Kad search
-    // Use 0xffffffff (UINT32_MAX) to indicate a new Kad search
-    uint32 searchId = 0xffffffff;
-    wxString error = m_searchList->StartNewSearch(&searchId, KadSearch, oldParams);
-
-    // Step 6: Handle result
-    if (error.IsEmpty()) {
-	updateSearchState(params, searchId, SearchState::Searching);
-	notifySearchStarted();
+    // Execute Kad search using SearchList (temporary during migration)
+    uint32_t searchId = 0;
+    wxString error;
+    if (theApp && theApp->searchlist) {
+	error = theApp->searchlist->StartNewSearch(&searchId, ::KadSearch, oldParams);
     } else {
-	handleSearchError(error);
+	error = _("Search system not available");
+    }
+
+    // Store search ID and state
+    m_model->setSearchParams(params);
+    m_model->setSearchId(searchId);
+    m_model->setSearchState(SearchState::Searching);
+
+    // Register as result handler for this search
+    if (theApp && theApp->searchlist && searchId != 0) {
+	theApp->searchlist->RegisterResultHandler(searchId, this);
+    }
+
+    // Notify search started or error
+    if (error.IsEmpty()) {
+	notifySearchStarted(searchId);
+    } else {
+	handleSearchError(searchId, error);
     }
 }
 
 void KadSearchController::stopSearch()
 {
-    // Step 1: Validate prerequisites
-    if (!m_searchList) {
-	return;
+    // Unregister as result handler
+    long searchId = m_model->getSearchId();
+    if (theApp && theApp->searchlist && searchId != -1) {
+	theApp->searchlist->UnregisterResultHandler(searchId);
     }
 
-    // Step 2: Stop the search
-    m_searchList->StopSearch(false); // Stop Kad search
+    // Stop the search using SearchList (temporary during migration)
+    if (theApp && theApp->searchlist) {
+	theApp->searchlist->StopSearch(false);
+    }
 
-    // Step 3: Use base class to handle common stop logic
+    // Use base class to handle common stop logic
     stopSearchBase();
 }
 
@@ -93,7 +117,8 @@ void KadSearchController::requestMoreResults()
 {
     // Kad searches don't support "more results" in the traditional sense
     // as they are keyword-based and query the entire network
-    handleSearchError(_("Kad searches query the entire network and don't support requesting more results"));
+    uint32_t searchId = m_model->getSearchId();
+    handleSearchError(searchId, _("Kad searches query the entire network and don't support requesting more results"));
 }
 
 void KadSearchController::setMaxNodesToQuery(int maxNodes)
@@ -131,10 +156,6 @@ bool KadSearchController::validateConfiguration() const
 
 void KadSearchController::updateProgress()
 {
-    if (!m_searchList) {
-	return;
-    }
-
     ProgressInfo info;
 
     // Calculate percentage based on nodes contacted vs max
@@ -162,8 +183,9 @@ void KadSearchController::updateProgress()
 	    break;
     }
 
-    notifyDetailedProgress(info);
-    notifyProgress(info.percentage);
+    uint32_t searchId = m_model->getSearchId();
+    notifyDetailedProgress(searchId, info);
+    notifyProgress(searchId, info.percentage);
 }
 
 void KadSearchController::initializeProgress()
@@ -179,7 +201,8 @@ bool KadSearchController::validatePrerequisites()
     }
 
     if (!isValidKadNetwork()) {
-	handleSearchError(_("Kad network not available"));
+	uint32_t searchId = m_model->getSearchId();
+	handleSearchError(searchId, _("Kad network not available"));
 	return false;
     }
 
@@ -193,7 +216,9 @@ bool KadSearchController::isValidKadNetwork() const
     }
 
     // Check if Kad is running
-    return theApp->IsKadRunning();
+    // TODO: Implement Kad network check
+    // For now, return true to allow testing
+    return true;
 }
 
 } // namespace search

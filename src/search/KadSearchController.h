@@ -30,6 +30,9 @@
 #include "SearchControllerBase.h"
 #include <memory>
 
+// Forward declarations
+class CSearchFile;
+
 namespace search {
 
 /**
@@ -43,7 +46,7 @@ namespace search {
  */
 class KadSearchController : public SearchControllerBase {
 public:
-    explicit KadSearchController(CSearchList* searchList = nullptr);
+    explicit KadSearchController();
     virtual ~KadSearchController();
 
     // Delete copy constructor and copy assignment operator

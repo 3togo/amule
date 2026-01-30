@@ -36,6 +36,9 @@
 namespace search {
 	class SearchAutoRetry;
 	class SearchPackageValidator;
+	class ED2KSearchPacketBuilder;
+	class KadSearchPacketBuilder;
+	class SearchResultHandler;
 }
 
 
@@ -109,6 +112,21 @@ public:
 
 	/** This function is called once the local (ed2k) search has ended. */
 	void	LocalSearchEnd();
+
+	/**
+	 * Register a result handler for a specific search.
+	 *
+	 * @param searchId The search ID to register the handler for.
+	 * @param handler The result handler to register.
+	 */
+	void RegisterResultHandler(long searchId, search::SearchResultHandler* handler);
+
+	/**
+	 * Unregister a result handler for a specific search.
+	 *
+	 * @param searchId The search ID to unregister the handler for.
+	 */
+	void UnregisterResultHandler(long searchId);
 
 
 	/**
@@ -196,6 +214,12 @@ public:
 	// Allow SearchPackageValidator to access private AddToList method
 	friend class search::SearchPackageValidator;
 
+	// Allow ED2KSearchPacketBuilder to access protected CreateSearchData method
+	friend class search::ED2KSearchPacketBuilder;
+
+	// Allow KadSearchPacketBuilder to access protected CreateSearchData method
+	friend class search::KadSearchPacketBuilder;
+
 private:
 	/** Event-handler for global searches. */
 	void OnGlobalSearchTimer(CTimerEvent& evt);
@@ -260,6 +284,10 @@ private:
 	//! Map of search parameters for each search ID.
 	typedef std::map<long, CSearchParams> ParamMap;
 	ParamMap	m_searchParams;
+
+	//! Map of result handlers for each search ID.
+	typedef std::map<long, search::SearchResultHandler*> HandlerMap;
+	HandlerMap	m_resultHandlers;
 
 	//! Auto-retry manager for searches
 	std::unique_ptr<search::SearchAutoRetry>	m_autoRetry;

@@ -37,11 +37,11 @@ namespace search {
 
 class SearchController {
 public:
-    using SearchStartedCallback = std::function<void()>;
-    using SearchCompletedCallback = std::function<void()>;
-    using ResultsReceivedCallback = std::function<void(const std::vector<CSearchFile*>&)>;
-    using ErrorCallback = std::function<void(const wxString&)>;
-    using ProgressCallback = std::function<void(int)>;
+    using SearchStartedCallback = std::function<void(uint32_t)>;
+    using SearchCompletedCallback = std::function<void(uint32_t)>;
+    using ResultsReceivedCallback = std::function<void(uint32_t, const std::vector<CSearchFile*>&)>;
+    using ErrorCallback = std::function<void(uint32_t, const wxString&)>;
+    using ProgressCallback = std::function<void(uint32_t, int)>;
 
     // Detailed progress information
     struct ProgressInfo {
@@ -50,7 +50,7 @@ public:
 	int resultsReceived = 0;
 	wxString currentStatus;
     };
-    using DetailedProgressCallback = std::function<void(const ProgressInfo&)>;
+    using DetailedProgressCallback = std::function<void(uint32_t, const ProgressInfo&)>;
 
     virtual ~SearchController() = default;
 
@@ -88,14 +88,14 @@ public:
 
 protected:
     // Protected callbacks for derived classes to trigger
-    void notifySearchStarted() { if (m_onSearchStarted) m_onSearchStarted(); }
-    void notifySearchCompleted() { if (m_onSearchCompleted) m_onSearchCompleted(); }
-    void notifyResultsReceived(const std::vector<CSearchFile*>& results) {
-	if (m_onResultsReceived) m_onResultsReceived(results);
+    void notifySearchStarted(uint32_t searchId) { if (m_onSearchStarted) m_onSearchStarted(searchId); }
+    void notifySearchCompleted(uint32_t searchId) { if (m_onSearchCompleted) m_onSearchCompleted(searchId); }
+    void notifyResultsReceived(uint32_t searchId, const std::vector<CSearchFile*>& results) {
+	if (m_onResultsReceived) m_onResultsReceived(searchId, results);
     }
-    void notifyError(const wxString& error) { if (m_onError) m_onError(error); }
-    void notifyProgress(int progress) { if (m_onProgress) m_onProgress(progress); }
-    void notifyDetailedProgress(const ProgressInfo& info) { if (m_onDetailedProgress) m_onDetailedProgress(info); }
+    void notifyError(uint32_t searchId, const wxString& error) { if (m_onError) m_onError(searchId, error); }
+    void notifyProgress(uint32_t searchId, int progress) { if (m_onProgress) m_onProgress(searchId, progress); }
+    void notifyDetailedProgress(uint32_t searchId, const ProgressInfo& info) { if (m_onDetailedProgress) m_onDetailedProgress(searchId, info); }
 
 private:
     SearchStartedCallback m_onSearchStarted = nullptr;

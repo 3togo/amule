@@ -889,15 +889,15 @@ void CSearchDlg::StartNewSearch() {
 
 	// Set up callbacks for the controller BEFORE starting the search
 	// We'll capture the search ID after the controller creates it
-	controller->setOnSearchStarted([this]() {
+	controller->setOnSearchStarted([this](uint32_t searchId) {
 		// Search started - state will be updated when we get the search ID
 	});
 
-	controller->setOnSearchCompleted([this]() {
+	controller->setOnSearchCompleted([this](uint32_t searchId) {
 		// Search completed - will be handled by the legacy system
 	});
 
-	controller->setOnResultsReceived([this](const std::vector<CSearchFile*>& results) {
+	controller->setOnResultsReceived([this](uint32_t searchId, const std::vector<CSearchFile*>& results) {
 		// Results received - will be handled by the legacy system
 	});
 
@@ -905,7 +905,7 @@ void CSearchDlg::StartNewSearch() {
 	bool searchError = false;
 	wxString errorMessage;
 
-	controller->setOnError([this, &searchError, &errorMessage](const wxString& error) {
+	controller->setOnError([this, &searchError, &errorMessage](uint32_t searchId, const wxString& error) {
 		// Handle errors
 		searchError = true;
 		errorMessage = error;

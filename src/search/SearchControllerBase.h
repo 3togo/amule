@@ -28,11 +28,14 @@
 
 #include "SearchController.h"
 #include "SearchModel.h"
-#include "../SearchList.h"
+#include "SearchResultHandler.h"
 #include <memory>
 #include <cstdint>
 #include <utility>
 #include <wx/string.h>
+
+// Forward declarations
+class CSearchFile;
 
 namespace search {
 
@@ -42,9 +45,9 @@ namespace search {
  * This class provides common functionality shared between different
  * search controller implementations to eliminate code duplication.
  */
-class SearchControllerBase : public SearchController {
+class SearchControllerBase : public SearchController, public SearchResultHandler {
 public:
-    explicit SearchControllerBase(CSearchList* searchList = nullptr);
+    explicit SearchControllerBase();
     virtual ~SearchControllerBase();
 
     // Delete copy constructor and copy assignment operator
@@ -66,7 +69,6 @@ public:
 protected:
     // Common data members
     std::unique_ptr<SearchModel> m_model;
-    CSearchList* m_searchList;
 
     // Retry settings
     int m_retryCount;
@@ -74,9 +76,7 @@ protected:
     static constexpr int DEFAULT_RETRY_COUNT = 3;
 
     // Helper methods
-    void connectToSearchSystem();
-    void disconnectFromSearchSystem();
-    void handleSearchError(const wxString& error);
+    void handleSearchError(uint32_t searchId, const wxString& error);
     virtual void resetSearchState();
     void stopSearchBase();
 
@@ -88,9 +88,17 @@ protected:
     // State update methods
     void updateSearchState(const SearchParams& params, uint32_t searchId, SearchState state);
 
-    // Helper methods
-    const std::vector<CSearchFile*>* getSearchResults() const;
-    CSearchList::CSearchParams convertParams(const SearchParams& params) const;
+    // Result management
+    void addResult(CSearchFile* result);
+    void clearResults();
+
+    // SearchResultHandler interface
+    void handleResult(uint32_t searchId, CSearchFile* result) override;
+    void handleResults(uint32_t searchId, const std::vector<CSearchFile*>& results) override;
+    bool handlesSearch(uint32_t searchId) const override;
+
+    // Search ID update (for retry)
+    void updateSearchId(uint32_t newSearchId) override;
 };
 
 } // namespace search

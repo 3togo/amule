@@ -24,41 +24,27 @@
 //
 
 #include "SearchControllerBase.h"
-#include "../SearchList.h"
-#include "../amule.h"
+#include "../SearchFile.h"
+#include "../Logger.h"
 
 namespace search {
 
-SearchControllerBase::SearchControllerBase(CSearchList* searchList)
+SearchControllerBase::SearchControllerBase()
     : m_model(std::make_unique<SearchModel>())
-    , m_searchList(searchList)
     , m_retryCount(DEFAULT_RETRY_COUNT)
     , m_currentRetry(0)
 {
-    connectToSearchSystem();
 }
 
 SearchControllerBase::~SearchControllerBase()
 {
-    disconnectFromSearchSystem();
+    clearResults();
 }
 
-void SearchControllerBase::connectToSearchSystem()
-{
-    if (theApp) {
-	m_searchList = theApp->searchlist;
-    }
-}
-
-void SearchControllerBase::disconnectFromSearchSystem()
-{
-    m_searchList = nullptr;
-}
-
-void SearchControllerBase::handleSearchError(const wxString& error)
+void SearchControllerBase::handleSearchError(uint32_t searchId, const wxString& error)
 {
     m_model->setSearchState(SearchState::Error);
-    notifyError(error);
+    notifyError(searchId, error);
 }
 
 void SearchControllerBase::resetSearchState()
@@ -69,25 +55,18 @@ void SearchControllerBase::resetSearchState()
 
 void SearchControllerBase::stopSearchBase()
 {
-    // Validate prerequisites
-    if (!m_searchList) {
-	return;
-    }
-
     // Update state
     m_model->setSearchState(SearchState::Idle);
     resetSearchState();
 
     // Notify completion
-    notifySearchCompleted();
+    uint32_t searchId = m_model->getSearchId();
+    notifySearchCompleted(searchId);
 }
 
 bool SearchControllerBase::validatePrerequisites()
 {
-    if (!m_searchList) {
-	handleSearchError(_("Search system not available"));
-	return false;
-    }
+    // Always return true - no external dependencies
     return true;
 }
 
@@ -95,7 +74,8 @@ bool SearchControllerBase::validateSearchParams(const SearchParams& params)
 {
     // Combine validation checks for efficiency
     if (!params.isValid() || params.searchString.IsEmpty()) {
-	handleSearchError(params.searchString.IsEmpty() 
+	uint32_t searchId = m_model->getSearchId();
+	handleSearchError(searchId, params.searchString.IsEmpty() 
 	    ? _("Search string cannot be empty")
 	    : _("Invalid search parameters"));
 	return false;
@@ -135,52 +115,67 @@ long SearchControllerBase::getSearchId() const
     return m_model->getSearchId();
 }
 
-const std::vector<CSearchFile*>* SearchControllerBase::getSearchResults() const
-{
-    if (!m_searchList) {
-	return nullptr;
-    }
-
-    long searchId = m_model->getSearchId();
-    if (searchId == -1) {
-	return nullptr;
-    }
-
-    return &m_searchList->GetSearchResults(searchId);
-}
-
-CSearchList::CSearchParams SearchControllerBase::convertParams(const SearchParams& params) const
-{
-    CSearchList::CSearchParams oldParams;
-    oldParams.searchString = params.searchString;
-    oldParams.strKeyword = params.strKeyword;
-    oldParams.typeText = params.typeText;
-    oldParams.extension = params.extension;
-    oldParams.minSize = params.minSize;
-    oldParams.maxSize = params.maxSize;
-    oldParams.availability = params.availability;
-    return oldParams;
-}
-
 const std::vector<CSearchFile*>& SearchControllerBase::getResults() const
 {
-    // Use thread_local instead of static to avoid thread safety issues
-    static thread_local std::vector<CSearchFile*> results;
-    results.clear();
-
-    const CSearchResultList* searchResults = getSearchResults();
-    if (searchResults) {
-	results = *searchResults;
-	m_model->cacheResults(results);
-    }
-
-    return results;
+    return m_model->getResults();
 }
 
 size_t SearchControllerBase::getResultCount() const
 {
-    const CSearchResultList* searchResults = getSearchResults();
-    return searchResults ? searchResults->size() : 0;
+    return m_model->getResultCount();
+}
+
+void SearchControllerBase::addResult(CSearchFile* result)
+{
+    m_model->addResult(result);
+}
+
+void SearchControllerBase::clearResults()
+{
+    m_model->clearResults();
+}
+
+void SearchControllerBase::handleResult(uint32_t searchId, CSearchFile* result)
+{
+    // Only handle results for our search
+    if (searchId != static_cast<uint32_t>(m_model->getSearchId())) {
+	return;
+    }
+
+    // Add result to model
+    m_model->addResult(result);
+
+    // Notify about new result
+    std::vector<CSearchFile*> results;
+    results.push_back(result);
+    notifyResultsReceived(searchId, results);
+}
+
+void SearchControllerBase::handleResults(uint32_t searchId, const std::vector<CSearchFile*>& results)
+{
+    // Only handle results for our search
+    if (searchId != static_cast<uint32_t>(m_model->getSearchId())) {
+	return;
+    }
+
+    // Add all results to model
+    for (CSearchFile* result : results) {
+	m_model->addResult(result);
+    }
+
+    // Notify about new results
+    notifyResultsReceived(searchId, results);
+}
+
+bool SearchControllerBase::handlesSearch(uint32_t searchId) const
+{
+    return searchId == static_cast<uint32_t>(m_model->getSearchId());
+}
+
+void SearchControllerBase::updateSearchId(uint32_t newSearchId)
+{
+    m_model->setSearchId(newSearchId);
+    AddDebugLogLineC(logSearch, wxString::Format(wxT("Updated controller search ID to %u"), newSearchId));
 }
 
 bool SearchControllerBase::validateConfiguration() const

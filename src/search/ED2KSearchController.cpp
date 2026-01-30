@@ -25,15 +25,22 @@
 //
 
 #include "ED2KSearchController.h"
-#include "../SearchList.h"
+#include "ED2KSearchPacketBuilder.h"
 #include "../ServerList.h"
+#include "../Server.h"
+#include "../ServerConnect.h"
 #include "../amule.h"
+#include "../SearchFile.h"
+#include "../SearchList.h"
+#include "../Packet.h"
+#include "../Statistics.h"
+#include "../MemFile.h"
 #include <wx/utils.h>
 
 namespace search {
 
-ED2KSearchController::ED2KSearchController(CSearchList* searchList)
-    : SearchControllerBase(searchList)
+ED2KSearchController::ED2KSearchController()
+    : SearchControllerBase()
     , m_maxServersToQuery(DEFAULT_MAX_SERVERS)
     , m_serversContacted(0)
     , m_resultsSinceLastUpdate(0)
@@ -66,9 +73,9 @@ void ED2KSearchController::startSearch(const SearchParams& params)
     // Step 5: Handle result
     if (error.IsEmpty()) {
 	updateSearchState(params, searchId, SearchState::Searching);
-	notifySearchStarted();
+	notifySearchStarted(searchId);
     } else {
-	handleSearchError(error);
+	handleSearchError(searchId, error);
     }
 }
 
@@ -79,7 +86,8 @@ bool ED2KSearchController::validatePrerequisites()
     }
 
     if (!isValidServerList()) {
-	handleSearchError(_("No servers available for search"));
+	uint32_t searchId = m_model->getSearchId();
+	handleSearchError(searchId, _("No servers available for search"));
 	return false;
     }
 
@@ -88,69 +96,102 @@ bool ED2KSearchController::validatePrerequisites()
 
 std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchParams& params)
 {
-    // Convert to old parameter format using base class method
-    CSearchList::CSearchParams oldParams = convertParams(params);
+    // Store search parameters
+    m_model->setSearchParams(params);
 
     // Determine search type
-    SearchType oldSearchType = (params.searchType == ModernSearchType::LocalSearch)
-			      ? LocalSearch
-			      : GlobalSearch;
+    ::SearchType oldSearchType = (params.searchType == ModernSearchType::LocalSearch)
+			      ? ::LocalSearch
+			      : ::GlobalSearch;
 
-    // Execute search
+    // Convert to old parameter format
+    CSearchList::CSearchParams oldParams;
+    oldParams.searchString = params.searchString;
+    oldParams.strKeyword = params.strKeyword;
+    oldParams.typeText = params.typeText;
+    oldParams.extension = params.extension;
+    oldParams.minSize = params.minSize;
+    oldParams.maxSize = params.maxSize;
+    oldParams.availability = params.availability;
+
+    // Execute search using SearchList (temporary during migration)
     uint32_t searchId = 0;
-    wxString error = m_searchList->StartNewSearch(&searchId, oldSearchType, oldParams);
+    wxString error;
+    if (theApp && theApp->searchlist) {
+	error = theApp->searchlist->StartNewSearch(&searchId, oldSearchType, oldParams);
+    } else {
+	error = _("Search system not available");
+    }
+
+    // Store search ID and state
+    m_model->setSearchId(searchId);
+    m_model->setSearchState(SearchState::Searching);
+
+    // Register as result handler for this search
+    if (theApp && theApp->searchlist && searchId != 0) {
+	theApp->searchlist->RegisterResultHandler(searchId, this);
+    }
+
+    // Initialize progress tracking
+    initializeProgress();
 
     return {searchId, error};
 }
 
+void ED2KSearchController::handleSearchError(uint32_t searchId, const wxString& error)
+{
+    SearchControllerBase::handleSearchError(searchId, error);
+}
+
 void ED2KSearchController::stopSearch()
 {
-    // Step 1: Validate prerequisites
-    if (!m_searchList) {
-	return;
+    // Unregister as result handler
+    long searchId = m_model->getSearchId();
+    if (theApp && theApp->searchlist && searchId != -1) {
+	theApp->searchlist->UnregisterResultHandler(searchId);
     }
 
-    // Step 2: Stop the search
-    m_searchList->StopSearch(true);
+    // Stop the search using SearchList (temporary during migration)
+    if (theApp && theApp->searchlist) {
+	theApp->searchlist->StopSearch(true);
+    }
 
-    // Step 3: Use base class to handle common stop logic
+    // Use base class to handle common stop logic
     stopSearchBase();
 }
 
 void ED2KSearchController::requestMoreResults()
 {
-    // Step 1: Validate prerequisites
-    if (!validatePrerequisites()) {
-	return;
-    }
-
-    // Step 2: Validate search state
+    // Step 1: Validate search state
     wxString error;
     if (!validateSearchStateForMoreResults(error)) {
-	handleSearchError(error);
+	uint32_t searchId = m_model->getSearchId();
+	handleSearchError(searchId, error);
 	return;
     }
 
-    // Step 3: Check retry limit
+    // Step 2: Check retry limit
     if (!validateRetryLimit(error)) {
-	handleSearchError(error);
+	uint32_t searchId = m_model->getSearchId();
+	handleSearchError(searchId, error);
 	return;
     }
 
-    // Step 4: Prepare for retry
+    // Step 3: Prepare for retry
     initializeProgress();
     m_currentRetry++;
 
-    // Step 5: Execute search with same parameters
+    // Step 4: Execute search with same parameters
     auto [newSearchId, execError] = executeSearch(m_model->getSearchParams());
 
-    // Step 6: Handle result
+    // Step 5: Handle result
     if (execError.IsEmpty()) {
 	m_model->setSearchId(newSearchId);
 	m_model->setSearchState(SearchState::Retrying);
-	notifySearchStarted();
+	notifySearchStarted(newSearchId);
     } else {
-	handleSearchError(execError);
+	uint32_t searchId = m_model->getSearchId();
+	handleSearchError(searchId, execError);
     }
 }
 
@@ -194,9 +235,6 @@ int ED2KSearchController::getRetryCount() const
 
 void ED2KSearchController::updateProgress()
 {
-    if (!m_searchList) {
-	return;
-    }
 
     ProgressInfo info;
 
@@ -225,8 +263,9 @@ void ED2KSearchController::updateProgress()
 	    break;
     }
 
-    notifyDetailedProgress(info);
-    notifyProgress(info.percentage);
+    uint32_t searchId = m_model->getSearchId();
+    notifyDetailedProgress(searchId, info);
+    notifyProgress(searchId, info.percentage);
 }
 
 void ED2KSearchController::initializeProgress()

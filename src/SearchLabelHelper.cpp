@@ -213,7 +213,7 @@ bool RetrySearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 	}
 
 	// Start retry - this increments the retry counter
-	if (!parentDlg->GetStateManager().StartRetry(searchId)) {
+	if (!parentDlg->GetStateManager().RequestRetry(searchId)) {
 		// Failed to start retry
 		return false;
 	}
@@ -323,7 +323,7 @@ bool RetryKadSearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 	}
 
 	// Start retry - this increments the retry counter
-	if (!parentDlg->GetStateManager().StartRetry(searchId)) {
+	if (!parentDlg->GetStateManager().RequestRetry(searchId)) {
 		// Failed to start retry
 		return false;
 	}

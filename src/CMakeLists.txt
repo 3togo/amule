@@ -189,8 +189,18 @@ if (BUILD_MONOLITHIC)
 		PartFileConvert.cpp
 		PartFileConvertDlg.cpp
 		search/SearchControllerBase.cpp
+		search/SearchController.cpp
+		search/SearchControllerFactory.cpp
+		search/ED2KSearchController.cpp
+		search/ED2KSearchPacketBuilder.cpp
+		search/KadSearchController.cpp
+		search/KadSearchPacketBuilder.cpp
+		search/SearchAutoRetry.cpp
+		search/SearchModel.cpp
 		search/SearchPackageValidator.cpp
 		search/SearchPackageException.cpp
+		SearchStateManager.cpp
+		SearchLabelHelper.cpp
 	)
 
 	if (WIN32)
