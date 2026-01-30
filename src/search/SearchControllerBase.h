@@ -60,7 +60,7 @@ public:
     long getSearchId() const override;
 
     // Result access
-    const std::vector<CSearchFile*>& getResults() const override;
+    std::vector<CSearchFile*> getResults() const override;
     size_t getResultCount() const override;
 
     // Configuration validation

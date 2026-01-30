@@ -65,7 +65,7 @@ public:
     virtual long getSearchId() const = 0;
 
     // Result access
-    virtual const std::vector<CSearchFile*>& getResults() const = 0;
+    virtual std::vector<CSearchFile*> getResults() const = 0;
     virtual size_t getResultCount() const = 0;
 
     // Callback setters with move semantics

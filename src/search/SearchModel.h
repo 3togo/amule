@@ -113,10 +113,6 @@ public:
     // Result filtering
     bool hasResults() const;
 
-    // Result caching - stores reference to external results
-    void cacheResults(const std::vector<CSearchFile*>& results);
-    void clearCachedResults();
-
     // State management
     void setSearchState(SearchState state);
     SearchState getSearchState() const;
@@ -144,11 +140,6 @@ private:
 
     // Results storage - using unique_ptr for automatic memory management
     std::vector<std::unique_ptr<CSearchFile>> m_results;
-
-    // Cache for external results (from CSearchList)
-    // Non-owning pointers - results are owned by CSearchList
-    mutable std::vector<CSearchFile*> m_cachedResults;
-    bool m_hasCachedResults = false;
 
     // Helper methods
     void validateSearchParams(const SearchParams& params) const;

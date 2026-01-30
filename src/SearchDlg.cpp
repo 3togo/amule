@@ -675,7 +675,19 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event)) {
 		// Use the SearchController to request more results
 		auto it = m_searchControllers.find(searchId);
 		if (it != m_searchControllers.end() && it->second) {
+			// Get the old search ID before requesting more results
+			uint32 oldSearchId = searchId;
 			it->second->requestMoreResults();
+			// Get the new search ID after requesting more results
+			uint32 newSearchId = it->second->getSearchId();
+			// Update the map with the new search ID
+			if (newSearchId != oldSearchId) {
+				auto controller = std::move(it->second);
+				m_searchControllers.erase(it);
+				m_searchControllers[newSearchId] = std::move(controller);
+				// Update the list control with the new search ID
+				list->ShowResults(newSearchId);
+			}
 		} else {
 			// Fallback to legacy method if controller not found
 			wxString error = theApp->searchlist->RequestMoreResults(searchId);
@@ -926,13 +938,13 @@ void CSearchDlg::StartNewSearch() {
 	});
 
 	// Track if an error occurred
-	bool searchError = false;
-	wxString errorMessage;
+	auto searchError = std::make_shared<bool>(false);
+	auto errorMessage = std::make_shared<wxString>();
 
-	controller->setOnError([this, &searchError, &errorMessage](uint32_t searchId, const wxString& error) {
+	controller->setOnError([this, searchError, errorMessage](uint32_t searchId, const wxString& error) {
 		// Handle errors
-		searchError = true;
-		errorMessage = error;
+		*searchError = true;
+		*errorMessage = error;
 		wxMessageBox(error, _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
 	});
 
@@ -942,9 +954,9 @@ void CSearchDlg::StartNewSearch() {
 
 	// Get the search ID from the controller after starting
 	uint32 real_id = controller->getSearchId();
-	if (real_id == 0 || searchError) {
-		if (!errorMessage.IsEmpty()) {
-			wxMessageBox(errorMessage, _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
+	if (real_id == 0 || *searchError) {
+		if (!errorMessage->IsEmpty()) {
+			wxMessageBox(*errorMessage, _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
 		} else {
 			wxMessageBox(_("Failed to get search ID from controller"), _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
 		}

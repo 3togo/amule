@@ -38,7 +38,8 @@ SearchControllerBase::SearchControllerBase()
 
 SearchControllerBase::~SearchControllerBase()
 {
-    clearResults();
+    // Don't clear results here - the legacy system (CSearchList) manages the lifetime
+    // of CSearchFile objects. Clearing them here would cause a double-free.
 }
 
 void SearchControllerBase::handleSearchError(uint32_t searchId, const wxString& error)
@@ -115,7 +116,7 @@ long SearchControllerBase::getSearchId() const
     return m_model->getSearchId();
 }
 
-const std::vector<CSearchFile*>& SearchControllerBase::getResults() const
+std::vector<CSearchFile*> SearchControllerBase::getResults() const
 {
     return m_model->getResults();
 }
