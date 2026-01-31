@@ -26,6 +26,8 @@
 #include "SearchControllerBase.h"
 #include "../SearchFile.h"
 #include "../Logger.h"
+#include "../amule.h"
+#include "../SearchList.h"
 
 namespace search {
 
@@ -126,16 +128,6 @@ size_t SearchControllerBase::getResultCount() const
     return m_model->getResultCount();
 }
 
-void SearchControllerBase::addResult(CSearchFile* result)
-{
-    m_model->addResult(result);
-}
-
-void SearchControllerBase::clearResults()
-{
-    m_model->clearResults();
-}
-
 void SearchControllerBase::handleResult(uint32_t searchId, CSearchFile* result)
 {
     // Only handle results for our search
@@ -143,12 +135,24 @@ void SearchControllerBase::handleResult(uint32_t searchId, CSearchFile* result)
 	return;
     }
 
-    // Add result to model
+    // Add result to model (handles duplicates internally)
     m_model->addResult(result);
+
+    // Also add result to legacy SearchList for UI display
+    // The SearchListCtrl::ShowResults() method retrieves results from SearchList
+    CSearchFile* resultForUI = result;
+    if (theApp && theApp->searchlist) {
+	// Create a copy for SearchList (SearchModel owns the original)
+	CSearchFile* resultCopy = new CSearchFile(*result);
+	resultCopy->SetSearchID(searchId);
+	theApp->searchlist->AddToList(resultCopy, false);
+	// Use the copy for UI notification to ensure consistency
+	resultForUI = resultCopy;
+    }
 
     // Notify about new result
     std::vector<CSearchFile*> results;
-    results.push_back(result);
+    results.push_back(resultForUI);
     notifyResultsReceived(searchId, results);
 }
 
@@ -159,13 +163,28 @@ void SearchControllerBase::handleResults(uint32_t searchId, const std::vector<CS
 	return;
     }
 
-    // Add all results to model
-    for (CSearchFile* result : results) {
-	m_model->addResult(result);
+    // Add all results to model (handles duplicates internally)
+    m_model->addResults(results);
+
+    // Also add results to legacy SearchList for UI display
+    // The SearchListCtrl::ShowResults() method retrieves results from SearchList
+    std::vector<CSearchFile*> resultsForUI;
+    if (theApp && theApp->searchlist) {
+	for (CSearchFile* result : results) {
+	    // Create a copy for SearchList (SearchModel owns the original)
+	    CSearchFile* resultCopy = new CSearchFile(*result);
+	    resultCopy->SetSearchID(searchId);
+	    theApp->searchlist->AddToList(resultCopy, false);
+	    // Use the copy for UI notification to ensure consistency
+	    resultsForUI.push_back(resultCopy);
+	}
+    } else {
+	// If SearchList is not available, use the original results
+	resultsForUI = results;
     }
 
     // Notify about new results
-    notifyResultsReceived(searchId, results);
+    notifyResultsReceived(searchId, resultsForUI);
 }
 
 bool SearchControllerBase::handlesSearch(uint32_t searchId) const

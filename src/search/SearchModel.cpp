@@ -60,7 +60,40 @@ SearchParams SearchModel::getSearchParamsThreadSafe() const
 void SearchModel::addResult(CSearchFile* result)
 {
     wxMutexLocker lock(m_mutex);
-    m_results.push_back(std::unique_ptr<CSearchFile>(result));
+    // Check for duplicates before adding
+    if (!isDuplicate(result)) {
+        m_results.push_back(std::unique_ptr<CSearchFile>(result));
+    } else {
+        // Duplicate found, delete the result
+        delete result;
+    }
+}
+
+void SearchModel::addResults(const std::vector<CSearchFile*>& results)
+{
+    wxMutexLocker lock(m_mutex);
+    for (CSearchFile* result : results) {
+        // Check for duplicates before adding
+        if (!isDuplicate(result)) {
+            m_results.push_back(std::unique_ptr<CSearchFile>(result));
+        } else {
+            // Duplicate found, delete the result
+            delete result;
+        }
+    }
+}
+
+bool SearchModel::isDuplicate(const CSearchFile* result) const
+{
+    wxMutexLocker lock(m_mutex);
+    for (const auto& existing : m_results) {
+        // Check by hash and size (primary duplicate detection)
+        if (result->GetFileHash() == existing->GetFileHash() &&
+            result->GetFileSize() == existing->GetFileSize()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void SearchModel::clearResults()

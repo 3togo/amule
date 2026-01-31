@@ -140,6 +140,33 @@ CSearchListCtrl::~CSearchListCtrl()
 }
 
 
+// Helper function to sanitize filenames with invalid Unicode characters
+static wxString SanitizeFilename(const wxString& filename)
+{
+	wxString result;
+	for (size_t i = 0; i < filename.length(); ++i) {
+		wxChar c = filename[i];
+		// Check if the character is valid UTF-8 and printable
+		// wxIsprint checks if the character is printable in the current locale
+		// We also allow common whitespace characters
+		if (wxIsprint(c) || c == wxT('\n') || c == wxT('\t') || c == wxT('\r')) {
+			// Check if the character is a valid Unicode code point
+			// Valid Unicode code points are in the range 0x0000-0x10FFFF
+			// Surrogate code points (0xD800-0xDFFF) are invalid in UTF-8
+			if ((c >= 0x0000 && c <= 0xD7FF) || (c >= 0xE000 && c <= 0x10FFFF)) {
+				result += c;
+			} else {
+				// Replace invalid Unicode code points
+				result += wxT('�');
+			}
+		} else {
+			// Replace non-printable characters
+			result += wxT('�');
+		}
+	}
+	return result;
+}
+
 void CSearchListCtrl::AddResult(CSearchFile* toshow)
 {
 
@@ -189,7 +216,9 @@ void CSearchListCtrl::AddResult(CSearchFile* toshow)
 	} else {
 		insertPos = GetInsertPos(toshowdata);
 	}
-	long newid = InsertItem(insertPos, toshow->GetFileName().GetPrintable());
+	// Sanitize filename to handle invalid Unicode characters
+	wxString safeFilename = SanitizeFilename(toshow->GetFileName().GetPrintable());
+	long newid = InsertItem(insertPos, safeFilename);
 
 	// Sanity checks to ensure that results/children are properly positioned.
 #ifdef __WXDEBUG__
@@ -292,7 +321,8 @@ void CSearchListCtrl::UpdateResult(CSearchFile* toupdate)
 
 		// Update the filename, which may be changed in case of multiple variants.
 		try {
-			SetItem(index, ID_SEARCH_COL_NAME, toupdate->GetFileName().GetPrintable());
+			wxString safeFilename = SanitizeFilename(toupdate->GetFileName().GetPrintable());
+			SetItem(index, ID_SEARCH_COL_NAME, safeFilename);
 		} catch (...) {
 			AddDebugLogLineC(logSearch, wxT("Pixman error while updating filename"));
 		}
@@ -496,7 +526,8 @@ bool CSearchListCtrl::IsFiltered(const CSearchFile* file)
 	bool result = true;
 
 	if (m_filterEnabled && m_filter.IsValid()) {
-		result = m_filter.Matches(file->GetFileName().GetPrintable());
+		wxString safeFilename = SanitizeFilename(file->GetFileName().GetPrintable());
+		result = m_filter.Matches(safeFilename);
 		result = ((result && !m_invert) || (!result && m_invert));
 		if (result && m_filterKnown) {
 			result = file->GetDownloadStatus() == CSearchFile::NEW;
@@ -904,7 +935,8 @@ void CSearchListCtrl::OnDrawItem(
 
 	#ifdef __WXDEBUG__
 	// Debug output for item information
-	std::cout << "DEBUG: Drawing file: " << file->GetFileName().GetPrintable().ToUTF8().data()
+	wxString safeFilename = SanitizeFilename(file->GetFileName().GetPrintable());
+	std::cout << "DEBUG: Drawing file: " << safeFilename.ToUTF8().data()
 		  << ", search ID: " << file->GetSearchID() << std::endl;
 	#endif
 

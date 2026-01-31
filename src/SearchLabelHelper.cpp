@@ -26,6 +26,7 @@
 #include "SearchLabelHelper.h"
 #include "SearchListCtrl.h"
 #include "SearchDlg.h"
+#include "SearchStateManager.h"
 #include "MuleNotebook.h"
 #include <common/Format.h>
 #include "amule.h"
@@ -60,49 +61,47 @@ void UpdateSearchStateWithCount(CSearchListCtrl* list, CSearchDlg* parentDlg, co
 		return;
 	}
 
+	// Get the search ID from the list
+	long searchId = list->GetSearchId();
+	if (searchId == 0) {
+		return;
+	}
+
+	// Get the SearchStateManager
+	SearchStateManager& stateManager = parentDlg->GetStateManager();
+	if (!stateManager.HasSearch(searchId)) {
+		return;
+	}
+
+	// Get the search type and keyword from SearchStateManager
+	wxString searchType = stateManager.GetSearchType(searchId);
+	wxString keyword = stateManager.GetKeyword(searchId);
+
 	// Log the values for debugging
-	theLogger.AddLogLine(wxT("SearchLabelHelper.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateSearchStateWithCount: state='%s', shown=%u, hidden=%u")) % state % shown % hidden);
+	theLogger.AddLogLine(wxT("SearchLabelHelper.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateSearchStateWithCount: searchId=%ld, state='%s', shown=%u, hidden=%u, type='%s', keyword='%s'")) % searchId % state % shown % hidden % searchType % keyword);
 
 	for (uint32 i = 0; i < (uint32)notebook->GetPageCount(); ++i) {
 		if (notebook->GetPage(i) == list) {
-			// Get the current tab text
-			wxString tabText = notebook->GetPageText(i);
-
-			// Preserve the search type prefix [Local], [ED2K], or [Kad]
-			wxString typePrefix;
-			if (tabText.StartsWith(wxT("[Local] "))) {
-				typePrefix = wxT("[Local] ");
-				tabText = tabText.Mid(8); // Remove "[Local] "
-			} else if (tabText.StartsWith(wxT("[ED2K] "))) {
-				typePrefix = wxT("[ED2K] ");
-				tabText = tabText.Mid(7); // Remove "[ED2K] "
-			} else if (tabText.StartsWith(wxT("[Kad] "))) {
-				typePrefix = wxT("[Kad] ");
-				tabText = tabText.Mid(6); // Remove "[Kad] "
+			// Build the new tab text using data from SearchStateManager
+			wxString newText;
+			
+			// Add search type prefix
+			if (searchType == wxT("Local")) {
+				newText = wxT("[Local] ");
+			} else if (searchType == wxT("Global")) {
+				newText = wxT("[Global] ");
+			} else if (searchType == wxT("Kad")) {
+				newText = wxT("[Kad] ");
 			}
-
-			// Remove any existing state prefix (if different from type prefix)
-			if (tabText.StartsWith(wxT("["))) {
-				size_t stateEnd = tabText.Find(wxT("]"));
-				if (stateEnd != wxString::npos) {
-					tabText = tabText.Mid(stateEnd + 2); // Skip "] "
-				}
-			}
-
-			// Remove any existing count suffix
-			int parenPos = tabText.Find(wxT(" ("));
-			if (parenPos != wxNOT_FOUND) {
-				tabText = tabText.Left(parenPos);
-			}
-
-			// Build the new tab text with type prefix and state
-			wxString newText = typePrefix;
+			
+			// Add state if provided
 			if (!state.IsEmpty()) {
-				newText += wxT("[") + state + wxT("] ") + tabText;
-			} else {
-				newText += tabText;
+				newText += wxT("[") + state + wxT("] ");
 			}
-
+			
+			// Add the keyword
+			newText += keyword;
+			
 			// Add count information
 			// Always show count when there is a state (e.g., "No Results", "Retrying 1")
 			// or when there are actual results
@@ -196,7 +195,7 @@ bool RetrySearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 
 	// Determine search type from tab text
 	bool isKadSearch = tabText.StartsWith(wxT("[Kad]")) || tabText.StartsWith(wxT("!"));
-	bool isEd2kSearch = tabText.StartsWith(wxT("[Local] ")) || tabText.StartsWith(wxT("[ED2K] "));
+	bool isEd2kSearch = tabText.StartsWith(wxT("[Local] ")) || tabText.StartsWith(wxT("[Global] "));
 
 	// Only retry ED2K searches (Local/Global), not Kad searches
 	if (!isEd2kSearch) {
@@ -238,7 +237,7 @@ bool RetrySearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 	uint32 newSearchId = searchId;
 	// Determine if this is a Local or Global search
 	SearchType searchType = LocalSearch;
-	if (tabText.StartsWith(wxT("[ED2K] "))) {
+	if (tabText.StartsWith(wxT("[Global] "))) {
 		searchType = GlobalSearch;
 	}
 	

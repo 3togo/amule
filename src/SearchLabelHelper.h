@@ -42,7 +42,7 @@ class wxNotebook;
  * - "No Results" - Search completed with no results
  * - Empty string - Search is complete or results are shown
  *
- * The function preserves the search type prefix ([Local], [ED2K], [Kad]).
+ * The function preserves the search type prefix ([Local], [Global], [Kad]).
  *
  * @param list The search list control to update
  * @param parentDlg The parent search dialog

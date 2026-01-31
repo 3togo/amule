@@ -199,6 +199,7 @@ if (BUILD_MONOLITHIC)
 		search/SearchModel.cpp
 		search/SearchPackageValidator.cpp
 		search/SearchPackageException.cpp
+		search/SearchResultRouter.cpp
 		SearchStateManager.cpp
 		SearchLabelHelper.cpp
 	)

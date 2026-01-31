@@ -102,6 +102,8 @@ public:
 	 */
 	void	ShowResults( long ResultsId );
 
+
+
 	/**
 	 * Updates the colors of item at the specified index.
 	 *

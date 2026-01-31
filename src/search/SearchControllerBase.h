@@ -59,7 +59,7 @@ public:
     SearchParams getSearchParams() const override;
     long getSearchId() const override;
 
-    // Result access
+    // Result access - delegates to SearchModel (single source of truth)
     std::vector<CSearchFile*> getResults() const override;
     size_t getResultCount() const override;
 
@@ -67,7 +67,7 @@ public:
     bool validateConfiguration() const;
 
 protected:
-    // Common data members
+    // Common data members - SearchModel is the single source of truth for state and results
     std::unique_ptr<SearchModel> m_model;
 
     // Retry settings
@@ -88,11 +88,7 @@ protected:
     // State update methods
     void updateSearchState(const SearchParams& params, uint32_t searchId, SearchState state);
 
-    // Result management
-    void addResult(CSearchFile* result);
-    void clearResults();
-
-    // SearchResultHandler interface
+    // SearchResultHandler interface - results are stored in SearchModel
     void handleResult(uint32_t searchId, CSearchFile* result) override;
     void handleResults(uint32_t searchId, const std::vector<CSearchFile*>& results) override;
     bool handlesSearch(uint32_t searchId) const override;

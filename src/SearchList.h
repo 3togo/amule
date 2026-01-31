@@ -31,6 +31,7 @@
 #include "SearchFile.h"		// Needed for CSearchFile
 #include <common/SmartPtr.h>	// Needed for CSmartPtr
 #include <memory>		// Needed for std::unique_ptr
+#include <set>		// Needed for std::set
 
 // Forward declarations
 namespace search {
@@ -70,7 +71,7 @@ public:
 	struct CSearchParams
 	{
 		/** Prevents accidental use of uninitialized variables. */
-		CSearchParams() { minSize = maxSize = availability = 0; }
+		CSearchParams() { minSize = maxSize = availability = 0; searchType = LocalSearch; }
 
 		//! The actual string to search for.
 		wxString searchString;
@@ -86,6 +87,8 @@ public:
 		uint64_t maxSize;
 		//! The minimum available (source-count), zero for any.
 		uint32_t availability;
+		//! The type of search (Local, Global, or Kad)
+		SearchType searchType;
 	};
 
 	/** Constructor. */
@@ -110,23 +113,23 @@ public:
 	/** Returns the completion percentage of the current search. */
 	uint32 GetSearchProgress() const;
 
+	/** Returns the current search ID. */
+	long GetCurrentSearchId() const { return m_currentSearch; }
+
+	/** Sets the current search ID. */
+	void SetCurrentSearch(long searchId) { m_currentSearch = searchId; }
+
+	/**
+	 * Requests more results for a specific search ID.
+	 * This is a thread-safe method that can be called from any thread.
+	 * 
+	 * @param searchId The search ID to request more results for
+	 * @return Empty string on success, error message on failure
+	 */
+	wxString RequestMoreResultsForSearch(long searchId);
+
 	/** This function is called once the local (ed2k) search has ended. */
 	void	LocalSearchEnd();
-
-	/**
-	 * Register a result handler for a specific search.
-	 *
-	 * @param searchId The search ID to register the handler for.
-	 * @param handler The result handler to register.
-	 */
-	void RegisterResultHandler(long searchId, search::SearchResultHandler* handler);
-
-	/**
-	 * Unregister a result handler for a specific search.
-	 *
-	 * @param searchId The search ID to unregister the handler for.
-	 */
-	void UnregisterResultHandler(long searchId);
 
 
 	/**
@@ -138,6 +141,18 @@ public:
 
 	/** Removes all results for the specified search. */
 	void	RemoveResults(long searchID);
+
+	/**
+	 * Adds the specified file to the current search's results.
+	 *
+	 * @param toadd The result to add.
+	 * @param clientResponse Is the result sent by a client (shared-files list).
+	 * @return True if the results were added, false otherwise.
+	 *
+	 * Note that this function takes ownership of the CSearchFile object,
+	 * regardless of whenever or not it was actually added to the results list.
+	 */
+	bool	AddToList(CSearchFile* toadd, bool clientResponse = false);
 
 
 	/** Finds the search-result (by hash) and downloads it in the given category. */
@@ -211,36 +226,15 @@ public:
 	/** Request more results from a specific server */
 	wxString RequestMoreResultsFromServer(const CServer* server, long searchID);
 
-	// Allow SearchPackageValidator to access private AddToList method
-	friend class search::SearchPackageValidator;
-
-	// Allow ED2KSearchPacketBuilder to access protected CreateSearchData method
-	friend class search::ED2KSearchPacketBuilder;
-
-	// Allow KadSearchPacketBuilder to access protected CreateSearchData method
-	friend class search::KadSearchPacketBuilder;
-
-private:
-	/** Event-handler for global searches. */
-	void OnGlobalSearchTimer(CTimerEvent& evt);
-
-	/**
-	 * Adds the specified file to the current search's results.
-	 *
-	 * @param toadd The result to add.
-	 * @param clientResponse Is the result sent by a client (shared-files list).
-	 * @return True if the results were added, false otherwise.
-	 *
-	 * Note that this function takes ownership of the CSearchFile object,
-	 * regardless of whenever or not it was actually added to the results list.
-	 */
-	bool AddToList(CSearchFile* toadd, bool clientResponse = false);
-
 	//! This smart pointer is used to safely prevent leaks.
 	typedef CSmartPtr<CMemFile> CMemFilePtr;
 
 	/** Create a basic search-packet for the given search-type. */
 	CMemFilePtr CreateSearchData(CSearchParams& params, SearchType type, bool supports64bit, bool& packetUsing64bit);
+
+private:
+	/** Event-handler for global searches. */
+	void OnGlobalSearchTimer(CTimerEvent& evt);
 
 
 	//! Timer used for global search intervals.
@@ -271,6 +265,15 @@ private:
 	//! TODO: Replace with 'cookie' system.
 	CQueueObserver<CServer*> m_serverQueue;
 
+	//! Set of servers already queried for current search
+	std::set<uint32>	m_queriedServers;
+
+	//! Track if we're in "more results" mode
+	bool		m_moreResultsMode;
+
+	//! Maximum number of servers to query in "more results" mode
+	int		m_moreResultsMaxServers;
+
 	//! Shorthand for the map of results (key is a SearchID).
 	typedef std::map<long, CSearchResultList> ResultMap;
 
@@ -285,18 +288,8 @@ private:
 	typedef std::map<long, CSearchParams> ParamMap;
 	ParamMap	m_searchParams;
 
-	//! Map of result handlers for each search ID.
-	typedef std::map<long, search::SearchResultHandler*> HandlerMap;
-	HandlerMap	m_resultHandlers;
-
-	//! Auto-retry manager for searches
-	std::unique_ptr<search::SearchAutoRetry>	m_autoRetry;
-
-	//! Package validator for search results
-	std::unique_ptr<search::SearchPackageValidator>	m_packageValidator;
-
-	//! Track result counts per search ID
-	std::map<long, int>	m_resultCounts;
+// Result handlers now managed by SearchResultRouter
+// Package validators now used by controllers directly
 
 	//! Handle search completion with auto-retry
 	void OnSearchComplete(long searchId, SearchType type, bool hasResults);

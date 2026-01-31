@@ -25,7 +25,7 @@
 
 #include "SearchPackageValidator.h"
 #include "SearchPackageException.h"
-#include "../SearchList.h"
+#include "SearchModel.h"
 #include "../Logger.h"
 #include "../MD4Hash.h"
 #include "../Tag.h"
@@ -133,34 +133,9 @@ void SearchPackageValidator::ValidateNetworkSource(CSearchFile* result) const
 	}
 }
 
-bool SearchPackageValidator::IsDuplicateResult(CSearchFile* result, const std::vector<CSearchFile*>& existingResults) const
-{
-	for (const auto& existing : existingResults) {
-		// Exact duplicate check
-		if (result->GetFileHash() == existing->GetFileHash() &&
-		    result->GetFileSize() == existing->GetFileSize() &&
-		    result->GetFileName() == existing->GetFileName()) {
-			AddDebugLogLineC(logSearch,
-				CFormat(wxT("Duplicate result: Hash=%s, Name='%s'"))
-					% result->GetFileHash().Encode() % result->GetFileName().GetPrintable());
-			m_totalDuplicates++;
-			return true;
-		}
 
-		// Fuzzy duplicate check (same hash and size)
-		if (result->GetFileHash() == existing->GetFileHash() &&
-		    result->GetFileSize() == existing->GetFileSize()) {
-			AddDebugLogLineC(logSearch,
-				CFormat(wxT("Fuzzy duplicate: Hash=%s, Name1='%s', Name2='%s'"))
-					% result->GetFileHash().Encode() % result->GetFileName().GetPrintable() % existing->GetFileName().GetPrintable());
-			m_totalDuplicates++;
-			return true;
-		}
-	}
-	return false;
-}
 
-size_t SearchPackageValidator::ProcessBatch(const std::vector<CSearchFile*>& batch, CSearchList* searchList)
+size_t SearchPackageValidator::ProcessBatch(const std::vector<CSearchFile*>& batch, SearchModel* model)
 {
 	size_t addedCount = 0;
 
@@ -175,21 +150,14 @@ size_t SearchPackageValidator::ProcessBatch(const std::vector<CSearchFile*>& bat
 			// Validate network source
 			ValidateNetworkSource(result);
 
-			// Check for duplicates
-			const CSearchResultList& existingResults = searchList->GetSearchResults(result->GetSearchID());
-			if (!IsDuplicateResult(result, existingResults)) {
-				// Add to results and notify UI
-				searchList->AddToList(result, false);
-				addedCount++;
-				m_totalAdded++;
+			// Add to model (handles duplicates internally)
+			model->addResult(result);
+			addedCount++;
+			m_totalAdded++;
 
-				AddDebugLogLineC(logSearch,
-					CFormat(wxT("Result added: SearchID=%u, Name='%s', Size=%llu"))
-						% result->GetSearchID() % result->GetFileName().GetPrintable() % result->GetFileSize());
-			} else {
-				// Duplicate - delete the result
-				delete result;
-			}
+			AddDebugLogLineC(logSearch,
+				CFormat(wxT("Result added: SearchID=%u, Name='%s', Size=%llu"))
+					% result->GetSearchID() % result->GetFileName().GetPrintable() % result->GetFileSize());
 		} catch (const SearchPackageException& e) {
 			// Exception already logged
 			// Clean up defective result
@@ -201,7 +169,7 @@ size_t SearchPackageValidator::ProcessBatch(const std::vector<CSearchFile*>& bat
 	return addedCount;
 }
 
-bool SearchPackageValidator::ProcessResult(CSearchFile* result, CSearchList* searchList)
+bool SearchPackageValidator::ProcessResult(CSearchFile* result, SearchModel* model)
 {
 	m_totalProcessed++;
 
@@ -215,23 +183,15 @@ bool SearchPackageValidator::ProcessResult(CSearchFile* result, CSearchList* sea
 		// Validate network source
 		ValidateNetworkSource(result);
 
-		// Check for duplicates
-		const CSearchResultList& existingResults = searchList->GetSearchResults(result->GetSearchID());
-		if (!IsDuplicateResult(result, existingResults)) {
-			// Add to results and notify UI
-			searchList->AddToList(result, false);
-			m_totalAdded++;
+		// Add to model (handles duplicates internally)
+		model->addResult(result);
+		m_totalAdded++;
 
-			AddDebugLogLineC(logSearch,
-				CFormat(wxT("Result processed: SearchID=%u, Name='%s', Size=%llu"))
-					% result->GetSearchID() % result->GetFileName().GetPrintable() % result->GetFileSize());
+		AddDebugLogLineC(logSearch,
+			CFormat(wxT("Result processed: SearchID=%u, Name='%s', Size=%llu"))
+				% result->GetSearchID() % result->GetFileName().GetPrintable() % result->GetFileSize());
 
-			return true;
-		} else {
-			// Duplicate - delete the result
-			delete result;
-			return false;
-		}
+		return true;
 	} catch (const SearchPackageException& e) {
 		// Exception already logged
 		// Clean up defective result
@@ -241,7 +201,7 @@ bool SearchPackageValidator::ProcessResult(CSearchFile* result, CSearchList* sea
 	}
 }
 
-size_t SearchPackageValidator::ProcessResults(const std::vector<CSearchFile*>& results, CSearchList* searchList)
+size_t SearchPackageValidator::ProcessResults(const std::vector<CSearchFile*>& results, SearchModel* model)
 {
 	m_totalProcessed += results.size();
 
@@ -251,7 +211,7 @@ size_t SearchPackageValidator::ProcessResults(const std::vector<CSearchFile*>& r
 	if (totalResults <= m_batchSize) {
 		AddDebugLogLineC(logSearch,
 			CFormat(wxT("Processing small package: %zu results")) % totalResults);
-		return ProcessBatch(results, searchList);
+		return ProcessBatch(results, model);
 	}
 
 	// Medium package: batch processing with progress
@@ -269,7 +229,7 @@ size_t SearchPackageValidator::ProcessResults(const std::vector<CSearchFile*>& r
 				batch.push_back(results[i]);
 			}
 
-			addedCount += ProcessBatch(batch, searchList);
+			addedCount += ProcessBatch(batch, model);
 
 			AddDebugLogLineC(logSearch,
 				CFormat(wxT("Medium batch progress: %zu%%, Batch=%zu/%zu, Added=%zu"))
@@ -296,7 +256,7 @@ size_t SearchPackageValidator::ProcessResults(const std::vector<CSearchFile*>& r
 			batch.push_back(results[i]);
 		}
 
-		addedCount += ProcessBatch(batch, searchList);
+		addedCount += ProcessBatch(batch, model);
 
 		size_t progress = (batchEnd * 100) / totalResults;
 		AddDebugLogLineC(logSearch,

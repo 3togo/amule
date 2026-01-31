@@ -30,6 +30,7 @@
 #include <vector>
 #include <stdint.h>
 #include "../SearchFile.h"
+#include "SearchModel.h"
 
 // Forward declarations
 class CSearchList;
@@ -66,19 +67,19 @@ public:
 	 * Validate and process a single search result
 	 *
 	 * @param result The search result to validate and process
-	 * @param searchList The search list to add the result to
+	 * @param model The search model to add the result to
 	 * @return true if result was added, false if it was a duplicate or invalid
 	 */
-	bool ProcessResult(CSearchFile* result, CSearchList* searchList);
+	bool ProcessResult(CSearchFile* result, SearchModel* model);
 
 	/**
 	 * Validate and process multiple search results
 	 *
 	 * @param results Vector of search results to validate and process
-	 * @param searchList The search list to add the results to
+	 * @param model The search model to add the results to
 	 * @return Number of results actually added
 	 */
-	size_t ProcessResults(const std::vector<CSearchFile*>& results, CSearchList* searchList);
+	size_t ProcessResults(const std::vector<CSearchFile*>& results, SearchModel* model);
 
 	/**
 	 * Set batch size for processing large packages
@@ -120,22 +121,13 @@ private:
 	void ValidateNetworkSource(CSearchFile* result) const;
 
 	/**
-	 * Check if a result is a duplicate
-	 *
-	 * @param result The search result to check
-	 * @param existingResults The existing results for this search
-	 * @return true if it's a duplicate, false otherwise
-	 */
-	bool IsDuplicateResult(CSearchFile* result, const std::vector<CSearchFile*>& existingResults) const;
-
-	/**
 	 * Process a batch of results
 	 *
 	 * @param batch Vector of results to process
-	 * @param searchList The search list to add the results to
+	 * @param model The search model to add the results to
 	 * @return Number of results actually added
 	 */
-	size_t ProcessBatch(const std::vector<CSearchFile*>& batch, CSearchList* searchList);
+	size_t ProcessBatch(const std::vector<CSearchFile*>& batch, SearchModel* model);
 
 	// Configuration
 	size_t m_batchSize;

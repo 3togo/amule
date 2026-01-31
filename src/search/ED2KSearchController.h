@@ -82,10 +82,16 @@ private:
     static constexpr int DEFAULT_MAX_SERVERS = 100;
     static constexpr int PROGRESS_UPDATE_INTERVAL = 5;
 
+    // Async requestMoreResults state
+    bool m_moreResultsInProgress = false;
+    uint32_t m_moreResultsSearchId = 0;
+    int m_moreResultsTimeout = 30; // 30 seconds timeout
+
     // Helper methods
     void updateProgress();
     void initializeProgress();
     bool isValidServerList() const;
+    uint32_t GenerateSearchId();
 
     // Validation methods
     bool validatePrerequisites();
@@ -93,6 +99,9 @@ private:
 
     // Helper methods
     void handleSearchError(uint32_t searchId, const wxString& error);
+
+    // Override handleResults for async completion notification
+    void handleResults(uint32_t searchId, const std::vector<CSearchFile*>& results) override;
 
     // Execution methods
     std::pair<uint32_t, wxString> executeSearch(const SearchParams& params);

@@ -81,6 +81,7 @@ private:
     void updateProgress();
     void initializeProgress();
     bool isValidKadNetwork() const;
+    uint32_t GenerateSearchId();
 
     // Validation methods
     bool validatePrerequisites();

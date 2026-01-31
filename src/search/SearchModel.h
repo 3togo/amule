@@ -102,13 +102,17 @@ public:
     // Thread-safe parameter access
     SearchParams getSearchParamsThreadSafe() const;
 
-    // Result management
+    // Result management - SearchModel is now the single source of truth for results
     void addResult(CSearchFile* result);
+    void addResults(const std::vector<CSearchFile*>& results);
     void clearResults();
     size_t getResultCount() const;
 
-    // Result access (thread-safe)
+    // Result access (thread-safe) - returns raw pointers, ownership stays with SearchModel
     std::vector<CSearchFile*> getResults() const;
+
+    // Duplicate checking
+    bool isDuplicate(const CSearchFile* result) const;
 
     // Result filtering
     bool hasResults() const;
@@ -139,6 +143,7 @@ private:
     long m_searchId = -1;
 
     // Results storage - using unique_ptr for automatic memory management
+    // This is now the SINGLE source of truth for search results
     std::vector<std::unique_ptr<CSearchFile>> m_results;
 
     // Helper methods

@@ -28,6 +28,7 @@
 #include "search/SearchPackageValidator.h"	// Package validator
 #include "search/SearchPackageException.h"	// Package exception
 #include "search/SearchResultHandler.h"	// Result handler interface
+#include "search/SearchResultRouter.h"	// Result router
 
 #include <protocol/Protocols.h>
 #include <protocol/kad/Constants.h>
@@ -277,19 +278,9 @@ CSearchList::CSearchList()
 	  m_searchInProgress(false),
 	  m_currentSearch(-1),
 	  m_64bitSearchPacket(false),
-	  m_KadSearchFinished(true),
-	  m_autoRetry(std::make_unique<search::SearchAutoRetry>()),
-	  m_packageValidator(std::make_unique<search::SearchPackageValidator>())
+	  m_KadSearchFinished(true)
 {
-	// Set up retry callback
-	m_autoRetry->SetOnRetry(
-		[this](long searchId, search::ModernSearchType type, int retryNum) {
-			OnSearchRetry(searchId,
-				type == search::ModernSearchType::KadSearch ? KadSearch :
-				type == search::ModernSearchType::LocalSearch ? LocalSearch :
-				GlobalSearch,
-				retryNum);
-		});
+	// Retry logic now handled by controllers
 }
 
 
@@ -297,7 +288,6 @@ CSearchList::~CSearchList()
 {
 	StopSearch();
 
-	// unique_ptr automatically handles cleanup of m_autoRetry and m_packageValidator
 
 	while (!m_results.empty()) {
 		RemoveResults(m_results.begin()->first);
@@ -719,20 +709,10 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 		resultVector.push_back(new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort));
 	}
 
-	// Forward results to registered handler if any
-	HandlerMap::iterator it = m_resultHandlers.find(m_currentSearch);
-	if (it != m_resultHandlers.end() && it->second) {
-		// Make a copy of results for the handler
-		std::vector<CSearchFile*> handlerResults;
-		for (CSearchFile* result : resultVector) {
-			handlerResults.push_back(result);
-		}
-		it->second->handleResults(m_currentSearch, handlerResults);
-	}
 
 	// Process results through validator (this adds them to SearchList)
 	if (!resultVector.empty()) {
-		m_packageValidator->ProcessResults(resultVector, this);
+		search::SearchResultRouter::Instance().RouteResults(m_currentSearch, resultVector);
 	}
 }
 
@@ -742,14 +722,9 @@ void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, u
 	// Create result
 	CSearchFile* result = new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort);
 
-	// Forward result to registered handler if any
-	HandlerMap::iterator it = m_resultHandlers.find(m_currentSearch);
-	if (it != m_resultHandlers.end() && it->second) {
-		it->second->handleResult(m_currentSearch, result);
-	}
 
 	// Process result through validator (this adds it to SearchList)
-	m_packageValidator->ProcessResult(result, this);
+	search::SearchResultRouter::Instance().RouteResult(m_currentSearch, result);
 }
 
 
@@ -1236,14 +1211,9 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt
 	CSearchFile *tempFile = new CSearchFile(temp, (eStrEncode == utf8strRaw), searchID, 0, 0, wxEmptyString, true);
 	tempFile->SetKadPublishInfo(kadPublishInfo);
 
-	// Forward result to registered handler if any
-	HandlerMap::iterator it = m_resultHandlers.find(searchID);
-	if (it != m_resultHandlers.end() && it->second) {
-		it->second->handleResult(searchID, tempFile);
-	}
 
 	// Process result through validator (this adds it to SearchList)
-	m_packageValidator->ProcessResult(tempFile, this);
+	search::SearchResultRouter::Instance().RouteResult(searchID, tempFile);
 }
 
 void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)
@@ -1287,42 +1257,6 @@ void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResul
 	// Update result count
 	ResultMap::iterator it = m_results.find(searchId);
 	int resultCount = (it != m_results.end()) ? it->second.size() : 0;
-	m_resultCounts[searchId] = resultCount;
-
-	// Log search completion
-	AddDebugLogLineC(logSearch, CFormat(wxT("Search complete: ID=%ld, Type=%d, HasResults=%d, ResultCount=%d"))
-		% searchId % (int)type % hasResults % resultCount);
-
-	// Check if we should retry
-	// Retry if we have no results OR if the result count is zero (all results were filtered out)
-	if ((!hasResults || resultCount == 0) && m_autoRetry->ShouldRetry(searchId)) {
-		// Increment retry count
-		m_autoRetry->IncrementRetryCount(searchId);
-
-		// Schedule retry
-		search::ModernSearchType modernType;
-		switch (type) {
-			case KadSearch:
-				modernType = search::ModernSearchType::KadSearch;
-				break;
-			case LocalSearch:
-				modernType = search::ModernSearchType::LocalSearch;
-				break;
-			case GlobalSearch:
-			default:
-				modernType = search::ModernSearchType::GlobalSearch;
-				break;
-		}
-
-		m_autoRetry->StartRetry(searchId, modernType);
-
-		// Log retry
-		AddDebugLogLineC(logSearch,
-			CFormat(wxT("Scheduling retry: SearchID=%ld, RetryCount=%d/%d"))
-				% searchId % m_autoRetry->GetRetryCount(searchId) % m_autoRetry->GetMaxRetryCount());
-
-		return; // Don't mark as finished yet
-	}
 
 	// Log marking search as finished
 	AddDebugLogLineC(logSearch, CFormat(wxT("Marking search finished: ID=%ld, Type=%d"))
@@ -1364,9 +1298,6 @@ void CSearchList::OnSearchRetry(long searchId, SearchType type, int retryNum)
 		return;
 	}
 
-	// Update search ID mapping
-	m_resultCounts[newSearchId] = m_resultCounts[searchId];
-	m_resultCounts.erase(searchId);
 
 	// Move results from old search ID to new search ID
 	ResultMap::iterator resultsIt = m_results.find(searchId);
@@ -1382,15 +1313,6 @@ void CSearchList::OnSearchRetry(long searchId, SearchType type, int retryNum)
 		AddDebugLogLineC(logSearch, wxString::Format(wxT("Moved %zu results from search %ld to %ld"), results.size(), searchId, newSearchId));
 	}
 
-	// Update result handler mapping if exists
-	HandlerMap::iterator handlerIt = m_resultHandlers.find(searchId);
-	if (handlerIt != m_resultHandlers.end()) {
-		// Update controller's search ID
-		handlerIt->second->updateSearchId(newSearchId);
-		m_resultHandlers[newSearchId] = handlerIt->second;
-		m_resultHandlers.erase(searchId);
-		AddDebugLogLineC(logSearch, wxString::Format(wxT("Moved result handler from search %ld to %ld"), searchId, newSearchId));
-	}
 
 	// Log success
 	AddDebugLogLineC(logSearch,
@@ -1398,21 +1320,12 @@ void CSearchList::OnSearchRetry(long searchId, SearchType type, int retryNum)
 			retryNum, searchId, newSearchId));
 }
 
-void CSearchList::RegisterResultHandler(long searchId, search::SearchResultHandler* handler)
-{
-	if (handler) {
-		m_resultHandlers[searchId] = handler;
-		AddDebugLogLineC(logSearch, wxString::Format(wxT("Registered result handler for search %ld"), searchId));
-	}
-}
-
-void CSearchList::UnregisterResultHandler(long searchId)
-{
-	HandlerMap::iterator it = m_resultHandlers.find(searchId);
-	if (it != m_resultHandlers.end()) {
-		m_resultHandlers.erase(it);
-		AddDebugLogLineC(logSearch, wxString::Format(wxT("Unregistered result handler for search %ld"), searchId));
-	}
-}
 
 // File_checked_for_headers
+
+wxString CSearchList::RequestMoreResultsForSearch(long searchId)
+{
+	// Request more results for the given search
+	// This is a wrapper around RequestMoreResults that handles the search ID
+	return RequestMoreResults(searchId);
+}

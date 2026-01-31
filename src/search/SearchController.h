@@ -59,6 +59,9 @@ public:
     virtual void stopSearch() = 0;
     virtual void requestMoreResults() = 0;
 
+    // Async callback for more results completion
+    using MoreResultsCallback = std::function<void(uint32_t, bool, const wxString&)>;
+
     // State information
     virtual SearchState getState() const = 0;
     virtual SearchParams getSearchParams() const = 0;
@@ -75,6 +78,7 @@ public:
     void setOnError(ErrorCallback callback) { m_onError = std::move(callback); }
     void setOnProgress(ProgressCallback callback) { m_onProgress = std::move(callback); }
     void setOnDetailedProgress(DetailedProgressCallback callback) { m_onDetailedProgress = std::move(callback); }
+    void setOnMoreResults(MoreResultsCallback callback) { m_onMoreResults = std::move(callback); }
 
     // Clear all callbacks
     void clearCallbacks() {
@@ -84,6 +88,7 @@ public:
         m_onError = nullptr;
         m_onProgress = nullptr;
         m_onDetailedProgress = nullptr;
+        m_onMoreResults = nullptr;
     }
 
 protected:
@@ -96,6 +101,9 @@ protected:
     void notifyError(uint32_t searchId, const wxString& error) { if (m_onError) m_onError(searchId, error); }
     void notifyProgress(uint32_t searchId, int progress) { if (m_onProgress) m_onProgress(searchId, progress); }
     void notifyDetailedProgress(uint32_t searchId, const ProgressInfo& info) { if (m_onDetailedProgress) m_onDetailedProgress(searchId, info); }
+    void notifyMoreResults(uint32_t searchId, bool success, const wxString& message) {
+	if (m_onMoreResults) m_onMoreResults(searchId, success, message);
+    }
 
 private:
     SearchStartedCallback m_onSearchStarted = nullptr;
@@ -104,6 +112,7 @@ private:
     ErrorCallback m_onError = nullptr;
     ProgressCallback m_onProgress = nullptr;
     DetailedProgressCallback m_onDetailedProgress = nullptr;
+    MoreResultsCallback m_onMoreResults = nullptr;
 };
 
 } // namespace search
