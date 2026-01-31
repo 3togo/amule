@@ -28,6 +28,7 @@
 #include "protocol/ed2k/Client2Client/TCP.h"
 #include "../LibSocket.h"
 #include "../MemFile.h"
+#include "../Packet.h"
 #include <memory>
 
 namespace MultiProtocol {
@@ -63,7 +64,7 @@ public:
 	// ED2K protocol handshake implementation using MemFile
 	CMemFile helloData;
 	helloData.WriteUInt8(OP_HELLO);
-	CPacket hello(helloData, OP_EDONKEYPROT, OP_HELLO);
+	::CPacket hello(helloData, OP_EDONKEYPROT, OP_HELLO);
 
 	// TODO: Implement proper packet sending using the correct client methods
 	// For now, just mark as complete for compilation
