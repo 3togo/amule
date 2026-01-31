@@ -746,8 +746,14 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event)) {
 			}
 		}
 
-		// Get search parameters atomically - this ensures we have a consistent view
-		CSearchList::CSearchParams params = theApp->searchlist->GetSearchParams(searchId);
+		// Get search parameters from SearchStateManager
+		CSearchList::CSearchParams params;
+		if (!m_stateManager.GetSearchParams(searchId, params)) {
+			wxMessageBox(_("No search parameters available for this search."), _("Search Error"),
+						 wxOK | wxICON_ERROR);
+			return;
+		}
+
 		if (params.searchString.IsEmpty()) {
 			wxMessageBox(_("No search parameters available for this search."), _("Search Error"),
 						 wxOK | wxICON_ERROR);
