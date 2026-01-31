@@ -720,8 +720,13 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event)) {
 		// Get the search ID for this tab - this is atomic
 		long searchId = list->GetSearchId();
 
+		// Debug logging
+		AddDebugLogLineN(logSearch, CFormat(wxT("More button clicked: searchId=%ld")) % searchId);
+		AddDebugLogLineN(logSearch, CFormat(wxT("SearchManager has search: %s")) % (m_stateManager.HasSearch(searchId) ? wxT("yes") : wxT("no")));
+
 		// Use SearchStateManager to get the search type instead of parsing tab text
 		wxString searchType = m_stateManager.GetSearchType(searchId);
+		AddDebugLogLineN(logSearch, CFormat(wxT("Search type: %s")) % searchType);
 
 		// The "More" button should only work for eD2k network searches (Local/Global), not for Kad
 		bool isKadSearch = (searchType == wxT("Kad"));
@@ -748,7 +753,9 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event)) {
 
 		// Get search parameters from SearchStateManager
 		CSearchList::CSearchParams params;
+		AddDebugLogLineN(logSearch, wxT("Attempting to get search parameters..."));
 		if (!m_stateManager.GetSearchParams(searchId, params)) {
+			AddDebugLogLineN(logSearch, wxT("Failed to get search parameters!"));
 			wxMessageBox(_("No search parameters available for this search."), _("Search Error"),
 						 wxOK | wxICON_ERROR);
 			return;
