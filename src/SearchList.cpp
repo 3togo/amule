@@ -382,6 +382,9 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 			m_currentSearch = *searchID;
 			m_KadSearchFinished = false;
 
+			// Register this search in the active searches map
+			m_activeSearches[*searchID] = type;
+
 			// Store search parameters for this search ID
 			m_searchParams[*searchID] = params;
 		} catch (const wxString& what) {
@@ -396,6 +399,9 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		}
 		m_currentSearch = *searchID;
 		m_searchInProgress = true;
+
+		// Register this search in the active searches map
+		m_activeSearches[*searchID] = type;
 
 		// Store search parameters for this search ID
 		m_searchParams[*searchID] = params;
@@ -703,28 +709,52 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 
 	uint32_t results = packet.ReadUInt32();
 
+	// Get the search ID from the active searches map
+	// This ensures results are associated with the correct search even if m_currentSearch has changed
+	long searchId = m_currentSearch;
+	if (!m_activeSearches.empty()) {
+		// Use the most recently added search ID from the active searches map
+		// This handles the case where multiple searches are active
+		auto it = m_activeSearches.rbegin();
+		if (it != m_activeSearches.rend()) {
+			searchId = it->first;
+		}
+	}
+
 	// Collect all results first
 	std::vector<CSearchFile*> resultVector;
 	for (; results > 0; --results) {
-		resultVector.push_back(new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort));
+		resultVector.push_back(new CSearchFile(packet, optUTF8, searchId, serverIP, serverPort));
 	}
 
 
 	// Process results through validator (this adds them to SearchList)
 	if (!resultVector.empty()) {
-		search::SearchResultRouter::Instance().RouteResults(m_currentSearch, resultVector);
+		search::SearchResultRouter::Instance().RouteResults(searchId, resultVector);
 	}
 }
 
 
 void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, uint32_t serverIP, uint16_t serverPort)
 {
+	// Get the search ID from the active searches map
+	// This ensures results are associated with the correct search even if m_currentSearch has changed
+	long searchId = m_currentSearch;
+	if (!m_activeSearches.empty()) {
+		// Use the most recently added search ID from the active searches map
+		// This handles the case where multiple searches are active
+		auto it = m_activeSearches.rbegin();
+		if (it != m_activeSearches.rend()) {
+			searchId = it->first;
+		}
+	}
+
 	// Create result
-	CSearchFile* result = new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort);
+	CSearchFile* result = new CSearchFile(packet, optUTF8, searchId, serverIP, serverPort);
 
 
 	// Process result through validator (this adds it to SearchList)
-	search::SearchResultRouter::Instance().RouteResult(m_currentSearch, result);
+	search::SearchResultRouter::Instance().RouteResult(searchId, result);
 }
 
 
@@ -817,6 +847,11 @@ void CSearchList::AddFileToDownloadByHash(const CMD4Hash& hash, uint8 cat)
 void CSearchList::StopSearch(bool globalOnly)
 {
 	if (m_searchType == GlobalSearch) {
+		// Remove this search from the active searches map
+		if (m_currentSearch != -1) {
+			m_activeSearches.erase(m_currentSearch);
+		}
+		
 		m_currentSearch = -1;
 		
 		// Reset search packet (unique_ptr handles deletion automatically)
@@ -833,6 +868,9 @@ void CSearchList::StopSearch(bool globalOnly)
 	} else if (m_searchType == KadSearch && !globalOnly) {
 		// Check if we have a valid search ID before stopping
 		if (m_currentSearch != -1) {
+			// Remove this search from the active searches map
+			m_activeSearches.erase(m_currentSearch);
+			
 			Kademlia::CSearchManager::StopSearch(m_currentSearch, false);
 			m_currentSearch = -1;
 		}
@@ -1261,6 +1299,9 @@ void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResul
 	// Log marking search as finished
 	AddDebugLogLineC(logSearch, CFormat(wxT("Marking search finished: ID=%ld, Type=%d"))
 		% searchId % (int)type);
+
+	// Remove this search from the active searches map
+	m_activeSearches.erase(searchId);
 
 	// Mark search as finished
 	if (type == KadSearch) {

@@ -32,6 +32,7 @@
 #include <common/SmartPtr.h>	// Needed for CSmartPtr
 #include <memory>		// Needed for std::unique_ptr
 #include <set>		// Needed for std::set
+#include <map>		// Needed for std::map
 
 // Forward declarations
 namespace search {
@@ -248,6 +249,9 @@ private:
 
 	//! The ID of the current search.
 	long		m_currentSearch;
+
+	//! Map of active searches and their types to track multiple concurrent searches
+	std::map<long, SearchType>	m_activeSearches;
 
 	//! The current packet used for searches.
 	std::unique_ptr<CPacket>	m_searchPacket;
