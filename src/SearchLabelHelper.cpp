@@ -32,6 +32,7 @@
 #include "amule.h"
 #include "SearchList.h"
 #include "Logger.h"
+#include "search/SearchLogging.h"
 #include <cassert>
 
 void UpdateSearchState(CSearchListCtrl* list, CSearchDlg* parentDlg, const wxString& state)
@@ -78,7 +79,7 @@ void UpdateSearchStateWithCount(CSearchListCtrl* list, CSearchDlg* parentDlg, co
 	wxString keyword = stateManager.GetKeyword(searchId);
 
 	// Log the values for debugging
-	theLogger.AddLogLine(wxT("SearchLabelHelper.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateSearchStateWithCount: searchId=%ld, state='%s', shown=%u, hidden=%u, type='%s', keyword='%s'")) % searchId % state % shown % hidden % searchType % keyword);
+	SEARCH_DEBUG_LABEL(CFormat(wxT("UpdateSearchStateWithCount: searchId=%ld, state='%s', shown=%u, hidden=%u, type='%s', keyword='%s'")) % searchId % state % shown % hidden % searchType % keyword);
 
 	for (uint32 i = 0; i < (uint32)notebook->GetPageCount(); ++i) {
 		if (notebook->GetPage(i) == list) {
@@ -114,7 +115,7 @@ void UpdateSearchStateWithCount(CSearchListCtrl* list, CSearchDlg* parentDlg, co
 			}
 
 			// Log the final tab text for debugging
-			theLogger.AddLogLine(wxT("SearchLabelHelper.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateSearchStateWithCount: Setting tab text to '%s'")) % newText);
+			SEARCH_DEBUG_LABEL(CFormat(wxT("UpdateSearchStateWithCount: Setting tab text to '%s'")) % newText);
 
 			notebook->SetPageText(i, newText);
 			break;

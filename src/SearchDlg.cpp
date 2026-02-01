@@ -39,6 +39,7 @@
 #include "SearchLabelHelper.h"
 #include "SearchList.h"		 // Needed for CSearchList
 #include "SearchListCtrl.h"	 // Needed for CSearchListCtrl
+#include "search/SearchLogging.h"
 #include "amule.h"			 // Needed for theApp
 #include "amuleDlg.h"		 // Needed for CamuleDlg
 #include "muuli_wdr.h"		 // Needed for IDC_STARTS
@@ -1144,12 +1145,12 @@ void CSearchDlg::UpdateHitCount(CSearchListCtrl* page) {
 	size_t hidden = page->GetHiddenItemCount();
 
 	// Log the hit count values for debugging
-	theLogger.AddLogLine(wxT("SearchDlg.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateHitCount: searchId=%ld, shown=%u, hidden=%u")) % searchId % shown % hidden);
+	SEARCH_DEBUG_COUNT(CFormat(wxT("UpdateHitCount: searchId=%ld, shown=%u, hidden=%u")) % searchId % shown % hidden);
 
 	// Ensure the search exists in state manager before updating
 	if (!m_stateManager.HasSearch(searchId)) {
 		// Search not initialized yet - this shouldn't happen but handle it gracefully
-		theLogger.AddLogLine(wxT("SearchDlg.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateHitCount: Search ID %ld not found in state manager, skipping update")) % searchId);
+		SEARCH_DEBUG_COUNT(CFormat(wxT("UpdateHitCount: Search ID %ld not found in state manager, skipping update")) % searchId);
 		return;
 	}
 
