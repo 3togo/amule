@@ -26,6 +26,7 @@
 
 #include "ED2KSearchHelper.h"
 #include "SearchController.h"
+#include "SearchTypeConverter.h"
 #include "../amule.h"
 #include "../ServerConnect.h"
 #include "../Server.h"
@@ -70,7 +71,7 @@ bool ED2KSearchHelper::CreateSearchPacket(const SearchParams& params, bool isLoc
 	oldParams.availability = params.availability;
 
 	// Determine search type
-	::SearchType type = isLocalSearch ? ::LocalSearch : ::GlobalSearch;
+	::SearchType type = SearchTypeConverter::toLegacy(searchType);
 
 	// Check if server supports 64-bit
 	bool supports64bit = SupportsLargeFiles();

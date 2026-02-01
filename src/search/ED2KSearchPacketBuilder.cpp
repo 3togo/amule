@@ -26,6 +26,7 @@
 
 #include "ED2KSearchPacketBuilder.h"
 #include "SearchController.h"
+#include "SearchTypeConverter.h"
 #include "../SearchList.h"
 #include "../amule.h"
 #include "../MemFile.h"
@@ -51,7 +52,7 @@ bool ED2KSearchPacketBuilder::CreateSearchPacket(const SearchParams& params, boo
     oldParams.availability = params.availability;
     
     // Determine search type
-    ::SearchType type = ::LocalSearch;
+    ::SearchType type = SearchTypeConverter::toLegacy(ModernSearchType::LocalSearch);
     
     // Use SearchList's CreateSearchData method
     bool packetUsing64bit = false;

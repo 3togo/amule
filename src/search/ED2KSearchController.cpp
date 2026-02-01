@@ -39,6 +39,8 @@
 #include "../MemFile.h"
 #include <protocol/Protocols.h>
 #include <wx/utils.h>
+#include "../Logger.h"
+#include "SearchTypeConverter.h"
 
 namespace search {
 
@@ -103,9 +105,7 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
     m_model->setSearchParams(params);
 
     // Determine search type
-    ::SearchType oldSearchType = (params.searchType == ModernSearchType::LocalSearch)
-			      ? ::LocalSearch
-			      : ::GlobalSearch;
+    ::SearchType oldSearchType = SearchTypeConverter::toLegacy(params.searchType);
 
     // Convert to old parameter format
     // Generate new search ID
@@ -117,7 +117,7 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
     
     try {
 	// Determine search type
-	bool isLocalSearch = (params.searchType == ModernSearchType::LocalSearch);
+	bool isLocalSearch = SearchTypeConverter::isLocalSearch(params.searchType);
 	
 	// Build search packet
 	uint8_t* packetData = nullptr;
@@ -262,7 +262,7 @@ bool ED2KSearchController::validateSearchStateForMoreResults(wxString& error) co
 {
     SearchParams params = m_model->getSearchParams();
 
-    if (params.searchType != ModernSearchType::GlobalSearch) {
+    if (!SearchTypeConverter::isGlobalSearch(params.searchType)) {
 	error = _("More results are only available for global eD2k searches");
 	return false;
     }

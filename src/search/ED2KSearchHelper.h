@@ -29,6 +29,7 @@
 
 #include <wx/string.h>
 #include <memory>
+#include "SearchModel.h"
 
 namespace search {
 
@@ -66,7 +67,7 @@ public:
 	 * @param[out] packetSize Size of the packet
 	 * @return true if packet was created successfully
 	 */
-	static bool CreateSearchPacket(const SearchParams& params, bool isLocalSearch,
+	static bool CreateSearchPacket(const SearchParams& params, ModernSearchType searchType,
 				      uint8_t*& packetData, uint32_t& packetSize);
 
 	/**
@@ -78,7 +79,7 @@ public:
 	 * @return true if packet was sent successfully
 	 */
 	static bool SendSearchPacket(const uint8_t* packetData, uint32_t packetSize,
-				     bool isLocalSearch);
+				     ModernSearchType searchType);
 
 	/**
 	 * Cleans up packet data created by CreateSearchPacket.
