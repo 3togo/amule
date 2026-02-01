@@ -28,6 +28,8 @@
 #include "SearchResultHandler.h"
 #include "../Logger.h"
 #include <common/Format.h>
+#include "../amule.h"
+#include "../SearchList.h"
 
 namespace search {
 
@@ -76,8 +78,14 @@ bool SearchResultRouter::RouteResult(uint32_t searchId, CSearchFile* result)
 
     // No controller registered for this search
     AddDebugLogLineC(logSearch, 
-        CFormat(wxT("No controller registered for search ID %u, dropping result")) % searchId);
+        CFormat(wxT("No controller registered for search ID %u, adding to SearchList")) % searchId);
 
+    // Add result to SearchList for display
+    if (theApp && theApp->searchlist) {
+        result->SetSearchID(searchId);
+        theApp->searchlist->AddToList(result, false);
+        return true;
+    }
     // Clean up the result since no one will handle it
     delete result;
     return false;
@@ -102,8 +110,17 @@ size_t SearchResultRouter::RouteResults(uint32_t searchId, const std::vector<CSe
 
     // No controller registered for this search
     AddDebugLogLineC(logSearch, 
-        CFormat(wxT("No controller registered for search ID %u, dropping %zu results")) 
+        CFormat(wxT("No controller registered for search ID %u, adding %zu results to SearchList")) 
         % searchId % results.size());
+
+    // Add results to SearchList for display
+    if (theApp && theApp->searchlist) {
+        for (CSearchFile* result : results) {
+            result->SetSearchID(searchId);
+            theApp->searchlist->AddToList(result, false);
+        }
+        return results.size();
+    }
 
     // Clean up all results since no one will handle them
     for (CSearchFile* result : results) {

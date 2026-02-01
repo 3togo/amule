@@ -87,6 +87,8 @@ private:
     uint32_t m_moreResultsSearchId = 0;
     int m_moreResultsTimeout = 30; // 30 seconds timeout
 
+    // Search completion tracking handled by SearchResultRouter
+
     // Helper methods
     void updateProgress();
     void initializeProgress();

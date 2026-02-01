@@ -247,11 +247,15 @@ private:
 	//! Specifies if a search is being performed.
 	bool		m_searchInProgress;
 
-	//! The ID of the current search.
+	//! The ID of the current search (DEPRECATED - use m_activeSearches instead)
 	long		m_currentSearch;
 
 	//! Map of active searches and their types to track multiple concurrent searches
+	//! This is now the single source of truth for active searches
 	std::map<long, SearchType>	m_activeSearches;
+
+	//! Mutex for thread-safe access to active searches
+	mutable wxMutex m_searchMutex;
 
 	//! The current packet used for searches.
 	std::unique_ptr<CPacket>	m_searchPacket;

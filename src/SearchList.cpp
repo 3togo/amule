@@ -709,15 +709,30 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 
 	uint32_t results = packet.ReadUInt32();
 
-	// Get the search ID from the active searches map
-	// This ensures results are associated with the correct search even if m_currentSearch has changed
-	long searchId = m_currentSearch;
-	if (!m_activeSearches.empty()) {
-		// Use the most recently added search ID from the active searches map
-		// This handles the case where multiple searches are active
-		auto it = m_activeSearches.rbegin();
-		if (it != m_activeSearches.rend()) {
-			searchId = it->first;
+	// Get the search ID from the active searches map in a thread-safe manner
+	// This ensures results are associated with the correct search
+	long searchId = -1;
+	{
+		wxMutexLocker lock(m_searchMutex);
+		if (!m_activeSearches.empty()) {
+			// Find the most recent global or local search
+			// We need to find the search that matches the server response
+			for (auto it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
+				if (it->second == LocalSearch || it->second == GlobalSearch) {
+					searchId = it->first;
+					break;
+				}
+			}
+		}
+	}
+
+	// If no valid search ID found, use the current search ID
+	if (searchId == -1) {
+		AddDebugLogLineN(logSearch, wxT("Received search results but no active search found, using current search"));
+		searchId = m_currentSearch;
+		if (searchId == -1) {
+			AddDebugLogLineN(logSearch, wxT("No current search, dropping results"));
+			return;
 		}
 	}
 
@@ -726,7 +741,6 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 	for (; results > 0; --results) {
 		resultVector.push_back(new CSearchFile(packet, optUTF8, searchId, serverIP, serverPort));
 	}
-
 
 	// Process results through validator (this adds them to SearchList)
 	if (!resultVector.empty()) {
@@ -737,21 +751,34 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 
 void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, uint32_t serverIP, uint16_t serverPort)
 {
-	// Get the search ID from the active searches map
-	// This ensures results are associated with the correct search even if m_currentSearch has changed
-	long searchId = m_currentSearch;
-	if (!m_activeSearches.empty()) {
-		// Use the most recently added search ID from the active searches map
-		// This handles the case where multiple searches are active
-		auto it = m_activeSearches.rbegin();
-		if (it != m_activeSearches.rend()) {
-			searchId = it->first;
+	// Get the search ID from the active searches map in a thread-safe manner
+	// This ensures results are associated with the correct search
+	long searchId = -1;
+	{
+		wxMutexLocker lock(m_searchMutex);
+		if (!m_activeSearches.empty()) {
+			// Find the most recent global search (UDP is only used for global searches)
+			for (auto it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
+				if (it->second == GlobalSearch) {
+					searchId = it->first;
+					break;
+				}
+			}
+		}
+	}
+
+	// If no valid search ID found, use the current search ID
+	if (searchId == -1) {
+		AddDebugLogLineN(logSearch, wxT("Received UDP search result but no active global search found, using current search"));
+		searchId = m_currentSearch;
+		if (searchId == -1) {
+			AddDebugLogLineN(logSearch, wxT("No current search, dropping result"));
+			return;
 		}
 	}
 
 	// Create result
 	CSearchFile* result = new CSearchFile(packet, optUTF8, searchId, serverIP, serverPort);
-
 
 	// Process result through validator (this adds it to SearchList)
 	search::SearchResultRouter::Instance().RouteResult(searchId, result);
