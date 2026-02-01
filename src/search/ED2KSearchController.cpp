@@ -28,6 +28,7 @@
 #include "ED2KSearchPacketBuilder.h"
 #include "SearchPackageValidator.h"
 #include "SearchResultRouter.h"
+#include "SearchLogging.h"
 #include "../ServerList.h"
 #include "../Server.h"
 #include "../ServerConnect.h"

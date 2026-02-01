@@ -17,7 +17,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     include(CheckCXXCompilerFlag)
     check_cxx_compiler_flag(-fcoroutines HAS_COROUTINES)
     if(HAS_COROUTINES)
-        add_compile_options(-fcoroutines)
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fcoroutines>)
         add_compile_definitions(USE_CPP20 HAS_COROUTINES)
     else()
         message(WARNING "Compiler does not support coroutines")
@@ -142,6 +142,13 @@ configure_file (
 	config.h.cm
 	config.h
 )
+
+# Search window debug logging
+if(ENABLE_SEARCH_WINDOW_DEBUG)
+	add_compile_definitions(ENABLE_SEARCH_WINDOW_DEBUG=1)
+else()
+	add_compile_definitions(ENABLE_SEARCH_WINDOW_DEBUG=0)
+endif()
 
 if (WIN32)
 	configure_file (

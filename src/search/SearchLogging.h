@@ -23,35 +23,32 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
-#include "SearchPackageException.h"
-#include "SearchLogging.h"
+#ifndef SEARCH_LOGGING_H
+#define SEARCH_LOGGING_H
+
 #include "../Logger.h"
-#include <common/Format.h>
+
+// Central switch for search window debug logging
+// Controlled by CMake option ENABLE_SEARCH_WINDOW_DEBUG
+// Default to enabled if not defined by CMake
+#ifndef ENABLE_SEARCH_WINDOW_DEBUG
+#define ENABLE_SEARCH_WINDOW_DEBUG 0
+#endif
 
 namespace search {
+    // Convenience macro for search window logging
+    #define SEARCH_DEBUG(msg) \
+        do { \
+            if (ENABLE_SEARCH_WINDOW_DEBUG && theLogger.IsEnabled(logSearch)) { \
+                theLogger.AddLogLine(wxT(__FILE__), __LINE__, false, logSearch, msg); \
+            } \
+        } while(0)
 
-SearchPackageException::SearchPackageException(const wxString& message, uint32_t searchId)
-	: m_message(message)
-	, m_searchId(searchId)
-	, m_timestamp(wxDateTime::Now())
-{
-	// Log immediately on creation
-	LogException();
+    // Convenience macro for critical search window messages
+    #define SEARCH_CRITICAL(msg) \
+        do { \
+            theLogger.AddLogLine(wxT(__FILE__), __LINE__, true, logSearch, msg); \
+        } while(0)
 }
 
-SearchPackageException::~SearchPackageException() throw()
-{
-}
-
-void SearchPackageException::LogException() const
-{
-	wxString logMsg = CFormat(wxT("SearchPackageException: SearchID=%u, Message='%s', Timestamp='%s'"))
-		% m_searchId % m_message % m_timestamp.FormatISOCombined();
-
-	SEARCH_DEBUG(logMsg);
-
-	// Also write to error log
-	AddLogLineC(logMsg);
-}
-
-} // namespace search
+#endif // SEARCH_LOGGING_H

@@ -26,6 +26,7 @@
 #include "SearchPackageValidator.h"
 #include "SearchPackageException.h"
 #include "SearchModel.h"
+#include "SearchLogging.h"
 #include "../Logger.h"
 #include "../MD4Hash.h"
 #include "../Tag.h"

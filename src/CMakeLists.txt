@@ -406,6 +406,12 @@ if (NEED_LIB_MULEAPPCORE)
 		set (IPFILTERSCANNER ${CMAKE_CURRENT_SOURCE_DIR}/IPFilterScanner.cpp)
 	endif()
 
+	# Disable register keyword warnings for generated scanner files
+	if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+		set_source_files_properties(${SCANNER} PROPERTIES COMPILE_FLAGS "-Wno-register")
+		set_source_files_properties(${IPFILTERSCANNER} PROPERTIES COMPILE_FLAGS "-Wno-register")
+	endif()
+
 	add_library (muleappcore STATIC
 		${IPFILTERSCANNER}
 		${PARSER}

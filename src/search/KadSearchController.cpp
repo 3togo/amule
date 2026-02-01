@@ -28,6 +28,7 @@
 #include "KadSearchPacketBuilder.h"
 #include "SearchPackageValidator.h"
 #include "SearchResultRouter.h"
+#include "SearchLogging.h"
 #include "../amule.h"
 #include "../SearchFile.h"
 #include "../SearchList.h"

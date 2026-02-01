@@ -26,6 +26,7 @@
 #include "SearchResultRouter.h"
 #include "SearchController.h"
 #include "SearchResultHandler.h"
+#include "SearchLogging.h"
 #include "../Logger.h"
 #include <common/Format.h>
 #include "../amule.h"
@@ -46,7 +47,7 @@ SearchResultRouter& SearchResultRouter::Instance()
 void SearchResultRouter::RegisterController(uint32_t searchId, SearchController* controller)
 {
     m_controllers[searchId] = controller;
-    AddDebugLogLineC(logSearch, 
+    SEARCH_DEBUG( 
         CFormat(wxT("Registered controller for search ID %u")) % searchId);
 }
 
@@ -55,7 +56,7 @@ void SearchResultRouter::UnregisterController(uint32_t searchId)
     ControllerMap::iterator it = m_controllers.find(searchId);
     if (it != m_controllers.end()) {
         m_controllers.erase(it);
-        AddDebugLogLineC(logSearch, 
+        SEARCH_DEBUG( 
             CFormat(wxT("Unregistered controller for search ID %u")) % searchId);
     }
 }
@@ -70,14 +71,14 @@ bool SearchResultRouter::RouteResult(uint32_t searchId, CSearchFile* result)
             // Route result to controller's handler
             handler->handleResult(searchId, result);
 
-            AddDebugLogLineC(logSearch, 
+            SEARCH_DEBUG( 
                 CFormat(wxT("Routed result for search ID %u")) % searchId);
             return true;
         }
     }
 
     // No controller registered for this search
-    AddDebugLogLineC(logSearch, 
+    SEARCH_DEBUG( 
         CFormat(wxT("No controller registered for search ID %u, adding to SearchList")) % searchId);
 
     // Add result to SearchList for display
@@ -101,7 +102,7 @@ size_t SearchResultRouter::RouteResults(uint32_t searchId, const std::vector<CSe
             // Route all results to controller's handler
             handler->handleResults(searchId, results);
 
-            AddDebugLogLineC(logSearch, 
+            SEARCH_DEBUG( 
                 CFormat(wxT("Routing %zu results for search ID %u")) % results.size() % searchId);
 
             return results.size();
@@ -109,7 +110,7 @@ size_t SearchResultRouter::RouteResults(uint32_t searchId, const std::vector<CSe
     }
 
     // No controller registered for this search
-    AddDebugLogLineC(logSearch, 
+    SEARCH_DEBUG( 
         CFormat(wxT("No controller registered for search ID %u, adding %zu results to SearchList")) 
         % searchId % results.size());
 
