@@ -773,19 +773,15 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event)) {
 		// Handle Local and Global searches differently
 		if (params.searchType == LocalSearch) {
 			// For Local searches, we need to convert to Global search
-			// This creates a new search ID and queries multiple servers
+			// This now reuses the same search ID and queries multiple servers
 			wxString error = theApp->searchlist->RequestMoreResultsForSearch(searchId);
 			if (!error.IsEmpty()) {
 				wxMessageBox(error, _("Search Error"), wxOK | wxICON_ERROR);
 				return;
 			}
 
-			// Get the new search ID - this is atomic
-			long newSearchId = theApp->searchlist->GetCurrentSearchId();
-			if (newSearchId != originalSearchId) {
-				// Update the list control to show results from the new search
-				list->ShowResults(newSearchId);
-			}
+			// The search ID remains the same, results will be appended to the existing list
+			// No need to update the list control since we're using the same search ID
 		} else if (params.searchType == GlobalSearch) {
 			// For Global searches, we continue querying additional servers
 			// The search ID remains the same, but we query more servers

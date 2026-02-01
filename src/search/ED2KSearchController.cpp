@@ -132,9 +132,13 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
 	}
 	
 	// Get search ID from model or generate new one
+	// IMPORTANT: When requesting more results, we MUST use the existing search ID
+	// to ensure results are routed to the correct search tag
 	if (m_model->getSearchId() == -1) {
 	    searchId = GenerateSearchId();
 	} else {
+	    // Use the existing search ID from the model
+	    // This is critical for "more results" functionality
 	    searchId = m_model->getSearchId();
 	}
 	
@@ -249,22 +253,29 @@ void ED2KSearchController::requestMoreResults()
 	return;
     }
 
+    // Store the original search ID before making any changes
+    uint32_t originalSearchId = m_model->getSearchId();
+
     // Mark as in progress
     m_moreResultsInProgress = true;
-    m_moreResultsSearchId = m_model->getSearchId();
+    m_moreResultsSearchId = originalSearchId;
 
     // Step 3: Prepare for retry
     initializeProgress();
     m_currentRetry++;
 
     // Step 4: Execute search with same parameters
+    // Use the original search ID to maintain consistency
     auto [newSearchId, execError] = executeSearch(m_model->getSearchParams());
 
     // Step 5: Handle result
     if (execError.IsEmpty()) {
-	m_model->setSearchId(newSearchId);
+	// Keep the original search ID - don't change it!
+	// This ensures results are routed to the correct search tag
+	// The executeSearch method will use the existing search ID if it's already set
+	m_model->setSearchId(originalSearchId);
 	m_model->setSearchState(SearchState::Retrying);
-	notifySearchStarted(newSearchId);
+	notifySearchStarted(originalSearchId);
 
 	// Start timeout timer for async completion
 	// The actual results will come back through the result handler
@@ -389,17 +400,28 @@ bool ED2KSearchController::isValidServerList() const
 
 void ED2KSearchController::handleResults(uint32_t searchId, const std::vector<CSearchFile*>& results)
 {
-    // Call base implementation first
-    SearchControllerBase::handleResults(searchId, results);
-
     // Check if we're in "more results" mode
-    if (m_moreResultsInProgress && searchId == static_cast<uint32_t>(m_model->getSearchId())) {
+    if (m_moreResultsInProgress) {
+	// When in "more results" mode, we need to ensure results are associated with the original search ID
+	// The searchId parameter might be different from m_model->getSearchId() if a new search ID was generated
+	// We should use the original search ID (stored in m_moreResultsSearchId) for all result handling
+
+	// Update the model's search ID to the original search ID to ensure correct routing
+	uint32_t originalSearchId = m_moreResultsSearchId;
+	m_model->setSearchId(originalSearchId);
+
+	// Call base implementation with the original search ID
+	SearchControllerBase::handleResults(originalSearchId, results);
+
 	// Don't mark as complete yet - we want to continue receiving results
 	// Just notify that we received some results
 	if (!results.empty()) {
 	    wxString message = wxString::Format(_("Received %zu additional result(s)"), results.size());
-	    notifyMoreResults(searchId, true, message);
+	    notifyMoreResults(originalSearchId, true, message);
 	}
+    } else {
+	// Normal search handling - call base implementation
+	SearchControllerBase::handleResults(searchId, results);
     }
 }
 

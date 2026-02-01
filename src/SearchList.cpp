@@ -446,14 +446,12 @@ wxString CSearchList::RequestMoreResults(long searchID)
 	// Stop any current search to prevent race conditions
 	StopSearch(true);
 
-	// Generate a unique search ID to avoid collisions
-	static uint32 s_nextSearchID = 0;
-	s_nextSearchID = (s_nextSearchID + 1) % 0xFFFFFFFE;
-	if (s_nextSearchID == 0) s_nextSearchID = 1;
-	uint32 newSearchID = s_nextSearchID;
+	// Use the original search ID to append results to the same search
+	// Don't create a new search ID - we want to append results to the existing search
+	uint32 originalSearchID = searchID;
 
-	// Create a new global search with the same parameters
-	return StartNewSearch(&newSearchID, GlobalSearch, params);
+	// Create a new global search with the same parameters using the original search ID
+	return StartNewSearch(&originalSearchID, GlobalSearch, params);
 }
 
 
