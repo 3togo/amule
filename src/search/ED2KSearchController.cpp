@@ -140,9 +140,30 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
 	
 	// Send packet to server
 	if (theApp && theApp->serverconnect) {
-	    // Set the current search ID in SearchList before sending
+	    // Register the search in SearchList's active searches map
+	    // This ensures results are properly routed to the correct search
 	    if (theApp->searchlist) {
-		theApp->searchlist->SetCurrentSearch(searchId);
+		// Use the legacy StartNewSearch method to register the search
+		// but with our pre-generated search ID
+		CSearchList::CSearchParams oldParams;
+		oldParams.searchString = params.searchString;
+		oldParams.strKeyword = params.strKeyword;
+		oldParams.typeText = params.typeText;
+		oldParams.extension = params.extension;
+		oldParams.minSize = params.minSize;
+		oldParams.maxSize = params.maxSize;
+		oldParams.availability = params.availability;
+		oldParams.searchType = isLocalSearch ? LocalSearch : GlobalSearch;
+
+		// Register the search with SearchList
+		// This ensures the search is tracked in the active searches map
+		wxString startError = theApp->searchlist->StartNewSearch(
+		    &searchId, oldParams.searchType, oldParams);
+		if (!startError.IsEmpty()) {
+		    delete[] packetData;
+		    error = startError;
+		    return {0, error};
+		}
 	    }
 
 	    theStats::AddUpOverheadServer(packetSize);

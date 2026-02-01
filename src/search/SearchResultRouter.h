@@ -100,6 +100,9 @@ private:
     typedef std::map<uint32_t, SearchController*> ControllerMap;
     ControllerMap m_controllers;
 
+    // Mutex for thread-safe access to controllers
+    mutable wxMutex m_controllersMutex;
+
     // Package validator for result validation
 };
 

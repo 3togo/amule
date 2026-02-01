@@ -328,18 +328,6 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		return _("eD2k search can't be done if eD2k is not connected");
 	}
 
-	if (params.typeText != ED2KFTSTR_PROGRAM) {
-		if (params.typeText.CmpNoCase(wxT("Any")) != 0) {
-			m_resultType = params.typeText;
-		} else {
-			m_resultType.Clear();
-		}
-	} else {
-		// No check is to be made on returned results if the
-		// type is 'Programs', since this returns multiple types.
-		m_resultType.Clear();
-	}
-
 	if (type == KadSearch) {
 		Kademlia::WordList words;
 		Kademlia::CSearchManager::GetWords(params.searchString, &words);
@@ -712,28 +700,43 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 	// Get the search ID from the active searches map in a thread-safe manner
 	// This ensures results are associated with the correct search
 	long searchId = -1;
+	SearchType searchType = LocalSearch; // Default to local search
+
 	{
 		wxMutexLocker lock(m_searchMutex);
 		if (!m_activeSearches.empty()) {
-			// Find the most recent global or local search
-			// We need to find the search that matches the server response
+			// Check if this is from the local server (TCP) or a remote server (UDP)
+			// TCP responses are for local searches, UDP responses are for global searches
+			bool isFromLocalServer = false;
+			if (theApp && theApp->serverconnect) {
+				const CServer* currentServer = theApp->serverconnect->GetCurrentServer();
+				if (currentServer && currentServer->GetIP() == serverIP && currentServer->GetPort() == serverPort) {
+					isFromLocalServer = true;
+				}
+			}
+
+			// Find the most recent search matching the response type
 			for (auto it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
-				if (it->second == LocalSearch || it->second == GlobalSearch) {
+				if (isFromLocalServer && it->second == LocalSearch) {
 					searchId = it->first;
+					searchType = LocalSearch;
+					break;
+				} else if (!isFromLocalServer && it->second == GlobalSearch) {
+					searchId = it->first;
+					searchType = GlobalSearch;
 					break;
 				}
 			}
 		}
 	}
 
-	// If no valid search ID found, use the current search ID
+	// If no valid search ID found, drop the results
+	// We should NOT use m_currentSearch as a fallback because it can cause
+	// results from different searches to be mixed together
 	if (searchId == -1) {
-		AddDebugLogLineN(logSearch, wxT("Received search results but no active search found, using current search"));
-		searchId = m_currentSearch;
-		if (searchId == -1) {
-			AddDebugLogLineN(logSearch, wxT("No current search, dropping results"));
-			return;
-		}
+		AddDebugLogLineN(logSearch, wxString::Format(wxT("Received search results from %s:%u but no matching active search found, dropping results"),
+			(uint32_t)serverIP, serverPort));
+		return;
 	}
 
 	// Collect all results first
@@ -758,6 +761,7 @@ void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, u
 		wxMutexLocker lock(m_searchMutex);
 		if (!m_activeSearches.empty()) {
 			// Find the most recent global search (UDP is only used for global searches)
+			// We need to ensure we don't accidentally route to a local search
 			for (auto it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
 				if (it->second == GlobalSearch) {
 					searchId = it->first;
@@ -767,14 +771,12 @@ void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, u
 		}
 	}
 
-	// If no valid search ID found, use the current search ID
+	// If no valid search ID found, drop the result
+	// UDP results should only go to global searches, not local searches
 	if (searchId == -1) {
-		AddDebugLogLineN(logSearch, wxT("Received UDP search result but no active global search found, using current search"));
-		searchId = m_currentSearch;
-		if (searchId == -1) {
-			AddDebugLogLineN(logSearch, wxT("No current search, dropping result"));
-			return;
-		}
+		AddDebugLogLineN(logSearch, wxString::Format(wxT("Received UDP search result from %s:%u but no active global search found, dropping result"),
+			(uint32_t)serverIP, serverPort));
+		return;
 	}
 
 	// Create result
@@ -799,20 +801,31 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 		return false;
 	}
 
-	// If the result was not the type the user wanted, drop it.
-	if ((clientResponse == false) && !m_resultType.IsEmpty()) {
-		if (GetFileTypeByName(toadd->GetFileName()) != m_resultType) {
-			AddDebugLogLineN(logSearch,
-				CFormat( wxT("Dropped result type %s != %s, file %s") )
-					% GetFileTypeByName(toadd->GetFileName())
-					% m_resultType
-					% toadd->GetFileName().GetPrintable());
-
-			delete toadd;
-			return false;
+	// Get the result type for this specific search (thread-safe)
+	wxString resultTypeForSearch;
+	{
+		wxMutexLocker lock(m_searchMutex);
+		ParamMap::iterator it = m_searchParams.find(toadd->GetSearchID());
+		if (it != m_searchParams.end()) {
+			resultTypeForSearch = it->second.typeText;
 		}
 	}
 
+	// If the result was not the type the user wanted, drop it.
+	if ((clientResponse == false) && !resultTypeForSearch.IsEmpty() && resultTypeForSearch != ED2KFTSTR_PROGRAM) {
+		if (resultTypeForSearch.CmpNoCase(wxT("Any")) != 0) {
+			if (GetFileTypeByName(toadd->GetFileName()) != resultTypeForSearch) {
+				AddDebugLogLineN(logSearch,
+					CFormat( wxT("Dropped result type %s != %s, file %s") )
+						% GetFileTypeByName(toadd->GetFileName())
+						% resultTypeForSearch
+						% toadd->GetFileName().GetPrintable());
+
+				delete toadd;
+				return false;
+			}
+		}
+	}
 
 	// Get, or implicitly create, the map of results for this search
 	CSearchResultList& results = m_results[toadd->GetSearchID()];
