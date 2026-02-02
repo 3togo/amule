@@ -53,6 +53,10 @@
 #include "RandomFunctions.h"
 #include "kademlia/kademlia/Kademlia.h"
 #include "kademlia/kademlia/UDPFirewallTester.h"
+#include "search/SearchController.h"
+#include "search/SearchControllerFactory.h"
+#include "search/SearchTypeConverter.h"
+#include "search/SearchResultRouter.h"
 #include "Statistics.h"
 
 
@@ -1106,13 +1110,66 @@ static CECPacket *Get_EC_Response_Search(const CECPacket *request)
 			}
 		/* fall through */
 		case EC_SEARCH_LOCAL: {
-			uint32 search_id = 0xffffffff;
-			wxString error = theApp->searchlist->StartNewSearch(&search_id, core_search_type, params);
-			if (!error.IsEmpty()) {
-				response = error;
+			// Convert core_search_type to modern search type
+			search::ModernSearchType modernType;
+			switch (core_search_type) {
+				case LocalSearch:
+					modernType = search::ModernSearchType::LocalSearch;
+					break;
+				case GlobalSearch:
+					modernType = search::ModernSearchType::GlobalSearch;
+					break;
+				case KadSearch:
+					modernType = search::ModernSearchType::KadSearch;
+					break;
+				default:
+					modernType = search::ModernSearchType::LocalSearch;
+					break;
+			}
+
+			// Create search controller
+			auto controller = search::SearchControllerFactory::createController(modernType);
+			if (!controller) {
+				response = _("Failed to create search controller");
+				break;
+			}
+
+			// Set up search parameters
+			search::SearchParams searchParams;
+			searchParams.searchString = params.searchString;
+			searchParams.strKeyword = params.searchString; // For Kad searches
+			searchParams.typeText = params.typeText;
+			searchParams.extension = params.extension;
+			searchParams.minSize = params.minSize;
+			searchParams.maxSize = params.maxSize;
+			searchParams.availability = params.availability;
+			searchParams.searchType = modernType;
+
+			// Set up error handling
+			wxString errorMessage;
+			bool hasError = false;
+			
+			controller->setOnError([&errorMessage, &hasError](uint32_t searchId, const wxString& error) {
+				errorMessage = error;
+				hasError = true;
+			});
+
+			// Start the search
+			controller->startSearch(searchParams);
+			
+			if (hasError) {
+				response = errorMessage;
 			} else {
-				response = wxTRANSLATE("Search in progress. Refetch results in a moment!");
-				op = EC_OP_STRINGS;
+				// Get the search ID from the controller
+				uint32_t searchId = controller->getSearchId();
+				if (searchId == 0) {
+					response = _("Failed to get search ID from controller");
+				} else {
+					// Store the controller if needed for external connections
+					// For now, we'll rely on SearchResultRouter for result routing
+					response = wxTRANSLATE("Search in progress. Refetch results in a moment!");
+					op = EC_OP_STRINGS;
+				}
 			}
 			break;
 		}
