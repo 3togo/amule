@@ -1604,8 +1604,17 @@ CECPacket *CECServerSocket::ProcessRequest2(const CECPacket *request)
 
 		case EC_OP_SEARCH_PROGRESS:
 			response = new CECPacket(EC_OP_SEARCH_PROGRESS);
-			response->AddTag(CECTag(EC_TAG_SEARCH_STATUS,
-				theApp->searchlist->GetSearchProgress()));
+			{
+				long searchId = theApp->searchlist->FindMostRecentActiveSearch(LocalSearch);
+				if (searchId == -1) {
+					searchId = theApp->searchlist->FindMostRecentActiveSearch(GlobalSearch);
+				}
+				if (searchId == -1) {
+					searchId = theApp->searchlist->FindMostRecentActiveSearch(KadSearch);
+				}
+				response->AddTag(CECTag(EC_TAG_SEARCH_STATUS,
+					theApp->searchlist->GetSearchProgress(searchId)));
+			}
 			break;
 
 		case EC_OP_DOWNLOAD_SEARCH_RESULT:

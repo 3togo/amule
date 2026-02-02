@@ -79,47 +79,26 @@ void ED2KSearchController::startSearch(const SearchParams& params)
         if (m_model->getSearchId() == -1) {
             searchId = GenerateSearchId();
             SEARCH_DEBUG_CONTROLLER(
-                CFormat(wxT("ED2KSearchController: Generated new search ID %u for %s search"))
-                % searchId % (isLocalSearch ? wxT("local") : wxT("global")));
+                wxString::Format("Generated new search ID: %u for %s search", 
+                    searchId, 
+                    isLocalSearch ? "local" : "global")
+            );
         } else {
-            // Use the existing search ID from the model
-            // This is critical for "more results" functionality
-            searchId = m_model->getSearchId();
+            searchId = static_cast<uint32_t>(m_model->getSearchId());
             SEARCH_DEBUG_CONTROLLER(
-                CFormat(wxT("ED2KSearchController: Using existing search ID %u for %s search (more results)"))
-                % searchId % (isLocalSearch ? wxT("local") : wxT("global")));
+                wxString::Format("Using existing search ID: %u for %s search", 
+                    searchId, 
+                    isLocalSearch ? "local" : "global")
+            );
         }
         
-        // Set up early registration in SearchList to ensure proper result routing
-        // --- EARLY REGISTRATION ---
-        if (theApp && theApp->searchlist) {
-            // Store search parameters in SearchList for later use
-            CSearchList::CSearchParams oldParams;
-            oldParams.searchString = params.searchString;
-            oldParams.strKeyword = params.strKeyword;
-            oldParams.typeText = params.typeText;
-            oldParams.extension = params.extension;
-            oldParams.minSize = params.minSize;
-            oldParams.maxSize = params.maxSize;
-            oldParams.availability = params.availability;
-            oldParams.searchType = isLocalSearch ? LocalSearch : GlobalSearch;
-
-            // Set the current search ID in SearchList
-            // This is used by ProcessSearchAnswer to route results
-            theApp->searchlist->SetCurrentSearch(searchId);
-
-            // Register this search in active searches map
-            // This is critical for ProcessSearchAnswer to find the search
-            theApp->searchlist->RegisterActiveSearch(searchId, isLocalSearch ? LocalSearch : GlobalSearch);
-
-            // Store search parameters in SearchStateManager
-            theApp->searchlist->StoreSearchParams(searchId, oldParams);
-
-            SEARCH_DEBUG_CONTROLLER(
-                CFormat(wxT("ED2KSearchController: Set current search ID %u in SearchList for %s search"))
-                % searchId % (isLocalSearch ? wxT("local") : wxT("global")));
-        }
-        // --- END EARLY REGISTRATION ---
+        // Register controller with router BEFORE starting search
+        // This ensures results are routed correctly from the start
+        SearchResultRouter::Instance().RegisterController(searchId, this);
+        
+        // Also register as fallback controller for the search type
+        // This handles cases where search ID might not be properly tracked
+        SearchResultRouter::Instance().RegisterTypeController(isLocalSearch ? ::LocalSearch : ::GlobalSearch, this);
 
         // Build search packet
         uint8_t* packetData = nullptr;
@@ -173,9 +152,9 @@ void ED2KSearchController::startSearch(const SearchParams& params)
 
     // Register with SearchResultRouter for result routing
     SearchResultRouter::Instance().RegisterController(searchId, this);
-    // Also register by search type for fallback routing (server assigns its own search ID)
+    // Also register as fallback controller for the search type
     bool isLocalSearch = SearchTypeConverter::isLocalSearch(params.searchType);
-    SearchResultRouter::Instance().RegisterControllerByType(isLocalSearch ? ::LocalSearch : ::GlobalSearch, this);
+    SearchResultRouter::Instance().RegisterTypeController(isLocalSearch ? ::LocalSearch : ::GlobalSearch, this);
 
     // Initialize progress tracking
     initializeProgress();
@@ -247,10 +226,6 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
 	    oldParams.availability = params.availability;
 	    oldParams.searchType = isLocalSearch ? LocalSearch : GlobalSearch;
 
-	    // Set the current search ID in SearchList
-	    // This is used by ProcessSearchAnswer to route results
-	    theApp->searchlist->SetCurrentSearch(searchId);
-
 	    // Register this search in active searches map
 	    // This is critical for ProcessSearchAnswer to find the search
 	    theApp->searchlist->RegisterActiveSearch(searchId, isLocalSearch ? LocalSearch : GlobalSearch);
@@ -278,9 +253,14 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
 	
 	// Send packet to server
 	if (theApp && theApp->serverconnect) {
-	    // Set the current search ID in SearchList for result routing
+	    // Handle search registration in SearchList for result routing
 	    if (theApp->searchlist) {
-		// Store search parameters in SearchList for later use
+		// Register this search in active searches map
+		// This is critical for ProcessSearchAnswer to find the search
+		theApp->searchlist->RegisterActiveSearch(searchId, isLocalSearch ? LocalSearch : GlobalSearch);
+
+		// Store search parameters in SearchStateManager
+		// This is used for retry functionality
 		CSearchList::CSearchParams oldParams;
 		oldParams.searchString = params.searchString;
 		oldParams.strKeyword = params.strKeyword;
@@ -291,22 +271,11 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
 		oldParams.availability = params.availability;
 		oldParams.searchType = isLocalSearch ? LocalSearch : GlobalSearch;
 
-		// Set the current search ID in SearchList
-		// This is used by ProcessSearchAnswer to route results
-		theApp->searchlist->SetCurrentSearch(searchId);
-
-		// Register this search in active searches map
-		// This is critical for ProcessSearchAnswer to find the search
-		theApp->searchlist->RegisterActiveSearch(searchId, isLocalSearch ? LocalSearch : GlobalSearch);
+		theApp->searchlist->StoreSearchParams(searchId, oldParams);
 
 		SEARCH_DEBUG_CONTROLLER(
-		    CFormat(wxT("ED2KSearchController: Set current search ID %u in SearchList"))
+		    CFormat(wxT("ED2KSearchController: Registered search ID %u in SearchList"))
 		    % searchId);
-
-		// Store search parameters in SearchStateManager
-		// This is used for retry functionality
-		// Note: We'll use SearchDlg's state manager through the controller callbacks
-		// The state manager will be initialized when the search tab is created
 	    }
 
 	    theStats::AddUpOverheadServer(packetSize);
@@ -346,7 +315,7 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
     SearchResultRouter::Instance().RegisterController(searchId, this);
     // Also register by search type for fallback routing (server assigns its own search ID)
     bool isLocalSearch = SearchTypeConverter::isLocalSearch(params.searchType);
-    SearchResultRouter::Instance().RegisterControllerByType(isLocalSearch ? ::LocalSearch : ::GlobalSearch, this);
+    SearchResultRouter::Instance().RegisterTypeController(isLocalSearch ? ::LocalSearch : ::GlobalSearch, this);
 
     // Initialize progress tracking
     initializeProgress();

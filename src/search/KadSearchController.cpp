@@ -29,6 +29,7 @@
 #include "SearchPackageValidator.h"
 #include "SearchResultRouter.h"
 #include "SearchLogging.h"
+#include "SearchTypeConverter.h"
 #include "../amule.h"
 #include "../SearchFile.h"
 #include "../SearchList.h"
@@ -39,6 +40,20 @@
 #include <wx/utils.h>
 
 namespace search {
+
+// Helper function to convert new SearchParams to old CSearchParams
+CSearchList::CSearchParams ConvertToLegacyParams(const SearchParams& newParams) {
+    CSearchList::CSearchParams legacyParams;
+    legacyParams.searchString = newParams.searchString;
+    legacyParams.strKeyword = newParams.strKeyword;
+    legacyParams.typeText = newParams.typeText;
+    legacyParams.extension = newParams.extension;
+    legacyParams.minSize = newParams.minSize;
+    legacyParams.maxSize = newParams.maxSize;
+    legacyParams.availability = newParams.availability;
+    legacyParams.searchType = SearchTypeConverter::toLegacy(newParams.searchType);
+    return legacyParams;
+}
 
 KadSearchController::KadSearchController()
     : SearchControllerBase()
@@ -85,28 +100,30 @@ void KadSearchController::startSearch(const SearchParams& params)
 	    return handleSearchError(0, error);
 	}
 	
-	// Generate search ID
-	searchId = GenerateSearchId();
+	// Generate or retrieve search ID
+	if (searchId == 0) {
+		searchId = GenerateSearchId();
+	}
+	m_model->setSearchId(searchId);
 
 	SEARCH_DEBUG_CONTROLLER(
 	    CFormat(wxT("KadSearchController: Generated search ID %u for Kad search"))
 	    % searchId);
+
+	// Convert new parameters to legacy format for storage
+	CSearchList::CSearchParams legacyParams = ConvertToLegacyParams(params);
 	
-	// Store search ID and state
+	// Store search parameters and state
 	m_model->setSearchParams(params);
-	m_model->setSearchId(searchId);
 	m_model->setSearchState(SearchState::Searching);
 	
 	// Register with SearchResultRouter for result routing
 	SearchResultRouter::Instance().RegisterController(searchId, this);
-	
+	// Also register as fallback for Kad searches
+	SearchResultRouter::Instance().RegisterTypeController(::KadSearch, this);
+
 	// Send packet to Kad network
 	if (theApp && Kademlia::CKademlia::IsRunning()) {
-	    // Set the current search ID in SearchList before sending
-	    if (theApp->searchlist) {
-		theApp->searchlist->SetCurrentSearch(searchId);
-	    }
-
 	    // Use legacy Kad search implementation
 	    try {
 		Kademlia::CSearch* search = Kademlia::CSearchManager::PrepareFindKeywords(
@@ -121,10 +138,11 @@ void KadSearchController::startSearch(const SearchParams& params)
 		searchId = search->GetSearchID();
 		m_model->setSearchId(searchId);
 
-		// Update the current search ID in SearchList
-		if (theApp && theApp->searchlist) {
-			theApp->searchlist->SetCurrentSearch(searchId);
-		}
+		// Register this search in active searches map
+		theApp->searchlist->RegisterActiveSearch(searchId, KadSearch);
+
+		// Store search parameters for later retrieval using converted legacy params
+		theApp->searchlist->StoreSearchParams(searchId, legacyParams);
 
 		// Re-register with new search ID
 		SearchResultRouter::Instance().UnregisterController(oldSearchId);

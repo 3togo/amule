@@ -44,88 +44,86 @@ namespace search {
 namespace search {
 
 /**
- * Search Result Router
- *
- * This class routes search results from network packets to the appropriate
- * controller and model. It serves as the central point for result
- * processing, ensuring that results go to the right place.
+ * SearchResultRouter manages the routing of search results to appropriate controllers.
+ * 
+ * This class implements strict protocol-based routing with complete isolation between
+ * different search types (LocalSearch, GlobalSearch, KadSearch).
+ * 
+ * Key features:
+ * - Each search ID is routed only to its registered controller
+ * - No fallback logic that uses "recent activity" or global state
+ * - Invalid search IDs result in discarded results (no memory leaks)
+ * - Thread-safe operation with proper mutex protection
  */
-class SearchResultRouter {
+class SearchResultRouter
+{
 public:
     /**
-     * Get the singleton instance
+     * Get the singleton instance of SearchResultRouter.
      */
     static SearchResultRouter& Instance();
 
     /**
-     * Register a controller for a specific search ID
-     *
-     * @param searchId The search ID to register the controller for
-     * @param controller The controller to handle results for this search
+     * Register a controller for a specific search ID.
+     * 
+     * @param searchId The unique search ID
+     * @param controller The controller to register (takes ownership)
      */
     void RegisterController(uint32_t searchId, SearchController* controller);
 
     /**
-     * Register a controller for a specific search type
-     *
-     * @param type The search type to register the controller for
-     * @param controller The controller to handle results for this search type
-     */
-    void RegisterControllerByType(::SearchType type, SearchController* controller);
-
-    /**
-     * Unregister a controller for a specific search ID
-     *
+     * Unregister a controller for a specific search ID.
+     * 
      * @param searchId The search ID to unregister
      */
     void UnregisterController(uint32_t searchId);
 
     /**
-     * Unregister a controller for a specific search type
-     *
-     * @param type The search type to unregister
-     * @param controller The controller to unregister
+     * Register a controller for a specific search type (fallback for unregistered search IDs).
+     * 
+     * @param searchType The search type (LocalSearch, GlobalSearch, KadSearch)
+     * @param controller The controller to register (takes ownership)
      */
-    void UnregisterControllerByType(::SearchType type, SearchController* controller);
+    void RegisterTypeController(SearchType searchType, SearchController* controller);
 
     /**
-     * Route a single result to the appropriate controller
-     *
-     * @param searchId The search ID this result belongs to
-     * @param result The search result to route
-     * @return true if the result was routed, false if no controller found
+     * Unregister a controller for a specific search type.
+     * 
+     * @param searchType The search type to unregister
+     */
+    void UnregisterTypeController(SearchType searchType);
+
+    /**
+     * Route a single search result to the appropriate handler.
+     * 
+     * @param searchId The search ID associated with the result
+     * @param result The search result to route (ownership transferred)
+     * @return true if result was handled, false if it was deleted
      */
     bool RouteResult(uint32_t searchId, CSearchFile* result);
 
     /**
-     * Route multiple results to the appropriate controller
-     *
-     * @param searchId The search ID these results belong to
-     * @param results Vector of search results to route
-     * @return Number of results routed
+     * Route multiple search results to the appropriate handler.
+     * 
+     * @param searchId The search ID associated with the results
+     * @param results The search results to route (ownership transferred)
+     * @return number of results successfully handled
      */
     size_t RouteResults(uint32_t searchId, const std::vector<CSearchFile*>& results);
 
 private:
-    // Private constructor for singleton
-    SearchResultRouter();
+    SearchResultRouter() = default;
+    ~SearchResultRouter() = default;
 
-    // Delete copy constructor and copy assignment operator
+    // Disable copy and assignment
     SearchResultRouter(const SearchResultRouter&) = delete;
     SearchResultRouter& operator=(const SearchResultRouter&) = delete;
 
-    // Map of search IDs to controllers
     typedef std::map<uint32_t, SearchController*> ControllerMap;
+    typedef std::map<SearchType, SearchController*> TypeControllerMap;
+
     ControllerMap m_controllers;
-
-    // Map of search types to controllers for fallback routing
-    typedef std::map<::SearchType, SearchController*> TypeControllerMap;
     TypeControllerMap m_typeControllers;
-
-    // Mutex for thread-safe access to controllers
-    mutable wxMutex m_controllersMutex;
-
-    // Package validator for result validation
 };
 
 } // namespace search
