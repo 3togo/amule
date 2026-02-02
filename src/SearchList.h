@@ -269,26 +269,18 @@ public:
 	/** Get the progress of a specific search. */
 	uint32 GetSearchProgress(long searchId) const;
 
-	/** Request more results for a specific search. */
-	wxString RequestMoreResults(long searchId);
+	/**
+	 * @brief Request more results for a search
+	 * @param searchID The ID of the search to request more results for
+	 * @return Error message if failed, empty string if successful
+	 */
+	wxString RequestMoreResults(long searchID);
 
-	/** Add an active search to track. */
-	void AddActiveSearch(long searchId, SearchType type);
-
-	/** Called when a search completes. */
-	void OnSearchComplete(long searchId, SearchType type, bool hasResults);
-
-	/** Called when a search needs to retry. */
-	void OnSearchRetry(long searchId, SearchType type, int retryNum);
-
-	/** Stop all searches. */
-	void StopAllSearches();
-
-	/** Get search parameters for a given search ID */
-	CSearchParams GetSearchParams(long searchID);
-
-
-
+	/**
+	 * @brief Get the next available search ID
+	 * @return The next search ID
+	 */
+	uint32 GetNextID();
 
 	/** Request more results from a specific server */
 	wxString RequestMoreResultsFromServer(const CServer* server, long searchID);
@@ -352,6 +344,10 @@ private:
 	//! Contains the results type desired in the current search.
 	//! If not empty, results of different types are filtered.
 	wxString	m_resultType;
+
+	// Added missing method declarations
+	void OnSearchComplete(long searchId, SearchType type, bool hasResults);
+	void StopAllSearches();
 
 	DECLARE_EVENT_TABLE()
 };

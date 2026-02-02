@@ -66,6 +66,7 @@ public:
     virtual SearchState getState() const = 0;
     virtual SearchParams getSearchParams() const = 0;
     virtual long getSearchId() const = 0;
+    virtual void setSearchId(long searchId) = 0;
 
     // Result access
     virtual std::vector<CSearchFile*> getResults() const = 0;

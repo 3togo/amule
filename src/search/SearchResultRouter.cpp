@@ -58,6 +58,15 @@ void SearchResultRouter::UnregisterController(uint32_t searchId)
     }
 }
 
+SearchController* SearchResultRouter::GetController(uint32_t searchId) const
+{
+    ControllerMap::const_iterator it = m_controllers.find(searchId);
+    if (it != m_controllers.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
 void SearchResultRouter::RegisterTypeController(::SearchType searchType, SearchController* controller)
 {
     m_typeControllers[searchType] = controller;

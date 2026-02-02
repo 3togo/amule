@@ -64,6 +64,14 @@ public:
     static SearchResultRouter& Instance();
 
     /**
+     * Get the controller for a specific search ID.
+     * 
+     * @param searchId The search ID to look up
+     * @return Pointer to the controller, or nullptr if not found
+     */
+    SearchController* GetController(uint32_t searchId) const;
+
+    /**
      * Register a controller for a specific search ID.
      * 
      * @param searchId The unique search ID
