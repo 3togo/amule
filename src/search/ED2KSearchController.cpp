@@ -137,19 +137,23 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
 	// to ensure results are routed to the correct search tag
 	if (m_model->getSearchId() == -1) {
 	    searchId = GenerateSearchId();
+	    SEARCH_DEBUG_CONTROLLER(
+		CFormat(wxT("ED2KSearchController: Generated new search ID %u for %s search"))
+		% searchId % (isLocalSearch ? wxT("local") : wxT("global")));
 	} else {
 	    // Use the existing search ID from the model
 	    // This is critical for "more results" functionality
 	    searchId = m_model->getSearchId();
+	    SEARCH_DEBUG_CONTROLLER(
+		CFormat(wxT("ED2KSearchController: Using existing search ID %u for %s search (more results)"))
+		% searchId % (isLocalSearch ? wxT("local") : wxT("global")));
 	}
 	
 	// Send packet to server
 	if (theApp && theApp->serverconnect) {
-	    // Register the search in SearchList's active searches map
-	    // This ensures results are properly routed to the correct search
+	    // Set the current search ID in SearchList for result routing
 	    if (theApp->searchlist) {
-		// Use the legacy StartNewSearch method to register the search
-		// but with our pre-generated search ID
+		// Store search parameters in SearchList for later use
 		CSearchList::CSearchParams oldParams;
 		oldParams.searchString = params.searchString;
 		oldParams.strKeyword = params.strKeyword;
@@ -160,21 +164,33 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
 		oldParams.availability = params.availability;
 		oldParams.searchType = isLocalSearch ? LocalSearch : GlobalSearch;
 
-		// Register the search with SearchList
-		// This ensures the search is tracked in the active searches map
-		wxString startError = theApp->searchlist->StartNewSearch(
-		    &searchId, oldParams.searchType, oldParams);
-		if (!startError.IsEmpty()) {
-		    delete[] packetData;
-		    error = startError;
-		    return {0, error};
-		}
+		// Set the current search ID in SearchList
+		// This is used by ProcessSearchAnswer to route results
+		theApp->searchlist->SetCurrentSearch(searchId);
+
+		// Register this search in active searches map
+		// This is critical for ProcessSearchAnswer to find the search
+		theApp->searchlist->RegisterActiveSearch(searchId, isLocalSearch ? LocalSearch : GlobalSearch);
+
+		SEARCH_DEBUG_CONTROLLER(
+		    CFormat(wxT("ED2KSearchController: Set current search ID %u in SearchList"))
+		    % searchId);
+
+		// Store search parameters in SearchStateManager
+		// This is used for retry functionality
+		// Note: We'll use SearchDlg's state manager through the controller callbacks
+		// The state manager will be initialized when the search tab is created
 	    }
 
 	    theStats::AddUpOverheadServer(packetSize);
 	    // Create a CMemFile from the raw data
 	    CMemFile dataFile(packetData, packetSize);
 	    CPacket* packet = new CPacket(dataFile, OP_EDONKEYPROT, OP_SEARCHREQUEST);
+
+	    SEARCH_DEBUG_CONTROLLER(
+		CFormat(wxT("ED2KSearchController: Sending %s search packet to server, searchId=%u, packetSize=%u"))
+		% (isLocalSearch ? wxT("local") : wxT("global")) % searchId % packetSize);
+
 	    theApp->serverconnect->SendPacket(packet, isLocalSearch);
 	    
 	    // For global search, store packet for querying more servers
@@ -201,6 +217,9 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
 
     // Register with SearchResultRouter for result routing
     SearchResultRouter::Instance().RegisterController(searchId, this);
+    // Also register by search type for fallback routing (server assigns its own search ID)
+    bool isLocalSearch = SearchTypeConverter::isLocalSearch(params.searchType);
+    SearchResultRouter::Instance().RegisterControllerByType(isLocalSearch ? ::LocalSearch : ::GlobalSearch, this);
 
     // Initialize progress tracking
     initializeProgress();
@@ -428,12 +447,15 @@ void ED2KSearchController::handleResults(uint32_t searchId, const std::vector<CS
 
 uint32_t ED2KSearchController::GenerateSearchId()
 {
-    // Generate a unique search ID
-    // This is a simple implementation - could be improved with a global counter
-    static uint32_t s_nextSearchId = 0;
+    // Generate a unique search ID for ED2K searches
+    // Use a different ID range than Kad to avoid conflicts
+    // Kad uses IDs in range [1, 0x7FFFFFFF]
+    // ED2K uses IDs in range [0x80000001, 0xFFFFFFFE]
+    // Note: The server will assign its own search ID, so this is just for tracking
+    static uint32_t s_nextSearchId = 0x80000000;
     s_nextSearchId = (s_nextSearchId + 1) % 0xFFFFFFFE;
-    if (s_nextSearchId == 0) {
-	s_nextSearchId = 1;
+    if (s_nextSearchId < 0x80000001) {
+	s_nextSearchId = 0x80000001;
     }
     return s_nextSearchId;
 }

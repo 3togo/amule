@@ -29,10 +29,7 @@
 #include "search/SearchPackageException.h"	// Package exception
 #include "search/SearchResultHandler.h"	// Result handler interface
 #include "search/SearchResultRouter.h"	// Result router
-#include "search/SearchControllerFactory.h"	// Search controller factory
-#include "search/SearchModel.h"	// Search model enums
-#include "search/SearchTypeConverter.h"	// Search type converter
-#include "search/SearchResultRouter.h"	// Result router
+#include "search/SearchLogging.h"		// Debug logging
 
 #include <protocol/Protocols.h>
 #include <protocol/kad/Constants.h>
@@ -51,7 +48,7 @@
 #include "Logger.h"			// Needed for AddLogLineM/...
 #include "Packet.h"			// Needed for CPacket
 #include "GuiEvents.h"		// Needed for Notify_*
-
+#include "NetworkFunctions.h"	// Needed for Uint32toStringIP
 
 #ifndef AMULE_DAEMON
 #include "amuleDlg.h"		// Needed for CamuleDlg
@@ -278,6 +275,9 @@ END_EVENT_TABLE()
 
 CSearchList::CSearchList()
 	: m_searchTimer(this, 0 /* Timer-id doesn't matter. */ ),
+	  m_searchType(LocalSearch),
+	  m_searchInProgress(false),
+	  m_currentSearch(-1),
 	  m_64bitSearchPacket(false),
 	  m_KadSearchFinished(true)
 {
@@ -314,27 +314,15 @@ void CSearchList::RemoveResults(long searchID)
 }
 
 
-// Remove GetNextSearchID function as it's no longer needed with the new ID generation scheme
+uint32 CSearchList::GetNextSearchID()
+{
+	static uint32 nextID = 0x80000000;
+	return ++nextID;
+}
 
 wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchParams& params)
 {
-	// Generate a new search ID in the appropriate range
-	// ED2K searches use range [0x80000001, 0xFFFFFFFE], Kad searches use [1, 0x7FFFFFFE]
-	if (type == KadSearch) {
-		// Kad search - use low range
-		*searchID = m_kadSearchIDSource++;
-		if (*searchID == 0x7FFFFFFFUL) {
-			m_kadSearchIDSource = 1;
-		}
-	} else {
-		// ED2K search - use high range
-		*searchID = m_ed2kSearchIDSource++;
-		if (m_ed2kSearchIDSource == 0xFFFFFFFFUL) {
-			m_ed2kSearchIDSource = 0x80000001UL;
-		}
-	}
-
-	// Validate search parameters before starting
+	// Check that we can actually perform the specified desired search.
 	if ((type == KadSearch) && !Kademlia::CKademlia::IsRunning()) {
 		return _("Kad search can't be done if Kad is not running");
 	} else if ((type == LocalSearch || type == GlobalSearch) && !theApp->IsConnectedED2K()) {
@@ -351,39 +339,72 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		}
 	}
 
-	// Update active searches map
-	wxMutexLocker lock(m_searchMutex);
-	m_activeSearches[*searchID] = type;
+	bool supports64bit = type == KadSearch ? true : theApp->serverconnect->GetCurrentServer() != NULL && (theApp->serverconnect->GetCurrentServer()->GetTCPFlags() & SRV_TCPFLG_LARGEFILES);
+	bool packetUsing64bit;
 
-	// Store search parameters for this search ID
-	m_searchParams[*searchID] = params;
+	// This MemFile is automatically free'd
+	CMemFilePtr data = CreateSearchData(params, type, supports64bit, packetUsing64bit);
 
-	// For local search, send via TCP immediately
-	if (type == LocalSearch) {
-		// Create search data packet
-		bool packetUsing64bit = false;
-		CMemFilePtr data = CreateSearchData(params, type, 
-			theApp->serverconnect->GetCurrentServer() ? 
-			theApp->serverconnect->GetCurrentServer()->SupportsLargeFilesUDP() : false, 
-			packetUsing64bit);
-		
-		if (data) {
-			CPacket* searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_SEARCHREQUEST);
-			
-			if (theApp->serverconnect->IsConnected()) {
-				// Connected to eD2K - send search request to server
-				theApp->serverconnect->SendPacket(searchPacket, true);
-			} else {
-				// Not connected - queue for when connection is established
-				delete searchPacket;
-				return _("Not connected to eD2K network");
-			}
-		} else {
-			return _("Failed to create search data packet");
+	if (data.get() == NULL) {
+		wxASSERT(_astrParserErrors.GetCount());
+		wxString error;
+
+		for (unsigned int i = 0; i < _astrParserErrors.GetCount(); ++i) {
+			error += _astrParserErrors[i] + wxT("\n");
 		}
-	} else if (type == GlobalSearch) {
-		// Start global search timer for UDP queries to servers
-		m_searchTimer.Start(100);
+
+		return error;
+	}
+
+	m_searchType = type;
+	if (type == KadSearch) {
+		try {
+			if (*searchID == 0xffffffff) {
+				Kademlia::CSearchManager::StopSearch(0xffffffff, false);
+			}
+
+			// searchstring will get tokenized there
+			// The tab must be created with the Kad search ID, so searchID is updated.
+			Kademlia::CSearch* search = Kademlia::CSearchManager::PrepareFindKeywords(params.strKeyword, data->GetLength(), data->GetRawBuffer(), *searchID);
+
+			*searchID = search->GetSearchID();
+			m_currentSearch = *searchID;
+			m_KadSearchFinished = false;
+
+			// Register this search in the active searches map
+			m_activeSearches[*searchID] = type;
+
+			// Store search parameters for this search ID
+			m_searchParams[*searchID] = params;
+		} catch (const wxString& what) {
+			AddLogLineC(what);
+			return _("Unexpected error while attempting Kad search: ") + what;
+		}
+	} else if (type == LocalSearch || type == GlobalSearch) {
+		// This is an ed2k search, local or global
+		// Initialize search ID if not already set
+		if (*searchID == 0) {
+			*searchID = GetNextSearchID();
+		}
+		m_currentSearch = *searchID;
+		m_searchInProgress = true;
+
+		// Register this search in the active searches map
+		m_activeSearches[*searchID] = type;
+
+		// Store search parameters for this search ID
+		m_searchParams[*searchID] = params;
+
+		CPacket* searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_SEARCHREQUEST);
+
+		theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
+		theApp->serverconnect->SendPacket(searchPacket, (type == LocalSearch));
+
+		if (type == GlobalSearch) {
+			m_searchPacket.reset(searchPacket);
+			m_64bitSearchPacket = packetUsing64bit;
+			m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ); // will be changed later when actually sending the packet!!
+		}
 	}
 
 	// Log search start
@@ -396,7 +417,7 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 			% *searchID % params.strKeyword);
 	}
 
-	return wxEmptyString; // Success
+	return wxEmptyString;
 }
 
 
@@ -508,12 +529,24 @@ void CSearchList::LocalSearchEnd()
 	} else {
 		// Don't trigger retry here - let the UI (SearchDlg/SearchStateManager) handle it
 		// The retry mechanism is now managed by SearchStateManager to ensure proper state transitions
-		ResultMap::iterator it = m_results.find(m_currentSearch);
+		// Get the current search ID from m_activeSearches instead of using deprecated m_currentSearch
+		long currentSearchId = -1;
+		{
+			wxMutexLocker lock(m_searchMutex);
+			// Find the most recent active local search
+			for (std::map<long, SearchType>::reverse_iterator it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
+				if (it->second == LocalSearch) {
+					currentSearchId = it->first;
+					break;
+				}
+			}
+		}
+		ResultMap::iterator it = m_results.find(currentSearchId);
 		bool hasResults = (it != m_results.end()) && !it->second.empty();
 		
 		// Only mark the search as finished if we have results
 		if (hasResults) {
-			OnSearchComplete(m_currentSearch, m_searchType, hasResults);
+			OnSearchComplete(currentSearchId, m_searchType, hasResults);
 		} else {
 			// No results - let the UI handle retry through SearchStateManager
 			// Just mark the search as finished internally
@@ -613,12 +646,24 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
 
 	// Don't trigger retry here - let the UI (SearchDlg/SearchStateManager) handle it
 	// The retry mechanism is now managed by SearchStateManager to ensure proper state transitions
-	ResultMap::iterator it = m_results.find(m_currentSearch);
+	// Get the current search ID from m_activeSearches instead of using deprecated m_currentSearch
+	long currentSearchId = -1;
+	{
+		wxMutexLocker lock(m_searchMutex);
+		// Find the most recent active global search
+		for (std::map<long, SearchType>::reverse_iterator it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
+			if (it->second == GlobalSearch) {
+				currentSearchId = it->first;
+				break;
+			}
+		}
+	}
+	ResultMap::iterator it = m_results.find(currentSearchId);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
 
 	// Only mark the search as finished if we have results
 	if (hasResults) {
-		OnSearchComplete(m_currentSearch, m_searchType, hasResults);
+		OnSearchComplete(currentSearchId, m_searchType, hasResults);
 		// Only stop if not retrying
 		if (m_searchInProgress) {
 			StopSearch(true);
@@ -679,13 +724,17 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 
 	// Get the search ID from the active searches map or results map
 	// We need to find the appropriate ED2K search (local or global)
+	// CRITICAL: Local and global searches must NOT share results
+	// TCP packets are for local searches, UDP packets are for global searches
+	// The server assigns its own search ID, so we can't use custom ID ranges
+	// Instead, we route based on packet type and search type
 	long searchId = -1;
 	{
 		wxMutexLocker lock(m_searchMutex);
-		// First, try to find the most recent active ED2K search
-		// ED2K searches have IDs in range [0x80000001, 0xFFFFFFFE]
+		// First, try to find the most recent active ED2K search matching the packet type
+		// ProcessSearchAnswer is called for TCP packets (local search results)
 		for (std::map<long, SearchType>::reverse_iterator it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
-			if (it->first >= 0x80000001) {
+			if (it->second == LocalSearch) {
 				searchId = it->first;
 				break;
 			}
@@ -703,11 +752,11 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 	}
 
 	SEARCH_DEBUG_ROUTING(wxString::Format(wxT("ProcessSearchAnswer: Received %lu results from %s:%u, searchId=%ld"),
-		(unsigned long)results, (uint32_t)serverIP, serverPort, searchId));
+		(unsigned long)results, Uint32toStringIP(serverIP).c_str(), serverPort, searchId));
 
 	if (searchId == -1) {
 		AddDebugLogLineN(logSearch, wxString::Format(wxT("Received search results from %s:%u but no ED2K search found (active or completed), dropping results"),
-			(uint32_t)serverIP, serverPort));
+			Uint32toStringIP(serverIP).c_str(), serverPort));
 		return;
 	}
 
@@ -749,7 +798,7 @@ void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, u
 	// UDP results should only go to global searches, not local searches
 	if (searchId == -1) {
 		AddDebugLogLineN(logSearch, wxString::Format(wxT("Received UDP search result from %s:%u but no active global search found, dropping result"),
-			(uint32_t)serverIP, serverPort));
+			Uint32toStringIP(serverIP).c_str(), serverPort));
 		return;
 	}
 
@@ -862,8 +911,20 @@ void CSearchList::StopSearch(bool globalOnly)
 {
 	if (m_searchType == GlobalSearch) {
 		// Remove this search from the active searches map
-		if (m_currentSearch != -1) {
-			m_activeSearches.erase(m_currentSearch);
+		// Get the current search ID from m_activeSearches instead of using deprecated m_currentSearch
+		long currentSearchId = -1;
+		{
+			wxMutexLocker lock(m_searchMutex);
+			// Find the most recent active global search
+			for (std::map<long, SearchType>::reverse_iterator it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
+				if (it->second == GlobalSearch) {
+					currentSearchId = it->first;
+					break;
+				}
+			}
+		}
+		if (currentSearchId != -1) {
+			m_activeSearches.erase(currentSearchId);
 		}
 		
 		m_currentSearch = -1;
@@ -1298,14 +1359,26 @@ void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)
 void CSearchList::SetKadSearchFinished()
 {
 	// Check if we have any results for the current search
-	ResultMap::iterator it = m_results.find(m_currentSearch);
+	// Get the current search ID from m_activeSearches instead of using deprecated m_currentSearch
+	long currentSearchId = -1;
+	{
+		wxMutexLocker lock(m_searchMutex);
+		// Find the most recent active Kad search
+		for (std::map<long, SearchType>::reverse_iterator it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
+			if (it->second == KadSearch) {
+				currentSearchId = it->first;
+				break;
+			}
+		}
+	}
+	ResultMap::iterator it = m_results.find(currentSearchId);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
 
 	// Don't trigger retry here - let the UI (SearchDlg/SearchStateManager) handle it
 	// The retry mechanism is now managed by SearchStateManager to ensure proper state transitions
 	// Only mark the search as finished if we have results
 	if (hasResults) {
-		OnSearchComplete(m_currentSearch, KadSearch, hasResults);
+		OnSearchComplete(currentSearchId, KadSearch, hasResults);
 	} else {
 		// No results - let the UI handle retry through SearchStateManager
 		// Just mark the Kad search as finished internally

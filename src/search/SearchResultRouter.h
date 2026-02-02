@@ -39,6 +39,8 @@ namespace search {
     class SearchResultHandler;
 }
 
+#include "../SearchList.h"
+
 namespace search {
 
 /**
@@ -62,6 +64,14 @@ public:
      * @param controller The controller to handle results for this search
      */
     void RegisterController(uint32_t searchId, SearchController* controller);
+
+    /**
+     * Register a controller for a specific search type
+     *
+     * @param type The search type to register the controller for
+     * @param controller The controller to handle results for this search type
+     */
+    void RegisterControllerByType(::SearchType type, SearchController* controller);
 
     /**
      * Unregister a controller for a specific search ID
@@ -99,6 +109,10 @@ private:
     // Map of search IDs to controllers
     typedef std::map<uint32_t, SearchController*> ControllerMap;
     ControllerMap m_controllers;
+
+    // Map of search types to controllers for fallback routing
+    typedef std::map<::SearchType, SearchController*> TypeControllerMap;
+    TypeControllerMap m_typeControllers;
 
     // Mutex for thread-safe access to controllers
     mutable wxMutex m_controllersMutex;

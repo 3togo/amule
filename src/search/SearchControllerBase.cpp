@@ -196,7 +196,7 @@ bool SearchControllerBase::handlesSearch(uint32_t searchId) const
 void SearchControllerBase::updateSearchId(uint32_t newSearchId)
 {
     m_model->setSearchId(newSearchId);
-    SEARCH_DEBUG(wxString::Format(wxT("Updated controller search ID to %u"), newSearchId));
+    SEARCH_DEBUG(wxString::Format(wxT("Updated controller search ID to %lu"), (unsigned long)newSearchId));
 }
 
 bool SearchControllerBase::validateConfiguration() const

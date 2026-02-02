@@ -27,6 +27,7 @@
 #include "ED2KSearchPacketBuilder.h"
 #include "SearchController.h"
 #include "SearchTypeConverter.h"
+#include "SearchLogging.h"
 #include "../SearchList.h"
 #include "../amule.h"
 #include "../MemFile.h"
@@ -51,8 +52,8 @@ bool ED2KSearchPacketBuilder::CreateSearchPacket(const SearchParams& params, boo
     oldParams.maxSize = params.maxSize;
     oldParams.availability = params.availability;
     
-    // Determine search type
-    ::SearchType type = SearchTypeConverter::toLegacy(ModernSearchType::LocalSearch);
+    // Determine search type - use the type from params
+    ::SearchType type = SearchTypeConverter::toLegacy(params.searchType);
     
     // Use SearchList's CreateSearchData method
     bool packetUsing64bit = false;
@@ -68,6 +69,10 @@ bool ED2KSearchPacketBuilder::CreateSearchPacket(const SearchParams& params, boo
     packetData = new uint8_t[packetSize];
     memcpy(packetData, data->GetRawBuffer(), packetSize);
     
+    // Debug logging to show search packet contents
+    SEARCH_DEBUG(CFormat(wxT("ED2KSearchPacketBuilder: Created search packet, size=%lu, searchString='%s', typeText='%s', extension='%s'"))
+	% (unsigned long)packetSize % oldParams.searchString % oldParams.typeText % oldParams.extension);
+
     return true;
 }
 

@@ -86,6 +86,10 @@ void KadSearchController::startSearch(const SearchParams& params)
 	
 	// Generate search ID
 	searchId = GenerateSearchId();
+
+	SEARCH_DEBUG_CONTROLLER(
+	    CFormat(wxT("KadSearchController: Generated search ID %u for Kad search"))
+	    % searchId);
 	
 	// Store search ID and state
 	m_model->setSearchParams(params);
@@ -115,6 +119,11 @@ void KadSearchController::startSearch(const SearchParams& params)
 		uint32_t oldSearchId = searchId;
 		searchId = search->GetSearchID();
 		m_model->setSearchId(searchId);
+
+		// Update the current search ID in SearchList
+		if (theApp && theApp->searchlist) {
+			theApp->searchlist->SetCurrentSearch(searchId);
+		}
 
 		// Re-register with new search ID
 		SearchResultRouter::Instance().UnregisterController(oldSearchId);

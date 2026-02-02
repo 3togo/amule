@@ -446,7 +446,7 @@ theApp->searchlist->ProcessSearchAnswer(
 					cur_srv,
 					cur_srv ? cur_srv->GetIP() : 0,
 					cur_srv ? cur_srv->GetPort() : 0);
-				theApp->searchlist->LocalSearchEnd();
+				// Don't call LocalSearchEnd() here - search should remain active until explicitly stopped or timeout occurs
 				break;
 			}
 			case OP_FOUNDSOURCES_OBFU:

@@ -43,6 +43,8 @@ namespace search {
 	class SearchResultHandler;
 }
 
+#include "search/SearchLogging.h"
+
 
 class CMemFile;
 class CMD4Hash;
@@ -115,10 +117,46 @@ public:
 	uint32 GetSearchProgress() const;
 
 	/** Returns the current search ID. */
-	long GetCurrentSearchId() const { return m_currentSearch; }
+	long GetCurrentSearchId() const { 
+		wxMutexLocker lock(m_searchMutex);
+		if (!m_activeSearches.empty()) {
+			return m_activeSearches.rbegin()->first;
+		}
+		return -1;
+	}
 
 	/** Sets the current search ID. */
-	void SetCurrentSearch(long searchId) { m_currentSearch = searchId; }
+	void SetCurrentSearch(long searchId) {
+		SEARCH_DEBUG_ROUTING(
+			wxString::Format(wxT("SetCurrentSearch: new=%ld"), searchId));
+		// m_currentSearch = searchId; // DEPRECATED - use m_activeSearches instead
+	}
+
+	/** Registers a search as active. */
+	void RegisterActiveSearch(long searchId, SearchType type) {
+		wxMutexLocker lock(m_searchMutex);
+		m_activeSearches[searchId] = type;
+	}
+
+	/** Gets the search type for the most recent ED2K search. */
+	SearchType GetMostRecentED2KSearchType() const {
+		wxMutexLocker lock(m_searchMutex);
+		// Find the most recent active ED2K search to determine type
+		for (auto it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
+			if (it->first >= 0x80000001) {
+				return it->second;
+			}
+		}
+		return GlobalSearch; // Default to global
+	}
+
+	/** Gets the search mutex for thread-safe access. */
+	wxMutex& GetSearchMutex() const { return m_searchMutex; }
+
+	/** Gets the active searches map for external access. */
+	const std::map<long, SearchType>& GetActiveSearches() const {
+		return m_activeSearches;
+	}
 
 	/**
 	 * Requests more results for a specific search ID.
@@ -212,9 +250,6 @@ public:
 	/** Mark current KAD search as finished */
 	void SetKadSearchFinished();
 
-	/** Get the current search ID */
-	long GetCurrentSearchID() const { return m_currentSearch; }
-
 	/** Get the next unique search ID */
 	uint32 GetNextSearchID();
 
@@ -238,17 +273,20 @@ private:
 	void OnGlobalSearchTimer(CTimerEvent& evt);
 
 
-	//! Timer used for global search intervals.
+	//! Timer used for global search intervals (legacy - will be moved to controllers)
 	CTimer	m_searchTimer;
 
+	//! DEPRECATED - Use m_activeSearches map instead
 	//! The current search-type, regarding the last/current search.
-	SearchType	m_searchType;
+	// SearchType	m_searchType;
 
+	//! DEPRECATED - Use m_activeSearches map and SearchController state instead
 	//! Specifies if a search is being performed.
-	bool		m_searchInProgress;
+	// bool		m_searchInProgress;
 
+	//! DEPRECATED - Use m_activeSearches map instead
 	//! The ID of the current search (DEPRECATED - use m_activeSearches instead)
-	long		m_currentSearch;
+	// long		m_currentSearch;
 
 	//! Map of active searches and their types to track multiple concurrent searches
 	//! This is now the single source of truth for active searches

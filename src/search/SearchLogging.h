@@ -32,7 +32,7 @@
 // Controlled by CMake option ENABLE_SEARCH_WINDOW_DEBUG
 // Default to enabled if not defined by CMake
 #ifndef ENABLE_SEARCH_WINDOW_DEBUG
-#define ENABLE_SEARCH_WINDOW_DEBUG 0
+#define ENABLE_SEARCH_WINDOW_DEBUG 1
 #endif
 
 namespace search {

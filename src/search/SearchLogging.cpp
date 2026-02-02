@@ -26,12 +26,12 @@
 #include "SearchLogging.h"
 
 namespace search {
-    // Initialize all log categories as disabled by default
+    // Initialize all log categories as enabled for debugging
     bool g_searchLogEnabled[LOG_SEARCH_MAX] = {
-        false,  // LOG_SEARCH_GENERAL
-        false,  // LOG_SEARCH_LABEL
-        false,  // LOG_SEARCH_COUNT
-        false,  // LOG_SEARCH_ROUTING
-        false   // LOG_SEARCH_CONTROLLER
+        true,  // LOG_SEARCH_GENERAL
+        true,  // LOG_SEARCH_LABEL
+        true,  // LOG_SEARCH_COUNT
+        true,  // LOG_SEARCH_ROUTING
+        true   // LOG_SEARCH_CONTROLLER
     };
 }

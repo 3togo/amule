@@ -35,6 +35,7 @@ namespace search {
 // Forward declarations
 class ED2KSearchController;
 class KadSearchController;
+class GlobalSearchController;
 
 class SearchControllerFactory {
 public:

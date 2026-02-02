@@ -222,6 +222,13 @@ if (BUILD_MONOLITHIC)
 		PRIVATE wxWidgets::NET
 	)
 
+	if (ENABLE_IP2COUNTRY)
+		target_link_libraries (amule
+			PRIVATE mulegeoip
+			PRIVATE maxminddb::maxminddb
+		)
+	endif()
+
 	if (HAVE_BFD)
 		target_link_libraries (amule
 			PRIVATE ${LIBBFD}

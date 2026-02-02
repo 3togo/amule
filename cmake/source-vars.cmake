@@ -72,8 +72,11 @@ if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 		SourceListCtrl.cpp
 		StatisticsDlg.cpp
 		TransferWnd.cpp
-		GeoIPConfigDlg.cpp
 	)
+endif()
+
+if (ENABLE_IP2COUNTRY)
+	list (APPEND GUI_SOURCES GeoIPConfigDlg.cpp)
 endif()
 
 if (BUILD_MONOLITHIC OR BUILD_DAEMON OR BUILD_REMOTEGUI)

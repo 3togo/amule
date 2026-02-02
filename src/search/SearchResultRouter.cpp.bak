@@ -122,26 +122,8 @@ size_t SearchResultRouter::RouteResults(uint32_t searchId, const std::vector<CSe
 
     // Determine search type from SearchList based on active searches
     ::SearchType searchType = ::GlobalSearch; // Default to global
-    uint32_t clientSearchId = searchId; // Use server searchId by default
-    
     if (theApp && theApp->searchlist) {
         searchType = theApp->searchlist->GetMostRecentED2KSearchType();
-        
-        // For ED2K searches, find the correct client search ID to use
-        // This handles the case where server returns a different search ID than what we sent
-        if (searchType == ::LocalSearch || searchType == ::GlobalSearch) {
-            // Get the most recent ED2K search ID from SearchList
-            // This is the ID that the controller was registered with
-            wxMutexLocker lock(theApp->searchlist->GetSearchMutex());
-            const auto& activeSearches = theApp->searchlist->GetActiveSearches();
-            for (auto it = activeSearches.rbegin(); 
-                 it != activeSearches.rend(); ++it) {
-                if (it->second == ::LocalSearch || it->second == ::GlobalSearch) {
-                    clientSearchId = static_cast<uint32_t>(it->first);
-                    break;
-                }
-            }
-        }
     }
 
     // Try to find a controller registered for this search type
@@ -149,11 +131,11 @@ size_t SearchResultRouter::RouteResults(uint32_t searchId, const std::vector<CSe
     if (typeIt != m_typeControllers.end() && typeIt->second) {
         SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(typeIt->second);
         if (handler) {
-            // Route results to the type-based controller using the correct client search ID
-            handler->handleResults(clientSearchId, results);
+            // Route results to the type-based controller
+            handler->handleResults(searchId, results);
             SEARCH_DEBUG(
-                CFormat(wxT("Routed %zu results to controller for search type %d (clientSearchId=%u, serverSearchId=%u)"))
-                % results.size() % (int)searchType % clientSearchId % searchId);
+                CFormat(wxT("Routed %zu results to controller for search type %d"))
+                % results.size() % (int)searchType);
             return results.size();
         }
     }

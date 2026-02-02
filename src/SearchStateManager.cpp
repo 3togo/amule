@@ -81,7 +81,7 @@ void SearchStateManager::InitializeSearch(uint32_t searchId, const wxString& sea
 	
 	printf("InitializeSearch: storing params for searchId=%u, searchString='%s'\n", searchId, (const char*)data.searchString.utf8_str());
 	m_searches[searchId] = data;
-	printf("InitializeSearch: m_searches size=%zu\n", m_searches.size());
+	printf("InitializeSearch: m_searches size=%lu\n", (unsigned long)m_searches.size());
 
 	// Notify observers of the new search
 	NotifyObservers(searchId, STATE_SEARCHING, 0);
@@ -195,7 +195,7 @@ bool SearchStateManager::GetSearchParams(uint32_t searchId, CSearchList::CSearch
 {
 	SearchMap::const_iterator it = m_searches.find(searchId);
 	if (it == m_searches.end()) {
-		printf("GetSearchParams: searchId=%u not found in m_searches (size=%zu)\n", searchId, m_searches.size());
+		printf("GetSearchParams: searchId=%u not found in m_searches (size=%lu)\n", searchId, (unsigned long)m_searches.size());
 		return false;
 	}
 	printf("GetSearchParams: searchId=%u found, searchString='%s'\n", searchId, (const char*)it->second.searchString.utf8_str());
