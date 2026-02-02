@@ -130,26 +130,45 @@ public:
 		return m_activeSearches;
 	}
 
+	/** Gets the search type for the most recent ED2K search. */
+	SearchType GetMostRecentED2KSearchType() const {
+		wxMutexLocker lock(m_searchMutex);
+		// Find the most recent active ED2K search to determine type
+		for (auto it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
+			if (it->first >= 0x80000001) {
+				return it->second;
+			}
+		}
+		return GlobalSearch; // Default to global
+	}
+
+	/** Checks if any local search is currently active */
+	bool IsLocalSearchActive() const {
+		wxMutexLocker lock(m_searchMutex);
+		for (const auto& search : m_activeSearches) {
+			if (search.second == LocalSearch) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Checks if any global search is currently active */
+	bool IsGlobalSearchActive() const {
+		wxMutexLocker lock(m_searchMutex);
+		for (const auto& search : m_activeSearches) {
+			if (search.second == GlobalSearch) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/** Constructor. */
 	CSearchList();
 
 	/** Frees any remaining search-results. */
 	~CSearchList();
-
-	/**
-	 * Finds the most recent active search of a specific type.
-	 * @param type The type of search to look for.
-	 * @return The search ID, or -1 if not found.
-	 */
-	long FindMostRecentActiveSearch(SearchType type) const;
-
-	/**
-	 * Checks if there are any active searches of a specific type.
-	 * @param type The type of search to check for.
-	 * @return True if at least one active search of the given type exists.
-	 */
-	bool HasActiveSearchOfType(SearchType type) const;
 
 	/**
 	 * Starts a new search.
@@ -164,11 +183,14 @@ public:
 	/** Stops the current search (global or Kad), if any is in progress. */
 	void StopSearch(bool globalOnly = false);
 
-	/**
-	 * Gets the search progress for the most recent active search.
-	 * @return Progress percentage (0-100)
-	 */
+	/** Returns the completion percentage of the current search. */
 	uint32 GetSearchProgress() const;
+
+	/** Returns the current search ID. */
+	long GetCurrentSearchId() const { return m_currentSearch; }
+
+	/** Sets the current search ID. */
+	void SetCurrentSearch(long searchId) { m_currentSearch = searchId; }
 
 	/**
 	 * Requests more results for a specific search ID.
@@ -262,25 +284,17 @@ public:
 	/** Mark current KAD search as finished */
 	void SetKadSearchFinished();
 
+	/** Get the current search ID */
+	long GetCurrentSearchID() const { return m_currentSearch; }
 
 	/** Get the next unique search ID */
 	uint32 GetNextSearchID();
 
-	/** Get the progress of a specific search. */
-	uint32 GetSearchProgress(long searchId) const;
+	/** Get the search parameters for a given search ID */
+	CSearchParams GetSearchParams(long searchID);
 
-	/**
-	 * @brief Request more results for a search
-	 * @param searchID The ID of the search to request more results for
-	 * @return Error message if failed, empty string if successful
-	 */
+	/** Request more results for a given search ID */
 	wxString RequestMoreResults(long searchID);
-
-	/**
-	 * @brief Get the next available search ID
-	 * @return The next search ID
-	 */
-	uint32 GetNextID();
 
 	/** Request more results from a specific server */
 	wxString RequestMoreResultsFromServer(const CServer* server, long searchID);
@@ -299,13 +313,21 @@ private:
 	//! Timer used for global search intervals.
 	CTimer	m_searchTimer;
 
+	//! The current search-type, regarding the last/current search.
+	SearchType	m_searchType;
 
-	//! Map of search parameters for each search ID
-	std::map<long, CSearchParams> m_searchParams;
+	//! Specifies if a search is being performed.
+	bool		m_searchInProgress;
+
+	//! The ID of the current search (DEPRECATED - use m_activeSearches instead)
+	long		m_currentSearch;
 
 	//! Map of active searches and their types to track multiple concurrent searches
 	//! This is now the single source of truth for active searches
 	std::map<long, SearchType>	m_activeSearches;
+
+	//! Map of search parameters for each search ID
+	std::map<long, CSearchParams> m_searchParams;
 
 	//! Mutex for thread-safe access to active searches
 	mutable wxMutex m_searchMutex;
@@ -345,9 +367,12 @@ private:
 	//! If not empty, results of different types are filtered.
 	wxString	m_resultType;
 
-	// Added missing method declarations
+	/** Handle search completion with auto-retry */
 	void OnSearchComplete(long searchId, SearchType type, bool hasResults);
-	void StopAllSearches();
+
+	/** Handle retry callback from auto-retry manager */
+	void OnSearchRetry(long searchId, SearchType type, int retryNum);
+
 
 	DECLARE_EVENT_TABLE()
 };

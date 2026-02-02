@@ -39,10 +39,6 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		UploadQueue.cpp
 		ThreadTasks.cpp
 		protocol/ProtocolCoordinator.cpp
-		search/ED2KSearchController.cpp
-		search/GlobalSearchController.cpp
-		search/KadSearchController.cpp
-		search/SearchResultRouter.cpp
 	)
 endif()
 

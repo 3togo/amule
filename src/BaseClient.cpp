@@ -1197,7 +1197,7 @@ void CUpDownClient::ProcessMuleCommentPacket(const uint8_t* pachPacket, uint32 n
 	// The comment is unicoded, with a uin32 len and safe read
 	// (won't break if string size is < than advertised len)
 	// Truncated to MAXFILECOMMENTLEN size
-	m_strComment = data.ReadString((GetUnicodeSupport() != utf8strNone), 4 /* bytes (it's a uint32)*/, true).Left(MAXFILECOMMENTLEN);
+	m_strComment = data.ReadString((GetUnicodeSupport() != utf8strNone), true).Left(MAXFILECOMMENTLEN);
 
 	AddDebugLogLineN( logClient, wxString(wxT("Description for file '")) << m_clientFilename << wxT("' received: ") << m_strComment);
 

@@ -33,9 +33,6 @@
 #include "SearchList.h"
 #include "Logger.h"
 #include "search/SearchLogging.h"
-#include "search/SearchController.h"
-#include "search/SearchControllerFactory.h"
-#include "search/SearchTypeConverter.h"
 #include <cassert>
 
 void UpdateSearchState(CSearchListCtrl* list, CSearchDlg* parentDlg, const wxString& state)
@@ -237,80 +234,33 @@ bool RetrySearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 	}
 
 	// Start a new ED2K search with the same parameters
-	// The controller will generate a new search ID
+	// Use the same search ID to keep results in the same tab
+	uint32 newSearchId = searchId;
 	// Determine if this is a Local or Global search
 	SearchType searchType = LocalSearch;
 	if (tabText.StartsWith(wxT("[Global] "))) {
 		searchType = GlobalSearch;
 	}
 	
-	// Convert to modern search type
-	search::ModernSearchType modernType;
-	switch (searchType) {
-		case LocalSearch:
-			modernType = search::ModernSearchType::LocalSearch;
-			break;
-		case GlobalSearch:
-			modernType = search::ModernSearchType::GlobalSearch;
-			break;
-		case KadSearch:
-			modernType = search::ModernSearchType::KadSearch;
-			break;
-		default:
-			modernType = search::ModernSearchType::LocalSearch;
-			break;
-	}
+	wxString error = theApp->searchlist->StartNewSearch(&newSearchId, searchType, params);
 
-	// Create search controller
-	auto controller = search::SearchControllerFactory::createController(modernType);
-	if (!controller) {
+	if (!error.IsEmpty()) {
+		// Retry failed - update state to show error
 		UpdateSearchState(page, parentDlg, wxT("Retry Failed"));
 		return false;
 	}
 
-	// Set up search parameters
-	search::SearchParams searchParams;
-	searchParams.searchString = params.searchString;
-	searchParams.strKeyword = params.strKeyword;
-	searchParams.typeText = params.typeText;
-	searchParams.extension = params.extension;
-	searchParams.minSize = params.minSize;
-	searchParams.maxSize = params.maxSize;
-	searchParams.availability = params.availability;
-	searchParams.searchType = modernType;
 
-	// Set up error handling
-	wxString errorMessage;
-	bool hasError = false;
-	uint32_t newSearchId = 0;
-	
-	controller->setOnError([&errorMessage, &hasError](uint32_t searchId, const wxString& error) {
-		errorMessage = error;
-		hasError = true;
-	});
-
-	controller->setOnSearchStarted([&newSearchId](uint32_t searchId) {
-		newSearchId = searchId;
-	});
-
-	// Start the search (retry)
-	controller->startSearch(searchParams);
-	
-	if (hasError) {
-		UpdateSearchState(page, parentDlg, wxT("Retry Failed"));
-		return false;
-	}
-
-	if (newSearchId == 0) {
-		UpdateSearchState(page, parentDlg, wxT("Retry Failed"));
-		return false;
-	}
-
-	// Update the page to show results from the new search
+// Update the page to show results from the new search
 	page->ShowResults(newSearchId);
 
-	// Success - update state
-	UpdateSearchState(page, parentDlg, wxT("Retrying..."));
+
+
+		
+
+
+	// Retry initiated successfully - state will be updated to "Searching"
+	// when the search starts
 	return true;
 }
 
@@ -396,48 +346,12 @@ bool RetryKadSearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 	}
 
 	// Start a new Kad search with the same parameters
-	// The controller will generate a new search ID
-	// Create Kad search controller
-	auto controller = search::SearchControllerFactory::createController(search::ModernSearchType::KadSearch);
-	if (!controller) {
-		UpdateSearchState(page, parentDlg, wxT("Retry Failed"));
-		return false;
-	}
+	// Use the same search ID to keep results in the same tab
+	uint32 newSearchId = searchId;
+	wxString error = theApp->searchlist->StartNewSearch(&newSearchId, KadSearch, params);
 
-	// Set up search parameters
-	search::SearchParams searchParams;
-	searchParams.searchString = params.searchString;
-	searchParams.strKeyword = params.strKeyword;
-	searchParams.typeText = params.typeText;
-	searchParams.extension = params.extension;
-	searchParams.minSize = params.minSize;
-	searchParams.maxSize = params.maxSize;
-	searchParams.availability = params.availability;
-	searchParams.searchType = search::ModernSearchType::KadSearch;
-
-	// Set up error handling
-	wxString errorMessage;
-	bool hasError = false;
-	uint32_t newSearchId = 0;
-	
-	controller->setOnError([&errorMessage, &hasError](uint32_t searchId, const wxString& error) {
-		errorMessage = error;
-		hasError = true;
-	});
-
-	controller->setOnSearchStarted([&newSearchId](uint32_t searchId) {
-		newSearchId = searchId;
-	});
-
-	// Start the search (retry)
-	controller->startSearch(searchParams);
-	
-	if (hasError) {
-		UpdateSearchState(page, parentDlg, wxT("Retry Failed"));
-		return false;
-	}
-
-	if (newSearchId == 0) {
+	if (!error.IsEmpty()) {
+		// Retry failed - update state to show error
 		UpdateSearchState(page, parentDlg, wxT("Retry Failed"));
 		return false;
 	}

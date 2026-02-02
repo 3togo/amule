@@ -233,13 +233,9 @@ void CSearchManager::GetWords(const wxString& str, WordList *words, bool allowDu
 	wxStringTokenizer tkz(str, GetInvalidKeywordChars());
 	while (tkz.HasMoreTokens()) {
 		current_word = tkz.GetNextToken();
-		// TODO: We'd need a safe way to determine if a sequence which contains only 3 chars is a real word.
-		// Currently we do this by evaluating the UTF-8 byte count. This will work well for Western locales,
-		// AS LONG AS the min. byte count is 3(!). If the byte count is once changed to 2, this will not
-		// work properly any longer because there are a lot of Western characters which need 2 bytes in UTF-8.
-		// Maybe we need to evaluate the Unicode character values itself whether the characters are located
-		// in code ranges where single characters are known to represent words.
-		if (strlen((const char *)(current_word.utf8_str())) >= 3) {
+		// Check if the word has at least 3 characters (not bytes)
+		// This fixes UTF-8 handling for non-Western languages like Chinese, Japanese, Korean
+		if (current_word.length() >= 3) {
 			current_word.MakeLower();
 			if (!allowDuplicates) {
 				words->remove(current_word);
@@ -248,6 +244,7 @@ void CSearchManager::GetWords(const wxString& str, WordList *words, bool allowDu
 		}
 	}
 }
+
 
 void CSearchManager::JumpStart()
 {
