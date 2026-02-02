@@ -32,6 +32,7 @@
 #include "../amule.h"
 #include "../SearchFile.h"
 #include "../SearchList.h"
+#include "../search/SearchLogging.h"
 #include "../kademlia/kademlia/Kademlia.h"
 #include "../kademlia/kademlia/SearchManager.h"
 #include "../kademlia/kademlia/Search.h"

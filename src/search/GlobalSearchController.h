@@ -33,6 +33,9 @@ public:
     void addQueriedServer(uint32_t serverIP);
     bool hasQueriedServer(uint32_t serverIP) const;
 
+    // Method to generate search ID
+    uint32_t GenerateSearchId();
+
 protected:
     // Check if searching is in progress
     bool isSearching() const;

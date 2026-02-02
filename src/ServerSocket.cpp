@@ -440,10 +440,10 @@ bool CServerSocket::ProcessPacket(const uint8_t* packet, uint32 size, int8 opcod
 				theStats::AddDownOverheadServer(size);
 				CServer* cur_srv = (serverconnect) ?
 					serverconnect->GetCurrentServer() : NULL;
-theApp->searchlist->ProcessSearchAnswer(
+				theApp->searchlist->ProcessSearchAnswer(
 					packet,
 					size,
-					cur_srv,
+					cur_srv ? cur_srv->GetUnicodeSupport() : false,
 					cur_srv ? cur_srv->GetIP() : 0,
 					cur_srv ? cur_srv->GetPort() : 0);
 				// Don't call LocalSearchEnd() here - search should remain active until explicitly stopped or timeout occurs

@@ -29,6 +29,7 @@
 #include "../Logger.h"
 #include "../amule.h"
 #include "../SearchList.h"
+#include <common/Format.h>
 
 namespace search {
 
@@ -174,6 +175,7 @@ void SearchControllerBase::handleResults(uint32_t searchId, const std::vector<CS
 	for (CSearchFile* result : results) {
 	    // Create a copy for SearchList (SearchModel owns the original)
 	    CSearchFile* resultCopy = new CSearchFile(*result);
+	    // Make sure the search ID matches the expected one for the UI
 	    resultCopy->SetSearchID(searchId);
 	    theApp->searchlist->AddToList(resultCopy, false);
 	    // Use the copy for UI notification to ensure consistency

@@ -28,10 +28,8 @@
 #include "SearchController.h"
 #include "SearchTypeConverter.h"
 #include "SearchLogging.h"
-#include "../SearchList.h"
 #include "../amule.h"
 #include "../MemFile.h"
-#include <wx/utils.h>
 
 namespace search {
 

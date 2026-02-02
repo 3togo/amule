@@ -81,6 +81,14 @@ public:
     void UnregisterController(uint32_t searchId);
 
     /**
+     * Unregister a controller for a specific search type
+     *
+     * @param type The search type to unregister
+     * @param controller The controller to unregister
+     */
+    void UnregisterControllerByType(::SearchType type, SearchController* controller);
+
+    /**
      * Route a single result to the appropriate controller
      *
      * @param searchId The search ID this result belongs to

@@ -28,7 +28,6 @@
 #include "ED2KSearchPacketBuilder.h"
 #include "SearchPackageValidator.h"
 #include "SearchResultRouter.h"
-#include "SearchLogging.h"
 #include "../ServerList.h"
 #include "../Server.h"
 #include "../ServerConnect.h"
@@ -42,6 +41,7 @@
 #include <wx/utils.h>
 #include "../Logger.h"
 #include "SearchTypeConverter.h"
+#include "../search/SearchLogging.h"  // Include for search logging macros
 
 namespace search {
 
@@ -59,30 +59,126 @@ ED2KSearchController::~ED2KSearchController()
 
 void ED2KSearchController::startSearch(const SearchParams& params)
 {
-    // Step 1: Validate prerequisites
-    if (!validatePrerequisites()) {
-	return;
+    // Determine search type
+    ::SearchType oldSearchType = SearchTypeConverter::toLegacy(params.searchType);
+
+    // Convert to old parameter format
+    uint32_t searchId = 0;
+    
+    // Build search packet using ED2KSearchPacketBuilder
+    ED2KSearchPacketBuilder packetBuilder;
+    wxString errorMessage;
+    
+    try {
+        // Determine search type
+        bool isLocalSearch = SearchTypeConverter::isLocalSearch(params.searchType);
+        
+        // Get search ID from model or generate new one
+        // IMPORTANT: When requesting more results, we MUST use the existing search ID
+        // to ensure results are routed to the correct search tab
+        if (m_model->getSearchId() == -1) {
+            searchId = GenerateSearchId();
+            SEARCH_DEBUG_CONTROLLER(
+                CFormat(wxT("ED2KSearchController: Generated new search ID %u for %s search"))
+                % searchId % (isLocalSearch ? wxT("local") : wxT("global")));
+        } else {
+            // Use the existing search ID from the model
+            // This is critical for "more results" functionality
+            searchId = m_model->getSearchId();
+            SEARCH_DEBUG_CONTROLLER(
+                CFormat(wxT("ED2KSearchController: Using existing search ID %u for %s search (more results)"))
+                % searchId % (isLocalSearch ? wxT("local") : wxT("global")));
+        }
+        
+        // Set up early registration in SearchList to ensure proper result routing
+        // --- EARLY REGISTRATION ---
+        if (theApp && theApp->searchlist) {
+            // Store search parameters in SearchList for later use
+            CSearchList::CSearchParams oldParams;
+            oldParams.searchString = params.searchString;
+            oldParams.strKeyword = params.strKeyword;
+            oldParams.typeText = params.typeText;
+            oldParams.extension = params.extension;
+            oldParams.minSize = params.minSize;
+            oldParams.maxSize = params.maxSize;
+            oldParams.availability = params.availability;
+            oldParams.searchType = isLocalSearch ? LocalSearch : GlobalSearch;
+
+            // Set the current search ID in SearchList
+            // This is used by ProcessSearchAnswer to route results
+            theApp->searchlist->SetCurrentSearch(searchId);
+
+            // Register this search in active searches map
+            // This is critical for ProcessSearchAnswer to find the search
+            theApp->searchlist->RegisterActiveSearch(searchId, isLocalSearch ? LocalSearch : GlobalSearch);
+
+            // Store search parameters in SearchStateManager
+            theApp->searchlist->StoreSearchParams(searchId, oldParams);
+
+            SEARCH_DEBUG_CONTROLLER(
+                CFormat(wxT("ED2KSearchController: Set current search ID %u in SearchList for %s search"))
+                % searchId % (isLocalSearch ? wxT("local") : wxT("global")));
+        }
+        // --- END EARLY REGISTRATION ---
+
+        // Build search packet
+        uint8_t* packetData = nullptr;
+        uint32_t packetSize = 0;
+        bool supports64bit = theApp->serverconnect->GetCurrentServer() ?
+            theApp->serverconnect->GetCurrentServer()->SupportsLargeFilesTCP() : false;
+        bool success = packetBuilder.CreateSearchPacket(params, supports64bit, packetData, packetSize);
+        
+        if (!success || !packetData) {
+            errorMessage = wxT("Failed to create ED2K search packet");
+            handleSearchError(m_model->getSearchId(), errorMessage);
+            return;
+        }
+        
+        // Send packet to server
+        if (theApp && theApp->serverconnect) {
+            theStats::AddUpOverheadServer(packetSize);
+            
+            // Create a CMemFile from the raw data
+            CMemFile dataFile(packetData, packetSize);
+            CPacket* packet = new CPacket(dataFile, OP_EDONKEYPROT, OP_SEARCHREQUEST);
+
+            SEARCH_DEBUG_CONTROLLER(
+                CFormat(wxT("ED2KSearchController: Sending %s search packet to server, searchId=%u, packetSize=%u"))
+                % (isLocalSearch ? wxT("local") : wxT("global")) % searchId % packetSize);
+
+            theApp->serverconnect->SendPacket(packet, isLocalSearch);
+            
+            // For global search, store packet for querying more servers
+            if (!isLocalSearch) {
+                // Store packet for later use in querying more servers
+                // TODO: Implement global search server queue
+            }
+            
+            // Clean up the packet data
+            delete[] packetData;
+        } else {
+            errorMessage = _("Not connected to eD2k server");
+            handleSearchError(m_model->getSearchId(), errorMessage);
+            return;
+        }
+    } catch (const wxString& e) {
+        errorMessage = wxString::Format(_("Failed to execute search: %s"), e.c_str());
+        handleSearchError(m_model->getSearchId(), errorMessage);
+        return;
     }
 
-    // Step 2: Validate search parameters
-    if (!validateSearchParams(params)) {
-	return;
-    }
+    // Store search ID and state
+    m_model->setSearchId(searchId);
+    m_model->setSearchState(SearchState::Searching);
 
-    // Step 3: Prepare search
+    // Register with SearchResultRouter for result routing
+    SearchResultRouter::Instance().RegisterController(searchId, this);
+    // Also register by search type for fallback routing (server assigns its own search ID)
+    bool isLocalSearch = SearchTypeConverter::isLocalSearch(params.searchType);
+    SearchResultRouter::Instance().RegisterControllerByType(isLocalSearch ? ::LocalSearch : ::GlobalSearch, this);
+
+    // Initialize progress tracking
     initializeProgress();
-    resetSearchState();
-
-    // Step 4: Convert parameters and execute search
-    auto [searchId, error] = executeSearch(params);
-
-    // Step 5: Handle result
-    if (error.IsEmpty()) {
-	updateSearchState(params, searchId, SearchState::Searching);
-	notifySearchStarted(searchId);
-    } else {
-	handleSearchError(searchId, error);
-    }
 }
 
 bool ED2KSearchController::validatePrerequisites()
@@ -120,21 +216,9 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
 	// Determine search type
 	bool isLocalSearch = SearchTypeConverter::isLocalSearch(params.searchType);
 	
-	// Build search packet
-	uint8_t* packetData = nullptr;
-	uint32_t packetSize = 0;
-	bool supports64bit = theApp->serverconnect->GetCurrentServer() ?
-		theApp->serverconnect->GetCurrentServer()->SupportsLargeFilesTCP() : false;
-	bool success = packetBuilder.CreateSearchPacket(params, supports64bit, packetData, packetSize);
-	
-	if (!success || !packetData) {
-	    error = wxT("Failed to create ED2K search packet");
-	    return {0, error};
-	}
-	
 	// Get search ID from model or generate new one
 	// IMPORTANT: When requesting more results, we MUST use the existing search ID
-	// to ensure results are routed to the correct search tag
+	// to ensure results are routed to the correct search tab
 	if (m_model->getSearchId() == -1) {
 	    searchId = GenerateSearchId();
 	    SEARCH_DEBUG_CONTROLLER(
@@ -147,6 +231,49 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
 	    SEARCH_DEBUG_CONTROLLER(
 		CFormat(wxT("ED2KSearchController: Using existing search ID %u for %s search (more results)"))
 		% searchId % (isLocalSearch ? wxT("local") : wxT("global")));
+	}
+	
+	// Set up early registration in SearchList to ensure proper result routing
+	// --- EARLY REGISTRATION ---
+	if (theApp && theApp->searchlist) {
+	    // Store search parameters in SearchList for later use
+	    CSearchList::CSearchParams oldParams;
+	    oldParams.searchString = params.searchString;
+	    oldParams.strKeyword = params.strKeyword;
+	    oldParams.typeText = params.typeText;
+	    oldParams.extension = params.extension;
+	    oldParams.minSize = params.minSize;
+	    oldParams.maxSize = params.maxSize;
+	    oldParams.availability = params.availability;
+	    oldParams.searchType = isLocalSearch ? LocalSearch : GlobalSearch;
+
+	    // Set the current search ID in SearchList
+	    // This is used by ProcessSearchAnswer to route results
+	    theApp->searchlist->SetCurrentSearch(searchId);
+
+	    // Register this search in active searches map
+	    // This is critical for ProcessSearchAnswer to find the search
+	    theApp->searchlist->RegisterActiveSearch(searchId, isLocalSearch ? LocalSearch : GlobalSearch);
+
+	    // Store search parameters in SearchStateManager
+	    theApp->searchlist->StoreSearchParams(searchId, oldParams);
+
+	    SEARCH_DEBUG_CONTROLLER(
+		CFormat(wxT("ED2KSearchController: Set current search ID %u in SearchList for %s search"))
+		% searchId % (isLocalSearch ? wxT("local") : wxT("global")));
+	}
+	// --- END EARLY REGISTRATION ---
+
+	// Build search packet
+	uint8_t* packetData = nullptr;
+	uint32_t packetSize = 0;
+	bool supports64bit = theApp->serverconnect->GetCurrentServer() ?
+		theApp->serverconnect->GetCurrentServer()->SupportsLargeFilesTCP() : false;
+	bool success = packetBuilder.CreateSearchPacket(params, supports64bit, packetData, packetSize);
+	
+	if (!success || !packetData) {
+	    error = wxT("Failed to create ED2K search packet");
+	    return {0, error};
 	}
 	
 	// Send packet to server

@@ -43,8 +43,6 @@ namespace search {
 	class SearchResultHandler;
 }
 
-#include "search/SearchLogging.h"
-
 
 class CMemFile;
 class CMD4Hash;
@@ -88,11 +86,83 @@ public:
 		uint64_t minSize;
 		//! The largest filesize in bytes to accept, zero for any.
 		uint64_t maxSize;
-		//! The minimum available (source-count), zero for any.
-		uint32_t availability;
-		//! The type of search (Local, Global, or Kad)
+		//! The minimum availability to accept, zero for any.
+		unsigned int availability;
+		//! The search type.
 		SearchType searchType;
 	};
+
+	/** Stores search parameters for later retrieval. */
+	void StoreSearchParams(long searchId, const CSearchParams& params) {
+		wxMutexLocker lock(m_searchMutex);
+		m_searchParams[searchId] = params;
+	}
+
+	/** Retrieves stored search parameters. */
+	bool GetSearchParams(long searchId, CSearchParams& params) const {
+		wxMutexLocker lock(m_searchMutex);
+		auto it = m_searchParams.find(searchId);
+		if (it != m_searchParams.end()) {
+			params = it->second;
+			return true;
+		}
+		return false;
+	}
+
+	/** Registers a search as active. */
+	void RegisterActiveSearch(long searchId, SearchType type) {
+		wxMutexLocker lock(m_searchMutex);
+		m_activeSearches[searchId] = type;
+	}
+
+	/** Unregisters a search as active. */
+	void UnregisterActiveSearch(long searchId) {
+		wxMutexLocker lock(m_searchMutex);
+		m_activeSearches.erase(searchId);
+		m_searchParams.erase(searchId);
+	}
+
+	/** Gets the search mutex for thread-safe access. */
+	wxMutex& GetSearchMutex() const { return m_searchMutex; }
+
+	/** Gets the active searches map for external access. */
+	const std::map<long, SearchType>& GetActiveSearches() const {
+		return m_activeSearches;
+	}
+
+	/** Gets the search type for the most recent ED2K search. */
+	SearchType GetMostRecentED2KSearchType() const {
+		wxMutexLocker lock(m_searchMutex);
+		// Find the most recent active ED2K search to determine type
+		for (auto it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
+			if (it->first >= 0x80000001) {
+				return it->second;
+			}
+		}
+		return GlobalSearch; // Default to global
+	}
+
+	/** Checks if any local search is currently active */
+	bool IsLocalSearchActive() const {
+		wxMutexLocker lock(m_searchMutex);
+		for (const auto& search : m_activeSearches) {
+			if (search.second == LocalSearch) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Checks if any global search is currently active */
+	bool IsGlobalSearchActive() const {
+		wxMutexLocker lock(m_searchMutex);
+		for (const auto& search : m_activeSearches) {
+			if (search.second == GlobalSearch) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/** Constructor. */
 	CSearchList();
@@ -117,46 +187,10 @@ public:
 	uint32 GetSearchProgress() const;
 
 	/** Returns the current search ID. */
-	long GetCurrentSearchId() const { 
-		wxMutexLocker lock(m_searchMutex);
-		if (!m_activeSearches.empty()) {
-			return m_activeSearches.rbegin()->first;
-		}
-		return -1;
-	}
+	long GetCurrentSearchId() const { return m_currentSearch; }
 
 	/** Sets the current search ID. */
-	void SetCurrentSearch(long searchId) {
-		SEARCH_DEBUG_ROUTING(
-			wxString::Format(wxT("SetCurrentSearch: new=%ld"), searchId));
-		// m_currentSearch = searchId; // DEPRECATED - use m_activeSearches instead
-	}
-
-	/** Registers a search as active. */
-	void RegisterActiveSearch(long searchId, SearchType type) {
-		wxMutexLocker lock(m_searchMutex);
-		m_activeSearches[searchId] = type;
-	}
-
-	/** Gets the search type for the most recent ED2K search. */
-	SearchType GetMostRecentED2KSearchType() const {
-		wxMutexLocker lock(m_searchMutex);
-		// Find the most recent active ED2K search to determine type
-		for (auto it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
-			if (it->first >= 0x80000001) {
-				return it->second;
-			}
-		}
-		return GlobalSearch; // Default to global
-	}
-
-	/** Gets the search mutex for thread-safe access. */
-	wxMutex& GetSearchMutex() const { return m_searchMutex; }
-
-	/** Gets the active searches map for external access. */
-	const std::map<long, SearchType>& GetActiveSearches() const {
-		return m_activeSearches;
-	}
+	void SetCurrentSearch(long searchId) { m_currentSearch = searchId; }
 
 	/**
 	 * Requests more results for a specific search ID.
@@ -250,6 +284,9 @@ public:
 	/** Mark current KAD search as finished */
 	void SetKadSearchFinished();
 
+	/** Get the current search ID */
+	long GetCurrentSearchID() const { return m_currentSearch; }
+
 	/** Get the next unique search ID */
 	uint32 GetNextSearchID();
 
@@ -273,24 +310,24 @@ private:
 	void OnGlobalSearchTimer(CTimerEvent& evt);
 
 
-	//! Timer used for global search intervals (legacy - will be moved to controllers)
+	//! Timer used for global search intervals.
 	CTimer	m_searchTimer;
 
-	//! DEPRECATED - Use m_activeSearches map instead
 	//! The current search-type, regarding the last/current search.
-	// SearchType	m_searchType;
+	SearchType	m_searchType;
 
-	//! DEPRECATED - Use m_activeSearches map and SearchController state instead
 	//! Specifies if a search is being performed.
-	// bool		m_searchInProgress;
+	bool		m_searchInProgress;
 
-	//! DEPRECATED - Use m_activeSearches map instead
 	//! The ID of the current search (DEPRECATED - use m_activeSearches instead)
-	// long		m_currentSearch;
+	long		m_currentSearch;
 
 	//! Map of active searches and their types to track multiple concurrent searches
 	//! This is now the single source of truth for active searches
 	std::map<long, SearchType>	m_activeSearches;
+
+	//! Map of search parameters for each search ID
+	std::map<long, CSearchParams> m_searchParams;
 
 	//! Mutex for thread-safe access to active searches
 	mutable wxMutex m_searchMutex;
@@ -330,18 +367,12 @@ private:
 	//! If not empty, results of different types are filtered.
 	wxString	m_resultType;
 
-	//! Map of search parameters for each search ID.
-	typedef std::map<long, CSearchParams> ParamMap;
-	ParamMap	m_searchParams;
-
-// Result handlers now managed by SearchResultRouter
-// Package validators now used by controllers directly
-
-	//! Handle search completion with auto-retry
+	/** Handle search completion with auto-retry */
 	void OnSearchComplete(long searchId, SearchType type, bool hasResults);
 
-	//! Handle retry callback from auto-retry manager
+	/** Handle retry callback from auto-retry manager */
 	void OnSearchRetry(long searchId, SearchType type, int retryNum);
+
 
 	DECLARE_EVENT_TABLE()
 };
