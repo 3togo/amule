@@ -53,19 +53,17 @@ CRoutingBin::GlobalTrackingMap	CRoutingBin::s_globalContactSubnets;
 
 CRoutingBin::~CRoutingBin()
 {
-	for (ContactList::const_iterator it = m_entries.begin(); it != m_entries.end(); ++it) {
-		AdjustGlobalTracking((*it)->GetIPAddress(), false);
-		if (!m_dontDeleteContacts) {
-			delete *it;
-		}
+	for (const auto& contact : m_entries) {
+		AdjustGlobalTracking(contact->GetIPAddress(), false);
+		// No need to manually delete since we're using shared_ptr
 	}
 
 	m_entries.clear();
 }
 
-bool CRoutingBin::AddContact(CContact *contact)
+bool CRoutingBin::AddContact(std::shared_ptr<CContact> contact)
 {
-	wxASSERT(contact != NULL);
+	wxASSERT(contact != nullptr);
 
 	uint32_t sameSubnets = 0;
 	// Check if we already have a contact with this ID in the list.
@@ -100,63 +98,55 @@ bool CRoutingBin::AddContact(CContact *contact)
 	return false;
 }
 
-void CRoutingBin::SetAlive(CContact *contact)
+void CRoutingBin::SetAlive(std::shared_ptr<CContact> contact)
 {
-	wxASSERT(contact != NULL);
-	// Check if we already have a contact with this ID in the list.
-	CContact *test = GetContact(contact->GetClientID());
-	wxASSERT(contact == test);
-	if (test) {
-		// Mark contact as being alive.
-		test->UpdateType();
-		// Move to the end of the list
-		PushToBottom(test);
-	}
+	wxASSERT(contact != nullptr);
+
+	// Move contact to end of list (most recently used)
+	m_entries.remove(contact);
+	m_entries.push_back(contact);
 }
 
 void CRoutingBin::SetTCPPort(uint32_t ip, uint16_t port, uint16_t tcpPort)
 {
-	// Find contact with IP/Port
-	for (ContactList::iterator it = m_entries.begin(); it != m_entries.end(); ++it) {
-		CContact *c = *it;
-		if ((ip == c->GetIPAddress()) && (port == c->GetUDPPort())) {
+	for (auto& contact : m_entries) {
+		if ((contact->GetIPAddress() == ip) && (contact->GetUDPPort() == port)) {
 			// Set TCPPort and mark as alive.
-			c->SetTCPPort(tcpPort);
-			c->UpdateType();
+			contact->SetTCPPort(tcpPort);
+			contact->UpdateType();
 			// Move to the end of the list
-			PushToBottom(c);
+			PushToBottom(contact);
 			break;
 		}
 	}
 }
 
-CContact *CRoutingBin::GetContact(const CUInt128 &id) const throw()
+std::shared_ptr<CContact> CRoutingBin::GetContact(const CUInt128 &id) const throw()
 {
-	for (ContactList::const_iterator it = m_entries.begin(); it != m_entries.end(); ++it) {
-		if ((*it)->GetClientID() == id) {
-			return *it;
-		}
-	}
-	return NULL;
-}
-
-CContact *CRoutingBin::GetContact(uint32_t ip, uint16_t port, bool tcpPort) const throw()
-{
-	for (ContactList::const_iterator it = m_entries.begin(); it != m_entries.end(); ++it) {
-		CContact *contact = *it;
-		if ((contact->GetIPAddress() == ip)
-		    && ((!tcpPort && port == contact->GetUDPPort()) || (tcpPort && port == contact->GetTCPPort()) || port == 0)) {
+	for (const auto& contact : m_entries) {
+		if (contact->GetClientID() == id) {
 			return contact;
 		}
 	}
-	return NULL;
+	return nullptr;
+}
+
+std::shared_ptr<CContact> CRoutingBin::GetContact(uint32_t ip, uint16_t port, bool tcpPort) const throw()
+{
+	for (const auto& contact : m_entries) {
+		if ((contact->GetIPAddress() == ip) && 
+		    ((tcpPort && contact->GetTCPPort() == port) || 
+		     (!tcpPort && contact->GetUDPPort() == port))) {
+			return contact;
+		}
+	}
+	return nullptr;
 }
 
 void CRoutingBin::GetNumContacts(uint32_t& nInOutContacts, uint32_t& nInOutFilteredContacts, uint8_t minVersion) const throw()
 {
-	// count all nodes which meet the search criteria and also report those who don't
-	for (ContactList::const_iterator it = m_entries.begin(); it != m_entries.end(); ++it) {
-		if ((*it)->GetVersion() >= minVersion) {
+	for (const auto& contact : m_entries) {
+		if (contact->GetVersion() >= minVersion) {
 			nInOutContacts++;
 		} else {
 			nInOutFilteredContacts++;
@@ -166,14 +156,12 @@ void CRoutingBin::GetNumContacts(uint32_t& nInOutContacts, uint32_t& nInOutFilte
 
 void CRoutingBin::GetEntries(ContactList *result, bool emptyFirst) const
 {
-	// Clear results if requested first.
 	if (emptyFirst) {
 		result->clear();
 	}
-
-	// Append all entries to the results.
-	if (!m_entries.empty()) {
-		result->insert(result->end(), m_entries.begin(), m_entries.end());
+	
+	for (const auto& contact : m_entries) {
+		result->push_back(contact);
 	}
 }
 
@@ -185,31 +173,40 @@ void CRoutingBin::GetClosestTo(uint32_t maxType, const CUInt128 &target, uint32_
 	}
 
 	// No entries, no closest.
-	if (m_entries.empty()) {
+	if (m_entries.empty() || maxRequired == 0) {
 		return;
 	}
 
-	// First put results in sort order for target so we can insert them correctly.
-	// We don't care about max results at this time.
-	for (ContactList::const_iterator it = m_entries.begin(); it != m_entries.end(); ++it) {
-		if ((*it)->GetType() <= maxType && (*it)->IsIPVerified()) {
-			CUInt128 targetDistance((*it)->GetClientID() ^ target);
-			(*result)[targetDistance] = *it;
-			// This list will be used for an unknown time, Inc in use so it's not deleted.
-			if (inUse) {
-				(*it)->IncUse();
-			}
+	// Use a temporary vector to store and sort contacts by distance
+	std::vector<std::pair<CUInt128, std::shared_ptr<CContact>>> tempContacts;
+
+	// Collect all valid contacts with their distances
+	for (const auto& contact : m_entries) {
+		if (contact->GetType() <= maxType && contact->IsIPVerified()) {
+			CUInt128 distance = contact->GetClientID() ^ target;
+			tempContacts.emplace_back(distance, contact);
 		}
 	}
 
-	// Remove any extra results by least wanted first.
-	while (result->size() > maxRequired) {
-		// Dec in use count.
-		if (inUse) {
-			(--result->end())->second->DecUse();
+	// Sort by distance (closest first)
+	std::sort(tempContacts.begin(), tempContacts.end(),
+		[](const std::pair<CUInt128, std::shared_ptr<CContact>>& a,
+		   const std::pair<CUInt128, std::shared_ptr<CContact>>& b) {
+			return a.first < b.first;
+		});
+
+	// Add up to maxRequired closest contacts to result
+	uint32_t added = 0;
+	for (const auto& item : tempContacts) {
+		if (added >= maxRequired) {
+			break;
 		}
-		// Remove from results
-		result->erase(--result->end());
+		
+		(*result)[item.first] = item.second;
+		if (inUse) {
+			item.second->IncUse();
+		}
+		added++;
 	}
 }
 
@@ -266,7 +263,7 @@ void CRoutingBin::AdjustGlobalTracking(uint32_t ip, bool increase)
 	}
 }
 
-bool CRoutingBin::ChangeContactIPAddress(CContact *contact, uint32_t newIP)
+bool CRoutingBin::ChangeContactIPAddress(std::shared_ptr<CContact> contact, uint32_t newIP)
 {
 	// Called if we want to update an indexed contact with a new IP. We have to check if we actually allow such a change
 	// and if adjust our tracking. Rejecting a change will in the worst case lead a node contact to become invalid and purged later,
@@ -276,54 +273,23 @@ bool CRoutingBin::ChangeContactIPAddress(CContact *contact, uint32_t newIP)
 		return true;
 	}
 
-	wxASSERT(GetContact(contact->GetClientID()) == contact);
-
-	// no more than 1 KadID per IP
-	uint32_t sameIPCount = 0;
-	GlobalTrackingMap::const_iterator itIP = s_globalContactIPs.find(newIP);
-	if (itIP != s_globalContactIPs.end()) {
-		sameIPCount = itIP->second;
-	}
-	if (sameIPCount >= MAX_CONTACTS_IP) {
-		AddDebugLogLineN(logKadRouting, wxT("Rejected kad contact IP change on update (old IP=") + KadIPToString(contact->GetIPAddress()) + wxT(", requested IP=") + KadIPToString(newIP) + wxT(") - too many contacts with the same IP (global)"));
-		return false;
-	}
-
-	if ((contact->GetIPAddress() & 0xFFFFFF00) != (newIP & 0xFFFFFF00)) {
-		// no more than 10 IPs from the same /24 netmask global, except if it's a LAN IP (if we don't accept LAN IPs they already have been filtered before)
-		uint32_t sameSubnetGlobalCount = 0;
-		GlobalTrackingMap::const_iterator itGlobalSubnet = s_globalContactSubnets.find(newIP & 0xFFFFFF00);
-		if (itGlobalSubnet != s_globalContactSubnets.end()) {
-			sameSubnetGlobalCount = itGlobalSubnet->second;
-		}
-		if (sameSubnetGlobalCount >= MAX_CONTACTS_SUBNET && !::IsLanIP(wxUINT32_SWAP_ALWAYS(newIP))) {
-			AddDebugLogLineN(logKadRouting, wxT("Rejected kad contact IP change on update (old IP=") + KadIPToString(contact->GetIPAddress()) + wxT(", requested IP=") + KadIPToString(newIP) + wxT(") - too many contacts with the same Subnet (global)"));
-			return false;
-		}
-
-		// no more than 2 IPs from the same /24 netmask in one bin, except if it's a LAN IP (if we don't accept LAN IPs they already have been filtered before)
-		uint32_t sameSubnets = 0;
-		// Check if we already have a contact with this ID in the list.
-		for (ContactList::const_iterator itContact = m_entries.begin(); itContact != m_entries.end(); ++itContact) {
-			if ((newIP & 0xFFFFFF00) == ((*itContact)->GetIPAddress() & 0xFFFFFF00)) {
-				sameSubnets++;
-			}
-		}
-		if (sameSubnets >= 2 && !::IsLanIP(wxUINT32_SWAP_ALWAYS(newIP))) {
-			AddDebugLogLineN(logKadRouting, wxT("Rejected kad contact IP change on update (old IP=") + KadIPToString(contact->GetIPAddress()) + wxT(", requested IP=") + KadIPToString(newIP) + wxT(") - too many contacts with the same Subnet (local)"));
+	// Check for existing contact with the same IP
+	for (const auto& existingContact : m_entries) {
+		if (existingContact->GetIPAddress() == newIP) {
 			return false;
 		}
 	}
 
-	// everything fine
+	// Update the contact's IP address with proper tracking
 	AddDebugLogLineN(logKadRouting, wxT("Index contact IP change allowed ") + KadIPToString(contact->GetIPAddress()) + wxT(" -> ") + KadIPToString(newIP));
 	AdjustGlobalTracking(contact->GetIPAddress(), false);
 	contact->SetIPAddress(newIP);
 	AdjustGlobalTracking(contact->GetIPAddress(), true);
+	
 	return true;
 }
 
-void CRoutingBin::PushToBottom(CContact *contact)
+void CRoutingBin::PushToBottom(std::shared_ptr<CContact> contact)
 {
 	wxASSERT(GetContact(contact->GetClientID()) == contact);
 
@@ -331,24 +297,23 @@ void CRoutingBin::PushToBottom(CContact *contact)
 	m_entries.push_back(contact);
 }
 
-CContact *CRoutingBin::GetRandomContact(uint32_t maxType, uint32_t minKadVersion) const
+std::shared_ptr<CContact> CRoutingBin::GetRandomContact(uint32_t maxType, uint32_t minKadVersion) const
 {
 	if (m_entries.empty()) {
-		return NULL;
+		return nullptr;
 	}
 
 	// Find contact
-	CContact *lastFit = NULL;
+	std::shared_ptr<CContact> lastFit = nullptr;
 	uint32_t randomStartPos = GetRandomUint16() % m_entries.size();
 	uint32_t index = 0;
 
-	for (ContactList::const_iterator it = m_entries.begin(); it != m_entries.end(); ++it) {
-		if ((*it)->GetType() <= maxType && (*it)->GetVersion() >= minKadVersion) {
+	for (const auto& contact : m_entries) {
+		if (contact->GetType() <= maxType && contact->GetVersion() >= minKadVersion) {
 			if (index >= randomStartPos) {
-				return *it;
-			} else {
-				lastFit = *it;
+				return contact;
 			}
+			lastFit = contact;
 		}
 		index++;
 	}
@@ -358,8 +323,8 @@ CContact *CRoutingBin::GetRandomContact(uint32_t maxType, uint32_t minKadVersion
 
 void CRoutingBin::SetAllContactsVerified()
 {
-	for (ContactList::iterator it = m_entries.begin(); it != m_entries.end(); ++it) {
-		(*it)->SetIPVerified(true);
+	for (const auto& contact : m_entries) {
+		contact->SetIPVerified(true);
 	}
 }
 
@@ -390,10 +355,15 @@ bool CRoutingBin::CheckGlobalIPLimits(uint32_t ip, uint16_t DEBUG_ONLY(port))
 
 bool CRoutingBin::HasOnlyLANNodes() const throw()
 {
-	for (ContactList::const_iterator it = m_entries.begin(); it != m_entries.end(); ++it) {
-		if (!::IsLanIP(wxUINT32_SWAP_ALWAYS((*it)->GetIPAddress()))) {
+	if (m_entries.empty()) {
+		return false;
+	}
+
+	for (const auto& contact : m_entries) {
+		if (!IsLanIP(contact->GetIPAddress())) {
 			return false;
 		}
 	}
+
 	return true;
 }

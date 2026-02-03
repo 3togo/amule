@@ -25,37 +25,24 @@
 //
 
 #include "KadSearchPacketBuilder.h"
+#include "../kademlia/utils/KadUDPKey.h"
+#include "../include/protocol/kad2/Client2Client/UDP.h"
 #include "../MemFile.h"
-#include "../protocol/kad2/Client2Client/UDP.h"
+#include "SearchModel.h"
 #include <wx/string.h>
 
 namespace search {
 
 bool KadSearchPacketBuilder::CreateSearchPacket(const SearchParams& params,
-						uint8_t*& packetData, uint32_t& packetSize)
+                                               uint8_t*& packetData, uint32_t& packetSize)
 {
-    // Validate input parameters
-    if (params.strKeyword.IsEmpty()) {
-        return false;
-    }
-
-    // Create packet using MemFile
-    CMemFile packet;
+    // For Kad searches, we don't actually create a packet here
+    // The Kad network handles search requests through its own API
+    // This method is kept for consistency with the interface
     
-    // Add operation code for Kademlia2 search
-    packet.WriteUInt8(KADEMLIA2_SEARCH_KEY_REQ);
-    
-    // Add search keyword
-    packet.WriteString(params.strKeyword);
-    
-    // Add additional search parameters if needed
-    // For now, keep it simple with just the keyword
-    
-    // Get the final packet data
-    packetSize = packet.GetLength();
-    packetData = new uint8_t[packetSize];
-    memcpy(packetData, packet.GetBuffer(), packetSize);
-    
+    // Return empty packet - Kad controller will handle the actual search
+    packetData = nullptr;
+    packetSize = 0;
     return true;
 }
 

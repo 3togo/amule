@@ -79,9 +79,9 @@ public:
 	void	 ReadFile(const wxString& specialNodesdat = wxEmptyString);
 
 	bool	 VerifyContact(const CUInt128& id, uint32_t ip);
-	CContact *GetContact(const CUInt128& id) const throw();
-	CContact *GetContact(uint32_t ip, uint16_t port, bool tcpPort) const throw();
-	CContact *GetRandomContact(uint32_t maxType, uint32_t minKadVersion) const;
+	std::shared_ptr<CContact> GetContact(const CUInt128& id) const;
+	std::shared_ptr<CContact> GetContact(uint32_t ip, uint16_t port, bool tcpPort) const;
+	std::shared_ptr<CContact> GetRandomContact(uint32_t maxType, uint32_t minKadVersion) const;
 	uint32_t GetNumContacts() const throw();
 	void	 GetNumContacts(uint32_t& nInOutContacts, uint32_t& nInOutFilteredContacts, uint8_t minVersion) const throw();
 

@@ -26,6 +26,7 @@
 #include "SearchControllerBase.h"
 #include "SearchLogging.h"
 #include "../SearchFile.h"
+#include "../SearchList.h"
 #include "../Logger.h"
 #include "../amule.h"
 #include <common/Format.h>
@@ -43,16 +44,6 @@ SearchControllerBase::~SearchControllerBase()
 {
     // Don't clear results here - the legacy system (CSearchList) manages the lifetime
     // of CSearchFile objects. Clearing them here would cause a double-free.
-}
-
-std::vector<CSearchFile*> SearchControllerBase::getResults() const
-{
-    return m_model->getResults();
-}
-
-size_t SearchControllerBase::getResultCount() const
-{
-    return m_model->getResultCount();
 }
 
 void SearchControllerBase::handleSearchError(uint32_t searchId, const wxString& error)
@@ -112,6 +103,31 @@ void SearchControllerBase::updateSearchState(const SearchParams& params, uint32_
     m_model->setSearchParams(params);
     m_model->setSearchId(searchId);
     m_model->setSearchState(state);
+}
+
+SearchState SearchControllerBase::getState() const
+{
+    return m_model->getSearchState();
+}
+
+SearchParams SearchControllerBase::getSearchParams() const
+{
+    return m_model->getSearchParams();
+}
+
+long SearchControllerBase::getSearchId() const
+{
+    return m_model->getSearchId();
+}
+
+std::vector<CSearchFile*> SearchControllerBase::getResults() const
+{
+    return m_model->getResults();
+}
+
+size_t SearchControllerBase::getResultCount() const
+{
+    return m_model->getResultCount();
 }
 
 void SearchControllerBase::handleResult(uint32_t searchId, CSearchFile* result)

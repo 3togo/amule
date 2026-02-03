@@ -191,7 +191,8 @@ int CEncryptedStreamSocket::Write(const void* lpBuf, uint32_t nBufLen)
 		wxASSERT( m_NegotiatingState == ONS_BASIC_SERVER_DELAYEDSENDING );
 		// handshakedata was delayed to put it into one frame with the first paypload to the server
 		// do so now with the payload attached
-		int nRes = SendNegotiatingData(lpBuf, nBufLen, nBufLen);
+		uint32_t nStartCryptFromByte = (lpBuf != NULL) ? nBufLen : 0;
+		int nRes = SendNegotiatingData(lpBuf, nBufLen, nStartCryptFromByte);
 		wxASSERT( nRes != SOCKET_ERROR );
 		(void)nRes;
 		return nBufLen;	// report a full send, even if we didn't for some reason - the data is now in our buffer and will be handled later

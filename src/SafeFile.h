@@ -152,19 +152,10 @@ public:
 	 *
 	 * @see CSafeFileIO::Read
 	 */
-	virtual wxString	ReadString(bool bOptUTF8, uint8 lenBytes = 2, bool SafeRead = false) const;
-
-	/**
-	 * Reads a string from the file, where the length is specified directly.
-	 *
-	 * @param bOptUTF8 Specifies if the string is UTF8 encoded.
-	 * @param length The length of the string.
-	 * @return The resulting text-string.
-	 *
-	 * This function is typically used when the text-fields length is not stored
-	 * as an integer-field in front of the text-field.
-	 */
-	virtual wxString	ReadOnlyString(bool bOptUTF8, uint16 length) const;
+	virtual wxString	ReadString(bool bOptUTF8 = false, bool SafeRead = true) const;
+	virtual wxString	ReadStringUTF8(bool SafeRead = true) const;
+	virtual wxString	ReadOnlyString(bool bOptUTF8, uint16 raw_len) const;
+	virtual wxString	ReadOnlyStringUTF8(uint16 raw_len) const;
 
 
 	/**
@@ -199,14 +190,16 @@ public:
 
 /* Warning: Special Kad functions, needs documentation */
 
-	CTag*		ReadTag(bool bOptACP = false) const;
-	void		ReadTagPtrList(TagPtrList* taglist, bool bOptACP = false) const;
+	CTag* ReadTag(bool bOptACP) const;
+	CTag* ReadTagUTF8() const;
+	void ReadTagPtrList(TagPtrList* taglist, bool bOptACP) const;
+	void ReadTagPtrListUTF8(TagPtrList* taglist) const;
 
-	void		WriteTag(const CTag& tag);
-	void		WriteTagPtrList(const TagPtrList& tagList);
+	void WriteTag(const CTag& tag);
+	void WriteTagPtrList(const TagPtrList& tagList);
 
 /* Special ED2Kv2 function */
-	uint64		GetIntTagValue() const;
+	uint64 GetIntTagValue() const;
 
 /* Some functions I added for simplicity */
 	// Very obvious

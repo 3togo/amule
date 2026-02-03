@@ -200,7 +200,7 @@ public:
 	bool AddSigningIP(uint32 dwIP);
 
 	CAICHHash m_Hash;
-	std::set<uint32> m_adwIpsSigning;
+	std::set<uint32_t> m_adwIpsSigning;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////

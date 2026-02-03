@@ -8,6 +8,14 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		kademlia/net/PacketTracking.cpp
 		kademlia/routing/Contact.cpp
 		kademlia/routing/RoutingZone.cpp
+		search/ED2KSearchController.cpp
+		search/ED2KSearchPacketBuilder.cpp
+		search/GlobalSearchController.cpp
+		search/KadSearchController.cpp
+		search/KadSearchPacketBuilder.cpp
+		search/LocalSearchController.cpp
+		search/SearchControllerBase.cpp
+		search/SearchControllerFactory.cpp
 		amule.cpp
 		BaseClient.cpp
 		ClientCreditsList.cpp
@@ -39,10 +47,6 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		UploadQueue.cpp
 		ThreadTasks.cpp
 		protocol/ProtocolCoordinator.cpp
-		search/ED2KSearchController.cpp
-		search/GlobalSearchController.cpp
-		search/KadSearchController.cpp
-		search/SearchResultRouter.cpp
 	)
 endif()
 

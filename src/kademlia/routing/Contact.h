@@ -41,12 +41,13 @@ there client on the eMule forum..
 
 #include "../kademlia/Kademlia.h"
 #include "../utils/KadUDPKey.h"
+#include <memory>
 
 ////////////////////////////////////////
 namespace Kademlia {
 ////////////////////////////////////////
 
-class CContact
+class CContact : public std::enable_shared_from_this<CContact>
 {
 public:
 	~CContact();

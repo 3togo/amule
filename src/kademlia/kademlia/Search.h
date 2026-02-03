@@ -40,13 +40,29 @@ there client on the eMule forum..
 #define __SEARCH_H__
 
 #include "SearchManager.h"
+#include "../routing/Maps.h"
+#include "../../Tag.h"
+#include "../../MemFile.h"
+#include <memory>
 
-class CKnownFile;
-class CTag;
+#include <list>
+#include <map>
+
+#include "../routing/Contact.h"
+#include "../utils/KadUDPKey.h"
+#include "../../MemFile.h"
+
+void CleanupContactSet(std::set<std::shared_ptr<Kademlia::CContact>>& contactSet);
+void CleanupContactMap(Kademlia::ContactMap& contactMap);
 
 ////////////////////////////////////////
 namespace Kademlia {
 ////////////////////////////////////////
+
+class CRoutingZone;
+class CSearchManager;
+
+typedef std::list<std::shared_ptr<CContact>> ContactList;
 
 class CKadClientSearcher;
 
@@ -98,19 +114,21 @@ public:
 	};
 
 	CSearch();
+	CSearch(const CUInt128& target, uint32_t type);
 	~CSearch();
 
 private:
 	void Go();
-	void ProcessResponse(uint32 fromIP, uint16 fromPort, ContactList *results);
-	void ProcessResult(const CUInt128 &answer, TagPtrList *info);
+	void StorePacket(uint8_t opcode, const CUInt128 &contactID, uint32_t ip, uint16_t port, uint8_t kadVersion, const CKadUDPKey& kadUdpKey, const uint8_t *data, uint32_t lenData, bool isSource);
+	void StorePacket();
+	void JumpStart();
+	void ProcessResponse(uint32_t fromIP, uint16_t fromPort, const ContactList& results);
+	void ProcessResult(const CUInt128& answer, TagPtrList *info);
 	void ProcessResultFile(const CUInt128 &answer, TagPtrList *info);
 	void ProcessResultKeyword(const CUInt128 &answer, TagPtrList *info);
 	void ProcessResultNotes(const CUInt128 &answer, TagPtrList *info);
-	void JumpStart();
-	void SendFindValue(CContact *contact, bool reaskMore = false);
+	void SendFindValue(const std::shared_ptr<CContact>& contact, bool reaskMore = false);
 	void PrepareToStop() throw();
-	void StorePacket();
 
 	uint8_t	GetRequestContactCount() const;
 
@@ -123,6 +141,12 @@ private:
 	uint32_t	m_totalLoad;
 	uint32_t	m_totalLoadResponses;
 	uint32_t	m_lastResponse;
+
+	bool		m_finished;
+	bool		m_running;
+	bool		m_bootstrap;
+	bool		m_special;
+	bool		m_fwCheckUDPSearch;
 
 	uint32_t	m_searchID;
 	CUInt128	m_target;
@@ -140,9 +164,13 @@ private:
 	RespondedMap	m_responded;
 	ContactMap	m_best;
 	ContactList	m_delete;
+	std::set<std::shared_ptr<CContact>> m_deleteSet; // 使用 shared_ptr 的集合
 	ContactMap	m_inUse;
 	CUInt128	m_closestDistantFound; // not used for the search itself, but for statistical data collecting
-	CContact *	m_requestedMoreNodesContact;
+	std::shared_ptr<CContact>	m_requestedMoreNodesContact; // 使用 shared_ptr
+
+private:
+	// 移除了旧的私有清理函数声明，因为会使用全局的、处理 shared_ptr 的版本
 };
 
 } // End namespace

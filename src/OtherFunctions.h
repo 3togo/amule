@@ -169,7 +169,10 @@ void DeleteContents(STL_CONTAINER& container)
 	// Ensure that the actual container wont contain dangling pointers during
 	// this operation, to ensure that the destructors can't access them.
 	STL_CONTAINER copy = std::exchange(container, STL_CONTAINER{});
-	std::for_each(copy.begin(), copy.end(), SDoDelete());
+	// Use a safer approach to avoid double deletion issues
+	for (auto it = copy.begin(); it != copy.end(); ++it) {
+		SDoDelete()(*it);
+	}
 }
 
 

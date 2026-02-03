@@ -214,6 +214,12 @@ public:
 			return 0;
 		}
 
+		// Handle NULL buffer case
+		if (buf == nullptr) {
+			AddDebugLogLineF(logAsio, wxT("Read called with NULL buffer: ") + wxString::Format(wxT("%u"), bytesToRead));
+			return 0;
+		}
+
 		if (m_sync) {
 			return ReadSync(buf, bytesToRead);
 		}
@@ -262,6 +268,15 @@ public:
 	{
 		if (m_sync) {
 			return WriteSync(buf, nbytes);
+		}
+
+		// Handle NULL buffer case - if buf is NULL, nbytes must be 0
+		if (buf == nullptr) {
+			if (nbytes != 0) {
+				AddDebugLogLineF(logAsio, wxT("Write called with NULL buffer but non-zero size: ") + wxString::Format(wxT("%u"), nbytes));
+				nbytes = 0; // Force size to 0 for safety
+			}
+			return 0;
 		}
 
 		if (m_sendBuffer) {
@@ -423,6 +438,10 @@ private:
 	//
 	void DispatchClose()
 	{
+		if (!m_socket) {
+			AddDebugLogLineF(logAsio, CFormat(wxT("TCP DispatchClose: socket is null %s")) % m_IP);
+			return;
+		}
 		error_code ec;
 		m_socket->close(ec);
 		if (ec) {
@@ -584,6 +603,12 @@ private:
 	//
 	uint32 ReadSync(char * buf, uint32 bytesToRead)
 	{
+		// Handle NULL buffer case
+		if (buf == nullptr) {
+			AddDebugLogLineF(logAsio, wxT("ReadSync called with NULL buffer: ") + wxString::Format(wxT("%u"), bytesToRead));
+			return 0;
+		}
+		
 		error_code ec;
 		uint32 received = read(*m_socket, buffer(buf, bytesToRead), ec);
 		SetError(ec);
@@ -592,6 +617,15 @@ private:
 
 	uint32 WriteSync(const void * buf, uint32 nbytes)
 	{
+		// Handle NULL buffer case - if buf is NULL, nbytes must be 0
+		if (buf == nullptr) {
+			if (nbytes != 0) {
+				AddDebugLogLineF(logAsio, wxT("WriteSync called with NULL buffer but non-zero size: ") + wxString::Format(wxT("%u"), nbytes));
+				nbytes = 0; // Force size to 0 for safety
+			}
+			return 0;
+		}
+		
 		error_code ec;
 		uint32 sent = write(*m_socket, buffer(buf, nbytes), ec);
 		SetError(ec);
@@ -813,17 +847,36 @@ public:
 
 	~CAsioSocketServerImpl()
 	{
+ 		// Set destruction flag to prevent further processing
+		m_destructing = true;
+		
+		// Cancel all pending operations to prevent callbacks after destruction
+		if (is_open()) {
+			error_code ec;
+			close(ec);
+			// Clear current socket to prevent any further use
+			m_currentSocket.reset();
+		}
 	}
 
 	// For wxSocketServer, Ok will return true if the server could bind to the specified address and is already listening for new connections.
 	bool IsOk() const { return m_ok; }
 
-	void Close() { close();	}
+	void Close() { 
+		error_code ec;
+		close(ec);	
+	}
 
 	bool AcceptWith(CLibSocket & socket)
 	{
 		if (!m_socketAvailable) {
 			AddDebugLogLineF(logAsio, wxT("AcceptWith: nothing there"));
+			return false;
+		}
+
+		// Check if we're being destroyed
+		if (m_destructing) {
+			AddDebugLogLineF(logAsio, wxT("AcceptWith: server is being destroyed"));
 			return false;
 		}
 
@@ -858,19 +911,34 @@ public:
 		return true;
 	}
 
-	bool SocketAvailable() const { return m_socketAvailable; }
+	bool SocketAvailable() const { return m_socketAvailable && !m_destructing; }
 
 private:
 
 	void StartAccept()
 	{
+		// Don't start new accepts if we're being destroyed
+		if (m_destructing) {
+			return;
+		}
+		
 		m_currentSocket.reset(new CAsioSocketImpl(NULL));
 		async_accept(m_currentSocket->GetAsioSocket(),
-			m_strand.wrap([this](const error_code& error) { HandleAccept(error); }));
+			m_strand.wrap([this](const error_code& error) { 
+				// Check if object is still valid before handling
+				if (!m_destructing) {
+					HandleAccept(error); 
+				}
+			}));
 	}
 
 	void HandleAccept(const error_code& error)
 	{
+		// Check if we're being destroyed
+		if (m_destructing) {
+			return;
+		}
+		
 		if (error) {
 			AddDebugLogLineC(logAsio, CFormat(wxT("Error in HandleAccept: %s")) % error.message());
 		} else {
@@ -886,7 +954,9 @@ private:
 		}
 		// We were not successful. Try again.
 		// Post the request to the event queue to make sure it doesn't get called immediately.
-		m_strand.post(boost::bind(& CAsioSocketServerImpl::StartAccept, this), boost::asio::get_associated_allocator(boost::bind(& CAsioSocketServerImpl::StartAccept, this)));
+		if (!m_destructing) {
+			m_strand.post(boost::bind(& CAsioSocketServerImpl::StartAccept, this), boost::asio::get_associated_allocator(boost::bind(& CAsioSocketServerImpl::StartAccept, this)));
+		}
 	}
 
 	// The wrapper object
@@ -898,6 +968,8 @@ private:
 	// Is there a socket available?
 	bool m_socketAvailable;
 	io_context::strand	m_strand;		// handle synchronisation in io_context thread pool
+	// Flag to indicate if object is being destroyed
+	bool m_destructing = false;
 };
 
 
@@ -1074,6 +1146,10 @@ private:
 	//
 	void DispatchClose()
 	{
+		if (!m_socket) {
+			AddDebugLogLineF(logAsio, wxT("UDP DispatchClose: socket is null"));
+			return;
+		}
 		error_code ec;
 		m_socket->close(ec);
 		if (ec) {
@@ -1085,6 +1161,11 @@ private:
 
 	void DispatchSendTo(CUDPData * recdata)
 	{
+		if (!m_socket) {
+			AddDebugLogLineF(logAsio, wxT("UDP DispatchSendTo: socket is null"));
+			delete recdata;
+			return;
+		}
 		ip::udp::endpoint endpoint(recdata->ipadr.GetEndpoint().address(), recdata->ipadr.Service());
 
 		AddDebugLogLineF(logAsio, CFormat(wxT("UDP DispatchSendTo %d to %s:%d")) % recdata->size
@@ -1163,6 +1244,10 @@ private:
 
 	void StartBackgroundRead()
 	{
+		if (!m_socket) {
+			AddDebugLogLineF(logAsio, wxT("UDP StartBackgroundRead: socket is null"));
+			return;
+		}
 		m_socket->async_receive_from(buffer(static_cast<void*>(m_readBuffer.get()), CMuleUDPSocket::UDP_BUFFER_SIZE), m_receiveEndpoint,
 		m_strand.wrap([this](const error_code& error, size_t bytes_transferred) { HandleRead(error, bytes_transferred); }));
 	}

@@ -1,4 +1,3 @@
-
 //
 // This file is part of the aMule Project.
 //
@@ -23,3 +22,54 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
+
+#ifndef __ED2K_SEARCH_CONTROLLER_H__
+#define __ED2K_SEARCH_CONTROLLER_H__
+
+#include "SearchControllerBase.h"
+#include <memory>
+
+// Forward declarations
+class CPacket;
+
+namespace search {
+
+/**
+ * Controller for managing ED2K network searches
+ */
+class ED2KSearchController : public SearchControllerBase
+{
+public:
+    /**
+     * Constructor
+     */
+    ED2KSearchController();
+    
+    /**
+     * Destructor
+     */
+    virtual ~ED2KSearchController();
+    
+    // Delete copy constructor and copy assignment operator
+    ED2KSearchController(const ED2KSearchController&) = delete;
+    ED2KSearchController& operator=(const ED2KSearchController&) = delete;
+
+    // Implement SearchController interface
+    virtual void startSearch(const SearchParams& params) override;
+    virtual void stopSearch() override;
+    virtual void requestMoreResults() override;
+    virtual SearchState getState() const override { return isSearching() ? SearchState::Searching : SearchState::Idle; }
+
+protected:
+    // Check if searching is in progress
+    bool isSearching() const;
+
+private:
+    bool m_isActive;                     ///< Whether search is currently active
+    bool validateSearchParams(const SearchParams& params);  ///< Validate search parameters before starting search
+};
+
+
+} // namespace search
+
+#endif // __ED2K_SEARCH_CONTROLLER_H__

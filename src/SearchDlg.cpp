@@ -744,10 +744,7 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event)) {
 		// More button should work for both Local and Global searches
 		if (!isLocalSearch && !isGlobalSearch) {
 			// Unknown search type, try to determine from search parameters
-			CSearchList::CSearchParams params;
-			if (!theApp->searchlist->GetSearchParams(searchId, params)) {
-				return;
-			}
+			CSearchList::CSearchParams params = theApp->searchlist->GetSearchParams(searchId);
 			if (params.searchType == KadSearch) {
 				wxMessageBox(_("The 'More' button does not work for Kad searches."), _("Search Information"),
 							 wxOK | wxICON_INFORMATION);
@@ -755,11 +752,17 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event)) {
 			}
 		}
 
-		// Get search parameters from SearchStateManager using reference parameter
+		// Get search parameters from SearchStateManager
 		CSearchList::CSearchParams params;
 		AddDebugLogLineN(logSearch, wxT("Attempting to get search parameters..."));
-		if (!m_stateManager.GetSearchParams(searchId, params) || params.searchString.IsEmpty()) {
-			AddDebugLogLineN(logSearch, wxT("Failed to get search parameters or search string is empty!"));
+		if (!m_stateManager.GetSearchParams(searchId, params)) {
+			AddDebugLogLineN(logSearch, wxT("Failed to get search parameters!"));
+			wxMessageBox(_("No search parameters available for this search."), _("Search Error"),
+						 wxOK | wxICON_ERROR);
+			return;
+		}
+
+		if (params.searchString.IsEmpty()) {
 			wxMessageBox(_("No search parameters available for this search."), _("Search Error"),
 						 wxOK | wxICON_ERROR);
 			return;

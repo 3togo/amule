@@ -42,8 +42,7 @@ there client on the eMule forum..
 #include "../utils/UInt128.h"
 #include "../routing/Maps.h"
 #include "../../Tag.h"
-
-class CMemFile;
+#include <memory>
 
 ////////////////////////////////////////
 namespace Kademlia {
@@ -54,7 +53,7 @@ class CRoutingZone;
 class CKadClientSearcher;
 
 typedef std::list<wxString> WordList;
-typedef std::map<CUInt128, CSearch*> SearchMap;
+typedef std::map<CUInt128, std::shared_ptr<CSearch>> SearchMap;
 
 class CSearchManager
 {
@@ -69,12 +68,12 @@ public:
 
 	// Search for a particular file
 	// Will return unique search id, returns zero if already searching for this file.
-	static CSearch* PrepareLookup(uint32_t type, bool start, const CUInt128& id);
+	static std::shared_ptr<CSearch> PrepareLookup(uint32_t type, bool start, const CUInt128& id);
 
 	// Will return unique search id, returns zero if already searching for this keyword.
-	static CSearch* PrepareFindKeywords(const wxString& keyword, uint32_t searchTermsDataSize, const uint8_t *searchTermsData, uint32_t searchid);
+	static std::shared_ptr<CSearch> PrepareFindKeywords(const wxString& keyword, uint32_t searchTermsDataSize, const uint8_t *searchTermsData, uint32_t searchid);
 
-	static bool StartSearch(CSearch* search);
+	static bool StartSearch(std::shared_ptr<CSearch> search);
 
 	static void ProcessResponse(const CUInt128& target, uint32_t fromIP, uint16_t fromPort, ContactList *results);
 	static void ProcessResult(const CUInt128& target, const CUInt128& answer, TagPtrList *info);

@@ -1,0 +1,12 @@
+commit 8a9fee9cb2f053f0e70bc1f5e716ac7121fd2535
+Merge: 7748145e7 c7c184846
+Author: freetogo@gmail.com <you@example.com>
+Date:   Tue Feb 3 11:33:52 2026 +0800
+
+    WIP on fix-search-routing: 7748145e7 ...
+
+ src/search/KadSearchController.cpp     | 32 +++++++++-----------------------
+ src/search/KadSearchController.h       | 30 ++++++++++++------------------
+ src/search/SearchControllerBase.cpp    |  1 -
+ src/search/SearchControllerFactory.cpp | 18 +++++++++---------
+ 4 files changed, 30 insertions(+), 51 deletions(-)

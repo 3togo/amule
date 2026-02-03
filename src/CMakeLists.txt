@@ -195,6 +195,7 @@ if (BUILD_MONOLITHIC)
 		search/GlobalSearchController.cpp
 		search/KadSearchPacketBuilder.cpp
 		search/SearchAutoRetry.cpp
+		search/SearchIdGenerator.cpp
 		search/SearchModel.cpp
 		search/SearchPackageValidator.cpp
 		search/SearchPackageException.cpp

@@ -396,7 +396,7 @@ bool CKademliaUDPListener::AddContact2(const uint8_t *data, uint32_t lenData, ui
 	bool tcpFirewalled = false;
 	uint8_t tags = bio.ReadUInt8();
 	while (tags) {
-		CTag *tag = bio.ReadTag();
+		CTag *tag = bio.ReadTagUTF8();
 		if (!tag->GetName().Cmp(TAG_SOURCEUPORT)) {
 			if (tag->IsInt() && (uint16_t)tag->GetInt() > 0) {
 				port = tag->GetInt();
@@ -468,14 +468,14 @@ void CKademliaUDPListener::Process2BootstrapRequest(uint32_t ip, uint16_t port, 
 
 	// Write packet info
 	packetdata.WriteUInt16(numContacts);
-	CContact *contact;
+	const std::shared_ptr<CContact> *contact;
 	for (ContactList::const_iterator it = contacts.begin(); it != contacts.end(); ++it) {
-		contact = *it;
-		packetdata.WriteUInt128(contact->GetClientID());
-		packetdata.WriteUInt32(contact->GetIPAddress());
-		packetdata.WriteUInt16(contact->GetUDPPort());
-		packetdata.WriteUInt16(contact->GetTCPPort());
-		packetdata.WriteUInt8(contact->GetVersion());
+		contact = &(*it);
+		packetdata.WriteUInt128((*contact)->GetClientID());
+		packetdata.WriteUInt32((*contact)->GetIPAddress());
+		packetdata.WriteUInt16((*contact)->GetUDPPort());
+		packetdata.WriteUInt16((*contact)->GetTCPPort());
+		packetdata.WriteUInt8((*contact)->GetVersion());
 	}
 
 	// Send response
@@ -547,7 +547,7 @@ void CKademliaUDPListener::Process2HelloRequest(const uint8_t *packetData, uint3
 		DebugSend(Kad2Ping, ip, port);
 		SendNullPacket(KADEMLIA2_PING, ip, port, senderKey, NULL);
 #ifdef __DEBUG__
-		CContact* contact = CKademlia::GetRoutingZone()->GetContact(contactID);
+		std::shared_ptr<CContact> contact = CKademlia::GetRoutingZone()->GetContact(contactID);
 		if (contact != NULL) {
 			if (contact->GetType() < 2) {
 				AddDebugLogLineN(logKadRouting, wxT("Sending (ping) challenge to a long known contact (should be verified already) - ") + KadIPToString(ip));
@@ -672,14 +672,14 @@ void CKademliaUDPListener::ProcessKademlia2Request(const uint8_t *packetData, ui
 		CMemFile packetdata(817);
 		packetdata.WriteUInt128(target);
 		packetdata.WriteUInt8(count);
-		CContact *c;
+		const std::shared_ptr<CContact> *c;
 		for (ContactMap::const_iterator it = results.begin(); it != results.end(); ++it) {
-			c = it->second;
-			packetdata.WriteUInt128(c->GetClientID());
-			packetdata.WriteUInt32(c->GetIPAddress());
-			packetdata.WriteUInt16(c->GetUDPPort());
-			packetdata.WriteUInt16(c->GetTCPPort());
-			packetdata.WriteUInt8(c->GetVersion()); //<- Kad Version inserted to allow backward compatibility.
+			c = &(it->second);
+			packetdata.WriteUInt128((*c)->GetClientID());
+			packetdata.WriteUInt32((*c)->GetIPAddress());
+			packetdata.WriteUInt16((*c)->GetUDPPort());
+			packetdata.WriteUInt16((*c)->GetTCPPort());
+			packetdata.WriteUInt8((*c)->GetVersion()); //<- Kad Version inserted to allow backward compatibility.
 		}
 
 		DebugSendF(CFormat(wxT("Kad2Res (count=%u)")) % count, ip, port);
@@ -741,16 +741,16 @@ void CKademliaUDPListener::ProcessKademlia2Response(const uint8_t *packetData, u
 						// deliver them back to the searchmanager (because he would UDP-ask them for further results), but only report
 						// them to FirewallChecker - this will of course cripple the search but that's not the point, since we only
 						// care for IPs and not the random set target
+						auto temp = std::make_shared<CContact>(id, contactIP, contactPort, tport, version, 0, false, target);
 						CUDPFirewallTester::AddPossibleTestContact(id, contactIP, contactPort, tport, target, version, 0, false);
 					} else {
 						bool verified = false;
 						bool wasAdded = routingZone->AddUnfiltered(id, contactIP, contactPort, tport, version, 0, verified, false, false);
-						CContact *temp = new CContact(id, contactIP, contactPort, tport, version, 0, false, target);
-						if (wasAdded || routingZone->IsAcceptableContact(temp)) {
+						std::shared_ptr<CContact> temp = std::make_shared<CContact>(id, contactIP, contactPort, tport, version, 0, false, target);
+						if (wasAdded || routingZone->IsAcceptableContact(temp.get())) {
 							results->push_back(temp);
 						} else {
 							DEBUG_ONLY( ignoredCount++; )
-							delete temp;
 						}
 					}
 				}
@@ -961,7 +961,7 @@ void CKademliaUDPListener::ProcessSearchResponse(CMemFile& bio)
 		// If that tag list is once used for something else than for viewing, special care has to be taken for any
 		// string conversion!
 		CScopedContainer<TagPtrList> tags;
-		bio.ReadTagPtrList(tags.get(), true/*bOptACP*/);
+		bio.ReadTagPtrListUTF8(tags.get());
 		CSearchManager::ProcessResult(target, answer, tags.get());
 		count--;
 	}
@@ -1033,7 +1033,7 @@ void CKademliaUDPListener::Process2PublishKeyRequest(const uint8_t *packetData, 
 			entry->m_bSource = false;
 			uint32_t tags = bio.ReadUInt8();
 			while (tags > 0) {
-				CTag* tag = bio.ReadTag();
+				CTag* tag = bio.ReadTagUTF8();
 				if (tag) {
 					if (!tag->GetName().Cmp(TAG_FILENAME)) {
 						if (entry->GetCommonFileName().IsEmpty()) {
@@ -1127,7 +1127,7 @@ void CKademliaUDPListener::Process2PublishSourceRequest(const uint8_t *packetDat
 		bool addUDPPortTag = true;
 		uint32_t tags = bio.ReadUInt8();
 		while (tags > 0) {
-			CTag* tag = bio.ReadTag();
+			CTag* tag = bio.ReadTagUTF8();
 			if (tag) {
 				if (!tag->GetName().Cmp(TAG_SOURCETYPE)) {
 					if (entry->m_bSource == false) {
@@ -1303,7 +1303,7 @@ void CKademliaUDPListener::Process2PublishNotesRequest(const uint8_t *packetData
 		entry->m_bSource = false;
 		uint32_t tags = bio.ReadUInt8();
 		while (tags > 0) {
-			CTag* tag = bio.ReadTag();
+			CTag* tag = bio.ReadTagUTF8();
 			if(tag) {
 				if (!tag->GetName().Cmp(TAG_FILENAME)) {
 					if (entry->GetCommonFileName().IsEmpty()) {
@@ -1643,10 +1643,11 @@ void CKademliaUDPListener::SendLegacyChallenge(uint32_t ip, uint16_t port, const
 	// which is our challenge. If we receive an answer packet for this request, we can be sure the
 	// contact is not spoofed
 #ifdef __DEBUG__
-	CContact* contact = CKademlia::GetRoutingZone()->GetContact(contactID);
+	std::shared_ptr<CContact> contact = CKademlia::GetRoutingZone()->GetContact(contactID);
+
 	if (contact != NULL) {
 		if (contact->GetType() < 2) {
-			AddDebugLogLineN(logKadRouting, wxT("Sending challenge to a long known contact (should be verified already) - ") + KadIPToString(ip));
+			AddDebugLogLineN(logKadRouting, wxT("Sending (ping) challenge to a long known contact (should be verified already) - ") + KadIPToString(ip));
 		}
 	} else {
 		wxFAIL;

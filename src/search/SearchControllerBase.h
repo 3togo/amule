@@ -54,13 +54,12 @@ public:
     SearchControllerBase(const SearchControllerBase&) = delete;
     SearchControllerBase& operator=(const SearchControllerBase&) = delete;
 
-    // State information
-    SearchState getState() const override { return m_model->getSearchState(); }
-    SearchParams getSearchParams() const override { return m_model->getSearchParams(); }
-    long getSearchId() const override { return m_model->getSearchId(); }
-    void setSearchId(long searchId) override { m_model->setSearchId(searchId); }
+    // Common state accessors
+    SearchState getState() const override;
+    SearchParams getSearchParams() const override;
+    long getSearchId() const override;
 
-    // Result access
+    // Result access - delegates to SearchModel (single source of truth)
     std::vector<CSearchFile*> getResults() const override;
     size_t getResultCount() const override;
 

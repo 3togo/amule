@@ -144,10 +144,7 @@ void CKademlia::Stop()
 	// Remove all active searches.
 	CSearchManager::StopAllSearches();
 
-	// Clean up bootstrap list before deleting instance
-	for (ContactList::iterator it = s_bootstrapList.begin(); it != s_bootstrapList.end(); ++it) {
-		delete *it;
-	}
+	// Clean up bootstrap list - no manual delete needed for shared_ptr
 	s_bootstrapList.clear();
 
 	// Delete all Kad Objects.
@@ -210,8 +207,8 @@ void CKademlia::Process()
 
 	if (m_externPortLookup <= now && CUDPFirewallTester::IsFWCheckUDPRunning() && GetPrefs()->FindExternKadPort(false)) {
 		// If our UDP firewallcheck is running and we don't know our external port, we send a request every 15 seconds
-		CContact *contact = GetRoutingZone()->GetRandomContact(3, 6);
-		if (contact != NULL) {
+		std::shared_ptr<CContact> contact = GetRoutingZone()->GetRandomContact(3, 6);
+		if (contact) {
 			AddDebugLogLineN(logKadPrefs, wxT("Requesting our external port from ") + KadIPToString(contact->GetIPAddress()));
 			DebugSend(Kad2Ping, contact->GetIPAddress(), contact->GetUDPPort());
 			GetUDPListener()->SendNullPacket(KADEMLIA2_PING, contact->GetIPAddress(), contact->GetUDPPort(), contact->GetUDPKey(), &contact->GetClientID());
@@ -283,13 +280,12 @@ void CKademlia::Process()
 	}
 
 	if (!IsConnected() && !s_bootstrapList.empty() && (now - m_bootstrap > 15 || (GetRoutingZone()->GetNumContacts() == 0 && now - m_bootstrap >= 2))) {
-		CContact *contact = s_bootstrapList.front();
+		std::shared_ptr<CContact> contact = s_bootstrapList.front();
 		s_bootstrapList.pop_front();
 		m_bootstrap = now;
 		AddDebugLogLineN(logKadMain, CFormat(wxT("Trying to bootstrap Kad from %s, Distance: %s Version: %u, %u contacts left"))
 			% KadIPToString(contact->GetIPAddress()) % contact->GetDistance().ToHexString() % contact->GetVersion() % s_bootstrapList.size());
 		instance->m_udpListener->Bootstrap(contact->GetIPAddress(), contact->GetUDPPort(), contact->GetVersion(), &contact->GetClientID());
-		delete contact;
 	}
 
 	if (GetUDPListener() != NULL) {
@@ -354,8 +350,8 @@ bool CKademlia::FindIPByNodeID(CKadClientSearcher& requester, const uint8_t* nod
 	wxCHECK(IsRunning() && instance && GetUDPListener(), false);
 
 	// first search our known contacts if we can deliver a result without asking, otherwise forward the request
-	CContact* contact;
-	if ((contact = GetRoutingZone()->GetContact(CUInt128(nodeID))) != NULL) {
+	std::shared_ptr<CContact> contact = GetRoutingZone()->GetContact(CUInt128(nodeID));
+	if (contact) {
 		// make sure that this entry is not too old, otherwise just do a search to be sure
 		if (contact->GetLastSeen() != 0 && time(NULL) - contact->GetLastSeen() < 1800) {
 			requester.KadSearchIPByNodeIDResult(KCSR_SUCCEEDED, wxUINT32_SWAP_ALWAYS(contact->GetIPAddress()), contact->GetTCPPort());

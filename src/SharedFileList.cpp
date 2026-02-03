@@ -791,7 +791,7 @@ void CSharedFileList::Publish()
 
 					if (tNow >= pPubKw->GetNextPublishTime()) {
 						//This keyword can be published.
-						Kademlia::CSearch* pSearch = Kademlia::CSearchManager::PrepareLookup(Kademlia::CSearch::STOREKEYWORD, false, pPubKw->GetKadID());
+						auto pSearch = Kademlia::CSearchManager::PrepareLookup(Kademlia::CSearch::STOREKEYWORD, false, pPubKw->GetKadID());
 						if (pSearch) {
 							//pSearch was created. Which means no search was already being done with this HashID.
 							//This also means that it was checked to see if network load wasn't a factor.
@@ -824,7 +824,7 @@ void CSharedFileList::Publish()
 								Kademlia::CSearchManager::StartSearch(pSearch);
 							} else {
 								//There were no valid files to publish with this keyword.
-								delete pSearch;
+								// No need to manually delete since we're using shared_ptr
 							}
 						}
 					}

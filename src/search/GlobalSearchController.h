@@ -1,62 +1,28 @@
-#ifndef GLOBALSEARCHCONTROLLER_H
-#define GLOBALSEARCHCONTROLLER_H
-#include <memory>
-#include <set>
-#include <wx/string.h>
-#include <wx/timer.h>
+#ifndef __GLOBAL_SEARCH_CONTROLLER_H__
+#define __GLOBAL_SEARCH_CONTROLLER_H__
+
 #include "SearchControllerBase.h"
-#include "SearchControllerFactory.h"
-#include "SearchModel.h"
-#include "SearchResultRouter.h"
-#include "../Packet.h"
+#include "ED2KSearchController.h"
+#include "KadSearchController.h"
+#include <memory>
 
 namespace search {
 
 class GlobalSearchController : public SearchControllerBase
 {
 public:
-    explicit GlobalSearchController();
-    ~GlobalSearchController() override;
-
-    // Delete copy constructor and copy assignment operator
-    GlobalSearchController(const GlobalSearchController&) = delete;
-    GlobalSearchController& operator=(const GlobalSearchController&) = delete;
-
-    // Implement SearchController interface
-    void startSearch(const SearchParams& params) override;
-    void stopSearch() override;
-    void requestMoreResults() override { /* Not applicable for global search */ }
-    SearchState getState() const override { return isSearching() ? SearchState::Searching : SearchState::Idle; }
-
-    // Global search specific methods
-    void onTimer();
-    void addQueriedServer(uint32_t serverIP);
-    bool hasQueriedServer(uint32_t serverIP) const;
-
-    // Method to generate search ID
-    uint32_t GenerateSearchId();
-
-protected:
-    // Check if searching is in progress
-    bool isSearching() const;
-
-private:
-    static uint32_t s_searchIdCounter;
+    GlobalSearchController();
+    virtual ~GlobalSearchController();
     
-    // Helper method to create search packet without SearchList dependency
-    bool CreateSearchPacket(const SearchParams& params, uint8_t*& packetData, uint32_t& packetSize);
-
-    // Timer for querying servers periodically
-    wxTimer m_searchTimer;
-
-    // Data for search request
-    std::unique_ptr<CPacket> m_searchPacket;
-    bool m_64bitSearchPacket;
-
-    // Track queried servers to avoid duplicates
-    std::set<uint32_t> m_queriedServers;
+    virtual void startSearch(const SearchParams& params) override;
+    virtual void stopSearch() override;
+    virtual void requestMoreResults() override;
+    
+private:
+    std::unique_ptr<ED2KSearchController> m_ed2kController;
+    std::unique_ptr<KadSearchController> m_kadController;
 };
 
 } // namespace search
 
-#endif // GLOBALSEARCHCONTROLLER_H
+#endif // __GLOBAL_SEARCH_CONTROLLER_H__

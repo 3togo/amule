@@ -1521,7 +1521,7 @@ uint32 CPartFile::Process(uint32 reducedownload/*in percent*/,uint8 m_icounter)
 				}
 
 				Kademlia::CUInt128 kadFileID(GetFileHash().GetHash());
-				Kademlia::CSearch* pSearch = Kademlia::CSearchManager::PrepareLookup(Kademlia::CSearch::FILE, true, kadFileID);
+				auto pSearch = Kademlia::CSearchManager::PrepareLookup(Kademlia::CSearch::FILE, true, kadFileID);
 				AddDebugLogLineN(logKadSearch, CFormat(wxT("Preparing a Kad Search for '%s'")) % GetFileName());
 				if (pSearch) {
 					AddDebugLogLineN(logKadSearch, CFormat(wxT("Kad lookup started for '%s'")) % GetFileName());

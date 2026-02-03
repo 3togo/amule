@@ -42,6 +42,7 @@ there client on the eMule forum..
 #include <map>
 #include <list>
 #include <set>
+#include <memory>
 
 ////////////////////////////////////////
 namespace Kademlia {
@@ -50,8 +51,8 @@ namespace Kademlia {
 class CUInt128;
 class CContact;
 
-typedef std::map<CUInt128, CContact*> ContactMap;
-typedef std::list<CContact*> ContactList;
+typedef std::map<CUInt128, std::shared_ptr<CContact>> ContactMap;
+typedef std::list<std::shared_ptr<CContact>> ContactList;
 typedef std::list<CUInt128> UIntList;
 typedef std::set<CUInt128> UIntSet;
 

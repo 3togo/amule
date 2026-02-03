@@ -39,7 +39,8 @@ namespace search {
 enum class ModernSearchType {
     LocalSearch = 0,
     GlobalSearch,
-    KadSearch
+    KadSearch,
+    ED2KSearch
 };
 
 enum class SearchState {

@@ -227,6 +227,11 @@ void CRoutingZone::ReadFile(const wxString& specialNodesdat)
 
 void CRoutingZone::ReadBootstrapNodesDat(CFileDataIO& file)
 {
+	// Clear existing bootstrap list to prevent memory leaks
+	while (!CKademlia::s_bootstrapList.empty()) {
+		CKademlia::s_bootstrapList.pop_back();
+	}
+
 	// Bootstrap versions of nodes.dat files are in the style of version 1 nodes.dats. The difference is that
 	// they will contain more contacts, 500-1000 instead of 50, and those contacts are not added into the routing table
 	// but used to sent Bootstrap packets to. The advantage is that on a list with a high ratio of dead nodes,
@@ -261,7 +266,7 @@ void CRoutingZone::ReadBootstrapNodesDat(CFileDataIO& file)
 					if (CKademlia::s_bootstrapList.size() < 50 || CKademlia::s_bootstrapList.back()->GetDistance() > distance) {
 						// look where to put this contact into the proper position
 						bool inserted = false;
-						CContact* contact = new CContact(id, ip, udpPort, tcpPort, contactVersion, 0, false, me);
+						auto contact = std::make_shared<CContact>(id, ip, udpPort, tcpPort, contactVersion, 0, false, me);
 						for (ContactList::iterator it = CKademlia::s_bootstrapList.begin(); it != CKademlia::s_bootstrapList.end(); ++it) {
 							if ((*it)->GetDistance() > distance) {
 								CKademlia::s_bootstrapList.insert(it, contact);
@@ -272,7 +277,6 @@ void CRoutingZone::ReadBootstrapNodesDat(CFileDataIO& file)
 						if (!inserted) {
 							CKademlia::s_bootstrapList.push_back(contact);
 						} else if (CKademlia::s_bootstrapList.size() > 50) {
-							delete CKademlia::s_bootstrapList.back();
 							CKademlia::s_bootstrapList.pop_back();
 						}
 					}
@@ -316,7 +320,10 @@ void CRoutingZone::WriteFile()
 			// file.WriteUInt32(0); // if we would use version >= 3 this would mean that this is a normal nodes.dat
 			file.WriteUInt32(numContacts);
 			for (ContactList::const_iterator it = contacts.begin(); it != contacts.end(); ++it) {
-				CContact *c = *it;
+				const std::shared_ptr<CContact>& c = *it;
+				if (!c || c->GetIPAddress() == 0) {
+					continue;
+				}
 				count++;
 				if (count > CONTACT_FILE_LIMIT) {
 					// This should never happen
@@ -414,51 +421,60 @@ bool CRoutingZone::Add(const CUInt128& id, uint32_t ip, uint16_t port, uint16_t 
 bool CRoutingZone::AddUnfiltered(const CUInt128& id, uint32_t ip, uint16_t port, uint16_t tport, uint8_t version, const CKadUDPKey& key, bool& ipVerified, bool update, bool fromHello)
 {
 	if (id != me) {
-		CContact *contact = new CContact(id, ip, port, tport, version, key, ipVerified);
+		std::shared_ptr<CContact> contact = std::make_shared<CContact>(id, ip, port, tport, version, key, ipVerified);
+		if (!contact) {
+			return false;
+		}
 		if (fromHello) {
 			contact->SetReceivedHelloPacket();
 		}
-		if (Add(contact, update, ipVerified)) {
+		bool ipRestricted = false;
+		if (Add(contact.get(), ipVerified, ipRestricted)) {
 			wxASSERT(!update);
 			return true;
-		} else {
-			delete contact;
-			return update;
 		}
 	}
 	return false;
 }
 
-bool CRoutingZone::Add(CContact *contact, bool& update, bool& outIpVerified)
+bool CRoutingZone::Add(CContact* contact, bool& ipVerified, bool& ipRestricted)
 {
 	// If we're not a leaf, call add on the correct branch.
 	if (!IsLeaf()) {
-		return m_subZones[contact->GetDistance().GetBitNumber(m_level)]->Add(contact, update, outIpVerified);
+		return m_subZones[contact->GetDistance().GetBitNumber(m_level)]->Add(contact, ipVerified, ipRestricted);
 	} else {
 		// Do we already have a contact with this KadID?
-		CContact *contactUpdate = m_bin->GetContact(contact->GetClientID());
-		if (contactUpdate) {
-			if (update) {
+		if (m_bin) {
+			std::shared_ptr<CContact> contactUpdate = m_bin->GetContact(contact->GetClientID());
+			if (contactUpdate) {
+				if (contact->GetVersion() >= contactUpdate->GetVersion()) {
+					m_bin->SetAlive(contactUpdate);
+					ipVerified = contactUpdate->IsIPVerified();
+					ipRestricted = contactUpdate->IsIPVerified();
+
+					return false;
+				}
 				if (contactUpdate->GetUDPKey().GetKeyValue(theApp->GetPublicIP(false)) != 0 && contactUpdate->GetUDPKey().GetKeyValue(theApp->GetPublicIP(false)) != contact->GetUDPKey().GetKeyValue(theApp->GetPublicIP(false))) {
 					// if our existing contact has a UDPSender-Key (which should be the case for all > = 0.49a clients)
 					// except if our IP has changed recently, we demand that the key is the same as the key we received
 					// from the packet which wants to update this contact in order to make sure this is not a try to
 					// hijack this entry
 					AddDebugLogLineN(logKadRouting, wxT("Sender (") + KadIPToString(contact->GetIPAddress()) + wxT(") tried to update contact entry but failed to provide the proper sender key (Sent Empty: ") + (contact->GetUDPKey().GetKeyValue(theApp->GetPublicIP(false)) == 0 ? wxT("Yes") : wxT("No")) + wxT(") for the entry (") + KadIPToString(contactUpdate->GetIPAddress()) + wxT(") - denying update"));
-					update = false;
+					ipVerified = false;
 				} else if (contactUpdate->GetVersion() >= 1 && contactUpdate->GetVersion() < 6 && contactUpdate->GetReceivedHelloPacket()) {
 					// legacy kad2 contacts are allowed only to update their RefreshTimer to avoid having them hijacked/corrupted by an attacker
 					// (kad1 contacts do not have this restriction as they might turn out as kad2 later on)
 					// only exception is if we didn't received a HELLO packet from this client yet
 					if (contactUpdate->GetIPAddress() == contact->GetIPAddress() && contactUpdate->GetTCPPort() == contact->GetTCPPort() && contactUpdate->GetVersion() == contact->GetVersion() && contactUpdate->GetUDPPort() == contact->GetUDPPort()) {
 						wxASSERT(!contact->IsIPVerified());	// legacy kad2 nodes should be unable to verify their IP on a HELLO
-						outIpVerified = contactUpdate->IsIPVerified();
+						ipVerified = contactUpdate->IsIPVerified();
+						ipRestricted = contactUpdate->IsIPVerified();
 						m_bin->SetAlive(contactUpdate);
 						AddDebugLogLineN(logKadRouting, CFormat(wxT("Updated kad contact refreshtimer only for legacy kad2 contact (%s, %u)")) % KadIPToString(contactUpdate->GetIPAddress()) % contactUpdate->GetVersion());
 					} else {
 						AddDebugLogLineN(logKadRouting, CFormat(wxT("Rejected value update for legacy kad2 contact (%s -> %s, %u -> %u)"))
 							% KadIPToString(contactUpdate->GetIPAddress()) % KadIPToString(contact->GetIPAddress()) % contactUpdate->GetVersion() % contact->GetVersion());
-						update = false;
+						ipVerified = false;
 					}
 				} else {
 #ifdef __DEBUG__
@@ -489,62 +505,47 @@ bool CRoutingZone::Add(CContact *contact, bool& update, bool& outIpVerified)
 						if (!contactUpdate->IsIPVerified()) {
 							contactUpdate->SetIPVerified(contact->IsIPVerified());
 						}
-						outIpVerified = contactUpdate->IsIPVerified();
+						ipVerified = contactUpdate->IsIPVerified();
+						ipRestricted = contactUpdate->IsIPVerified();
 						m_bin->SetAlive(contactUpdate);
 						if (contact->GetReceivedHelloPacket()) {
 							contactUpdate->SetReceivedHelloPacket();
 						}
 					} else {
-						update = false;
+						ipVerified = false;
 					}
 				}
+			} else {
+				std::shared_ptr<CContact> newContact = std::make_shared<CContact>(*contact);
+				return m_bin->AddContact(newContact);
 			}
-			return false;
-		} else if (m_bin->GetRemaining()) {
-			update = false;
-			// This bin is not full, so add the new contact
-			return m_bin->AddContact(contact);
-		} else if (CanSplit()) {
-			// This bin was full and split, call add on the correct branch.
-			Split();
-			return m_subZones[contact->GetDistance().GetBitNumber(m_level)]->Add(contact, update, outIpVerified);
-		} else {
-			update = false;
-			return false;
 		}
+		return false;
 	}
 }
 
-CContact *CRoutingZone::GetContact(const CUInt128& id) const throw()
+std::shared_ptr<CContact> CRoutingZone::GetContact(const CUInt128& id) const
 {
-	if (IsLeaf()) {
+	if (m_bin) {
 		return m_bin->GetContact(id);
-	} else {
-		CUInt128 distance = CKademlia::GetPrefs()->GetKadID();
-		distance ^= id;
-		return m_subZones[distance.GetBitNumber(m_level)]->GetContact(id);
 	}
+	return nullptr;
 }
 
-CContact *CRoutingZone::GetContact(uint32_t ip, uint16_t port, bool tcpPort) const throw()
+std::shared_ptr<CContact> CRoutingZone::GetContact(uint32_t ip, uint16_t port, bool tcpPort) const
 {
-	if (IsLeaf()) {
+	if (m_bin) {
 		return m_bin->GetContact(ip, port, tcpPort);
-	} else {
-		CContact *contact = m_subZones[0]->GetContact(ip, port, tcpPort);
-		return (contact != NULL) ? contact : m_subZones[1]->GetContact(ip, port, tcpPort);
 	}
+	return nullptr;
 }
 
-CContact *CRoutingZone::GetRandomContact(uint32_t maxType, uint32_t minKadVersion) const
+std::shared_ptr<CContact> CRoutingZone::GetRandomContact(uint32_t maxType, uint32_t minKadVersion) const
 {
-	if (IsLeaf()) {
+	if (m_bin) {
 		return m_bin->GetRandomContact(maxType, minKadVersion);
-	} else {
-		unsigned zone = GetRandomUint16() & 1 /* GetRandomUint16() % 2 */;
-		CContact *contact = m_subZones[zone]->GetRandomContact(maxType, minKadVersion);
-		return (contact != NULL) ? contact : m_subZones[1 - zone]->GetRandomContact(maxType, minKadVersion);
 	}
+	return nullptr;
 }
 
 void CRoutingZone::GetClosestTo(uint32_t maxType, const CUInt128& target, const CUInt128& distance, uint32_t maxRequired, ContactMap *result, bool emptyFirst, bool inUse) const
@@ -619,7 +620,8 @@ void CRoutingZone::Split()
 
 	for (ContactList::const_iterator it = entries.begin(); it != entries.end(); ++it) {
 		if (!m_subZones[(*it)->GetDistance().GetBitNumber(m_level)]->m_bin->AddContact(*it)) {
-			delete *it;
+			// No manual delete needed - shared_ptr will automatically clean up when no longer referenced
+			// The contact will be destroyed when removed from all containers
 		}
 	}
 }
@@ -759,19 +761,17 @@ void CRoutingZone::OnSmallTimer()
 		return;
 	}
 
-	CContact *c = NULL;
 	time_t now = time(NULL);
 	ContactList entries;
 
 	// Remove dead entries
 	m_bin->GetEntries(&entries);
 	for (ContactList::iterator it = entries.begin(); it != entries.end(); ++it) {
-		c = *it;
+		std::shared_ptr<CContact> c = *it;
 		if (c->GetType() == 4) {
 			if ((c->GetExpireTime() > 0) && (c->GetExpireTime() <= now)) {
 				if (!c->InUse()) {
 					m_bin->RemoveContact(c);
-					delete c;
 				}
 				continue;
 			}
@@ -781,15 +781,16 @@ void CRoutingZone::OnSmallTimer()
 		}
 	}
 
-	c = m_bin->GetOldest();
-	if (c != NULL) {
+	std::shared_ptr<CContact> c = m_bin->GetOldest();
+	if (c != nullptr) {
 		if (c->GetExpireTime() >= now || c->GetType() == 4) {
 			m_bin->PushToBottom(c);
-			c = NULL;
+
+			c = nullptr;
 		}
 	}
 
-	if (c != NULL) {
+	if (c != nullptr) {
 		c->CheckingType();
 		if (c->GetVersion() >= 6) {
 			DebugSend(Kad2HelloReq, c->GetIPAddress(), c->GetUDPPort());
@@ -869,7 +870,8 @@ uint32_t CRoutingZone::GetBootstrapContacts(ContactList *results, uint32_t maxRe
 
 bool CRoutingZone::VerifyContact(const CUInt128& id, uint32_t ip)
 {
-	CContact* contact = GetContact(id);
+	std::shared_ptr<CContact> contact = GetContact(id);
+
 	if (contact == NULL) {
 		return false;
 	} else if (ip != contact->GetIPAddress()) {
@@ -902,7 +904,7 @@ bool CRoutingZone::IsAcceptableContact(const CContact *toCheck) const
 		// No Kad1 contacts allowed
 		return false;
 	}
-	CContact *duplicate = GetContact(toCheck->GetClientID());
+	std::shared_ptr<CContact> duplicate = GetContact(toCheck->GetClientID());
 	if (duplicate != NULL) {
 		if ((duplicate->IsIPVerified() && duplicate->GetIPAddress() != toCheck->GetIPAddress()) || duplicate->GetUDPPort() != toCheck->GetUDPPort()) {
 			// already existing verified node with different IP

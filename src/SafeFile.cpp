@@ -206,17 +206,10 @@ unsigned char* CFileDataIO::ReadBsob(uint8* puSize) const
 }
 
 
-wxString CFileDataIO::ReadString(bool bOptUTF8, uint8 SizeLen, bool SafeRead) const
+wxString CFileDataIO::ReadString(bool bOptUTF8, bool SafeRead) const
 {
-	uint32 readLen;
-	switch (SizeLen) {
-		case sizeof(uint16):	readLen = ReadUInt16();	break;
-		case sizeof(uint32):	readLen = ReadUInt32();	break;
-
-		default:
-			MULE_VALIDATE_PARAMS(false, wxT("Invalid SizeLen value in ReadString"));
-	}
-
+	uint16 readLen = ReadUInt16();
+	
 	if (SafeRead) {
 		readLen = std::min<uint64>(readLen, GetLength() - GetPosition());
 	}
@@ -224,6 +217,17 @@ wxString CFileDataIO::ReadString(bool bOptUTF8, uint8 SizeLen, bool SafeRead) co
 	return ReadOnlyString(bOptUTF8, readLen);
 }
 
+
+wxString CFileDataIO::ReadStringUTF8(bool SafeRead) const
+{
+	uint16 readLen = ReadUInt16();
+	
+	if (SafeRead) {
+		readLen = std::min<uint64>(readLen, GetLength() - GetPosition());
+	}
+
+	return ReadOnlyStringUTF8(readLen);
+}
 
 wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 {
@@ -255,6 +259,34 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 	return str;
 }
 
+
+wxString CFileDataIO::ReadOnlyStringUTF8(uint16 raw_len) const
+{
+	// We only need to set the the NULL terminator, since we know that
+	// reads will either succeed or throw an exception, in which case
+	// we wont be returning anything
+	std::vector<char> val_array(raw_len + 1);
+	val_array[raw_len] = 0;
+
+	char* val = &(val_array[0]);
+
+	Read(val, raw_len);
+	wxString str;
+
+	if (CHECK_BOM(raw_len, val)) {
+		// This is a UTF8 string with a BOM header, skip header.
+		str = UTF82unicode(val + 3);
+	} else {
+		// Force UTF-8 decoding without fallback
+		str = UTF82unicode(val);
+		// If UTF-8 decoding fails, treat as raw bytes (better than Latin-1 corruption)
+		if (str.IsEmpty()) {
+			str = wxString::FromUTF8(val, raw_len);
+		}
+	}
+
+	return str;
+}
 
 void CFileDataIO::WriteUInt8(uint8 value)
 {
@@ -482,18 +514,99 @@ CTag *CFileDataIO::ReadTag(bool bOptACP) const
 }
 
 
+CTag* CFileDataIO::ReadTagUTF8() const
+{
+	uint8 type;
+	wxString name;
+	CTag* retVal = NULL;
+
+	try {
+		type = ReadUInt8();
+		name = ReadString(false);
+
+		switch (type)
+		{
+			case TAGTYPE_HASH16:
+			{
+				retVal = new CTagHash(name, ReadHash());
+				break;
+			}
+
+			case TAGTYPE_STRING:
+				// Force UTF-8 decoding without fallback
+				retVal = new CTagString(name, ReadStringUTF8());
+				break;
+
+			case TAGTYPE_UINT64:
+				retVal = new CTagInt64(name, ReadUInt64());
+				break;
+
+			case TAGTYPE_UINT32:
+				retVal = new CTagInt32(name, ReadUInt32());
+				break;
+
+			case TAGTYPE_UINT16:
+				retVal = new CTagInt16(name, ReadUInt16());
+				break;
+
+			case TAGTYPE_UINT8:
+				retVal = new CTagInt8(name, ReadUInt8());
+				break;
+
+			case TAGTYPE_FLOAT32:
+				retVal = new CTagFloat(name, ReadFloat());
+				break;
+
+			case TAGTYPE_BSOB:
+			{
+				uint8 size = 0;
+				CScopedArray<unsigned char> value(ReadBsob(&size));
+
+				retVal = new CTagBsob(name, value.get(), size);
+				break;
+			}
+
+			default:
+				throw wxString(CFormat(wxT("Invalid Kad tag type; type=0x%02x name=%s\n")) % type % name);
+		}
+	} catch(const CMuleException& e) {
+		AddLogLineN(e.what());
+		delete retVal;
+		throw;
+	} catch(const wxString& e) {
+		AddLogLineN(e);
+		throw;
+	}
+
+	return retVal;
+}
+
 void CFileDataIO::ReadTagPtrList(TagPtrList* taglist, bool bOptACP) const
 {
 	MULE_VALIDATE_PARAMS(taglist, wxT("NULL pointer argument in ReadTagPtrList"));
-
-	uint32 count = ReadUInt8();
-	for (uint32 i = 0; i < count; i++)
-	{
+	
+	uint32 count = ReadUInt32();
+	for (uint32 i = 0; i < count; i++) {
 		CTag* tag = ReadTag(bOptACP);
-		taglist->push_back(tag);
+		if (tag) {
+			taglist->push_back(tag);
+		}
 	}
 }
 
+
+void CFileDataIO::ReadTagPtrListUTF8(TagPtrList* taglist) const
+{
+	MULE_VALIDATE_PARAMS(taglist, wxT("NULL pointer argument in ReadTagPtrListUTF8"));
+	
+	uint32 count = ReadUInt32();
+	for (uint32 i = 0; i < count; i++) {
+		CTag* tag = ReadTagUTF8();
+		if (tag) {
+			taglist->push_back(tag);
+		}
+	}
+}
 
 void CFileDataIO::WriteTag(const CTag& tag)
 {

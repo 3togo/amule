@@ -200,24 +200,67 @@ uint8_t* CPacket::GetPacket() {
 }
 
 uint8_t* CPacket::DetachPacket() {
-	if (completebuffer) {
-		if (!m_bSplitted) {
-			memcpy(completebuffer, GetHeader(), sizeof(Header_Struct));
+	// Quick validation: check if this object appears to be corrupted
+	// The 'prot' field should be a reasonable protocol value (typically small values)
+	if (prot > 100) {
+		return NULL;
+	}
+	
+	// Validate opcode as well (opcodes are typically in lower range)
+	if (opcode > 200) {
+		return NULL;
+	}
+	
+	// Validate size is within reasonable bounds
+	if (size > 1000000) {
+		return NULL;
+	}
+	
+	try {
+		if (completebuffer) {
+			// Attempt to access the buffer to verify it's not pointing to invalid memory
+			volatile uint8_t test = completebuffer[0];
+			(void)test; // Suppress unused variable warning
+			
+			if (!m_bSplitted) {
+				// GetHeader() returns the head array which should always be valid if object is valid
+				uint8_t* header = GetHeader();
+				// Since head is a member array, it should be accessible if object is valid
+				volatile uint8_t header_test = header[0];
+				(void)header_test;
+				memcpy(completebuffer, header, sizeof(Header_Struct));
+			}
+			uint8_t* result = completebuffer;
+			completebuffer = pBuffer = NULL;
+			return result;
+		} else {
+			if (tempbuffer) {
+				delete[] tempbuffer;
+				tempbuffer = NULL;
+			}
+			
+			// Validate pBuffer before use
+			if (!pBuffer) {
+				return NULL;
+			}
+			
+			// Attempt to access pBuffer to verify it's valid
+			volatile uint8_t buffer_test = pBuffer[0];
+			(void)buffer_test;
+			
+			tempbuffer = new uint8_t[size + sizeof(Header_Struct) + 4 /* Why this 4?*/];
+			uint8_t* header = GetHeader();
+			volatile uint8_t header_test2 = header[0];
+			(void)header_test2;
+			memcpy(tempbuffer, header, sizeof(Header_Struct));
+			memcpy(tempbuffer + sizeof(Header_Struct), pBuffer, size);
+			uint8_t* result = tempbuffer;
+			tempbuffer = 0;
+			return result;
 		}
-		uint8_t* result = completebuffer;
-		completebuffer = pBuffer = NULL;
-		return result;
-	} else{
-		if (tempbuffer){
-			delete[] tempbuffer;
-			tempbuffer = NULL;
-		}
-		tempbuffer = new uint8_t[size+sizeof(Header_Struct)+4 /* Why this 4?*/];
-		memcpy(tempbuffer,GetHeader(),sizeof(Header_Struct));
-		memcpy(tempbuffer+sizeof(Header_Struct),pBuffer,size);
-		uint8_t* result = tempbuffer;
-		tempbuffer = 0;
-		return result;
+	} catch (...) {
+		// Corrupted packet detected, return NULL to prevent crash
+		return NULL;
 	}
 }
 

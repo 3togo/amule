@@ -25,266 +25,96 @@
 //
 
 #include "KadSearchController.h"
-#include "KadSearchPacketBuilder.h"
-#include "SearchPackageValidator.h"
-#include "SearchResultRouter.h"
-#include "SearchLogging.h"
-#include "SearchTypeConverter.h"
 #include "../amule.h"
-#include "../SearchFile.h"
+#include "../Logger.h"
+#include "../MemFile.h"
 #include "../search/SearchLogging.h"
+#include "../search/KadSearchPacketBuilder.h"
 #include "../kademlia/kademlia/Kademlia.h"
 #include "../kademlia/kademlia/SearchManager.h"
 #include "../kademlia/kademlia/Search.h"
-#include <wx/utils.h>
+#include <wx/string.h>
 
 namespace search {
 
-// Static counter for Kad search IDs
-static uint32_t s_kadSearchIdCounter = 0;
-
 KadSearchController::KadSearchController()
-    : m_maxNodesToQuery(0)
-    , m_nodesContacted(0)
-    , m_currentRetry(0)
-    , m_retryCount(DEFAULT_RETRY_COUNT)
 {
 }
 
 KadSearchController::~KadSearchController()
 {
+    stopSearch();
 }
 
 void KadSearchController::startSearch(const SearchParams& params)
 {
-    // Step 1: Validate prerequisites
-    if (!validatePrerequisites()) {
-	return;
-    }
-
-    // Step 2: Validate search parameters
     if (!validateSearchParams(params)) {
-	return;
+        uint32_t searchId = m_model->getSearchId();
+        handleSearchError(searchId, _("Invalid search parameters"));
+        return;
     }
-
-    // Step 3: Prepare search
-    initializeProgress();
-    resetSearchState();
-
-    // Generate search ID
-    uint32_t searchId = 0;
     
-    // Build search packet using KadSearchPacketBuilder
-    KadSearchPacketBuilder packetBuilder;
-    wxString error;
+    // Store search parameters in model
+    m_model->setSearchParams(params);
     
-    try {
-	// Build Kad search packet
-	uint8_t* packetData = nullptr;
-	uint32_t packetSize = 0;
-	bool success = packetBuilder.CreateSearchPacket(params, packetData, packetSize);
-	
-	if (!success || !packetData) {
-	    error = wxT("Failed to create Kad search packet");
-	    return handleSearchError(0, error);
-	}
-	
-	// Generate or retrieve search ID
-	if (searchId == 0) {
-		searchId = GenerateSearchId();
-	}
-	m_model->setSearchId(searchId);
-
-	SEARCH_DEBUG_CONTROLLER(
-	    CFormat(wxT("KadSearchController: Generated search ID %u for Kad search"))
-	    % searchId);
-
-	// Convert new parameters to legacy format for storage
-	CSearchList::CSearchParams legacyParams = ConvertToLegacyParams(params);
-	
-	// Store search parameters and state
-	m_model->setSearchParams(params);
-	m_model->setSearchState(SearchState::Searching);
-	
-	// Register with SearchResultRouter for result routing
-	SearchResultRouter::Instance().RegisterController(searchId, this);
-	// Also register as fallback for Kad searches
-	SearchResultRouter::Instance().RegisterTypeController(::KadSearch, this);
-
-	// Send packet to Kad network
-	if (theApp && Kademlia::CKademlia::IsRunning()) {
-	    // Use legacy Kad search implementation
-	    try {
-		Kademlia::CSearch* search = Kademlia::CSearchManager::PrepareFindKeywords(
-		    params.strKeyword,
-		    packetSize,
-		    packetData,
-		    searchId
-		);
-
-		// Update search ID from Kad search manager
-		uint32_t oldSearchId = searchId;
-		searchId = search->GetSearchID();
-		m_model->setSearchId(searchId);
-
-		// Register this search in active searches map
-		theApp->searchlist->RegisterActiveSearch(searchId, KadSearch);
-
-		// Store search parameters for later retrieval using converted legacy params
-		theApp->searchlist->StoreSearchParams(searchId, legacyParams);
-
-		// Re-register with new search ID
-		SearchResultRouter::Instance().UnregisterController(oldSearchId);
-		SearchResultRouter::Instance().RegisterController(searchId, this);
-
-		notifySearchStarted(searchId);
-	    } catch (const wxString& what) {
-		error = wxString::Format(_("Failed to start Kad search: %s"), what.c_str());
-		handleSearchError(searchId, error);
-	    }
-
-	    // Clean up packet data
-	    delete[] packetData;
-	} else {
-	    delete[] packetData;
-	    error = _("Kad network not available");
-	    handleSearchError(searchId, error);
-	}
-    } catch (const wxString& e) {
-	error = wxString::Format(_("Failed to execute Kad search: %s"), e.c_str());
-	handleSearchError(0, error);
+    // Generate unique search ID
+    uint32_t searchId = m_model->getSearchId();
+    updateSearchState(params, searchId, SearchState::Searching);
+    
+    // Create search packet data
+    uint8_t* packetData = nullptr;
+    uint32_t packetSize = 0;
+    
+    if (!KadSearchPacketBuilder::CreateSearchPacket(params, packetData, packetSize)) {
+        handleSearchError(searchId, _("Failed to create Kad search packet"));
+        return;
     }
+    
+    // Start Kad search
+    bool success = false;
+    if (Kademlia::CKademlia::IsRunning()) {
+        // Use the correct CSearchManager API
+        auto search = Kademlia::CSearchManager::PrepareFindKeywords(
+            params.searchString, packetSize, packetData, searchId);
+        
+        if (search) {
+            success = Kademlia::CSearchManager::StartSearch(search);
+        }
+        
+        if (success) {
+            AddLogLineN(wxString::Format(_("Kad search started with ID: %u"), searchId));
+            notifySearchStarted(searchId);
+        } else {
+            handleSearchError(searchId, _("Failed to start Kad search"));
+        }
+    } else {
+        handleSearchError(searchId, _("Kad network is not running"));
+    }
+    
+    delete[] packetData;
 }
 
 void KadSearchController::stopSearch()
 {
-    // Unregister from SearchResultRouter
-    long searchId = m_model->getSearchId();
-    if (searchId != -1) {
-	SearchResultRouter::Instance().UnregisterController(searchId);
+    if (Kademlia::CKademlia::IsRunning()) {
+        // Stop search with current search ID
+        uint32_t searchId = m_model->getSearchId();
+        Kademlia::CSearchManager::StopSearch(searchId, true);
     }
-    
-    // Clear results
-    m_model->clearResults();
-    
-    // Use base class to handle common stop logic
-    stopSearchBase();
+    m_model->setSearchState(SearchState::Completed);
+}
+
+bool KadSearchController::validateSearchParams(const SearchParams& params)
+{
+    // Basic validation - ensure search string is not empty
+    return !params.searchString.IsEmpty();
 }
 
 void KadSearchController::requestMoreResults()
 {
-    // Kad searches don't support "more results" in the traditional sense
-    // as they are keyword-based and query the entire network
+    // Kad searches automatically continue until completion
     uint32_t searchId = m_model->getSearchId();
-    handleSearchError(searchId, _("Kad searches query the entire network and don't support requesting more results"));
-}
-
-void KadSearchController::setMaxNodesToQuery(int maxNodes)
-{
-    m_maxNodesToQuery = maxNodes;
-}
-
-int KadSearchController::getMaxNodesToQuery() const
-{
-    return m_maxNodesToQuery;
-}
-
-void KadSearchController::setRetryCount(int retryCount)
-{
-    m_retryCount = retryCount;
-}
-
-int KadSearchController::getRetryCount() const
-{
-    return m_retryCount;
-}
-
-bool KadSearchController::validateConfiguration() const
-{
-    if (!SearchControllerBase::validateConfiguration()) {
-	return false;
-    }
-
-    if (m_maxNodesToQuery <= 0) {
-	return false;
-    }
-
-    return true;
-}
-
-void KadSearchController::updateProgress()
-{
-    ProgressInfo info;
-
-    // Calculate percentage based on nodes contacted vs max
-    if (m_maxNodesToQuery > 0) {
-	info.percentage = (m_nodesContacted * 100) / m_maxNodesToQuery;
-    }
-
-    info.serversContacted = 0; // Not applicable for Kad
-    info.resultsReceived = getResultCount();
-
-    // Set status based on state
-    switch (getState()) {
-	case SearchState::Searching:
-	    info.currentStatus = _("Searching Kad network...");
-	    break;
-	case SearchState::Retrying:
-	    info.currentStatus = wxString::Format(_("Retrying search (%d/%d)..."),
-				                m_currentRetry, m_retryCount);
-	    break;
-	case SearchState::Completed:
-	    info.currentStatus = _("Search completed");
-	    break;
-	default:
-	    info.currentStatus = _("Idle");
-	    break;
-    }
-
-    uint32_t searchId = m_model->getSearchId();
-    notifyDetailedProgress(searchId, info);
-    notifyProgress(searchId, info.percentage);
-}
-
-void KadSearchController::initializeProgress()
-{
-    m_nodesContacted = 0;
-    updateProgress();
-}
-
-bool KadSearchController::validatePrerequisites()
-{
-    if (!SearchControllerBase::validatePrerequisites()) {
-	return false;
-    }
-
-    if (!isValidKadNetwork()) {
-	uint32_t searchId = m_model->getSearchId();
-	handleSearchError(searchId, _("Kad network not available"));
-	return false;
-    }
-
-    return true;
-}
-
-bool KadSearchController::isValidKadNetwork() const
-{
-    if (!theApp) {
-	return false;
-    }
-
-    // Check if Kad is running
-    // TODO: Implement Kad network check
-    // For now, return true to allow testing
-    return true;
-}
-
-uint32_t KadSearchController::GenerateSearchId()
-{
-    // Kad search ID range: 1 to 2,147,483,647 (0x7FFFFFFF)
-    // Use modulo to cycle through the range while avoiding 0
-    s_kadSearchIdCounter = (s_kadSearchIdCounter % 0x7FFFFFFF) + 1;
-    return s_kadSearchIdCounter;
+    notifyError(searchId, _("Kad searches do not support manual request for more results"));
 }
 
 } // namespace search
