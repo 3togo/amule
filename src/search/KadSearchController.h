@@ -49,26 +49,21 @@ public:
     explicit KadSearchController();
     virtual ~KadSearchController();
 
-    // Delete copy constructor and copy assignment operator
-    KadSearchController(const KadSearchController&) = delete;
-    KadSearchController& operator=(const KadSearchController&) = delete;
-
-    // SearchController implementation
-    void startSearch(const SearchParams& params) override;
+    // SearchController interface
+    bool startSearch(const SearchParams& params, uint32_t searchId = 0) override;
     void stopSearch() override;
-    void requestMoreResults() override;
-
-    // Kad-specific methods
-    void setMaxNodesToQuery(int maxNodes);
-    int getMaxNodesToQuery() const;
-
-    void setRetryCount(int retryCount);
-    int getRetryCount() const;
-
-    // Configuration validation
-    bool validateConfiguration() const;
+    void retrySearch() override;
+    SearchState getState() const override;
+    std::vector<CSearchFile*> getResults() const override;
+    
+    // SearchResultHandler interface  
+    void handleNewResult(CSearchFile* result) override;
+    void handleSearchCompleted() override;
+    void handleSearchFailed(const wxString& reason) override;
 
 private:
+    uint32_t GenerateSearchId();
+    
     // Kad-specific settings
     int m_maxNodesToQuery;
 
@@ -81,7 +76,6 @@ private:
     void updateProgress();
     void initializeProgress();
     bool isValidKadNetwork() const;
-    uint32_t GenerateSearchId();
 
     // Validation methods
     bool validatePrerequisites();

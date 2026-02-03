@@ -28,7 +28,6 @@
 #include "../SearchFile.h"
 #include "../Logger.h"
 #include "../amule.h"
-#include "../SearchList.h"
 #include <common/Format.h>
 
 namespace search {

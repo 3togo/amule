@@ -40,24 +40,14 @@
 
 namespace search {
 
-// Helper function to convert new SearchParams to old CSearchParams
-CSearchList::CSearchParams ConvertToLegacyParams(const SearchParams& newParams) {
-    CSearchList::CSearchParams legacyParams;
-    legacyParams.searchString = newParams.searchString;
-    legacyParams.strKeyword = newParams.strKeyword;
-    legacyParams.typeText = newParams.typeText;
-    legacyParams.extension = newParams.extension;
-    legacyParams.minSize = newParams.minSize;
-    legacyParams.maxSize = newParams.maxSize;
-    legacyParams.availability = newParams.availability;
-    legacyParams.searchType = SearchTypeConverter::toLegacy(newParams.searchType);
-    return legacyParams;
-}
+// Static counter for Kad search IDs
+static uint32_t s_kadSearchIdCounter = 0;
 
 KadSearchController::KadSearchController()
-    : SearchControllerBase()
-    , m_maxNodesToQuery(DEFAULT_MAX_NODES)
+    : m_maxNodesToQuery(0)
     , m_nodesContacted(0)
+    , m_currentRetry(0)
+    , m_retryCount(DEFAULT_RETRY_COUNT)
 {
 }
 
@@ -291,14 +281,10 @@ bool KadSearchController::isValidKadNetwork() const
 
 uint32_t KadSearchController::GenerateSearchId()
 {
-    // Generate a unique search ID for Kad
-    // Kad uses a different ID space than ED2K
-    static uint32_t s_nextKadSearchId = 0;
-    s_nextKadSearchId = (s_nextKadSearchId + 1) % 0xFFFFFFFE;
-    if (s_nextKadSearchId == 0) {
-	s_nextKadSearchId = 1;
-    }
-    return s_nextKadSearchId;
+    // Kad search ID range: 1 to 2,147,483,647 (0x7FFFFFFF)
+    // Use modulo to cycle through the range while avoiding 0
+    s_kadSearchIdCounter = (s_kadSearchIdCounter % 0x7FFFFFFF) + 1;
+    return s_kadSearchIdCounter;
 }
 
 } // namespace search
