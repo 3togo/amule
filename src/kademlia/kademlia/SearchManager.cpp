@@ -96,7 +96,7 @@ void CSearchManager::StopAllSearches()
 	DeleteContents(m_searches);
 }
 
-bool CSearchManager::StartSearch(CSearch* search)
+bool CSearchManager::StartSearch(CSearch *search)
 {
 	// A search object was created, now try to start the search.
 	if (AlreadySearchingFor(search->GetTarget())) {
@@ -104,10 +104,19 @@ bool CSearchManager::StartSearch(CSearch* search)
 		delete search;
 		return false;
 	}
-	// Add to the search map
+
+	// Add this search to the list of active searches.
 	m_searches[search->GetTarget()] = search;
-	// Start the search.
+
+	// Debug: Log search start with details
+	AddDebugLogLineN(logKadSearch, CFormat(wxT("Starting Kad Search - Type: %d, Target: %s, ID: %x")) 
+		% search->GetSearchTypes() 
+		% search->GetTarget().ToHexString() 
+		% search->GetSearchID());
+
+	// Send the initial search request.
 	search->Go();
+
 	return true;
 }
 
@@ -498,6 +507,10 @@ void CSearchManager::ProcessResult(const CUInt128& target, const CUInt128& answe
 	if (it != m_searches.end()) {
 		s = it->second;
 	}
+
+	// Debug: Log result processing attempt
+	AddDebugLogLineN(logKadSearch, CFormat(wxT("Processing result for target %s, answer %s")) 
+		% target.ToHexString() % answer.ToHexString());
 
 	// If this search was deleted before these results, delete contacts and abort, otherwise process them.
 	if (s == NULL) {

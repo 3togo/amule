@@ -209,6 +209,10 @@ void CSearch::PrepareToStop() throw()
 		return;
 	}
 
+	// Debug: Log search termination
+	AddDebugLogLineN(logKadSearch, CFormat(wxT("Preparing to stop search %s, target %s, type %d, answers %d")) 
+		% wxString::Format(wxT("%08x"), m_searchID) % m_target.ToHexString() % m_type % m_answers);
+
 	// Set basetime by search type.
 	uint32_t baseTime = 0;
 	switch (m_type) {
@@ -893,6 +897,10 @@ void CSearch::ProcessResultFile(const CUInt128& answer, TagPtrList *info)
 	uint8_t byCryptOptions = 0; // 0 = not supported.
 	CUInt128 buddy;
 
+	// Debug: Log start of file result processing
+	AddDebugLogLineN(logKadSearch, CFormat(wxT("Processing file result for search %s, answer %s")) 
+		% wxString::Format(wxT("%08x"), m_searchID) % answer.ToHexString());
+
 	for (TagPtrList::const_iterator it = info->begin(); it != info->end(); ++it) {
 		CTag *tag = *it;
 		if (!tag->GetName().Cmp(TAG_SOURCETYPE)) {
@@ -921,6 +929,10 @@ void CSearch::ProcessResultFile(const CUInt128& answer, TagPtrList *info)
 		}
 	}
 
+	// Debug: Log parsed source information
+	AddDebugLogLineN(logKadSearch, CFormat(wxT("Parsed source - Type: %d, IP: %s, TCP: %d, UDP: %d, BuddyIP: %s, BuddyPort: %d, Crypto: %d")) 
+		% type % KadIPPortToString(ip, udp) % tcp % udp % KadIPPortToString(buddyip, buddyport) % buddyport % byCryptOptions);
+
 	// Process source based on its type. Currently only one method is needed to process all types.
 	switch( type ) {
 		case 1:
@@ -934,9 +946,15 @@ void CSearch::ProcessResultFile(const CUInt128& answer, TagPtrList *info)
 			break;
 		case 2:
 			//Don't use this type, some clients will process it wrong.
+			AddDebugLogLineN(logKadSearch, wxT("Skipping source type 2 (unsupported)"));
+			break;
 		default:
+			AddDebugLogLineN(logKadSearch, CFormat(wxT("Unknown source type %d, skipping")) % type);
 			break;
 	}
+	
+	// Debug: Log final result count
+	AddDebugLogLineN(logKadSearch, CFormat(wxT("Total answers for this search: %d")) % m_answers);
 }
 
 void CSearch::ProcessResultNotes(const CUInt128& answer, TagPtrList *info)
@@ -1110,6 +1128,10 @@ void CSearch::SendFindValue(CContact *contact, bool reaskMore)
 			return;
 		}
 
+		// Debug: Log search request being sent
+		AddDebugLogLineN(logKadSearch, CFormat(wxT("Sending search request to contact %s:%d, target %s, type %d")) 
+			% KadIPToString(contact->GetIPAddress()) % contact->GetUDPPort() % m_target.ToHexString() % m_type);
+
 		CMemFile packetdata(33);
 		// The number of returned contacts is based on the type of search.
 		uint8_t contactCount = GetRequestContactCount();
@@ -1127,6 +1149,7 @@ void CSearch::SendFindValue(CContact *contact, bool reaskMore)
 		if (contactCount > 0) {
 			packetdata.WriteUInt8(contactCount);
 		} else {
+			AddDebugLogLineN(logKadSearch, wxT("Skipping search request - contactCount is 0"));
 			return;
 		}
 
