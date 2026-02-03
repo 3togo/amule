@@ -29,6 +29,7 @@
 #include "search/SearchPackageException.h"	// Package exception
 #include "search/SearchResultHandler.h"	// Result handler interface
 #include "search/SearchResultRouter.h"	// Result router
+#include "search/SearchLogging.h"		// Debug logging
 
 #include <protocol/Protocols.h>
 #include <protocol/kad/Constants.h>
@@ -582,83 +583,47 @@ void CSearchList::ProcessSharedFileList(const uint8_t* in_packet, uint32 size,
 }
 
 
-void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, bool optUTF8, uint32_t serverIP, uint16_t serverPort)
+void CSearchList::ProcessSearchAnswer(const uint8_t* packet, uint32_t size, bool optUTF8, uint32_t serverIP, uint16_t serverPort)
 {
-	CMemFile packet(in_packet, size);
-
-	uint32_t results = packet.ReadUInt32();
-
-	// TCP results should only go to LocalSearch
-	// Find the most recent active LocalSearch
-	long searchId = -1;
-	{
-		wxMutexLocker lock(m_searchMutex);
-		// Check if this is from the local server (TCP)
-		bool isFromLocalServer = false;
-		if (theApp && theApp->serverconnect) {
-			const CServer* currentServer = theApp->serverconnect->GetCurrentServer();
-			if (currentServer && currentServer->GetIP() == serverIP && currentServer->GetPort() == serverPort) {
-				isFromLocalServer = true;
-			}
-		}
-
-		if (isFromLocalServer) {
-			// Find the most recent active LocalSearch
-			for (auto it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
-				if (it->second == LocalSearch) {
-					searchId = it->first;
-					break;
-				}
-			}
-		}
-	}
-
-	// If no valid search ID found, drop the results
-	if (searchId == -1) {
-		AddDebugLogLineN(logSearch, wxString::Format(wxT("Discarding TCP search results from %s:%u - no active local search"), (uint32_t)serverIP, serverPort));
-		return;
-	}
-
-	// Collect all results first
+	// Create CMemFile from raw packet data
+	CMemFile memFile(packet, size);
+	
+	// Read number of results first
+	uint32 numResults = memFile.ReadUInt32();
+	
+	// Process all results
 	std::vector<CSearchFile*> resultVector;
-	for (; results > 0; --results) {
-		resultVector.push_back(new CSearchFile(packet, optUTF8, searchId, serverIP, serverPort));
+	resultVector.reserve(numResults);
+	
+	for (uint32 i = 0; i < numResults; ++i) {
+		if (memFile.GetPosition() >= memFile.GetLength()) {
+			break;
+		}
+		
+		// For TCP local search results, use type-based routing
+		// Search ID is set to -1 to indicate type-based routing
+		CSearchFile* result = new CSearchFile(memFile, optUTF8, -1, serverIP, serverPort);
+		resultVector.push_back(result);
 	}
-
-	// Process results through validator (this adds them to SearchList)
+	
+	// Route all results through type-based routing for LocalSearch
 	if (!resultVector.empty()) {
-		search::SearchResultRouter::Instance().RouteResults(searchId, resultVector);
+		search::SearchResultRouter::Instance().RouteResultsByType(LocalSearch, resultVector);
 	}
 }
 
 
 void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, uint32_t serverIP, uint16_t serverPort)
 {
-	// UDP results should only go to GlobalSearch  
-	// Find the most recent active GlobalSearch
-	long searchId = -1;
-	{
-		wxMutexLocker lock(m_searchMutex);
-		// Find the most recent active GlobalSearch
-		for (auto it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
-			if (it->second == GlobalSearch) {
-				searchId = it->first;
-				break;
-			}
-		}
-	}
-
-	// If no valid search ID found, drop the result
-	if (searchId == -1) {
-		AddDebugLogLineN(logSearch, wxString::Format(wxT("Discarding UDP search result from %s:%u - no active global search"), (uint32_t)serverIP, serverPort));
-		return;
-	}
-
-	// Create result
-	CSearchFile* result = new CSearchFile(packet, optUTF8, searchId, serverIP, serverPort);
-
-	// Process result through validator (this adds it to SearchList)
-	search::SearchResultRouter::Instance().RouteResult(searchId, result);
+	// Create result from the packet
+	CSearchFile* result = new CSearchFile(packet, optUTF8, -1, serverIP, serverPort);
+	
+	// For UDP global search results, use type-based routing to ensure they only go to GlobalSearch
+	// This prevents mixing with LocalSearch results even if search IDs are reused
+	std::vector<CSearchFile*> results;
+	results.push_back(result);
+	
+	search::SearchResultRouter::Instance().RouteResultsByType(GlobalSearch, results);
 }
 
 

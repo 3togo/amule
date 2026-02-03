@@ -119,6 +119,15 @@ public:
      */
     size_t RouteResults(uint32_t searchId, const std::vector<CSearchFile*>& results);
 
+    /**
+     * Route multiple search results by search type (for protocols without search ID).
+     * 
+     * @param searchType The search type (LocalSearch, GlobalSearch, KadSearch)
+     * @param results The search results to route (ownership transferred)
+     * @return number of results successfully handled
+     */
+    size_t RouteResultsByType(SearchType searchType, const std::vector<CSearchFile*>& results);
+
 private:
     SearchResultRouter() = default;
     ~SearchResultRouter() = default;

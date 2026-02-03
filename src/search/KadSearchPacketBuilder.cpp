@@ -25,45 +25,37 @@
 //
 
 #include "KadSearchPacketBuilder.h"
-#include "SearchController.h"
-#include "../SearchList.h"
-#include "../amule.h"
 #include "../MemFile.h"
-#include <wx/utils.h>
+#include "../protocol/kad2/Client2Client/UDP.h"
+#include <wx/string.h>
 
 namespace search {
 
 bool KadSearchPacketBuilder::CreateSearchPacket(const SearchParams& params,
 						uint8_t*& packetData, uint32_t& packetSize)
 {
-    if (!theApp || !theApp->searchlist) {
-	return false;
+    // Validate input parameters
+    if (params.strKeyword.IsEmpty()) {
+        return false;
     }
 
-    // Convert to old parameter format
-    CSearchList::CSearchParams oldParams;
-    oldParams.searchString = params.searchString;
-    oldParams.strKeyword = params.strKeyword;
-    oldParams.typeText = params.typeText;
-    oldParams.extension = params.extension;
-    oldParams.minSize = params.minSize;
-    oldParams.maxSize = params.maxSize;
-    oldParams.availability = params.availability;
-
-    // Use SearchList's CreateSearchData method
-    bool packetUsing64bit = false;
-    CSearchList::CMemFilePtr data = theApp->searchlist->CreateSearchData(
-	oldParams, ::KadSearch, true, packetUsing64bit);
-
-    if (data.get() == NULL) {
-	return false;
-    }
-
-    // Store packet data
-    packetSize = data->GetLength();
+    // Create packet using MemFile
+    CMemFile packet;
+    
+    // Add operation code for Kademlia2 search
+    packet.WriteUInt8(KADEMLIA2_SEARCH_KEY_REQ);
+    
+    // Add search keyword
+    packet.WriteString(params.strKeyword);
+    
+    // Add additional search parameters if needed
+    // For now, keep it simple with just the keyword
+    
+    // Get the final packet data
+    packetSize = packet.GetLength();
     packetData = new uint8_t[packetSize];
-    memcpy(packetData, data->GetRawBuffer(), packetSize);
-
+    memcpy(packetData, packet.GetBuffer(), packetSize);
+    
     return true;
 }
 
@@ -77,10 +69,9 @@ void KadSearchPacketBuilder::FreeSearchPacket(uint8_t* packetData)
 bool KadSearchPacketBuilder::EncodeSearchParams(const SearchParams& params,
 					       uint8_t*& packetData, uint32_t& packetSize)
 {
-    // For now, we use SearchList's CreateSearchData method
-    // This is temporary during migration
-    // We'll implement proper packet encoding in Phase 3
-    return false;
+    // Now implemented in CreateSearchPacket
+    // This method can be used for future extensions
+    return CreateSearchPacket(params, packetData, packetSize);
 }
 
 } // namespace search

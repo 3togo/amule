@@ -186,4 +186,55 @@ size_t SearchResultRouter::RouteResults(uint32_t searchId, const std::vector<CSe
     return 0;
 }
 
+size_t SearchResultRouter::RouteResultsByType(SearchType searchType, const std::vector<CSearchFile*>& results)
+{
+    if (results.empty()) {
+        return 0;
+    }
+
+    SEARCH_DEBUG(
+        CFormat(wxT("RouteResultsByType: searchType=%d, results=%zu")) 
+        % (int)searchType % results.size());
+
+    // Find type controller
+    TypeControllerMap::iterator it = m_typeControllers.find(searchType);
+    if (it != m_typeControllers.end() && it->second) {
+        // Get the controller as SearchResultHandler
+        SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(it->second);
+        if (handler) {
+            // Route all results to controller's handler
+            // Use a dummy search ID of 0 since type-based routing doesn't have a specific ID
+            handler->handleResults(0, results);
+
+            SEARCH_DEBUG(
+                CFormat(wxT("RouteResultsByType: routed %zu results to type controller")) 
+                % results.size());
+
+            return results.size();
+        }
+    }
+
+    // No type controller found - add results directly to SearchList
+    SEARCH_DEBUG(
+        CFormat(wxT("RouteResultsByType: no type controller for searchType=%d, adding to SearchList")) 
+        % (int)searchType);
+
+    if (theApp && theApp->searchlist) {
+        for (CSearchFile* result : results) {
+            if (result) {
+                result->SetSearchID(0); // Set dummy ID
+                theApp->searchlist->AddToList(result, false);
+            }
+        }
+        return results.size();
+    }
+
+    // Clean up all results since no one will handle them
+    for (CSearchFile* result : results) {
+        delete result;
+    }
+
+    return 0;
+}
+
 } // namespace search

@@ -191,10 +191,8 @@ if (BUILD_MONOLITHIC)
 		search/SearchControllerBase.cpp
 		search/SearchController.cpp
 		search/SearchControllerFactory.cpp
-		search/ED2KSearchController.cpp
-		search/ED2KSearchPacketBuilder.cpp
+		search/LocalSearchController.cpp
 		search/GlobalSearchController.cpp
-		search/KadSearchController.cpp
 		search/KadSearchPacketBuilder.cpp
 		search/SearchAutoRetry.cpp
 		search/SearchModel.cpp

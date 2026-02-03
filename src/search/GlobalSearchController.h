@@ -41,6 +41,11 @@ protected:
     bool isSearching() const;
 
 private:
+    static uint32_t s_searchIdCounter;
+    
+    // Helper method to create search packet without SearchList dependency
+    bool CreateSearchPacket(const SearchParams& params, uint8_t*& packetData, uint32_t& packetSize);
+
     // Timer for querying servers periodically
     wxTimer m_searchTimer;
 

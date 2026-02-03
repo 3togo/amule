@@ -33,7 +33,7 @@
 namespace search {
 
 // Forward declarations
-class ED2KSearchController;
+class LocalSearchController;
 class KadSearchController;
 class GlobalSearchController;
 
