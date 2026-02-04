@@ -1,0 +1,20 @@
+--- a/src/amuleDlg.cpp
++++ b/src/amuleDlg.cpp
+@@ -1142,7 +1142,10 @@
+ = msCur;
+ 
+-.o GraphUpdateInfo update = theApp->m_statistics->GetPointsForUpdate();
++// Check if statistics object is available before using it
++if (theApp->m_statistics != NULL) {
++GraphUpdateInfo update = theApp->m_statistics->GetPointsForUpdate();
++
+ 
+ d->UpdateStatGraphs(theStats::GetPeakConnections(), update);
+ d->UpdateGraph(update);
+@@ -1147,6 +1150,7 @@
+ d->UpdateStatGraphs(theStats::GetPeakConnections(), update);
+ d->UpdateGraph(update);
++}
+ 
+ int sStatsUpdate = thePrefs::GetStatsInterval();
+ if ((sStatsUpdate > 0) && ((int)(msCur - msPrevStats) > sStatsUpdate*1000)) {

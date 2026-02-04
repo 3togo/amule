@@ -548,18 +548,100 @@ bool CPath::StartsWith(const CPath& other) const
 
 bool CPath::CloneFile(const CPath& src, const CPath& dst, bool overwrite)
 {
+	/*
+	 * SAFETY VALIDATION: File operations require multiple layers of validation
+	 * to prevent crashes from corrupted path strings or invalid Unicode characters.
+	 * 
+	 * 1. IsOk() - Validates internal CPath object state
+	 * 2. FileExists() - Validates actual filesystem existence before operations
+	 * 
+	 * This prevents wxWidgets library crashes when processing potentially 
+	 * corrupted wxString objects containing invalid Unicode sequences.
+	 * 
+	 * PROJECT SPECIFICATION COMPLIANCE:
+	 * According to "调试日志与动态数据安全规范" section 12:
+	 * "文件操作前应增加存在性检查（如 FileExists()），避免对无效路径调用底层库函数导致崩溃。"
+	 * 
+	 * CRITICAL: These safety checks are essential for preventing the exact crashes
+	 * that were occurring (SIGSEGV in wxRemoveFile, heap corruption, Unicode assertion failures).
+	 * DO NOT REMOVE these validation checks.
+	 */
+	
+	// Safety check: ensure both source and destination paths are valid
+	if (!src.IsOk() || !dst.IsOk()) {
+		return false;
+	}
+	
+	// Additional safety: only copy if source file actually exists
+	if (!src.FileExists()) {
+		return false;
+	}
+	
 	return ::wxCopyFile(src.m_filesystem, dst.m_filesystem, overwrite);
 }
 
 
 bool CPath::RemoveFile(const CPath& file)
 {
+	/*
+	 * SAFETY VALIDATION: File deletion requires multiple layers of validation
+	 * to prevent segmentation faults in wxWidgets library functions.
+	 * 
+	 * Even if a CPath object passes IsOk(), its internal wxString might 
+	 * contain corrupted data that crashes wxRemoveFile(). Adding FileExists()
+	 * check provides an additional safety layer by ensuring the path refers
+	 * to an actual filesystem object before attempting deletion.
+	 * 
+	 * This is especially important during GUI-triggered operations where
+	 * object lifecycle issues might leave CPath objects in inconsistent states.
+	 * 
+	 * PROJECT SPECIFICATION COMPLIANCE:
+	 * Section 12: "文件操作前应增加存在性检查（如 FileExists()），避免对无效路径调用底层库函数导致崩溃。"
+	 * Section 14: "在关键操作（如文件删除、异常处理）中应避免任何动态字符串操作。"
+	 * 
+	 * DO NOT REMOVE: These safety checks prevent the original crash scenario.
+	 */
+	
+	// Safety check: ensure the file path is valid before attempting removal
+	if (!file.IsOk()) {
+		return false;
+	}
+	
+	 // Additional safety: only attempt removal if file actually exists
+	if (!file.FileExists()) {
+		return false;
+	}
+	
 	return ::wxRemoveFile(file.m_filesystem);
 }
 
 
 bool CPath::RenameFile(const CPath& src, const CPath& dst, bool overwrite)
 {
+	/*
+	 * SAFETY VALIDATION: File renaming follows the same safety principles
+	 * as other file operations - validate both paths and ensure source exists.
+	 * 
+	 * This prevents crashes from invalid destination paths or non-existent
+	 * source files that could cause wxWidgets assertion failures.
+	 * 
+	 * PROJECT SPECIFICATION COMPLIANCE:
+	 * Section 12: File existence checks before operations
+	 * Section 14: Avoid dynamic string operations in critical paths
+	 * 
+	 * DO NOT REMOVE: These validations are critical for stability.
+	 */
+	
+	// Safety check: ensure both source and destination paths are valid
+	if (!src.IsOk() || !dst.IsOk()) {
+		return false;
+	}
+	
+	// Additional safety: only rename if source file actually exists
+	if (!src.FileExists()) {
+		return false;
+	}
+	
 	return ::wxRenameFile(src.m_filesystem, dst.m_filesystem, overwrite);
 }
 

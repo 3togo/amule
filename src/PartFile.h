@@ -88,7 +88,8 @@ public:
 
 typedef std::map<uint32,SourcenameItem> SourcenameItemMap;
 
-class CPartFile : public CKnownFile {
+	class CPartFile : public CKnownFile
+{
 public:
 	typedef std::list<Requested_Block_Struct*> CReqBlockPtrList;
 
@@ -134,6 +135,9 @@ public:
 #else
 	uint8	GetStatus(bool ignorepause = false) const;
 #endif
+	// Remove IsDeleted method - not needed with proper lifecycle management
+	// bool	IsDeleted() const { return m_deleted; }
+
 	virtual void	UpdatePartsInfo();
 	const CPath& GetPartMetFileName() const { return m_partmetfilename; }
 	uint16	GetPartMetNumber() const;

@@ -1,0 +1,36 @@
+// Add these lines to ED2KSearchController::executeSearch method
+
+// After line 112:
+    AddDebugLogLineN(logSearch, wxT("ED2KSearchController: executeSearch called"));
+
+// After line 119:
+    AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: oldSearchType=%d"), (int)oldSearchType);
+
+// After line 131:
+    AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: isLocalSearch=%d"), isLocalSearch);
+
+// After line 127:
+    bool supports64bit = theApp->serverconnect->GetCurrentServer() ?
+        theApp->serverconnect->GetCurrentServer()->SupportsLargeFilesTCP() : false;
+    AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: supports64bit=%d"), supports64bit);
+
+// After line 140:
+    AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: CreateSearchPacket success=%d, packetSize=%u"), success, packetSize);
+
+// After line 142:
+    AddDebugLogLineN(logSearch, wxT("ED2KSearchController: Failed to create ED2K search packet"));
+
+// After line 144:
+    AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: searchId=%u"), searchId));
+
+// After line 152:
+    AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: Sending packet to server, isLocalSearch=%d"), isLocalSearch));
+
+// After line 164:
+    AddDebugLogLineN(logSearch, wxT("ED2KSearchController: Not connected to eD2k server"));
+
+// After line 167:
+    AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: Exception: %s"), e.c_str()));
+
+// After line 176:
+    AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: Search completed, searchId=%u"), searchId));

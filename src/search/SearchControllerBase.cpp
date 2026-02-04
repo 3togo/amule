@@ -144,7 +144,8 @@ void SearchControllerBase::handleResult(uint32_t searchId, CSearchFile* result)
     // The SearchListCtrl::ShowResults() method retrieves results from SearchList
     CSearchFile* resultForUI = result;
     if (theApp && theApp->searchlist) {
-	// Create a copy for SearchList (SearchModel owns the original)
+	// Create a copy for SearchList BEFORE adding to model
+	// (SearchModel::addResult will delete the result if it's a duplicate)
 	CSearchFile* resultCopy = new CSearchFile(*result);
 	resultCopy->SetSearchID(searchId);
 	theApp->searchlist->AddToList(resultCopy, false);

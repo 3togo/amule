@@ -1,0 +1,26 @@
+// Fix for SearchDlg.h - Move private methods to public section
+
+// In SearchDlg.h, find the private section (around line 196):
+// private:
+//	// Helper methods for search controller
+//	void		SetupControllerCallbacks(search::SearchController* controller);
+//	search::SearchParams	CreateSearchParamsFromUI(const wxString& searchString, search::ModernSearchType searchType);
+
+// Move these two methods to the public section (before line 196):
+// public:
+//	// Helper methods for search controller (needed by SearchLabelHelper)
+//	void		SetupControllerCallbacks(search::SearchController* controller);
+//	search::SearchParams	CreateSearchParamsFromUI(const wxString& searchString, search::ModernSearchType searchType);
+
+// Also add StoreController method to public section:
+//	void		StoreController(uint32_t searchId, std::unique_ptr<search::SearchController> controller);
+
+// And move m_searchControllers to public section:
+//	// Map of search ID to SearchController for active searches
+//	std::map<uint32, std::unique_ptr<search::SearchController>> m_searchControllers;
+
+// Add this method implementation to SearchDlg.cpp:
+void CSearchDlg::StoreController(uint32_t searchId, std::unique_ptr<search::SearchController> controller)
+{
+	m_searchControllers[searchId] = std::move(controller);
+}

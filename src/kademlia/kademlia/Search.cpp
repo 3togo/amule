@@ -45,6 +45,9 @@ there client on the eMule forum..
 #include <protocol/kad2/Client2Client/UDP.h>
 #include <tags/FileTags.h>
 
+#include "../../KnownFile.h"
+#include "../../MD4Hash.h"
+
 #include "Defines.h"
 #include "UDPFirewallTester.h"
 #include "../routing/RoutingZone.h"
@@ -863,21 +866,27 @@ void CSearch::StorePacket()
 void CSearch::ProcessResult(const CUInt128& answer, TagPtrList *info)
 {
 	wxString type = wxT("Unknown");
-	switch (m_type) {
-		case FILE:
-			type = wxT("File");
-			ProcessResultFile(answer, info);
-			break;
-		case KEYWORD:
-			type = wxT("Keyword");
-			ProcessResultKeyword(answer, info);
-			break;
-		case NOTES:
-			type = wxT("Notes");
-			ProcessResultNotes(answer, info);
-			break;
+	try {
+		switch (m_type) {
+			case FILE:
+				type = wxT("File");
+				ProcessResultFile(answer, info);
+				break;
+			case KEYWORD:
+				type = wxT("Keyword");
+				ProcessResultKeyword(answer, info);
+				break;
+			case NOTES:
+				type = wxT("Notes");
+				ProcessResultNotes(answer, info);
+				break;
+		}
+		AddDebugLogLineN(logKadSearch, wxT("Got result (") + type + wxT(")"));
+	} catch (const std::exception& e) {
+		AddDebugLogLineN(logKadSearch, CFormat(wxT("Exception in CSearch::ProcessResult: %s")) % wxString::FromUTF8(e.what()));
+	} catch (...) {
+		AddDebugLogLineN(logKadSearch, wxT("Unknown exception in CSearch::ProcessResult"));
 	}
-	AddDebugLogLineN(logKadSearch, wxT("Got result (") + type + wxT(")"));
 }
 
 void CSearch::ProcessResultFile(const CUInt128& answer, TagPtrList *info)
@@ -1065,9 +1074,43 @@ void CSearch::ProcessResultKeyword(const CUInt128& answer, TagPtrList *info)
 		}
 	}
 
-	// If we don't have a valid filename and filesize, drop this keyword.
-	if (!bFileName || !bFileSize) {
-		AddDebugLogLineN(logKadSearch, wxString(wxT("No ")) + (!bFileName ? wxT("filename") : wxT("filesize")) + wxT(" on search result, ignoring"));
+	// If we don't have a valid filename, try to get it from our known files using the target hash
+	if (!bFileName) {
+		uint8_t fileid[16];
+		m_target.ToByteArray(fileid);
+		const CMD4Hash fileHash(fileid);
+
+		// Check if this hash is in our shared files
+		CKnownFile* file = theApp->sharedfiles->GetFileByID(fileHash);
+		
+		if (!file) {
+			// If we didn't find anything check if it's in our download queue
+			file = theApp->downloadqueue->GetFileByID(fileHash);
+		}
+
+		// If we found a file, use its filename
+		if (file) {
+			name = file->GetFileName().GetPrintable();
+			bFileName = !name.IsEmpty();
+			if (bFileName) {
+				AddDebugLogLineN(logKadSearch, wxT("Using known filename for search result"));
+			}
+		}
+	}
+
+	// If we still don't have a valid filename, create a placeholder using the file hash from the answer
+	if (!bFileName) {
+		uint8_t fileid[16];
+		answer.ToByteArray(fileid);
+		const CMD4Hash fileHash(fileid);
+		name = CFormat(_("[File: %s]")) % fileHash.Encode();
+		bFileName = true;
+		AddDebugLogLineN(logKadSearch, wxT("Using placeholder filename for search result"));
+	}
+
+	// If we don't have a valid filesize, drop this keyword.
+	if (!bFileSize) {
+		AddDebugLogLineN(logKadSearch, wxT("No filesize on search result, ignoring"));
 		return;
 	}
 
@@ -1282,7 +1325,7 @@ uint8_t CSearch::GetRequestContactCount() const
 		case KEYWORD:
 		case FINDSOURCE:
 		case NOTES:
-			return KADEMLIA_FIND_VALUE;
+			return KADEMLIA_CONTACTS_PER_REQUEST;
 		case FINDBUDDY:
 		case STOREFILE:
 		case STOREKEYWORD:

@@ -1,0 +1,8 @@
+// Add this method to CSearchDlg class in SearchDlg.h (public section):
+//	void StoreController(uint32_t searchId, std::unique_ptr<search::SearchController> controller);
+
+// Add this method implementation to SearchDlg.cpp:
+void CSearchDlg::StoreController(uint32_t searchId, std::unique_ptr<search::SearchController> controller)
+{
+	m_searchControllers[searchId] = std::move(controller);
+}

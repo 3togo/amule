@@ -1,0 +1,69 @@
+--- a/src/search/ED2KSearchController.cpp
++++ b/src/search/ED2KSearchController.cpp
+@@ -99,6 +99,8 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const Searc
+
+ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchParams& params)
+ {
++    AddDebugLogLineN(logSearch, wxT("ED2KSearchController: executeSearch called"));
++
+     // Store search parameters
+     m_model->setSearchParams(params);
+
+@@ -108,6 +110,7 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const Searc
+ 			      ? ::LocalSearch
+ 			      : ::GlobalSearch;
+     AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: oldSearchType=%d"), (int)oldSearchType));
++
+     // Convert to old parameter format
+     // Generate new search ID
+     uint32_t searchId = 0;
+@@ -122,6 +125,7 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const Searc
+ 	// Determine search type
+ 	bool isLocalSearch = (params.searchType == ModernSearchType::LocalSearch);
+ 	AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: isLocalSearch=%d"), isLocalSearch));
++
+ 	// Build search packet
+ 	uint8_t* packetData = nullptr;
+ 	uint32_t packetSize = 0;
+@@ -129,6 +133,7 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const Searc
+ 		theApp->serverconnect->GetCurrentServer()->SupportsLargeFilesTCP() : false;
+ 	bool success = packetBuilder.CreateSearchPacket(params, supports64bit, packetData, packetSize);
+ 	AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: CreateSearchPacket success=%d, packetSize=%u"), success, packetSize));
++
+ 	if (!success || !packetData) {
+ 	    AddDebugLogLineN(logSearch, wxT("ED2KSearchController: Failed to create ED2K search packet"));
+ 	    error = wxT("Failed to create ED2K search packet");
+@@ -141,6 +146,7 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const Searc
+ 	} else {
+ 	    searchId = m_model->getSearchId();
+ 	}
++	AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: searchId=%u"), searchId));
+
+ 	// Send packet to server
+ 	if (theApp && theApp->serverconnect) {
++	    AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: Sending packet to server, isLocalSearch=%d"), isLocalSearch));
+ 	    // Set the current search ID in SearchList before sending
+ 	    if (theApp->searchlist) {
+ 		theApp->searchlist->SetCurrentSearch(searchId);
+@@ -166,6 +173,7 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const Searc
+ 	    // Clean up the packet data
+ 	    delete[] packetData;
+ 	} else {
++	    AddDebugLogLineN(logSearch, wxT("ED2KSearchController: Not connected to eD2k server"));
+ 	    delete[] packetData;
+ 	    error = _("Not connected to eD2k server");
+ 	    return {0, error};
+ 	}
+     } catch (const wxString& e) {
++	AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: Exception: %s"), e.c_str()));
+ 	error = wxString::Format(_("Failed to execute search: %s"), e.c_str());
+ 	return {0, error};
+     }
+@@ -180,6 +189,8 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const Searc
+     // Initialize progress tracking
+     initializeProgress();
+
++    AddDebugLogLineN(logSearch, wxString::Format(wxT("ED2KSearchController: Search completed, searchId=%u"), searchId));
++
+     return {searchId, error};
+ }

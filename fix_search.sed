@@ -1,0 +1,1 @@
+799,807c		// Get the list control for this search		CSearchListCtrl* list = GetSearchList(searchId);		if (!list) {			return;		}		// Refresh the list to show new results		// The results are already in SearchList, we just need to refresh the display		list->ShowResults(searchId);		// Update hit count		UpdateHitCount(list);

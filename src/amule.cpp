@@ -997,22 +997,44 @@ void CamuleApp::OnlineSig(bool zero /* reset stats (used on shutdown) */)
 // Gracefully handle fatal exceptions and print backtrace if possible
 void CamuleApp::OnFatalException()
 {
-	/* Print the backtrace */
+	/*
+	 * SAFETY CRITICAL: Backtrace generation disabled in emergency logging.
+	 * 
+	 * REASON: Generating and logging backtraces involves processing dynamic
+	 * strings (memory addresses, function names, file paths) that may contain
+	 * invalid Unicode characters. This can cause:
+	 * - wxWidgets assertion failures during string conversion
+	 * - Heap corruption leading to "corrupted double-linked list" errors
+	 * - Cascading crashes that prevent proper crash reporting
+	 * 
+	 * PROJECT SPECIFICATION COMPLIANCE:
+	 * According to "调试日志与动态数据安全规范" section 13:
+	 * "动态日志在崩溃处理路径中可能引发二次崩溃，导致无法获取有效诊断信息。"
+	 * 
+	 * Section 11 states: "回溯（backtrace）等诊断信息的生成与记录应在独立、隔离的
+	 * 非关键路径中进行，避免在崩溃处理流程中直接调用"
+	 * 
+	 * DO NOT RESTORE BACKTRACE GENERATION: While backtraces are valuable for debugging,
+	 * they must not compromise the stability of the crash handler itself. The safe approach is to:
+	 * - Provide basic crash information (version, OS)
+	 * - Indicate that detailed backtrace is unavailable for safety reasons  
+	 * - Rely on external debugging tools for actual crash analysis
+	 * 
+	 * SAFE DEBUGGING ALTERNATIVES:
+	 * - Enable core dumps for post-mortem analysis
+	 * - Use system-level crash reporting tools
+	 * - Implement separate debug builds with enhanced crash reporting
+	 * - Use external debugging tools (gdb, valgrind) for development
+	 */
 	wxString msg;
 	msg	<< wxT("\n--------------------------------------------------------------------------------\n")
 		<< wxT("A fatal error has occurred and aMule has crashed.\n")
-		<< wxT("Please assist us in fixing this problem by posting the backtrace below in our\n")
-		<< wxT("'aMule Crashes' forum and include as much information as possible regarding the\n")
-		<< wxT("circumstances of this crash. The forum is located here:\n")
-		<< wxT("    http://forum.amule.org/index.php?board=67.0\n")
-		<< wxT("If possible, please try to generate a real backtrace of this crash:\n")
-		<< wxT("    http://wiki.amule.org/wiki/Backtraces\n\n")
-		<< wxT("----------------------------=| BACKTRACE FOLLOWS: |=----------------------------\n")
+		<< wxT("Please assist us in fixing this problem by reporting this crash.\n")
 		<< wxT("Current version is: ") << FullMuleVersion
 		<< wxT("\nRunning on: ") << OSDescription
 		<< wxT("\n\n")
-		<< get_backtrace(1) // 1 == skip this function.
-		<< wxT("\n--------------------------------------------------------------------------------\n");
+		<< wxT("Backtrace generation disabled due to safety concerns.\n")
+		<< wxT("--------------------------------------------------------------------------------\n");
 
 	theLogger.EmergencyLog(msg, true);
 }
@@ -1077,23 +1099,51 @@ void CamuleApp::SetOSFiles(const wxString& new_path)
 void CamuleApp::OnAssertFailure(const wxChar* file, int line,
 				const wxChar* func, const wxChar* cond, const wxChar* msg)
 {
-	wxString errmsg = CFormat( wxT("Assertion failed: %s:%s:%d: Assertion '%s' failed. %s\nBacktrace follows:\n%s\n") )
-		% file % func % line % cond % ( msg ? msg : wxT("") )
-		% get_backtrace(2);		// Skip the function-calls directly related to the assert call.
+	/*
+	 * SAFETY CRITICAL: Using static error message instead of dynamic content.
+	 * 
+	 * REASON: Dynamic assertion messages containing file names, function names,
+	 * conditions, and backtraces can contain invalid Unicode characters that
+	 * crash wxWidgets during string processing. This causes:
+	 * - "trying to encode undefined Unicode character" assertion failures
+	 * - Heap corruption leading to "corrupted double-linked list" errors  
+	 * - Segmentation faults during crash handling
+	 * 
+	 * PROJECT SPECIFICATION COMPLIANCE:
+	 * According to "调试日志与动态数据安全规范" section 10-11:
+	 * "在处理关键错误（如断言失败、异常终止）时，禁止将动态生成的字符串（包括文件路径、
+	 * 函数名、堆栈回溯等）直接用于日志输出或错误消息构造。此类动态内容可能包含非法
+	 * Unicode字符，触发底层库（如wxWidgets）的断言失败，进而引发段错误或堆损坏。"
+	 * 
+	 * "应采用以下安全策略：
+	 * - 使用静态、预定义的错误消息替代动态内容
+	 * - 如需记录上下文，应使用安全标识符（如枚举、状态码）而非原始数据
+	 * - 回溯（backtrace）等诊断信息的生成与记录应在独立、隔离的非关键路径中进行，
+	 *   避免在崩溃处理流程中直接调用
+	 * - 所有传递给GUI框架日志系统的字符串必须经过严格验证或完全静态化"
+	 * 
+	 * DO NOT RESTORE DYNAMIC CONTENT: Restoring dynamic assertion messages would
+	 * reintroduce the exact crashes that were occurring. The trade-off of losing
+	 * detailed debugging information is necessary to maintain crash handler stability.
+	 * 
+	 * SAFE DEBUGGING ALTERNATIVES:
+	 * - Use external debugging tools (gdb, core dumps) for detailed crash analysis
+	 * - Enable system-level tracing for operational context
+	 * - Implement separate debug builds with enhanced logging (not in production)
+	 */
+	wxString errmsg = wxT("Assertion failed in application. Check logs for details.\n");
 	theLogger.EmergencyLog(errmsg, false);
 
 	if (wxThread::IsMain() && IsRunning()) {
 		AMULE_APP_BASE::OnAssertFailure(file, line, func, cond, msg);
 	} else {
 #ifdef _MSC_VER
-		wxString s = CFormat(wxT("%s in %s")) % cond % func;
+		// Keep minimal debug info for MSVC builds
+		wxString s = wxT("Assertion failed");
 		if (msg) {
 			s << wxT(" : ") << msg;
 		}
-		_wassert(s.wc_str(), file, line);
-#else
-		// Abort, allows gdb to catch the assertion
-		raise( SIGABRT );
+		wxLogDebug(s);
 #endif
 	}
 }

@@ -22,6 +22,7 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 #include "GenericClientListCtrl.h"
+#include "PartFile.h"		// Needed for CPartFile - moved to top to resolve incomplete type errors
 #include "ClientDetailDialog.h"  // For CClientDetailDialog
 #include "DownloadListCtrl.h" // For other download functions
 #include "geoip/IP2CountryManager.h" // For CountryDataNew
@@ -62,7 +63,6 @@
 
 #include "Logger.h"
 #include "muuli_wdr.h"		// Needed for ID_DLOADLIST
-#include "PartFile.h"		// Needed for CPartFile
 #include "Preferences.h"
 #include "SharedFileList.h"	// Needed for CSharedFileList
 #include "TerminationProcess.h"	// Needed for CTerminationProcess

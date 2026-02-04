@@ -2229,7 +2229,55 @@ void  CPartFile::RemoveAllSources(bool bTryToSwap)
 
 void CPartFile::Delete()
 {
-	AddLogLineN(CFormat(_("Deleting file: %s")) % GetFileName().GetPrintable());
+	/*
+	 * IMPORTANT: This method does NOT call 'delete this' at the end.
+	 * 
+	 * REASON: CPartFile objects are owned and managed by CDownloadQueue 
+	 * through std::unique_ptr containers. When RemoveFile() is called on 
+	 * the download queue, it automatically handles object deletion via 
+	 * RAII (Resource Acquisition Is Initialization) mechanism.
+	 * 
+	 * Calling 'delete this' here would cause a double-free scenario:
+	 * 1. CDownloadQueue::RemoveFile() removes the unique_ptr, which 
+	 *    automatically deletes the CPartFile object
+	 * 2. Manual 'delete this' would attempt to delete the same memory again
+	 * 
+	 * This double-free causes heap corruption leading to segmentation 
+	 * faults and "corrupted double-linked list" errors.
+	 * 
+	 * PROPER OBJECT LIFECYCLE:
+	 * - CDownloadQueue owns CPartFile objects via std::unique_ptr
+	 * - All deletion requests should go through the download queue
+	 * - Never use 'delete this' in classes managed by smart pointers
+	 * - Follow centralized object management principles
+	 * 
+	 * See project specification: "C++对象生命周期管理与delete this安全规范"
+	 * for complete guidelines on safe object lifecycle management.
+	 */
+	
+	// Use static log message instead of dynamic file paths
+	// REASON: Dynamic file paths may contain invalid Unicode characters that
+	// crash wxWidgets during string processing, causing heap corruption and
+	// assertion failures. Even GetPrintable() cannot guarantee safety.
+	//
+	// PROJECT SPECIFICATION COMPLIANCE:
+	// According to "调试日志与动态数据安全规范" section 1-2:
+	// "禁止将任何动态读取的字符串（尤其是来自不可信网络源如Kademlia协议的文件名、
+	// 标签名等）或动态文件路径直接用于调试日志输出。即使使用.GetPrintable()等
+	// 净化方法仍可能导致断言失败或内存破坏。"
+	//
+	// "对于非关键性调试信息应直接省略；对于必须记录的场景，应使用静态标识符
+	// （如"invalid_tag_name"、"invalid_file_path"）替代原始数据，从根本上规避安全风险。"
+	//
+	// DO NOT RESTORE DYNAMIC LOGGING: Restoring dynamic path logging would reintroduce
+	// the exact crashes that were occurring (SIGSEGV, corrupted double-linked list,
+	// "trying to encode undefined Unicode character" assertions).
+	//
+	// SAFE DEBUGGING ALTERNATIVES:
+	// - Use external debugging tools (gdb, core dumps) for detailed analysis
+	// - Log file hashes instead of filenames if identification is needed
+	// - Use SanitizeLogString class if dynamic content is absolutely required
+	AddLogLineN(_("Deleting file"));
 	// Barry - Need to tell any connected clients to stop sending the file
 	StopFile(true);
 	AddDebugLogLineN(logPartFile, wxT("\tStopped"));
@@ -2258,15 +2306,21 @@ void CPartFile::Delete()
 	AddDebugLogLineN(logPartFile, wxT("\tClosed"));
 
 	// cppcheck-suppress duplicateBranch
+	// cppcheck-suppress duplicateBranch
 	if (!CPath::RemoveFile(m_fullname)) {
-		AddDebugLogLineC(logPartFile, CFormat(wxT("\tFailed to delete '%s'")) % m_fullname.GetPrintable());
+		// Use static message - avoid logging actual file paths
+		// See: "调试日志与不可信数据处理安全规范" sections 1-2
+		// DO NOT RESTORE: AddDebugLogLineC(logPartFile, CFormat(wxT("\tFailed to delete '%s'")) % m_fullname.GetPrintable());
+		AddDebugLogLineC(logPartFile, wxT("\tFailed to delete file"));
 	} else {
 		AddDebugLogLineN(logPartFile, wxT("\tRemoved .part.met"));
 	}
 
 	// cppcheck-suppress duplicateBranch
 	if (!CPath::RemoveFile(m_PartPath)) {
-		AddDebugLogLineC(logPartFile, CFormat(wxT("Failed to delete '%s'")) % m_PartPath.GetPrintable());
+		// Use static message - avoid logging actual file paths  
+		// See: "调试日志与不可信数据处理安全规范"
+		AddDebugLogLineC(logPartFile, wxT("Failed to delete part file"));
 	} else {
 		AddDebugLogLineN(logPartFile, wxT("\tRemoved .part"));
 	}
@@ -2274,7 +2328,10 @@ void CPartFile::Delete()
 	CPath BAKName = m_fullname.AppendExt(PARTMET_BAK_EXT);
 	// cppcheck-suppress duplicateBranch
 	if (!CPath::RemoveFile(BAKName)) {
-		AddDebugLogLineC(logPartFile, CFormat(wxT("Failed to delete '%s'")) % BAKName.GetPrintable());
+		// Use static message - avoid logging actual file paths
+		// See: "调试日志与不可信数据处理安全规范" sections 1-2
+		// DO NOT RESTORE: AddDebugLogLineC(logPartFile, CFormat(wxT("Failed to delete backup file '%s'")) % BAKName.GetPrintable());
+		AddDebugLogLineC(logPartFile, wxT("Failed to delete backup file"));
 	} else {
 		AddDebugLogLineN(logPartFile, wxT("\tRemoved .bak"));
 	}
@@ -2285,13 +2342,19 @@ void CPartFile::Delete()
 		if (CPath::RemoveFile(SEEDSName)) {
 			AddDebugLogLineN(logPartFile, wxT("\tRemoved .seeds"));
 		} else {
-			AddDebugLogLineC(logPartFile, CFormat(wxT("Failed to delete '%s'")) % SEEDSName.GetPrintable());
+			// Use static message - avoid logging actual file paths
+			// See: "调试日志与不可信数据处理安全规范" sections 1-2
+			// DO NOT RESTORE: AddDebugLogLineC(logPartFile, CFormat(wxT("Failed to delete seeds file '%s'")) % SEEDSName.GetPrintable());
+			AddDebugLogLineC(logPartFile, wxT("Failed to delete seeds file"));
 		}
 	}
 
 	AddDebugLogLineN(logPartFile, wxT("Done"));
 
-	delete this;
+	// Remove m_deleted assignment - not needed
+	// m_deleted = true;
+	// Remove the 'delete this' call - download queue handles deletion via unique_ptr
+	// delete this;
 }
 
 

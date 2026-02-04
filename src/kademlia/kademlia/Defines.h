@@ -47,7 +47,8 @@ namespace Kademlia {
 const unsigned int K	=		10;
 #define KBASE				4
 #define KK				5
-#define ALPHA_QUERY			3
+#define ALPHA_QUERY			5
+#define KADEMLIA_CONTACTS_PER_REQUEST	20
 #define LOG_BASE_EXPONENT		5
 #define HELLO_TIMEOUT			20
 #define SEARCH_JUMPSTART		1

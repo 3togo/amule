@@ -1,0 +1,28 @@
+Kad Search Debug Information
+==========================
+
+Based on the analysis, the search flow should be:
+
+1. User clicks "Start" button in search window
+2. KadSearchController::startSearch() is called
+3. KadSearchPacketBuilder::CreateSearchPacket() creates the search packet
+4. Kademlia::CSearchManager::PrepareFindKeywords() is called with the packet
+5. CSearch::Go() sends the search request to Kad nodes
+6. Kad nodes respond with results
+7. CSearch::ProcessResponse() processes the results
+8. CSearchList::KademliaSearchKeyword() is called for each result
+9. SearchResultRouter::RouteResult() routes the result to the controller
+10. SearchControllerBase::handleResult() adds the result to the model and UI
+
+The issue is that no results are being returned. This could be due to:
+
+1. The search packet is not being sent correctly
+2. The Kad network is not responding
+3. Results are being received but not processed correctly
+4. The search ID mismatch is still causing issues
+
+Let's check if there are any issues with:
+- The search packet creation
+- The search initiation
+- The result processing
+- The routing mechanism
