@@ -2229,7 +2229,7 @@ void  CPartFile::RemoveAllSources(bool bTryToSwap)
 
 void CPartFile::Delete()
 {
-	AddLogLineN(CFormat(_("Deleting file: %s")) % GetFileName());
+	AddLogLineN(CFormat(_("Deleting file: %s")) % GetFileName().GetPrintable());
 	// Barry - Need to tell any connected clients to stop sending the file
 	StopFile(true);
 	AddDebugLogLineN(logPartFile, wxT("\tStopped"));
@@ -2259,14 +2259,14 @@ void CPartFile::Delete()
 
 	// cppcheck-suppress duplicateBranch
 	if (!CPath::RemoveFile(m_fullname)) {
-		AddDebugLogLineC(logPartFile, CFormat(wxT("\tFailed to delete '%s'")) % m_fullname);
+		AddDebugLogLineC(logPartFile, CFormat(wxT("\tFailed to delete '%s'")) % m_fullname.GetPrintable());
 	} else {
 		AddDebugLogLineN(logPartFile, wxT("\tRemoved .part.met"));
 	}
 
 	// cppcheck-suppress duplicateBranch
 	if (!CPath::RemoveFile(m_PartPath)) {
-		AddDebugLogLineC(logPartFile, CFormat(wxT("Failed to delete '%s'")) % m_PartPath);
+		AddDebugLogLineC(logPartFile, CFormat(wxT("Failed to delete '%s'")) % m_PartPath.GetPrintable());
 	} else {
 		AddDebugLogLineN(logPartFile, wxT("\tRemoved .part"));
 	}
@@ -2274,7 +2274,7 @@ void CPartFile::Delete()
 	CPath BAKName = m_fullname.AppendExt(PARTMET_BAK_EXT);
 	// cppcheck-suppress duplicateBranch
 	if (!CPath::RemoveFile(BAKName)) {
-		AddDebugLogLineC(logPartFile, CFormat(wxT("Failed to delete '%s'")) % BAKName);
+		AddDebugLogLineC(logPartFile, CFormat(wxT("Failed to delete '%s'")) % BAKName.GetPrintable());
 	} else {
 		AddDebugLogLineN(logPartFile, wxT("\tRemoved .bak"));
 	}
@@ -2285,7 +2285,7 @@ void CPartFile::Delete()
 		if (CPath::RemoveFile(SEEDSName)) {
 			AddDebugLogLineN(logPartFile, wxT("\tRemoved .seeds"));
 		} else {
-			AddDebugLogLineC(logPartFile, CFormat(wxT("Failed to delete '%s'")) % SEEDSName);
+			AddDebugLogLineC(logPartFile, CFormat(wxT("Failed to delete '%s'")) % SEEDSName.GetPrintable());
 		}
 	}
 
