@@ -788,8 +788,8 @@ void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, u
 bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 {
 	const uint64 fileSize = toadd->GetFileSize();
-	// If filesize is 0, or file is too large for the network, drop it
-	if ((fileSize == 0) || (fileSize > MAX_FILE_SIZE)) {
+	// If file is too large for network, drop it
+	if (fileSize > MAX_FILE_SIZE) {
 		AddDebugLogLineN(logSearch,
 				CFormat(wxT("Dropped result with filesize %u: %s"))
 					% fileSize
@@ -798,29 +798,59 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 		delete toadd;
 		return false;
 	}
+	// Note: Kad search results may have filesize 0
+	// This is acceptable and will be handled by the UI
 
 	// Get the result type for this specific search (thread-safe)
 	wxString resultTypeForSearch;
+	SearchType searchType = LocalSearch; // Default to local search
+	long searchId = toadd->GetSearchID();
 	{
 		wxMutexLocker lock(m_searchMutex);
-		std::map<long, CSearchParams>::iterator it = m_searchParams.find(toadd->GetSearchID());
+		std::map<long, CSearchParams>::iterator it = m_searchParams.find(searchId);
 		if (it != m_searchParams.end()) {
 			resultTypeForSearch = it->second.typeText;
 		}
+		
+		// Also get the search type to determine if this is a Kad search
+		std::map<long, SearchType>::iterator typeIt = m_activeSearches.find(searchId);
+		if (typeIt != m_activeSearches.end()) {
+			searchType = typeIt->second;
+		}
 	}
 
+	// CRITICAL WARNING: Do NOT apply strict type filtering to Kad search results!
+	// The Kad network may not provide accurate file type metadata, and
+	// GetFileTypeByName() may not correctly identify file types from Kad results.
+	// Applying strict type filtering here causes many valid Kad results to be dropped,
+	// significantly reducing search hit counts compared to v0.1.
+	//
+	// History: This filtering was causing a dramatic reduction in Kad search results.
+	// The fix is to skip this filter for Kad searches (searchType == KadSearch).
+	// DO NOT MODIFY THIS FILTER WITHOUT UNDERSTANDING THE IMPACT ON KAD SEARCHES!
+
 	// If the result was not the type the user wanted, drop it.
-	if ((clientResponse == false) && !resultTypeForSearch.IsEmpty() && resultTypeForSearch != ED2KFTSTR_PROGRAM) {
+	// But skip this check for Kad searches since Kad results often lack accurate type information
+	if (searchType != KadSearch && !resultTypeForSearch.IsEmpty() && resultTypeForSearch != ED2KFTSTR_PROGRAM) {
 		if (resultTypeForSearch.CmpNoCase(wxT("Any")) != 0) {
-			if (GetFileTypeByName(toadd->GetFileName()) != resultTypeForSearch) {
-				AddDebugLogLineN(logSearch,
-					CFormat( wxT("Dropped result type %s != %s, file %s") )
-						% GetFileTypeByName(toadd->GetFileName())
-						% resultTypeForSearch
-						% toadd->GetFileName().GetPrintable());
+			wxString actualFileType = GetFileTypeByName(toadd->GetFileName());
+			if (actualFileType != resultTypeForSearch) {
+				AddLogLineN(
+					CFormat(wxT("DROPPED result - SearchID=%ld, SearchType=%d, Type mismatch: actual='%s' != expected='%s', file='%s'"))
+						% searchId % (int)searchType % actualFileType % resultTypeForSearch % toadd->GetFileName().GetPrintable());
 
 				delete toadd;
 				return false;
+			}
+		}
+	} else if (searchType == KadSearch && !resultTypeForSearch.IsEmpty() && resultTypeForSearch != ED2KFTSTR_PROGRAM) {
+		// DEBUG: Log that we're skipping filtering for Kad search
+		if (resultTypeForSearch.CmpNoCase(wxT("Any")) != 0) {
+			wxString actualFileType = GetFileTypeByName(toadd->GetFileName());
+			if (actualFileType != resultTypeForSearch) {
+				AddLogLineN(
+					CFormat(wxT("KEPT Kad result despite type mismatch - SearchID=%ld, actual='%s' != expected='%s', file='%s'"))
+						% searchId % actualFileType % resultTypeForSearch % toadd->GetFileName().GetPrintable());
 			}
 		}
 	}
@@ -828,24 +858,22 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 	// Get, or implicitly create, the map of results for this search
 	CSearchResultList& results = m_results[toadd->GetSearchID()];
 
-	for (size_t i = 0; i < results.size(); ++i) {
-		CSearchFile* item = results.at(i);
+	// DEBUG: Log incoming result candidate
+	AddLogLineN(CFormat(wxT("Result candidate received - SearchID=%ld, SearchType=%d, ClientResponse=%d, FileName='%s', FileSize=%llu, ResultType='%s'"))
+		% searchId % (int)searchType % (int)clientResponse % toadd->GetFileName().GetPrintable() % fileSize % resultTypeForSearch);
 
-		if ((toadd->GetFileHash() == item->GetFileHash()) && (toadd->GetFileSize() == item->GetFileSize())) {
-			AddDebugLogLineN(logSearch, CFormat(wxT("Received duplicate results for '%s' : %s")) % item->GetFileName().GetPrintable() % item->GetFileHash().Encode());
-			// Add the child, possibly updating the parents filename.
-			item->AddChild(toadd);
-			Notify_Search_Update_Sources(item);
-			return true;
-		}
-	}
-
-	AddDebugLogLineN(logSearch,
+	AddLogLineN(
 		CFormat(wxT("Added new result '%s' : %s"))
 			% toadd->GetFileName().GetPrintable() % toadd->GetFileHash().Encode());
 
 	// New unique result, simply add and display.
 	results.push_back(toadd);
+	
+	// DEBUG: Log total results count for this search
+	size_t totalResults = results.size();
+	AddLogLineN(CFormat(wxT("SearchID=%ld now has %zu total results (added: '%s')"))
+		% searchId % totalResults % toadd->GetFileName().GetPrintable());
+
 	Notify_Search_Add_Result(toadd);
 
 	return true;
@@ -888,7 +916,7 @@ void CSearchList::StopSearch(bool globalOnly)
 		// Remove this search from the active searches map
 		if (m_currentSearch != -1) {
 			m_activeSearches.erase(m_currentSearch);
-		}
+			}
 		
 		m_currentSearch = -1;
 		
@@ -946,8 +974,12 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 
 	s_strCurKadKeyword.Clear();
 	if (type == KadSearch) {
-		wxASSERT( !params.strKeyword.IsEmpty() );
-		s_strCurKadKeyword = params.strKeyword;
+		// Use strKeyword if set, otherwise fall back to searchString
+		if (params.strKeyword.IsEmpty()) {
+			s_strCurKadKeyword = params.searchString;
+		} else {
+			s_strCurKadKeyword = params.strKeyword;
+		}
 	}
 
 	LexInit(params.searchString);
@@ -1078,12 +1110,10 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 			target.WriteMetaDataSearchParam(type == KadSearch ? TAG_MEDIA_ALBUM : FT_ED2K_MEDIA_ALBUM, album);
 		}
 
-		if (!artist.IsEmpty()){
-			if (++iParameterCount < parametercount) {
-				target.WriteBooleanAND();
-			}
+		if (!artist.IsEmpty()) {
 			target.WriteMetaDataSearchParam(type == KadSearch ? TAG_MEDIA_ARTIST : FT_ED2K_MEDIA_ARTIST, artist);
 		}
+
 		#endif // 0
 
 		// If this assert fails... we're seriously fucked up
@@ -1091,6 +1121,7 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 		wxASSERT( iParameterCount == parametercount );
 
 	} else {
+
 		if (!params.extension.IsEmpty()) {
 			if (++iParameterCount < parametercount) {
 				target.WriteBooleanAND();
@@ -1243,6 +1274,12 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt128 *fileID,
 	const wxString& name, uint64_t size, const wxString& type, uint32_t kadPublishInfo, const TagPtrList& taglist)
 {
+	static std::atomic<uint32_t> kadResultCounter{0};
+	uint32_t currentCount = ++kadResultCounter;
+
+	AddLogLineN(CFormat(wxT("KAD SEARCH RESULT #%u RECEIVED - SearchID=%u, Name='%s', Size=%llu, Type='%s'"))
+		% currentCount % searchID % name % size % type);
+
 	EUtf8Str eStrEncode = utf8strRaw;
 
 	CMemFile temp(250);
@@ -1287,6 +1324,8 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt
 	CSearchFile *tempFile = new CSearchFile(temp, (eStrEncode == utf8strRaw), searchID, 0, 0, wxEmptyString, true);
 	tempFile->SetKadPublishInfo(kadPublishInfo);
 
+	AddLogLineN(CFormat(wxT("KAD SEARCH RESULT #%u PROCESSED - About to route to SearchResultRouter"))
+		% currentCount);
 
 	// Process result through validator (this adds it to SearchList)
 	search::SearchResultRouter::Instance().RouteResult(searchID, tempFile);
