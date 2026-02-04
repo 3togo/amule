@@ -539,8 +539,8 @@ CTag* CFileDataIO::ReadTag(bool bOptACP) const
 CTag* CFileDataIO::ReadTagUTF8() const
 {
 	// According to Kademlia protocol specifications, UTF-8 specific methods should not be used.
-	// Delegate to ReadTag(false) to ensure compatibility and prevent crashes.
-	return ReadTag(false);
+	// Delegate to ReadTag(true) to ensure ACP compatibility with older Kad clients.
+	return ReadTag(true);
 }
 
 
@@ -562,13 +562,8 @@ void CFileDataIO::ReadTagPtrListUTF8(TagPtrList* taglist) const
 {
 	MULE_VALIDATE_PARAMS(taglist, wxT("NULL pointer argument in ReadTagPtrListUTF8"));
 	
-	uint32 count = ReadUInt32();
-	for (uint32 i = 0; i < count; i++) {
-		CTag* tag = ReadTagUTF8();
-		if (tag) {
-			taglist->push_back(tag);
-		}
-	}
+	// Delegate to ReadTagPtrList with ACP enabled for compatibility with older Kad clients
+	ReadTagPtrList(taglist, true);
 }
 
 void CFileDataIO::WriteTag(const CTag& tag)

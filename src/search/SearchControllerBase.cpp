@@ -132,17 +132,14 @@ size_t SearchControllerBase::getResultCount() const
 
 void SearchControllerBase::handleResult(uint32_t searchId, CSearchFile* result)
 {
-    // Only handle results for our search
-    if (searchId != static_cast<uint32_t>(m_model->getSearchId())) {
-	return;
-    }
+    SEARCH_DEBUG(
+        CFormat(wxT("DEBUG: SearchControllerBase::handleResult - SearchID=%u, FileName='%s'"))
+            % searchId % result->GetFileName().GetPrintable());
 
-    // Add result to model (handles duplicates internally)
+    // Add to search model first (this handles deduplication)
     m_model->addResult(result);
-
-    // Also add result to legacy SearchList for UI display
-    // The SearchListCtrl::ShowResults() method retrieves results from SearchList
     CSearchFile* resultForUI = result;
+
     if (theApp && theApp->searchlist) {
 	// Create a copy for SearchList BEFORE adding to model
 	// (SearchModel::addResult will delete the result if it's a duplicate)

@@ -46,7 +46,12 @@ KadSearchController::KadSearchController()
     : SearchControllerBase(), m_maxNodesToQuery(DEFAULT_MAX_NODES),
       m_nodesContacted(0) {}
 
-KadSearchController::~KadSearchController() {}
+KadSearchController::~KadSearchController() {
+    // Unregister the search to clean up active searches map
+    if (theApp && theApp->searchlist) {
+        theApp->searchlist->UnregisterActiveSearch(m_model->getSearchId());
+    }
+}
 
 void KadSearchController::startSearch(const SearchParams &params) {
   // Step 1: Validate prerequisites
@@ -106,6 +111,8 @@ void KadSearchController::startSearch(const SearchParams &params) {
         // Set the current search ID in SearchList after registration
         if (theApp->searchlist) {
           theApp->searchlist->SetCurrentSearch(searchId);
+          // Register the search type to enable proper filtering in SearchList::AddResult
+          theApp->searchlist->RegisterActiveSearch(searchId, KadSearch);
         }
 
         notifySearchStarted(searchId);
@@ -129,11 +136,13 @@ void KadSearchController::startSearch(const SearchParams &params) {
 }
 
 void KadSearchController::stopSearch() {
-  // Unregister from SearchResultRouter
-  long searchId = m_model->getSearchId();
-  if (searchId != -1) {
-    SearchResultRouter::Instance().UnregisterController(searchId);
-  }
+  // DO NOT immediately unregister from SearchResultRouter
+  // This allows late-arriving Kad search results to be processed
+  // The controller will be unregistered by the Kad search system
+  // when the search is actually complete (after SEARCHKEYWORD_LIFETIME)
+  //
+  // This matches v0.1 behavior where controllers remained registered
+  // longer to collect more results from the distributed Kad network
 
   // Clear results
   m_model->clearResults();

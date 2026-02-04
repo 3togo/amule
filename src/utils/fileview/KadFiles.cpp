@@ -127,7 +127,7 @@ void DecodeKeyIndexDat(const CFileDataIO& file)
 				}
 				cout << "\t\t\ttagCount : " << (uint32)(tagCount = file.ReadUInt8()) << '\n';
 				for (uint32_t it = 0; it < tagCount; it++) {
-					CTag *tag = file.ReadTag();
+					CTag *tag = file.ReadTag(true);
 					cout << "\t\t\t\t" << *tag << '\n';
 					delete tag;
 				}
@@ -156,7 +156,7 @@ void DecodeSourceIndexDat(const CFileDataIO& file)
 				cout << "\t\t\tLifeTime: " << CTimeT(file.ReadUInt32());
 				cout << "\n\t\t\ttagCount: " << static_cast<unsigned int>(tagCount = file.ReadUInt8()) << '\n';
 				for (uint32_t it = 0; it < tagCount; it++) {
-					CTag *tag = file.ReadTag();
+					CTag *tag = file.ReadTag(true);
 					cout << "\t\t\t\t" << *tag << '\n';
 					delete tag;
 				}

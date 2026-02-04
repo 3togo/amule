@@ -127,7 +127,7 @@ void CIndexed::ReadFile()
 									}
 									uint32_t tagList = k_file.ReadUInt8();
 									while (tagList) {
-										CTag* tag = k_file.ReadTag(false);
+										CTag* tag = k_file.ReadTag(true);
 										if (tag) {
 											if (!tag->GetName().Cmp(TAG_FILENAME)) {
 												if (toAdd->GetCommonFileName().IsEmpty()) {
@@ -195,7 +195,7 @@ void CIndexed::ReadFile()
 								toAdd->m_tLifeTime = s_file.ReadUInt32();
 								uint32_t tagList = s_file.ReadUInt8();
 								while (tagList) {
-									CTag* tag = s_file.ReadTag(false);
+									CTag* tag = s_file.ReadTag(true);
 									if (tag) {
 										if (!tag->GetName().Cmp(TAG_SOURCEIP)) {
 											toAdd->m_uIP = tag->GetInt();

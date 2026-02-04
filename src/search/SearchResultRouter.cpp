@@ -78,6 +78,11 @@ void SearchResultRouter::UnregisterControllerByType(::SearchType type, SearchCon
 
 bool SearchResultRouter::RouteResult(uint32_t searchId, CSearchFile* result)
 {
+    SEARCH_DEBUG(
+        CFormat(wxT("DEBUG: RouteResult called - SearchID=%u, FileName='%s'"))
+            % searchId % result->GetFileName().GetPrintable());
+
+    // First try to route by specific search ID
     ControllerMap::iterator it = m_controllers.find(searchId);
     if (it != m_controllers.end() && it->second) {
         // Get the controller as SearchResultHandler
@@ -92,41 +97,9 @@ bool SearchResultRouter::RouteResult(uint32_t searchId, CSearchFile* result)
         }
     }
 
-    // No controller registered for this search
-    SEARCH_DEBUG( 
-        CFormat(wxT("No controller registered for search ID %u, adding to SearchList")) % searchId);
-
-    // Add result to SearchList for display
-    if (theApp && theApp->searchlist) {
-        result->SetSearchID(searchId);
-        theApp->searchlist->AddToList(result, false);
-        return true;
-    }
-    // Clean up the result since no one will handle it
-    delete result;
-    return false;
-}
-
-size_t SearchResultRouter::RouteResults(uint32_t searchId, const std::vector<CSearchFile*>& results)
-{
-    ControllerMap::iterator it = m_controllers.find(searchId);
-    if (it != m_controllers.end() && it->second) {
-        // Get the controller as SearchResultHandler
-        SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(it->second);
-        if (handler) {
-            // Route all results to controller's handler
-            handler->handleResults(searchId, results);
-
-            SEARCH_DEBUG( 
-                CFormat(wxT("Routing %zu results for search ID %u")) % results.size() % searchId);
-
-            return results.size();
-        }
-    }
-
-    // No controller registered for this search ID, trying fallback routing by search type
-    SEARCH_DEBUG( 
-        CFormat(wxT("No controller registered for search ID %u, trying fallback routing")) % searchId);
+    // If no specific controller found, try routing by search type
+    SEARCH_DEBUG(
+        CFormat(wxT("No specific controller for SearchID=%u, trying fallback routing")) % searchId);
 
     // Determine search type from SearchList based on active searches
     // This is the fallback when no specific controller is registered
@@ -175,36 +148,103 @@ size_t SearchResultRouter::RouteResults(uint32_t searchId, const std::vector<CSe
     if (typeIt != m_typeControllers.end() && typeIt->second) {
         SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(typeIt->second);
         if (handler) {
-            // Route results to the type-based controller using the correct client search ID
-            handler->handleResults(clientSearchId, results);
+            // Route result to the type-based controller using the correct client search ID
+            handler->handleResult(clientSearchId, result);
             SEARCH_DEBUG(
-                CFormat(wxT("Routed %zu results to controller for search type %d (clientSearchId=%u, serverSearchId=%u)"))
-                % results.size() % (int)searchType % clientSearchId % searchId);
-            return results.size();
+                CFormat(wxT("Routed result to controller for search type %d (clientSearchId=%u, serverSearchId=%u)"))
+                % (int)searchType % clientSearchId % searchId);
+            return true;
         }
     }
 
-    // No controller found, add results to SearchList for display
+    // No controller found, add result to SearchList for display
     SEARCH_DEBUG(
-        CFormat(wxT("No controller registered for search type %d, adding %zu results to SearchList"))
-        % (int)searchType % results.size());
+        CFormat(wxT("No controller registered for search type %d, adding result to SearchList"))
+        % (int)searchType);
 
-    // Add results to SearchList for display
+    // Add result to SearchList for display
     if (theApp && theApp->searchlist) {
-        for (CSearchFile* result : results) {
-            // Use the client search ID instead of the server ID to ensure UI consistency
-            result->SetSearchID(clientSearchId);
-            theApp->searchlist->AddToList(result, false);
-        }
-        return results.size();
+        // Use the client search ID instead of the server ID to ensure UI consistency
+        result->SetSearchID(clientSearchId);
+        theApp->searchlist->AddToList(result, false);
+        return true;
     }
 
-    // Clean up all results since no one will handle them
-    for (CSearchFile* result : results) {
-        delete result;
-    }
+    // Clean up result since no one will handle it
+    delete result;
 
-    return 0;
+    return false;
 }
+
+
+size_t SearchResultRouter::RouteResults(uint32_t searchId, const std::vector<CSearchFile*>& results)
+{
+    size_t routedCount = 0;
+    
+    // First try to route by specific search ID
+    ControllerMap::iterator it = m_controllers.find(searchId);
+    if (it != m_controllers.end() && it->second) {
+        // Get the controller as SearchResultHandler
+        SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(it->second);
+        if (handler) {
+            // Route all results to controller's handler
+            handler->handleResults(searchId, results);
+            routedCount = results.size();
+            
+            SEARCH_DEBUG( 
+                CFormat(wxT("Routed %u results for search ID %u")) % (unsigned int)routedCount % searchId);
+            return routedCount;
+        }
+    }
+
+    // If no specific controller found, try routing by search type
+    SEARCH_DEBUG(
+        CFormat(wxT("No specific controller for SearchID=%u, trying fallback routing for %u results")) 
+        % searchId % (unsigned int)results.size());
+        
+    // Determine search type from active searches
+    SearchType searchType = GlobalSearch;
+    {
+        wxMutexLocker lock(theApp->searchlist->GetSearchMutex());
+        const std::map<long, SearchType>& activeSearches = theApp->searchlist->GetActiveSearches();
+        auto typeIt = activeSearches.find(searchId);
+        if (typeIt != activeSearches.end()) {
+            searchType = typeIt->second;
+        }
+    }
+
+    // Try to find a controller registered for this search type
+    TypeControllerMap::iterator typeIt = m_typeControllers.find(searchType);
+    if (typeIt != m_typeControllers.end() && typeIt->second) {
+        SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(typeIt->second);
+        if (handler) {
+            // Route all results to the type-based controller
+            handler->handleResults(searchId, results);
+            routedCount = results.size();
+            
+            SEARCH_DEBUG(
+                CFormat(wxT("Routed %u results by search type %d for search ID %u")) 
+                % (unsigned int)routedCount % (int)searchType % searchId);
+            return routedCount;
+        }
+    }
+
+    // No controller found - add results directly to SearchList
+    SEARCH_DEBUG(
+        CFormat(wxT("No controller found for SearchID=%u, adding %u results directly to SearchList")) 
+        % searchId % (unsigned int)results.size());
+        
+    for (CSearchFile* result : results) {
+        if (theApp && theApp->searchlist) {
+            CSearchFile* resultCopy = new CSearchFile(*result);
+            resultCopy->SetSearchID(searchId);
+            theApp->searchlist->AddToList(resultCopy, false);
+            routedCount++;
+        }
+    }
+    
+    return routedCount;
+}
+
 
 } // namespace search

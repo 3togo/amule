@@ -396,7 +396,7 @@ bool CKademliaUDPListener::AddContact2(const uint8_t *data, uint32_t lenData, ui
 	bool tcpFirewalled = false;
 	uint8_t tags = bio.ReadUInt8();
 	while (tags) {
-		CTag *tag = bio.ReadTagUTF8();
+		CTag *tag = bio.ReadTag(true);
 		if (!tag->GetName().Cmp(TAG_SOURCEUPORT)) {
 			if (tag->IsInt() && (uint16_t)tag->GetInt() > 0) {
 				port = tag->GetInt();
@@ -961,7 +961,7 @@ void CKademliaUDPListener::ProcessSearchResponse(CMemFile& bio)
 		// If that tag list is once used for something else than for viewing, special care has to be taken for any
 		// string conversion!
 		CScopedContainer<TagPtrList> tags;
-		bio.ReadTagPtrListUTF8(tags.get());
+		bio.ReadTagPtrList(tags.get(), true);
 		CSearchManager::ProcessResult(target, answer, tags.get());
 		count--;
 	}
@@ -1033,7 +1033,7 @@ void CKademliaUDPListener::Process2PublishKeyRequest(const uint8_t *packetData, 
 			entry->m_bSource = false;
 			uint32_t tags = bio.ReadUInt8();
 			while (tags > 0) {
-				CTag* tag = bio.ReadTagUTF8();
+				CTag* tag = bio.ReadTag(true);
 				if (tag) {
 					if (!tag->GetName().Cmp(TAG_FILENAME)) {
 						if (entry->GetCommonFileName().IsEmpty()) {
@@ -1127,7 +1127,7 @@ void CKademliaUDPListener::Process2PublishSourceRequest(const uint8_t *packetDat
 		bool addUDPPortTag = true;
 		uint32_t tags = bio.ReadUInt8();
 		while (tags > 0) {
-			CTag* tag = bio.ReadTagUTF8();
+			CTag* tag = bio.ReadTag(true);
 			if (tag) {
 				if (!tag->GetName().Cmp(TAG_SOURCETYPE)) {
 					if (entry->m_bSource == false) {
@@ -1303,7 +1303,7 @@ void CKademliaUDPListener::Process2PublishNotesRequest(const uint8_t *packetData
 		entry->m_bSource = false;
 		uint32_t tags = bio.ReadUInt8();
 		while (tags > 0) {
-			CTag* tag = bio.ReadTagUTF8();
+			CTag* tag = bio.ReadTag(true);
 			if(tag) {
 				if (!tag->GetName().Cmp(TAG_FILENAME)) {
 					if (entry->GetCommonFileName().IsEmpty()) {

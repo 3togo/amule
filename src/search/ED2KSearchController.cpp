@@ -56,6 +56,10 @@ ED2KSearchController::ED2KSearchController()
 
 ED2KSearchController::~ED2KSearchController()
 {
+    // Unregister the search to clean up active searches map
+    if (theApp && theApp->searchlist) {
+        theApp->searchlist->UnregisterActiveSearch(m_model->getSearchId());
+    }
 }
 
 void ED2KSearchController::startSearch(const SearchParams& params)
@@ -178,8 +182,13 @@ void ED2KSearchController::startSearch(const SearchParams& params)
     bool isLocalSearch = SearchTypeConverter::isLocalSearch(params.searchType);
     SearchResultRouter::Instance().RegisterControllerByType(isLocalSearch ? ::LocalSearch : ::GlobalSearch, this);
 
-    // Initialize progress tracking
-    initializeProgress();
+    // Register the search type to enable proper filtering in SearchList::AddResult
+    SearchType searchType = SearchTypeConverter::isLocalSearch(params.searchType) ? LocalSearch : GlobalSearch;
+    if (theApp->searchlist) {
+        theApp->searchlist->RegisterActiveSearch(searchId, searchType);
+    }
+
+    notifySearchStarted(searchId);
 }
 
 bool ED2KSearchController::validatePrerequisites()

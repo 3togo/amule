@@ -1322,10 +1322,11 @@ uint8_t CSearch::GetRequestContactCount() const
 		case NODEFWCHECKUDP:
 			return KADEMLIA_FIND_NODE;
 		case FILE:
-		case KEYWORD:
 		case FINDSOURCE:
 		case NOTES:
 			return KADEMLIA_CONTACTS_PER_REQUEST;
+		case KEYWORD:
+			return KADEMLIA_FIND_VALUE;
 		case FINDBUDDY:
 		case STOREFILE:
 		case STOREKEYWORD:

@@ -300,6 +300,10 @@ void CSearchList::RemoveResults(long searchID)
 	// A non-existent search id will just be ignored
 	Kademlia::CSearchManager::StopSearch(searchID, true);
 
+	// Unregister the controller when results are explicitly removed
+	// This ensures proper cleanup when a search is deleted
+	search::SearchResultRouter::Instance().UnregisterController(searchID);
+
 	ResultMap::iterator it = m_results.find(searchID);
 	if ( it != m_results.end() ) {
 		CSearchResultList& list = it->second;
@@ -691,9 +695,17 @@ void CSearchList::ProcessSharedFileList(const uint8_t* in_packet, uint32 size,
 
 void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, bool optUTF8, uint32_t serverIP, uint16_t serverPort)
 {
+	// DEBUG: Log incoming search answer
+	AddDebugLogLineN(logSearch, CFormat(wxT("DEBUG: ProcessSearchAnswer called - Size=%u, OptUTF8=%d, Server=%s:%u"))
+		% size % (int)optUTF8 % (uint32_t)serverIP % serverPort);
+
 	CMemFile packet(in_packet, size);
 
 	uint32_t results = packet.ReadUInt32();
+
+	// DEBUG: Log number of results in the packet
+	AddDebugLogLineN(logSearch, CFormat(wxT("DEBUG: Processing search answer with %u results - Server=%s:%u"))
+		% results % (uint32_t)serverIP % serverPort);
 
 	// Get the search ID from the active searches map in a thread-safe manner
 	// This ensures results are associated with the correct search
@@ -728,11 +740,15 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 		}
 	}
 
+	// DEBUG: Log search ID resolution
+	AddDebugLogLineN(logSearch, CFormat(wxT("DEBUG: Resolved search context - SearchID=%ld, SearchType=%d, IsFromLocalServer=%d"))
+		% searchId % (int)searchType % (int)(searchId != -1 && searchType == LocalSearch));
+
 	// If no valid search ID found, drop the results
 	// We should NOT use m_currentSearch as a fallback because it can cause
 	// results from different searches to be mixed together
 	if (searchId == -1) {
-		AddDebugLogLineN(logSearch, wxString::Format(wxT("Received search results from %s:%u but no matching active search found, dropping results"),
+		AddDebugLogLineN(logSearch, wxString::Format(wxT("WARNING: Received search results from %s:%u but no matching active search found, dropping results"),
 			(uint32_t)serverIP, serverPort));
 		return;
 	}
@@ -752,6 +768,10 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 
 void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, uint32_t serverIP, uint16_t serverPort)
 {
+	// DEBUG: Log incoming UDP search answer
+	AddDebugLogLineN(logSearch, CFormat(wxT("DEBUG: ProcessUDPSearchAnswer called - PacketSize=%u, OptUTF8=%d, Server=%s:%u"))
+		% packet.GetLength() % (int)optUTF8 % (uint32_t)serverIP % serverPort);
+
 	// Get the search ID from the active searches map in a thread-safe manner
 	// This ensures results are associated with the correct search
 	long searchId = -1;
@@ -769,10 +789,14 @@ void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, u
 		}
 	}
 
+	// DEBUG: Log search ID resolution for UDP
+	AddDebugLogLineN(logSearch, CFormat(wxT("DEBUG: Resolved UDP search context - SearchID=%ld, FoundActiveGlobalSearch=%d"))
+		% searchId % (int)(searchId != -1));
+
 	// If no valid search ID found, drop the result
 	// UDP results should only go to global searches, not local searches
 	if (searchId == -1) {
-		AddDebugLogLineN(logSearch, wxString::Format(wxT("Received UDP search result from %s:%u but no active global search found, dropping result"),
+		AddDebugLogLineN(logSearch, wxString::Format(wxT("WARNING: Received UDP search result from %s:%u but no active global search found, dropping result"),
 			(uint32_t)serverIP, serverPort));
 		return;
 	}
@@ -788,12 +812,17 @@ void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, u
 bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 {
 	const uint64 fileSize = toadd->GetFileSize();
+	const uint32_t searchId = toadd->GetSearchID();
+	
+	// DEBUG: Log every result entering AddToList with comprehensive details
+	AddDebugLogLineN(logSearch, CFormat(wxT("DEBUG: AddToList called - SearchID=%u, FileName='%s', FileSize=%llu, ClientResponse=%d, Hash=%s"))
+		% searchId % toadd->GetFileName().GetPrintable() % fileSize % (int)clientResponse % toadd->GetFileHash().Encode());
+
 	// If file is too large for network, drop it
 	if (fileSize > MAX_FILE_SIZE) {
 		AddDebugLogLineN(logSearch,
-				CFormat(wxT("Dropped result with filesize %u: %s"))
-					% fileSize
-					% toadd->GetFileName().GetPrintable());
+				CFormat(wxT("DROPPED result due to size limit - SearchID=%u, FileName='%s', FileSize=%llu, MaxAllowed=%u"))
+					% searchId % toadd->GetFileName().GetPrintable() % fileSize % MAX_FILE_SIZE);
 
 		delete toadd;
 		return false;
@@ -804,7 +833,6 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 	// Get the result type for this specific search (thread-safe)
 	wxString resultTypeForSearch;
 	SearchType searchType = LocalSearch; // Default to local search
-	long searchId = toadd->GetSearchID();
 	{
 		wxMutexLocker lock(m_searchMutex);
 		std::map<long, CSearchParams>::iterator it = m_searchParams.find(searchId);
@@ -818,6 +846,10 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 			searchType = typeIt->second;
 		}
 	}
+
+	// DEBUG: Log search parameters retrieval
+	AddDebugLogLineN(logSearch, CFormat(wxT("DEBUG: Retrieved search parameters - SearchID=%u, SearchType=%d, ResultType='%s'"))
+		% searchId % (int)searchType % resultTypeForSearch);
 
 	// CRITICAL WARNING: Do NOT apply strict type filtering to Kad search results!
 	// The Kad network may not provide accurate file type metadata, and
@@ -937,6 +969,10 @@ void CSearchList::StopSearch(bool globalOnly)
 			// Remove this search from the active searches map
 			m_activeSearches.erase(m_currentSearch);
 			
+			// Unregister the controller when Kad search is explicitly stopped
+			// This ensures proper cleanup when user manually stops a search
+			search::SearchResultRouter::Instance().UnregisterController(m_currentSearch);
+
 			Kademlia::CSearchManager::StopSearch(m_currentSearch, false);
 			m_currentSearch = -1;
 		}
@@ -1292,18 +1328,21 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt
 
 	// write tag list
 	unsigned int uFilePosTagCount = temp.GetPosition();
-	uint32 tagcount = 0;
-	temp.WriteUInt32(tagcount); // dummy tag count, will be filled later
+	temp.WriteUInt32(0); // will be overwritten later with actual tag count
 
-	// standard tags
+	// File name
 	CTagString tagName(FT_FILENAME, name);
 	tagName.WriteTagToFile(&temp, eStrEncode);
-	tagcount++;
+	unsigned int tagcount = 1;
 
-	CTagInt64 tagSize(FT_FILESIZE, size);
-	tagSize.WriteTagToFile(&temp, eStrEncode);
-	tagcount++;
+	// File size
+	if (size) {
+		CTagVarInt tagSize(FT_FILESIZE, size);
+		tagSize.WriteTagToFile(&temp, eStrEncode);
+		tagcount++;
+	}
 
+	// File type
 	if (!type.IsEmpty()) {
 		CTagString tagType(FT_FILETYPE, type);
 		tagType.WriteTagToFile(&temp, eStrEncode);
@@ -1324,8 +1363,6 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt
 	CSearchFile *tempFile = new CSearchFile(temp, (eStrEncode == utf8strRaw), searchID, 0, 0, wxEmptyString, true);
 	tempFile->SetKadPublishInfo(kadPublishInfo);
 
-	AddLogLineN(CFormat(wxT("KAD SEARCH RESULT #%u PROCESSED - About to route to SearchResultRouter"))
-		% currentCount);
 
 	// Process result through validator (this adds it to SearchList)
 	search::SearchResultRouter::Instance().RouteResult(searchID, tempFile);
@@ -1353,6 +1390,11 @@ void CSearchList::SetKadSearchFinished()
 	// Check if we have any results for the current search
 	ResultMap::iterator it = m_results.find(m_currentSearch);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
+
+	// Unregister the controller now that the Kad search is actually complete
+	// This matches v0.1 behavior where controllers remained registered
+	// until the search was truly finished, allowing more results to be collected
+	search::SearchResultRouter::Instance().UnregisterController(m_currentSearch);
 
 	// Don't trigger retry here - let the UI (SearchDlg/SearchStateManager) handle it
 	// The retry mechanism is now managed by SearchStateManager to ensure proper state transitions
