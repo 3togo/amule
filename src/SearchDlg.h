@@ -202,7 +202,7 @@ private:
 	void		OnFilterCheckChange(wxCommandEvent& ev);
 	void		OnFilteringChange(wxCommandEvent& ev);
 
-	void		OnSearchClosing(wxBookCtrlEvent& evt);
+	void		OnSearchClosing(wxNotebookEvent& evt);
 
 	void		OnBnClickedStart(wxCommandEvent& evt);
 	void		OnBnClickedStop(wxCommandEvent& evt);
@@ -215,7 +215,7 @@ private:
 	/**
 	 * Event-handler for page-changes which takes care of enabling/disabling the download button.
 	 */
-	void		OnSearchPageChanged(wxBookCtrlEvent& evt);
+	void		OnSearchPageChanged(wxNotebookEvent& evt);
 
 	uint32		m_last_search_time;
 

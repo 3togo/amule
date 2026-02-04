@@ -24,7 +24,7 @@
 //
 
 #include "IP2CountryManager.h"
-#include "src/pixmaps/flags_xpm/CountryFlags.h"
+#include "CountryFlags.h"
 #include <Logger.h>
 #include <Preferences.h>
 #ifdef __WINDOWS__

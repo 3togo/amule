@@ -147,7 +147,7 @@ private:
 	/**
 	 * Event-handler for changing categories.
 	 */
-	void OnCategoryChanged(wxBookCtrlEvent& evt);
+	void OnCategoryChanged(wxNotebookEvent& evt);
 
 	/**
 	 * Event-handler for displaying the category-popup menu.
