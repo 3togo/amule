@@ -831,7 +831,8 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 	for (size_t i = 0; i < results.size(); ++i) {
 		CSearchFile* item = results.at(i);
 
-		if ((toadd->GetFileHash() == item->GetFileHash()) && (toadd->GetFileSize() == item->GetFileSize())) {
+		// Compare only by hash since size might be unknown in some results
+		if (toadd->GetFileHash() == item->GetFileHash()) {
 			AddDebugLogLineN(logSearch, CFormat(wxT("Received duplicate results for '%s' : %s")) % item->GetFileName().GetPrintable() % item->GetFileHash().Encode());
 			// Add the child, possibly updating the parents filename.
 			item->AddChild(toadd);

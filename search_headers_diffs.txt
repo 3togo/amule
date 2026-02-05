@@ -1,0 +1,295 @@
+diff --git a/src/search/ED2KSearchHelper.h b/src/search/ED2KSearchHelper.h
+new file mode 100644
+index 000000000..440550a23
+--- /dev/null
++++ b/src/search/ED2KSearchHelper.h
+@@ -0,0 +1,94 @@
++
++//
++// This file is part of the aMule Project.
++//
++// Copyright (c) 2003-2011 aMule Team ( admin@amule.org / http://www.amule.org )
++// Copyright (c) 2002-2011 Merkur ( devs@emule-project.net / http://www.emule-project.net )
++//
++// Any parts of this program derived from the xMule, lMule or eMule project,
++// or contributed by third-party developers are copyrighted by their
++// respective authors.
++//
++// This program is free software; you can redistribute it and/or modify
++// it under the terms of the GNU General Public License as published by
++// the Free Software Foundation; either version 2 of the License, or
++// (at your option) any later version.
++//
++// This program is distributed in the hope that it will be useful,
++// but WITHOUT ANY WARRANTY; without even the implied warranty of
++// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++// GNU General Public License for more details.
++//
++// You should have received a copy of the GNU General Public License
++// along with this program; if not, write to the Free Software
++// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
++//
++
++#ifndef ED2KSEARCHHELPER_H
++#define ED2KSEARCHHELPER_H
++
++#include <wx/string.h>
++#include <memory>
++#include "SearchModel.h"
++
++namespace search {
++
++class SearchParams;
++
++/**
++ * Helper class for ED2K search operations.
++ * 
++ * This class provides utility functions for ED2K searches,
++ * including packet creation and search validation.
++ */
++class ED2KSearchHelper
++{
++public:
++	/**
++	 * Validates if ED2K search can be performed.
++	 * 
++	 * @return true if ED2K is connected and ready for search
++	 */
++	static bool CanPerformSearch();
++
++	/**
++	 * Checks if the current server supports 64-bit file sizes.
++	 * 
++	 * @return true if server supports large files
++	 */
++	static bool SupportsLargeFiles();
++
++	/**
++	 * Creates a search packet for ED2K search.
++	 * 
++	 * @param params Search parameters
++	 * @param isLocalSearch Whether this is a local search
++	 * @param[out] packetData The created packet data
++	 * @param[out] packetSize Size of the packet
++	 * @return true if packet was created successfully
++	 */
++	static bool CreateSearchPacket(const SearchParams& params, ModernSearchType searchType,
++				      uint8_t*& packetData, uint32_t& packetSize);
++
++	/**
++	 * Sends a search packet to the ED2K server.
++	 * 
++	 * @param packetData Packet data to send
++	 * @param packetSize Size of the packet
++	 * @param isLocalSearch Whether this is a local search
++	 * @return true if packet was sent successfully
++	 */
++	static bool SendSearchPacket(const uint8_t* packetData, uint32_t packetSize,
++				     ModernSearchType searchType);
++
++	/**
++	 * Cleans up packet data created by CreateSearchPacket.
++	 * 
++	 * @param packetData Packet data to free
++	 */
++	static void FreeSearchPacket(uint8_t* packetData);
++};
++
++} // namespace search
++
++#endif // ED2KSEARCHHELPER_H
+diff --git a/src/search/KadSearchHelper.h b/src/search/KadSearchHelper.h
+new file mode 100644
+index 000000000..72feec740
+--- /dev/null
++++ b/src/search/KadSearchHelper.h
+@@ -0,0 +1,103 @@
++
++//
++// This file is part of the aMule Project.
++//
++// Copyright (c) 2003-2011 aMule Team ( admin@amule.org / http://www.amule.org )
++// Copyright (c) 2002-2011 Merkur ( devs@emule-project.net / http://www.emule-project.net )
++//
++// Any parts of this program derived from the xMule, lMule or eMule project,
++// or contributed by third-party developers are copyrighted by their
++// respective authors.
++//
++// This program is free software; you can redistribute it and/or modify
++// it under the terms of the GNU General Public License as published by
++// the Free Software Foundation; either version 2 of the License, or
++// (at your option) any later version.
++//
++// This program is distributed in the hope that it will be useful,
++// but WITHOUT ANY WARRANTY; without even the implied warranty of
++// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++// GNU General Public License for more details.
++//
++// You should have received a copy of the GNU General Public License
++// along with this program; if not, write to the Free Software
++// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
++//
++
++#ifndef KADSEARCHHELPER_H
++#define KADSEARCHHELPER_H
++
++#include <wx/string.h>
++#include <memory>
++
++namespace search {
++
++class SearchParams;
++
++/**
++ * Helper class for Kad search operations.
++ * 
++ * This class provides utility functions for Kad searches,
++ * including packet creation and search validation.
++ */
++class KadSearchHelper
++{
++public:
++	/**
++	 * Validates if Kad search can be performed.
++	 * 
++	 * @return true if Kad is running and ready for search
++	 */
++	static bool CanPerformSearch();
++
++	/**
++	 * Extracts the keyword for Kad search from the search string.
++	 * 
++	 * @param searchString The search string
++	 * @param[out] keyword The extracted keyword
++	 * @return true if keyword was extracted successfully
++	 */
++	static bool ExtractKeyword(const wxString& searchString, wxString& keyword);
++
++	/**
++	 * Creates a search packet for Kad search.
++	 * 
++	 * @param params Search parameters
++	 * @param[out] packetData The created packet data
++	 * @param[out] packetSize Size of the packet
++	 * @return true if packet was created successfully
++	 */
++	static bool CreateSearchPacket(const SearchParams& params,
++				      uint8_t*& packetData, uint32_t& packetSize);
++
++	/**
++	 * Starts a Kad search with the given packet.
++	 * 
++	 * @param packetData Packet data to send
++	 * @param packetSize Size of the packet
++	 * @param keyword The search keyword
++	 * @param[out] searchId The assigned search ID
++	 * @return true if search was started successfully
++	 */
++	static bool StartSearch(const uint8_t* packetData, uint32_t packetSize,
++			       const wxString& keyword, uint32_t& searchId);
++
++	/**
++	 * Stops a Kad search.
++	 * 
++	 * @param searchId The search ID to stop
++	 * @return true if search was stopped successfully
++	 */
++	static bool StopSearch(uint32_t searchId);
++
++	/**
++	 * Cleans up packet data created by CreateSearchPacket.
++	 * 
++	 * @param packetData Packet data to free
++	 */
++	static void FreeSearchPacket(uint8_t* packetData);
++};
++
++} // namespace search
++
++#endif // KADSEARCHHELPER_H
+diff --git a/src/search/SearchControllerFactory.h b/src/search/SearchControllerFactory.h
+index e1954ee47..c68863bec 100644
+--- a/src/search/SearchControllerFactory.h
++++ b/src/search/SearchControllerFactory.h
+@@ -35,7 +35,6 @@ namespace search {
+ // Forward declarations
+ class ED2KSearchController;
+ class KadSearchController;
+-class GlobalSearchController;
+ 
+ class SearchControllerFactory {
+ public:
+diff --git a/src/search/SearchLogging.h b/src/search/SearchLogging.h
+index d22d5d3ed..2e0973172 100644
+--- a/src/search/SearchLogging.h
++++ b/src/search/SearchLogging.h
+@@ -32,7 +32,7 @@
+ // Controlled by CMake option ENABLE_SEARCH_WINDOW_DEBUG
+ // Default to enabled if not defined by CMake
+ #ifndef ENABLE_SEARCH_WINDOW_DEBUG
+-#define ENABLE_SEARCH_WINDOW_DEBUG 1
++#define ENABLE_SEARCH_WINDOW_DEBUG 0
+ #endif
+ 
+ namespace search {
+diff --git a/src/search/SearchResultRouter.h b/src/search/SearchResultRouter.h
+index b8d8efedd..778ae07e4 100644
+--- a/src/search/SearchResultRouter.h
++++ b/src/search/SearchResultRouter.h
+@@ -39,8 +39,6 @@ namespace search {
+     class SearchResultHandler;
+ }
+ 
+-#include "../SearchList.h"
+-
+ namespace search {
+ 
+ /**
+@@ -65,14 +63,6 @@ public:
+      */
+     void RegisterController(uint32_t searchId, SearchController* controller);
+ 
+-    /**
+-     * Register a controller for a specific search type
+-     *
+-     * @param type The search type to register the controller for
+-     * @param controller The controller to handle results for this search type
+-     */
+-    void RegisterControllerByType(::SearchType type, SearchController* controller);
+-
+     /**
+      * Unregister a controller for a specific search ID
+      *
+@@ -80,14 +70,6 @@ public:
+      */
+     void UnregisterController(uint32_t searchId);
+ 
+-    /**
+-     * Unregister a controller for a specific search type
+-     *
+-     * @param type The search type to unregister
+-     * @param controller The controller to unregister
+-     */
+-    void UnregisterControllerByType(::SearchType type, SearchController* controller);
+-
+     /**
+      * Route a single result to the appropriate controller
+      *
+@@ -118,10 +100,6 @@ private:
+     typedef std::map<uint32_t, SearchController*> ControllerMap;
+     ControllerMap m_controllers;
+ 
+-    // Map of search types to controllers for fallback routing
+-    typedef std::map<::SearchType, SearchController*> TypeControllerMap;
+-    TypeControllerMap m_typeControllers;
+-
+     // Mutex for thread-safe access to controllers
+     mutable wxMutex m_controllersMutex;
+ 
+@@ -130,4 +108,4 @@ private:
+ 
+ } // namespace search
+ 
+-#endif // SEARCHRESULTROUTER_H
+\ No newline at end of file
++#endif // SEARCHRESULTROUTER_H

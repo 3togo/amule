@@ -36,6 +36,9 @@
 #include "../kademlia/kademlia/SearchManager.h"
 #include "../kademlia/kademlia/Search.h"
 #include <wx/utils.h>
+#include "SearchResultHandler.h"
+#include "SearchResultRouter.h"
+#include "../Logger.h"
 
 namespace search {
 
@@ -262,16 +265,16 @@ bool KadSearchController::isValidKadNetwork() const
     return true;
 }
 
-uint32_t KadSearchController::GenerateSearchId()
-{
-    // Generate a unique search ID for Kad
-    // Kad uses a different ID space than ED2K
-    static uint32_t s_nextKadSearchId = 0;
-    s_nextKadSearchId = (s_nextKadSearchId + 1) % 0xFFFFFFFE;
-    if (s_nextKadSearchId == 0) {
-	s_nextKadSearchId = 1;
+uint32_t KadSearchController::GenerateSearchId() {
+    // Implement Kad search ID generation directly to bypass linking issue
+    // Kad search IDs typically use the higher range (>= 0x80000001)
+    static std::atomic<uint32_t> s_nextKadSearchId{0x80000001};
+    uint32_t id = s_nextKadSearchId.fetch_add(1);
+    // Ensure we don't overflow the reserved range for Kad searches
+    if (id < 0x80000001) {
+        id = 0x80000001;
+        s_nextKadSearchId.store(0x80000002);
     }
-    return s_nextKadSearchId;
+    return id;
 }
-
 } // namespace search

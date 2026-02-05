@@ -30,7 +30,10 @@
 #include <memory>
 #include <vector>
 #include <wx/string.h>
+#include <wx/thread.h>
+#include "../SearchList.h"  // Contains SearchType enum
 #include "../SearchFile.h"
+#include "SearchModel.h"  // Contains ModernSearchType
 
 // Forward declarations
 namespace search {
@@ -88,22 +91,42 @@ public:
      */
     size_t RouteResults(uint32_t searchId, const std::vector<CSearchFile*>& results);
 
+    /**
+     * Register a controller for a specific search type (for type-based routing)
+     */
+    void RegisterControllerByType(::SearchType type, SearchController* controller);
+
+    /**
+     * Unregister a controller for a specific search type
+     */
+    void UnregisterControllerByType(::SearchType type, SearchController* controller);
+
+    /**
+     * Get the active controller for a specific search type
+     */
+    SearchController* GetActiveController(ModernSearchType type);
+
 private:
     // Private constructor for singleton
-    SearchResultRouter();
+    SearchResultRouter() = default;
 
     // Delete copy constructor and copy assignment operator
     SearchResultRouter(const SearchResultRouter&) = delete;
     SearchResultRouter& operator=(const SearchResultRouter&) = delete;
 
+    // Static instance for singleton
+    static SearchResultRouter m_instance;
+
     // Map of search IDs to controllers
     typedef std::map<uint32_t, SearchController*> ControllerMap;
     ControllerMap m_controllers;
 
+    // Map of search types to controllers for fallback routing
+    typedef std::map<::SearchType, SearchController*> TypeControllerMap;
+    TypeControllerMap m_typeControllers;
+
     // Mutex for thread-safe access to controllers
     mutable wxMutex m_controllersMutex;
-
-    // Package validator for result validation
 };
 
 } // namespace search
