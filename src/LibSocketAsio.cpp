@@ -793,7 +793,8 @@ public:
 		: ip::tcp::acceptor(s_io_service),
 		  m_libSocketServer(libSocketServer),
 		  m_currentSocket(NULL),
-		  m_strand(s_io_service)
+		  m_strand(s_io_service),
+		  m_valid(true)
 	{
 		m_ok = false;
 		m_socketAvailable = false;
@@ -813,6 +814,17 @@ public:
 
 	~CAsioSocketServerImpl()
 	{
+		m_valid = false;
+		// Cancel any pending asynchronous operations to prevent use-after-free
+		// when the async handlers try to access this object after destruction
+		try {
+			if (is_open()) {
+				cancel();
+			}
+		} catch (const std::exception& e) {
+			// Ignore exceptions during cleanup
+			AddDebugLogLineN(logAsio, CFormat(wxT("Exception during CAsioSocketServerImpl cleanup: %s")) % wxString(e.what()));
+		}
 	}
 
 	// For wxSocketServer, Ok will return true if the server could bind to the specified address and is already listening for new connections.
@@ -871,6 +883,11 @@ private:
 
 	void HandleAccept(const error_code& error)
 	{
+		if (!m_valid) {
+			// Object is being destroyed, don't process any more events
+			return;
+		}
+		
 		if (error) {
 			AddDebugLogLineC(logAsio, CFormat(wxT("Error in HandleAccept: %s")) % error.message());
 		} else {
@@ -898,6 +915,7 @@ private:
 	// Is there a socket available?
 	bool m_socketAvailable;
 	io_context::strand	m_strand;		// handle synchronisation in io_context thread pool
+	bool m_valid;
 };
 
 
@@ -909,7 +927,11 @@ CLibSocketServer::CLibSocketServer(const amuleIPV4Address& adr, int /* flags */)
 
 CLibSocketServer::~CLibSocketServer()
 {
-	delete m_aServer;
+	if (m_aServer) {
+		m_aServer->Close();
+		delete m_aServer;
+		m_aServer = nullptr;
+	}
 }
 
 
