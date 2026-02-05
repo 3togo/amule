@@ -440,13 +440,14 @@ bool CServerSocket::ProcessPacket(const uint8_t* packet, uint32 size, int8 opcod
 				theStats::AddDownOverheadServer(size);
 				CServer* cur_srv = (serverconnect) ?
 					serverconnect->GetCurrentServer() : NULL;
-theApp->searchlist->ProcessSearchAnswer(
-					packet,
-					size,
-					cur_srv,
-					cur_srv ? cur_srv->GetIP() : 0,
-					cur_srv ? cur_srv->GetPort() : 0);
-				theApp->searchlist->LocalSearchEnd();
+				theApp->searchlist->ProcessSearchAnswer(
+						packet,
+						size,
+						cur_srv,
+						cur_srv ? cur_srv->GetIP() : 0,
+						cur_srv ? cur_srv->GetPort() : 0);
+				// Removed call to LocalSearchEnd() - this is handled by the search controller
+				// through OnSearchComplete when the search is actually complete
 				break;
 			}
 			case OP_FOUNDSOURCES_OBFU:
