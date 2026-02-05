@@ -99,6 +99,16 @@ public:
 	~CSearchList();
 
 	/**
+	 * Get the mutex for thread-safe access to active searches
+	 */
+	wxMutex& GetSearchMutex() { return m_searchMutex; }
+
+	/**
+	 * Get the map of active searches
+	 */
+	const std::map<long, SearchType>& GetActiveSearches() const { return m_activeSearches; }
+
+	/**
 	 * Starts a new search.
 	 *
 	 * @param searchID The ID of the search, which may be modified.

@@ -33,6 +33,7 @@
 #include "Constants.h"		// Needed for DownloadItemType
 #include "MuleListCtrl.h"	// Needed for CMuleListCtrl
 #include "amuleDlg.h"		// Needed for CamuleDlg::DialogType
+#include <wx/menu.h>		// Needed for wxMenu
 
 class CPartFile;
 class CClientRef;

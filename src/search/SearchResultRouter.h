@@ -31,6 +31,7 @@
 #include <vector>
 #include <wx/string.h>
 #include "../SearchFile.h"
+#include "SearchControllerBase.h"
 
 // Forward declarations
 namespace search {
@@ -38,6 +39,9 @@ namespace search {
     class SearchModel;
     class SearchResultHandler;
 }
+
+// Include SearchType definition
+#include "../SearchList.h"
 
 namespace search {
 
@@ -61,7 +65,7 @@ public:
      * @param searchId The search ID to register the controller for
      * @param controller The controller to handle results for this search
      */
-    void RegisterController(uint32_t searchId, SearchController* controller);
+    void RegisterController(uint32_t searchId, SearchControllerBase* controller);
 
     /**
      * Unregister a controller for a specific search ID
@@ -69,6 +73,7 @@ public:
      * @param searchId The search ID to unregister
      */
     void UnregisterController(uint32_t searchId);
+
 
     /**
      * Route a single result to the appropriate controller
@@ -97,8 +102,9 @@ private:
     SearchResultRouter& operator=(const SearchResultRouter&) = delete;
 
     // Map of search IDs to controllers
-    typedef std::map<uint32_t, SearchController*> ControllerMap;
+    typedef std::map<uint32_t, SearchControllerBase*> ControllerMap;
     ControllerMap m_controllers;
+
 
     // Mutex for thread-safe access to controllers
     mutable wxMutex m_controllersMutex;

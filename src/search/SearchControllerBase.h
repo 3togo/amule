@@ -33,18 +33,11 @@
 #include <cstdint>
 #include <utility>
 #include <wx/string.h>
-
-// Forward declarations
-class CSearchFile;
+#include <vector>
+#include "../SearchFile.h"
 
 namespace search {
 
-/**
- * SearchControllerBase - Base implementation class for search controllers
- *
- * This class provides common functionality shared between different
- * search controller implementations to eliminate code duplication.
- */
 class SearchControllerBase : public SearchController, public SearchResultHandler {
 public:
     explicit SearchControllerBase();
@@ -59,9 +52,20 @@ public:
     SearchParams getSearchParams() const override;
     long getSearchId() const override;
 
-    // Result access - delegates to SearchModel (single source of truth)
+    /**
+     * Get the current results for this search
+     */
     std::vector<CSearchFile*> getResults() const override;
+
+    /**
+     * Get the number of results for this search
+     */
     size_t getResultCount() const override;
+
+    /**
+     * Clear all results for this search
+     */
+    void clearResults() { m_results.clear(); }
 
     // Configuration validation
     bool validateConfiguration() const;
@@ -95,6 +99,19 @@ protected:
 
     // Search ID update (for retry)
     void updateSearchId(uint32_t newSearchId) override;
+
+private:
+    // Local storage for search results (used by Global/Kad searches)
+    std::vector<CSearchFile*> m_results;
+    
+    // Search ID
+    uint32_t m_searchId;
+
+    // Search parameters
+    SearchParams m_params;
+
+    // Search state
+    SearchState m_state;
 };
 
 } // namespace search

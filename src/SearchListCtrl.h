@@ -31,7 +31,7 @@
 #include <wx/regex.h>		// Needed for wxRegExp
 
 #include "MuleListCtrl.h"	// Needed for CMuleListCtrl
-
+#include "search/SearchController.h"
 
 class CSearchList;
 class CSearchFile;
@@ -153,6 +153,16 @@ public:
 	void	DownloadSelected(int category = -1);
 
 	static wxString DetermineStatusPrintable(CSearchFile *toshow);
+
+    /**
+     * Set the associated search controller for this tab
+     */
+    void SetSearchController(search::SearchController* controller) { m_controller = controller; }
+
+    /**
+     * Get the associated search controller for this tab
+     */
+    search::SearchController* GetSearchController() const { return m_controller; }
 
 protected:
 	/// Return old column order.
@@ -300,6 +310,11 @@ protected:
 	void OnPopupDownload( wxCommandEvent& event );
 
 	DECLARE_EVENT_TABLE()
+
+private:
+    //! The associated search controller (for Global/Kad searches)
+    search::SearchController* m_controller = nullptr;
+
 };
 
 #endif // SEARCHLISTCTRL_H

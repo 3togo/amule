@@ -28,6 +28,7 @@
 
 #include <wx/panel.h>		// Needed for wxPanel
 #include <wx/notebook.h>		// Needed for wxNotebookEvent
+#include <wx/bookctrl.h>		// Needed for wxBookCtrlEvent
 #include "Types.h"
 
 class CFriend;
@@ -82,7 +83,9 @@ protected:
 
 	void	OnBnClickedCsend(wxCommandEvent& evt);
 	void	OnBnClickedCclose(wxCommandEvent& evt);
+#if wxUSE_GUI
 	void	OnAllPagesClosed(wxNotebookEvent& evt);
+#endif
 	void	CheckNewButtonsState();
 
 	DECLARE_EVENT_TABLE()

@@ -101,7 +101,7 @@ public:
 	 * @param searchString This will be the heading of the new page.
 	 * @param nSearchID The results with this searchId will be displayed.
 	 */
-	void		CreateNewTab(const wxString& searchString, wxUIntPtr nSearchID);
+	void		CreateNewTab(const wxString& searchString, wxUIntPtr nSearchID, search::SearchController* controller = nullptr);
 
 
 	/**
@@ -202,7 +202,9 @@ private:
 	void		OnFilterCheckChange(wxCommandEvent& ev);
 	void		OnFilteringChange(wxCommandEvent& ev);
 
+#if wxUSE_GUI
 	void		OnSearchClosing(wxBookCtrlEvent& evt);
+#endif
 
 	void		OnBnClickedStart(wxCommandEvent& evt);
 	void		OnBnClickedStop(wxCommandEvent& evt);
@@ -215,7 +217,9 @@ private:
 	/**
 	 * Event-handler for page-changes which takes care of enabling/disabling the download button.
 	 */
+#if wxUSE_GUI
 	void		OnSearchPageChanged(wxBookCtrlEvent& evt);
+#endif
 
 	uint32		m_last_search_time;
 

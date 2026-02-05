@@ -86,9 +86,26 @@ libmuleappcommon_a_SOURCES = \
 	Tag.cpp \
 	TerminationProcess.cpp \
 	Timer.cpp \
-	kademlia/utils/UInt128.cpp
+	kademlia/utils/UInt128.cpp \
+	search/ED2KSearchController.cpp \
+	search/ED2KSearchHelper.cpp \
+	search/ED2KSearchPacketBuilder.cpp \
+	search/GlobalSearchController.cpp \
+	search/KadSearchController.cpp \
+	search/KadSearchHelper.cpp \
+	search/KadSearchPacketBuilder.cpp \
+	search/SearchAutoRetry.cpp \
+	search/SearchController.cpp \
+	search/SearchControllerBase.cpp \
+	search/SearchControllerFactory.cpp \
+	search/SearchIdGenerator.cpp \
+	search/SearchLogging.cpp \
+	search/SearchModel.cpp \
+	search/SearchPackageException.cpp \
+	search/SearchPackageValidator.cpp \
+	search/SearchResultRouter.cpp
 
-libmuleappcommon_a_CPPFLAGS = $(AM_CPPFLAGS) $(WXBASE_CPPFLAGS) -I$(srcdir)/libs -I$(srcdir)/include $(CRYPTOPP_CPPFLAGS) $(LIBUPNP_CPPFLAGS)
+libmuleappcommon_a_CPPFLAGS = $(AM_CPPFLAGS) $(WXBASE_CPPFLAGS) -I$(srcdir)/libs -I$(srcdir)/include -I$(srcdir)/search $(CRYPTOPP_CPPFLAGS) $(LIBUPNP_CPPFLAGS)
 
 
 # Common to core/monolithic
@@ -425,6 +442,25 @@ noinst_HEADERS = \
 		SearchDlg.h \
 		SearchExpr.h \
 		SearchFile.h \
+		search/ED2KSearchController.h \
+		search/ED2KSearchHelper.h \
+		search/ED2KSearchPacketBuilder.h \
+		search/GlobalSearchController.h \
+		search/KadSearchController.h \
+		search/KadSearchHelper.h \
+		search/KadSearchPacketBuilder.h \
+		search/SearchAutoRetry.h \
+		search/SearchController.h \
+		search/SearchControllerBase.h \
+		search/SearchControllerFactory.h \
+		search/SearchIdGenerator.h \
+		search/SearchLogging.h \
+		search/SearchModel.h \
+		search/SearchPackageException.h \
+		search/SearchPackageValidator.h \
+		search/SearchResultHandler.h \
+		search/SearchResultRouter.h \
+		search/SearchTypeConverter.h \
 		SearchListCtrl.h \
 		SearchList.h \
 		ServerConnect.h \

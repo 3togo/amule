@@ -28,7 +28,6 @@
 #include "../SearchFile.h"
 #include "../Logger.h"
 #include "../amule.h"
-#include "../SearchList.h"
 
 namespace search {
 
@@ -39,16 +38,14 @@ SearchControllerBase::SearchControllerBase()
 {
 }
 
-SearchControllerBase::~SearchControllerBase()
-{
-    // Don't clear results here - the legacy system (CSearchList) manages the lifetime
-    // of CSearchFile objects. Clearing them here would cause a double-free.
-}
+SearchControllerBase::~SearchControllerBase() = default;
 
 void SearchControllerBase::handleSearchError(uint32_t searchId, const wxString& error)
 {
     m_model->setSearchState(SearchState::Error);
-    notifyError(searchId, error);
+    
+    // Notify listeners via SearchController interface
+    SearchController::notifyError(searchId, error);
 }
 
 void SearchControllerBase::resetSearchState()
@@ -65,7 +62,9 @@ void SearchControllerBase::stopSearchBase()
 
     // Notify completion
     uint32_t searchId = m_model->getSearchId();
-    notifySearchCompleted(searchId);
+    
+    // Notify listeners via SearchController interface
+    SearchController::notifySearchCompleted(searchId);
 }
 
 bool SearchControllerBase::validatePrerequisites()
@@ -106,86 +105,58 @@ void SearchControllerBase::updateSearchState(const SearchParams& params, uint32_
 
 SearchState SearchControllerBase::getState() const
 {
-    return m_model->getSearchState();
+    return m_state;
 }
 
 SearchParams SearchControllerBase::getSearchParams() const
 {
-    return m_model->getSearchParams();
+    return m_params;
 }
 
 long SearchControllerBase::getSearchId() const
 {
-    return m_model->getSearchId();
+    return static_cast<long>(m_searchId);
 }
 
 std::vector<CSearchFile*> SearchControllerBase::getResults() const
 {
-    return m_model->getResults();
+    return m_results;
 }
 
 size_t SearchControllerBase::getResultCount() const
 {
-    return m_model->getResultCount();
+    return m_results.size();
 }
 
 void SearchControllerBase::handleResult(uint32_t searchId, CSearchFile* result)
 {
-    // Only handle results for our search
-    if (searchId != static_cast<uint32_t>(m_model->getSearchId())) {
-	return;
+    if (!result || searchId != static_cast<uint32_t>(m_model->getSearchId())) {
+        return;
     }
 
     // Add result to model (handles duplicates internally)
     m_model->addResult(result);
 
-    // Also add result to legacy SearchList for UI display
-    // The SearchListCtrl::ShowResults() method retrieves results from SearchList
-    CSearchFile* resultForUI = result;
-    if (theApp && theApp->searchlist) {
-	// Create a copy for SearchList (SearchModel owns the original)
-	CSearchFile* resultCopy = new CSearchFile(*result);
-	resultCopy->SetSearchID(searchId);
-	theApp->searchlist->AddToList(resultCopy, false);
-	// Use the copy for UI notification to ensure consistency
-	resultForUI = resultCopy;
-    }
-
     // Notify about new result
-    std::vector<CSearchFile*> results;
-    results.push_back(resultForUI);
-    notifyResultsReceived(searchId, results);
+    std::vector<CSearchFile*> results{result};
+    
+    // Notify listeners via SearchController interface
+    SearchController::notifyResultsReceived(searchId, results);
 }
 
 void SearchControllerBase::handleResults(uint32_t searchId, const std::vector<CSearchFile*>& results)
 {
-    // Only handle results for our search
-    if (searchId != static_cast<uint32_t>(m_model->getSearchId())) {
-	return;
+    if (results.empty() || searchId != static_cast<uint32_t>(m_model->getSearchId())) {
+        return;
     }
 
     // Add all results to model (handles duplicates internally)
     m_model->addResults(results);
 
-    // Also add results to legacy SearchList for UI display
-    // The SearchListCtrl::ShowResults() method retrieves results from SearchList
-    std::vector<CSearchFile*> resultsForUI;
-    if (theApp && theApp->searchlist) {
-	for (CSearchFile* result : results) {
-	    // Create a copy for SearchList (SearchModel owns the original)
-	    CSearchFile* resultCopy = new CSearchFile(*result);
-	    resultCopy->SetSearchID(searchId);
-	    theApp->searchlist->AddToList(resultCopy, false);
-	    // Use the copy for UI notification to ensure consistency
-	    resultsForUI.push_back(resultCopy);
-	}
-    } else {
-	// If SearchList is not available, use the original results
-	resultsForUI = results;
-    }
-
     // Notify about new results
-    notifyResultsReceived(searchId, resultsForUI);
+    
+    // Notify listeners via SearchController interface
+    SearchController::notifyResultsReceived(searchId, results);
 }
 
 bool SearchControllerBase::handlesSearch(uint32_t searchId) const

@@ -29,6 +29,25 @@ set_source_files_properties (${EC_INCLUDE_DIR}/ECCodes.h PROPERTIES GENERATED TR
 set_source_files_properties (${EC_INCLUDE_DIR}/ECTagTypes.h PROPERTIES GENERATED TRUE)
 include (${CMAKE_SOURCE_DIR}/cmake/source-vars.cmake)
 
+# 定义搜索模块的源文件
+set(SEARCH_SOURCES
+    search/SearchControllerBase.cpp
+    search/SearchController.cpp
+    search/SearchControllerFactory.cpp
+    search/SearchAutoRetry.cpp
+    search/SearchModel.cpp
+    search/SearchPackageValidator.cpp
+    search/SearchPackageException.cpp
+    search/SearchResultRouter.cpp
+    search/SearchLogging.cpp
+    search/ED2KSearchPacketBuilder.cpp
+    search/KadSearchPacketBuilder.cpp
+    search/LocalSearchController.cpp
+    search/GlobalSearchController.cpp
+    SearchStateManager.cpp
+    SearchLabelHelper.cpp
+)
+
 if (BUILD_UTIL)
 	add_subdirectory (utils)
 endif()
@@ -109,6 +128,7 @@ if (BUILD_DAEMON)
 		${CORE_SOURCES}
 		${COMMON_SOURCES}
 		amuled.cpp
+		${SEARCH_SOURCES}
 	)
 
 	if (WIN32)
@@ -191,10 +211,6 @@ if (BUILD_MONOLITHIC)
 		search/SearchControllerBase.cpp
 		search/SearchController.cpp
 		search/SearchControllerFactory.cpp
-		search/ED2KSearchController.cpp
-		search/ED2KSearchPacketBuilder.cpp
-		search/KadSearchController.cpp
-		search/KadSearchPacketBuilder.cpp
 		search/SearchAutoRetry.cpp
 		search/SearchModel.cpp
 		search/SearchPackageValidator.cpp
@@ -311,6 +327,7 @@ endif()
 
 if (NEED_LIB_MULEAPPCOMMON)
 	set(MULEAPPCOMMON_SOURCES
+		amuleAppCommon.cpp
 		CFile.cpp
 		ClientCredits.cpp
 		common/NetworkSummaryUtil.cpp
@@ -329,6 +346,16 @@ if (NEED_LIB_MULEAPPCOMMON)
 		Tag.cpp
 		TerminationProcess.cpp
 		Timer.cpp
+		search/SearchControllerBase.cpp
+		search/SearchControllerFactory.cpp  
+		search/SearchModel.cpp
+		search/SearchResultRouter.cpp
+		search/KadSearchController.cpp
+		search/GlobalSearchController.cpp
+		search/LocalSearchController.cpp
+		search/SearchLogging.cpp
+		search/ED2KSearchPacketBuilder.cpp
+		search/KadSearchPacketBuilder.cpp
 	)
 	
 	if(ENABLE_UPNP)
@@ -352,6 +379,7 @@ if (NEED_LIB_MULEAPPCOMMON)
 		PUBLIC ${EC_INCLUDE_DIR}
 		PRIVATE ${INCLUDE_INCLUDE_DIR}
 		PRIVATE ${LIBS_INCLUDE_DIR}
+		PRIVATE ${SRC_DIR}/search
 		PRIVATE ${ZLIB_INCLUDE_DIR}
 	)
 
@@ -367,6 +395,7 @@ if (NEED_LIB_MULEAPPCOMMON)
 endif()
 
 if (NEED_LIB_MULEAPPCORE)
+	# 确保 muleappcore 的 Parser 依赖项在前面
 	if (BISON_FOUND)
 		bison_target (Parser.cpp
 			${CMAKE_CURRENT_SOURCE_DIR}/Parser.y
@@ -486,6 +515,7 @@ if (NEED_LIB_MULEAPPGUI)
 		MuleNotebook.cpp
 		MuleTextCtrl.cpp
 		muuli_wdr.cpp
+		amuleDlg.cpp
 	)
 
 	if (ENABLE_IP2COUNTRY)

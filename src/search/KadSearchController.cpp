@@ -66,9 +66,6 @@ void KadSearchController::startSearch(const SearchParams& params)
     initializeProgress();
     resetSearchState();
 
-    // Generate search ID
-    uint32_t searchId = 0;
-    
     // Build search packet using KadSearchPacketBuilder
     KadSearchPacketBuilder packetBuilder;
     wxString error;
@@ -84,46 +81,38 @@ void KadSearchController::startSearch(const SearchParams& params)
 	    return handleSearchError(0, error);
 	}
 	
-	// Generate search ID
-	searchId = GenerateSearchId();
-	
-	// Store search ID and state
-	m_model->setSearchParams(params);
-	m_model->setSearchId(searchId);
-	m_model->setSearchState(SearchState::Searching);
-	
-	// Register with SearchResultRouter for result routing
-	SearchResultRouter::Instance().RegisterController(searchId, this);
-	
 	// Send packet to Kad network
 	if (theApp && Kademlia::CKademlia::IsRunning()) {
-	    // Set the current search ID in SearchList before sending
-	    if (theApp->searchlist) {
-		theApp->searchlist->SetCurrentSearch(searchId);
-	    }
-
 	    // Use legacy Kad search implementation
 	    try {
+		// Let Kad search manager generate the search ID by passing 0
 		Kademlia::CSearch* search = Kademlia::CSearchManager::PrepareFindKeywords(
 		    params.strKeyword,
 		    packetSize,
 		    packetData,
-		    searchId
+		    0  // Let Kad search manager generate the search ID
 		);
 
-		// Update search ID from Kad search manager
-		uint32_t oldSearchId = searchId;
-		searchId = search->GetSearchID();
-		m_model->setSearchId(searchId);
+		// Get the actual search ID from Kad search manager
+		uint32_t searchId = search->GetSearchID();
 
-		// Re-register with new search ID
-		SearchResultRouter::Instance().UnregisterController(oldSearchId);
+		// Store search ID and state
+		m_model->setSearchParams(params);
+		m_model->setSearchId(searchId);
+		m_model->setSearchState(SearchState::Searching);
+
+		// Register with SearchResultRouter for result routing
 		SearchResultRouter::Instance().RegisterController(searchId, this);
+
+		// Set the current search ID in SearchList after registration
+		if (theApp->searchlist) {
+		    theApp->searchlist->SetCurrentSearch(searchId);
+		}
 
 		notifySearchStarted(searchId);
 	    } catch (const wxString& what) {
 		error = wxString::Format(_("Failed to start Kad search: %s"), what.c_str());
-		handleSearchError(searchId, error);
+		handleSearchError(0, error);
 	    }
 
 	    // Clean up packet data
@@ -131,7 +120,7 @@ void KadSearchController::startSearch(const SearchParams& params)
 	} else {
 	    delete[] packetData;
 	    error = _("Kad network not available");
-	    handleSearchError(searchId, error);
+	    handleSearchError(0, error);
 	}
     } catch (const wxString& e) {
 	error = wxString::Format(_("Failed to execute Kad search: %s"), e.c_str());
@@ -257,21 +246,8 @@ bool KadSearchController::isValidKadNetwork() const
     }
 
     // Check if Kad is running
-    // TODO: Implement Kad network check
-    // For now, return true to allow testing
-    return true;
+    return Kademlia::CKademlia::IsRunning();
 }
 
-uint32_t KadSearchController::GenerateSearchId()
-{
-    // Generate a unique search ID for Kad
-    // Kad uses a different ID space than ED2K
-    static uint32_t s_nextKadSearchId = 0;
-    s_nextKadSearchId = (s_nextKadSearchId + 1) % 0xFFFFFFFE;
-    if (s_nextKadSearchId == 0) {
-	s_nextKadSearchId = 1;
-    }
-    return s_nextKadSearchId;
-}
 
 } // namespace search

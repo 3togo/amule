@@ -545,20 +545,26 @@ bool CSearchDlg::CheckTabNameExists(SearchType searchType, const wxString& searc
 	return false;
 }
 
-void CSearchDlg::CreateNewTab(const wxString& searchString, wxUIntPtr nSearchID) {
-	CSearchListCtrl* list =
-		new CSearchListCtrl(m_notebook, ID_SEARCHLISTCTRL, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxNO_BORDER);
-	m_notebook->AddPage(list, searchString, true, 0);
+void CSearchDlg::CreateNewTab(const wxString& searchString, wxUIntPtr nSearchID, search::SearchController* controller)
+{
+    CSearchListCtrl* list =
+        new CSearchListCtrl(m_notebook, ID_SEARCHLISTCTRL, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxNO_BORDER);
+    m_notebook->AddPage(list, searchString, true, 0);
 
-	// Ensure that new results are filtered
-	bool enable = CastChild(IDC_FILTERCHECK, wxCheckBox)->GetValue();
-	wxString filter = CastChild(ID_FILTER_TEXT, wxTextCtrl)->GetValue();
-	bool invert = CastChild(ID_FILTER_INVERT, wxCheckBox)->GetValue();
-	bool known = CastChild(ID_FILTER_KNOWN, wxCheckBox)->GetValue();
+    // Store the controller reference for proper result routing
+    if (controller) {
+        list->SetSearchController(controller);
+    }
 
-	list->SetFilter(filter, invert, known);
-	list->EnableFiltering(enable);
-	list->ShowResults(nSearchID);
+    // Ensure that new results are filtered
+    bool enable = CastChild(IDC_FILTERCHECK, wxCheckBox)->GetValue();
+    wxString filter = CastChild(ID_FILTER_TEXT, wxTextCtrl)->GetValue();
+    bool invert = CastChild(ID_FILTER_INVERT, wxCheckBox)->GetValue();
+    bool known = CastChild(ID_FILTER_KNOWN, wxCheckBox)->GetValue();
+
+    list->SetFilter(filter, invert, known);
+    list->EnableFiltering(enable);
+    list->ShowResults(nSearchID);
 
 	// Update the tab label with initial state and hit count
 	// The search should already be initialized in SearchStateManager from StartNewSearch
@@ -1046,14 +1052,28 @@ void CSearchDlg::StartNewSearch() {
 		// Results received - display them in the appropriate tab
 		for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
 			CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
-			if (list && list->GetSearchId() == (long)searchId) {
-				// Add each new result to the list control without clearing existing results
-				for (CSearchFile* result : results) {
-					list->AddResult(result);
+			if (list && list->GetSearchController()) {
+				// Check if this controller matches the search ID
+				if (list->GetSearchController()->getSearchId() == searchId) {
+					// Add each new result to the list control without clearing existing results
+					for (CSearchFile* result : results) {
+						list->AddResult(result);
+					}
+					// Update hit count
+					UpdateHitCount(list);
+					break;
 				}
-				// Update hit count
-				UpdateHitCount(list);
-				break;
+			} else {
+				// Fallback to search ID matching for Local searches (no controller)
+				if (list && list->GetSearchId() == (long)searchId) {
+					// Add each new result to the list control without clearing existing results
+					for (CSearchFile* result : results) {
+						list->AddResult(result);
+					}
+					// Update hit count
+					UpdateHitCount(list);
+					break;
+				}
 			}
 		}
 	});
@@ -1126,7 +1146,7 @@ void CSearchDlg::StartNewSearch() {
 
 	// Search started successfully, now create a new tab
 	// Always create a new tab to ensure each search gets its own tab
-	CreateNewTab(prefix + params.searchString, real_id);
+	CreateNewTab(prefix + params.searchString, real_id, controller.get());
 }
 
 void CSearchDlg::UpdateHitCount(CSearchListCtrl* page) {

@@ -147,7 +147,9 @@ private:
 	/**
 	 * Event-handler for changing categories.
 	 */
+#if wxUSE_GUI
 	void OnCategoryChanged(wxBookCtrlEvent& evt);
+#endif
 
 	/**
 	 * Event-handler for displaying the category-popup menu.

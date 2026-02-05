@@ -24,8 +24,9 @@
 //
 
 #include "SearchControllerFactory.h"
-#include "ED2KSearchController.h"
+#include "LocalSearchController.h"
 #include "KadSearchController.h"
+#include "GlobalSearchController.h"
 
 namespace search {
 
@@ -33,13 +34,14 @@ std::unique_ptr<SearchController> SearchControllerFactory::createController(Mode
 {
     switch (type) {
 	case ModernSearchType::LocalSearch:
-	    return std::make_unique<ED2KSearchController>();
+	    return std::make_unique<LocalSearchController>();
 	case ModernSearchType::GlobalSearch:
-	    return std::make_unique<ED2KSearchController>();
+	    return std::make_unique<GlobalSearchController>();
 	case ModernSearchType::KadSearch:
 	    return std::make_unique<KadSearchController>();
 	default:
-	    return std::make_unique<ED2KSearchController>();
+	    // Should not happen, but return LocalSearchController as fallback
+	    return std::make_unique<LocalSearchController>();
     }
 }
 

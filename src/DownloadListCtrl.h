@@ -28,6 +28,7 @@
 
 #include <map>				// Needed for std::multimap
 #include <wx/brush.h>
+#include <wx/menu.h>		// Needed for wxMenu
 
 #include "Types.h"			// Needed for uint8
 #include "Constants.h"		// Needed for DownloadItemType

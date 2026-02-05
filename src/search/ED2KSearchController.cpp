@@ -27,7 +27,7 @@
 #include "ED2KSearchController.h"
 #include "ED2KSearchPacketBuilder.h"
 #include "SearchPackageValidator.h"
-#include "SearchResultRouter.h"
+// #include "SearchResultRouter.h"  // REMOVED - Local searches don't use router
 #include "SearchLogging.h"
 #include "../ServerList.h"
 #include "../Server.h"
@@ -195,12 +195,21 @@ std::pair<uint32_t, wxString> ED2KSearchController::executeSearch(const SearchPa
 	return {0, error};
     }
 
-    // Store search ID and state
+    // Store search ID and state  
+    m_model->setSearchParams(params);
     m_model->setSearchId(searchId);
     m_model->setSearchState(SearchState::Searching);
 
-    // Register with SearchResultRouter for result routing
-    SearchResultRouter::Instance().RegisterController(searchId, this);
+    // Set the current search ID in SearchList 
+    if (theApp->searchlist) {
+	theApp->searchlist->SetCurrentSearch(searchId);
+    }
+
+    notifySearchStarted(searchId);
+
+    // Local searches do NOT register with SearchResultRouter
+    // Results are handled directly by SearchList through legacy callbacks
+    // SearchResultRouter::Instance().RegisterController(searchId, this);  // REMOVED
 
     // Initialize progress tracking
     initializeProgress();
@@ -215,17 +224,14 @@ void ED2KSearchController::handleSearchError(uint32_t searchId, const wxString& 
 
 void ED2KSearchController::stopSearch()
 {
-    // Unregister from SearchResultRouter
-    long searchId = m_model->getSearchId();
-    if (searchId != -1) {
-	SearchResultRouter::Instance().UnregisterController(searchId);
-    }
-    
-    // Clear results
-    m_model->clearResults();
-    
-    // Use base class to handle common stop logic
-    stopSearchBase();
+    // Local searches do NOT unregister with SearchResultRouter
+    // Results are handled directly by SearchList through legacy callbacks
+    // if (m_model->getSearchId() != 0) {
+    //     SearchResultRouter::Instance().UnregisterController(m_model->getSearchId());
+    // }
+
+    m_model->setSearchState(SearchState::Idle);
+    AddDebugLogLineN(logSearch, "ED2KSearchController: Stopped local search");
 }
 
 void ED2KSearchController::requestMoreResults()
