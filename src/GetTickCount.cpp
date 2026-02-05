@@ -122,12 +122,18 @@ uint32 GetTickCountFullRes(void) {
 	}
 
 	uint32 GetTickCount(){
-		wxASSERT(mytimer != NULL);
+		if (mytimer == NULL) {
+			// Timer not initialized yet, fall back to direct time query
+			return static_cast<uint32>(wxGetLocalTimeMillis().GetValue());
+		}
 		return MyTimer::GetTickCountNow();
 	}
 
 	uint64 GetTickCount64(){
-		wxASSERT(mytimer != NULL);
+		if (mytimer == NULL) {
+			// Timer not initialized yet, fall back to direct time query
+			return wxGetLocalTimeMillis().GetValue();
+		}
 		return MyTimer::GetTickCountNow64();
 	}
 
