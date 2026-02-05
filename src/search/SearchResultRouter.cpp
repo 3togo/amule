@@ -31,6 +31,7 @@
 #include <wx/thread.h>
 
 #include "SearchController.h"
+#include "SearchResultHandler.h"
 #include "../SearchList.h"
 #include "../SearchFile.h"
 #include "../amule.h"
@@ -61,19 +62,23 @@ void SearchResultRouter::UnregisterController(uint32_t searchId)
 
 bool SearchResultRouter::RouteResult(uint32_t searchId, CSearchFile* result)
 {
+    wxMutexLocker lock(m_controllersMutex);
     ControllerMap::iterator it = m_controllers.find(searchId);
     if (it != m_controllers.end() && it->second) {
         // We have a controller registered for this search ID
-        // For now, we'll just add the result to the search list as before
-        // The controller may be notified separately through other mechanisms
-        if (theApp && theApp->searchlist) {
-            result->SetSearchID(searchId);
-            theApp->searchlist->AddToList(result, false);
+        // Check if the controller implements SearchResultHandler
+        SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(it->second);
+        if (handler) {
+            // Pass the result to the controller's handler
+            std::vector<CSearchFile*> singleResult;
+            singleResult.push_back(result);
+            handler->handleResults(searchId, singleResult);
             return true;
         }
+        // If not a SearchResultHandler, fall through to default handling
     }
 
-    // No controller registered for this search
+    // No controller registered for this search or controller doesn't implement handler
     AddDebugLogLineN(logSearch, 
         CFormat(wxT("No controller registered for search ID %u, adding to SearchList")) % searchId);
 
