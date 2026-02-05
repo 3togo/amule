@@ -89,30 +89,14 @@ bool SearchResultRouter::RouteResult(uint32_t searchId, CSearchFile* result)
 }
 
 size_t SearchResultRouter::RouteResults(uint32_t searchId, const std::vector<CSearchFile*>& results) {
-    // Determine search type based on the search ID range
-    // KadSearch typically uses higher IDs (>= 0x80000001)
-    SearchType searchType = (searchId >= 0x80000001) ? KadSearch : GlobalSearch;
-
     size_t shown = 0;
 
     for (auto* result : results) {
-        // For KadSearch, bypass strict filtering
-        if (searchType == KadSearch) {
-            // Directly add KadSearch results to SearchList
-            if (theApp && theApp->searchlist) {
-                result->SetSearchID(searchId);
-                theApp->searchlist->AddToList(result, false);
-            }
-        } else {
-            // For other search types, directly add to list without filtering
-            // since the IsFiltered method may not be available in all builds
-            if (theApp && theApp->searchlist) {
-                result->SetSearchID(searchId);
-                theApp->searchlist->AddToList(result, false);
-            }
+        // Use the single result routing logic which properly handles controller lookup
+        if (RouteResult(searchId, result)) {
+            shown++; 
         }
-        
-        shown++;
+        // RouteResult handles the deletion if needed
     }
 
     return shown;
