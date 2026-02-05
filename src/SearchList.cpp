@@ -518,7 +518,11 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 void CSearchList::LocalSearchEnd()
 {
 	if (m_searchType == GlobalSearch) {
-		wxCHECK_RET(m_searchPacket, wxT("Global search, but no packet"));
+		// Check if we have a valid search packet before proceeding
+		if (!m_searchPacket) {
+			AddDebugLogLineN(logSearch, wxT("Global search end called but no search packet available"));
+			return;
+		}
 
 		// Ensure that every global search starts over.
 		theApp->serverlist->RemoveObserver(&m_serverQueue);
