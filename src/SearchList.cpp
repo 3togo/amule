@@ -371,10 +371,11 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 			m_KadSearchFinished = false;
 
 			// Register this search in the active searches map
-			m_activeSearches[*searchID] = type;
-
-			// Store search parameters for this search ID
-			m_searchParams[*searchID] = params;
+			{
+				wxMutexLocker lock(m_searchMutex);
+				m_activeSearches[*searchID] = type;
+				m_searchParams[*searchID] = params;
+			}
 		} catch (const wxString& what) {
 			AddLogLineC(what);
 			return _("Unexpected error while attempting Kad search: ") + what;
@@ -389,11 +390,11 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		m_searchInProgress = true;
 
 		// Register this search in the active searches map
-		m_activeSearches[*searchID] = type;
-
-		// Store search parameters for this search ID
-		m_searchParams[*searchID] = params;
-
+		{
+			wxMutexLocker lock(m_searchMutex);
+			m_activeSearches[*searchID] = type;
+			m_searchParams[*searchID] = params;
+		}
 		CPacket* searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_SEARCHREQUEST);
 
 		theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
@@ -422,6 +423,7 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 
 CSearchList::CSearchParams CSearchList::GetSearchParams(long searchID)
 {
+	wxMutexLocker lock(m_searchMutex);
 	ParamMap::iterator it = m_searchParams.find(searchID);
 	if (it != m_searchParams.end()) {
 		return it->second;
@@ -887,6 +889,7 @@ void CSearchList::StopSearch(bool globalOnly)
 	if (m_searchType == GlobalSearch) {
 		// Remove this search from the active searches map
 		if (m_currentSearch != -1) {
+			wxMutexLocker lock(m_searchMutex);
 			m_activeSearches.erase(m_currentSearch);
 		}
 		
@@ -907,7 +910,10 @@ void CSearchList::StopSearch(bool globalOnly)
 		// Check if we have a valid search ID before stopping
 		if (m_currentSearch != -1) {
 			// Remove this search from the active searches map
-			m_activeSearches.erase(m_currentSearch);
+			{
+				wxMutexLocker lock(m_searchMutex);
+				m_activeSearches.erase(m_currentSearch);
+			}
 			
 			Kademlia::CSearchManager::StopSearch(m_currentSearch, false);
 			m_currentSearch = -1;
@@ -1339,7 +1345,10 @@ void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResul
 		% searchId % (int)type);
 
 	// Remove this search from the active searches map
-	m_activeSearches.erase(searchId);
+	{
+		wxMutexLocker lock(m_searchMutex);
+		m_activeSearches.erase(searchId);
+	}
 
 	// Mark search as finished
 	if (type == KadSearch) {
