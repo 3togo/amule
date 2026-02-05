@@ -747,6 +747,22 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 	if (!resultVector.empty()) {
 		search::SearchResultRouter::Instance().RouteResults(searchId, resultVector);
 	}
+
+	// Check if more results are available
+	int iAddData = (int)(packet.GetLength() - packet.GetPosition());
+	if (iAddData == 1) {
+		uint8 ucMore = packet.ReadUInt8();
+		if (ucMore == 0x00 || ucMore == 0x01) {
+			bool hasMore = (ucMore == 1);
+			if (!hasMore) {
+				// This was the last result packet, mark search as complete
+				OnSearchComplete(searchId, searchType, !resultVector.empty());
+			}
+		}
+	} else if (iAddData == 0) {
+		// No more data, assume search is complete
+		OnSearchComplete(searchId, searchType, !resultVector.empty());
+	}
 }
 
 
