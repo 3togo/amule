@@ -264,7 +264,7 @@ private:
 	//! This is now the single source of truth for active searches
 	std::map<long, SearchType>	m_activeSearches;
 
-	//! Mutex for thread-safe access to active searches
+	//! Mutex for thread-safe access to active searches (recursive to prevent deadlock on relock)
 	mutable wxMutex m_searchMutex;
 
 	//! The current packet used for searches.

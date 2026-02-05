@@ -273,7 +273,8 @@ END_EVENT_TABLE()
 
 
 CSearchList::CSearchList()
-	: m_searchTimer(this, 0 /* Timer-id doesn't matter. */ ),
+	: m_searchMutex(wxMUTEX_RECURSIVE),
+	  m_searchTimer(this, 0 /* Timer-id doesn't matter. */ ),
 	  m_searchType(LocalSearch),
 	  m_searchInProgress(false),
 	  m_currentSearch(-1),
