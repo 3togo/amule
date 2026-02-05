@@ -259,10 +259,8 @@ bool KadSearchController::isValidKadNetwork() const
 	return false;
     }
 
-    // Check if Kad is running
-    // TODO: Implement Kad network check
-    // For now, return true to allow testing
-    return true;
+    // Check if Kad is actually running
+    return Kademlia::CKademlia::IsRunning();
 }
 
 uint32_t KadSearchController::GenerateSearchId() {
@@ -277,4 +275,6 @@ uint32_t KadSearchController::GenerateSearchId() {
     }
     return id;
 }
+
+
 } // namespace search
