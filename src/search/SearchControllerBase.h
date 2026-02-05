@@ -104,9 +104,6 @@ private:
     // Local storage for search results (used by Global/Kad searches)
     std::vector<CSearchFile*> m_results;
     
-    // Search ID
-    uint32_t m_searchId;
-
     // Search parameters
     SearchParams m_params;
 

@@ -115,7 +115,7 @@ SearchParams SearchControllerBase::getSearchParams() const
 
 long SearchControllerBase::getSearchId() const
 {
-    return static_cast<long>(m_searchId);
+    return m_model->getSearchId();
 }
 
 std::vector<CSearchFile*> SearchControllerBase::getResults() const
