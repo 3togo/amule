@@ -794,7 +794,7 @@ public:
 		  m_libSocketServer(libSocketServer),
 		  m_currentSocket(NULL),
 		  m_strand(s_io_service),
-		  m_valid(true)
+		  m_shutdownFlag(false)
 	{
 		m_ok = false;
 		m_socketAvailable = false;
@@ -814,7 +814,9 @@ public:
 
 	~CAsioSocketServerImpl()
 	{
-		m_valid = false;
+		// Set shutdown flag atomically before any cleanup
+		m_shutdownFlag.store(true);
+		
 		// Cancel any pending asynchronous operations to prevent use-after-free
 		// when the async handlers try to access this object after destruction
 		try {
@@ -883,8 +885,14 @@ private:
 
 	void HandleAccept(const error_code& error)
 	{
-		if (!m_valid) {
+		// Check shutdown flag atomically before accessing any members
+		if (m_shutdownFlag.load()) {
 			// Object is being destroyed, don't process any more events
+			return;
+		}
+		
+		// Additional safety check: ensure acceptor is still open
+		if (!is_open()) {
 			return;
 		}
 		
@@ -915,7 +923,7 @@ private:
 	// Is there a socket available?
 	bool m_socketAvailable;
 	io_context::strand	m_strand;		// handle synchronisation in io_context thread pool
-	bool m_valid;
+	std::atomic<bool> m_shutdownFlag;
 };
 
 
