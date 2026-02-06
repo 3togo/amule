@@ -36,6 +36,11 @@
 #include "SearchList.h"			// Needed for CSearchFile
 #include "kademlia/utils/UInt128.h"	// Needed for CUInt128
 
+// EC headers needed for CEC_*_Tag types
+#include <ec/cpp/ECSpecialTags.h>
+#include <ec/cpp/ECTag.h>
+#include <ec/cpp/ECPacket.h>
+
 class CED2KFileLink;
 class CServer;
 class CKnownFile;
@@ -184,7 +189,7 @@ public:
 	iterator begin() { return m_items.begin(); }
 	iterator end() { return m_items.end(); }
 
-	uint32 GetCount()
+	uint32 GetCount() const
 	{
 		return m_item_count;
 	}
@@ -411,14 +416,29 @@ public:
 	void ConnectToAnyServer();
 	void StopConnectionTry();
 	void Disconnect();
+	
+	// Missing methods needed for SearchList.cpp
+	void SendPacket(CPacket* packet, bool localSearch);
+	void SendUDPPacket(CPacket* packet, CServer* server, bool flag);
 };
 
 class CServerListRem : public CRemoteContainer<CServer, uint32, CEC_Server_Tag> {
 	uint32 m_TotalUser, m_TotalFile;
 
-	virtual void HandlePacket(const CECPacket *packet);
 public:
 	CServerListRem(CRemoteConnect *);
+	
+	// Missing methods needed for SearchList.cpp
+	void AddObserver(CQueueObserver<CServer*>* observer);
+	void RemoveObserver(CQueueObserver<CServer*>* observer);
+	size_t GetServerCount() const;
+	
+	virtual void HandlePacket(const CECPacket *packet);
+	
+	uint32 GetTotalUser() const { return m_TotalUser; }
+	uint32 GetTotalFile() const { return m_TotalFile; }
+
+	void Request();
 	void GetUserFileStatus(uint32 &total_user, uint32 &total_file)
 	{
 		total_user = m_TotalUser;
@@ -557,17 +577,19 @@ public:
 	typedef std::map<long, CSearchResultList> ResultMap;
 	ResultMap m_results;
 
+	wxString StartNewSearch(uint32* searchID, SearchType type, CSearchList::CSearchParams& params);
+	void StopSearch(bool all = false);
+	
+	// Missing methods needed for SearchDlg.cpp
+	CSearchList::CSearchParams GetSearchParams(uint32 searchId);
+	wxString RequestMoreResultsForSearch(uint32 searchId);
+
 	const CSearchResultList& GetSearchResults(long nSearchID);
 	void RemoveResults(long nSearchID);
 	const CSearchResultList& GetSearchResults(long nSearchID) const;
 	//
 	// Actions
 	//
-
-	wxString StartNewSearch(uint32* nSearchID, SearchType search_type,
-		const CSearchList::CSearchParams& params);
-
-	void StopSearch(bool globalOnly = false);
 
 	//
 	// template

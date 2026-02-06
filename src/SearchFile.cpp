@@ -28,6 +28,7 @@
 #include <tags/FileTags.h>
 
 #include "amule.h"				// Needed for theApp
+#include "include/common/MacrosProgramSpecific.h"	// Needed for NOT_ON_REMOTEGUI macro
 #include "CanceledFileList.h"
 #include "MemFile.h"			// Needed for CMemFile
 #include "Preferences.h"		// Needed for thePrefs
@@ -122,12 +123,13 @@ CSearchFile::CSearchFile(const CSearchFile& other)
 }
 
 
+NOT_ON_REMOTEGUI(
 CSearchFile::~CSearchFile()
 {
 	for (size_t i = 0; i < m_children.size(); ++i) {
 		delete m_children.at(i);
 	}
-}
+})
 
 
 void CSearchFile::AddClient(const ClientStruct& client)
@@ -174,6 +176,7 @@ void CSearchFile::MergeResults(const CSearchFile& other)
 		}
 	}
 
+	NOT_ON_REMOTEGUI(
 	// copy possible available sources from new result
 	if (other.GetClientID() && other.GetClientPort()) {
 		// pre-filter sources which would be dropped by CPartFile::AddSources
@@ -181,10 +184,12 @@ void CSearchFile::MergeResults(const CSearchFile& other)
 			CSearchFile::ClientStruct client(other.GetClientID(), other.GetClientPort(), other.GetClientServerIP(), other.GetClientServerPort());
 			AddClient(client);
 		}
-	}
+	})
+
 }
 
 
+NOT_ON_REMOTEGUI(
 void CSearchFile::AddChild(CSearchFile* file)
 {
 	wxCHECK_RET(file, wxT("Not a valid child!"));
@@ -227,10 +232,11 @@ void CSearchFile::AddChild(CSearchFile* file)
 	m_children.push_back(file);
 	UpdateParent();
 
+	NOT_ON_REMOTEGUI(
 	if (ShowChildren()) {
 		Notify_Search_Add_Result(file);
-	}
-}
+	})
+})
 
 
 void CSearchFile::UpdateParent()

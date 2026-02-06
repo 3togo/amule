@@ -233,16 +233,20 @@ void CamuleGuiBase::ResetTitle()
 // Sets the contents of the clipboard. Prior content  erased.
 bool CamuleGuiBase::CopyTextToClipboard(wxString strText)
 {
-	bool ClipBoardOpen = wxTheClipboard->Open();
-	if (ClipBoardOpen) {
-		wxTheClipboard->UsePrimarySelection(false);
+	if (wxTheClipboard->Open()) {
 		wxTheClipboard->SetData(new wxTextDataObject(strText));
 		wxTheClipboard->Close();
+		return true;
 	}
-
-	return ClipBoardOpen;
+	return false;
 }
 
+#ifndef CLIENT_GUI
+bool CamuleGuiApp::CopyTextToClipboard(wxString strText)
+{
+	return CamuleGuiBase::CopyTextToClipboard(strText);
+}
+#endif
 
 void CamuleGuiBase::AddGuiLogLine(const wxString& line)
 {

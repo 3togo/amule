@@ -405,6 +405,8 @@ class CamuleGuiApp : public CamuleApp, public CamuleGuiBase
 
 public:
 
+	bool CopyTextToClipboard(wxString strText);
+
 	virtual int ShowAlert(wxString msg, wxString title, int flags);
 
 	void ShutDown(wxCloseEvent &evt);
@@ -460,6 +462,9 @@ public:
 	bool CopyTextToClipboard(wxString strText);
 
 	virtual int ShowAlert(wxString msg, wxString title, int flags);
+
+	// Network performance monitoring
+	network_perf::NetworkPerformanceMonitor networkPerformanceMonitor;
 
 	DECLARE_EVENT_TABLE()
 };

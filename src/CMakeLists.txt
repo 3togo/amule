@@ -30,23 +30,6 @@ set_source_files_properties (${EC_INCLUDE_DIR}/ECTagTypes.h PROPERTIES GENERATED
 include (${CMAKE_SOURCE_DIR}/cmake/source-vars.cmake)
 
 # 定义搜索模块的源文件
-set(SEARCH_SOURCES
-    search/SearchControllerBase.cpp
-    search/SearchController.cpp
-    search/SearchControllerFactory.cpp
-    search/SearchAutoRetry.cpp
-    search/SearchModel.cpp
-    search/SearchPackageValidator.cpp
-    search/SearchPackageException.cpp
-    search/SearchResultRouter.cpp
-    search/SearchLogging.cpp
-    search/ED2KSearchPacketBuilder.cpp
-    search/KadSearchPacketBuilder.cpp
-    search/LocalSearchController.cpp
-    search/GlobalSearchController.cpp
-    SearchStateManager.cpp
-    SearchLabelHelper.cpp
-)
 
 if (BUILD_UTIL)
 	add_subdirectory (utils)
@@ -128,7 +111,7 @@ if (BUILD_DAEMON)
 		${CORE_SOURCES}
 		${COMMON_SOURCES}
 		amuled.cpp
-		${SEARCH_SOURCES}
+		# ${SEARCH_SOURCES}
 	)
 
 	if (WIN32)
@@ -208,17 +191,6 @@ if (BUILD_MONOLITHIC)
 		CaptchaGenerator.cpp
 		PartFileConvert.cpp
 		PartFileConvertDlg.cpp
-		search/SearchControllerBase.cpp
-		search/SearchController.cpp
-		search/SearchControllerFactory.cpp
-		search/SearchAutoRetry.cpp
-		search/SearchModel.cpp
-		search/SearchPackageValidator.cpp
-		search/SearchPackageException.cpp
-		search/SearchResultRouter.cpp
-		search/SearchLogging.cpp
-		SearchStateManager.cpp
-		SearchLabelHelper.cpp
 	)
 
 	if (WIN32)
@@ -346,16 +318,17 @@ if (NEED_LIB_MULEAPPCOMMON)
 		Tag.cpp
 		TerminationProcess.cpp
 		Timer.cpp
-		search/SearchControllerBase.cpp
-		search/SearchControllerFactory.cpp  
-		search/SearchModel.cpp
-		search/SearchResultRouter.cpp
-		search/KadSearchController.cpp
-		search/GlobalSearchController.cpp
-		search/LocalSearchController.cpp
-		search/SearchLogging.cpp
-		search/ED2KSearchPacketBuilder.cpp
-		search/KadSearchPacketBuilder.cpp
+		# Commenting out search sources for now
+		# search/SearchControllerBase.cpp
+		# search/SearchControllerFactory.cpp  
+		# search/SearchModel.cpp
+		# search/SearchResultRouter.cpp
+		# search/KadSearchController.cpp
+		# search/GlobalSearchController.cpp
+		# search/LocalSearchController.cpp
+		# search/SearchLogging.cpp
+		# search/ED2KSearchPacketBuilder.cpp
+		# search/KadSearchPacketBuilder.cpp
 	)
 	
 	if(ENABLE_UPNP)

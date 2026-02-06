@@ -268,7 +268,9 @@ size_t SearchPackageValidator::ProcessResults(const std::vector<CSearchFile*>& r
 				% addedCount);
 
 		// Allow UI to update
+#ifndef AMULE_DAEMON
 		wxYieldIfNeeded();
+#endif
 	}
 
 	AddDebugLogLineC(logSearch,

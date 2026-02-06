@@ -145,7 +145,9 @@ protected:
 	//! The pointer to the widget which would receive right-click events or NULL.
 	wxWindow*	m_popup_widget;
 
+#ifndef AMULE_DAEMON
 	DECLARE_EVENT_TABLE()
+#endif
 };
 
 #ifdef __WINDOWS__

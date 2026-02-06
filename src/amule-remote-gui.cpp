@@ -48,6 +48,7 @@
 #include "Friend.h"
 #include "GetTickCount.h"	// Needed for GetTickCount
 #include "GuiEvents.h"
+#include "libs/ec/cpp/ECSpecialTags.h"		// Needed for CEC_SearchFile_Tag
 #ifdef ENABLE_IP2COUNTRY
 	#include "IP2Country.h"		// Needed for IP2Country
 #endif
@@ -746,6 +747,19 @@ void CServerConnectRem::Disconnect()
 	m_Conn->SendPacket(&req);
 }
 
+void CServerConnectRem::SendPacket(CPacket* packet, bool localSearch)
+{
+	// TODO: Implement remote packet sending
+	// For now, this is a placeholder implementation
+	AddLogLineN(_("Remote SendPacket not implemented"));
+}
+
+void CServerConnectRem::SendUDPPacket(CPacket* packet, CServer* server, bool flag)
+{
+	// TODO: Implement remote UDP packet sending  
+	// For now, this is a placeholder implementation
+	AddLogLineN(_("Remote SendUDPPacket not implemented"));
+}
 
 void CServerConnectRem::ConnectToServer(CServer *server)
 {
@@ -796,7 +810,6 @@ void CServerConnectRem::HandlePacket(const CECPacket *packet)
 	theApp->amuledlg->ShowConnectionState();
 }
 
-
 /*
  * Server list: host list of ed2k servers.
  */
@@ -814,6 +827,25 @@ void CServerListRem::HandlePacket(const CECPacket *)
 	// CRemoteContainer<CServer, uint32, CEC_Server_Tag>::HandlePacket(packet);
 }
 
+void CServerListRem::AddObserver(CQueueObserver<CServer*>* observer)
+{
+	// TODO: Implement remote observer pattern
+	// For now, this is a placeholder implementation
+	AddLogLineN(_("Remote AddObserver not implemented"));
+}
+
+void CServerListRem::RemoveObserver(CQueueObserver<CServer*>* observer)
+{
+	// TODO: Implement remote observer pattern
+	// For now, this is a placeholder implementation  
+	AddLogLineN(_("Remote RemoveObserver not implemented"));
+}
+
+size_t CServerListRem::GetServerCount() const
+{
+	// Return the size of the container
+	return GetCount();
+}
 
 void CServerListRem::UpdateServerMetFromURL(wxString url)
 {
@@ -1509,21 +1541,20 @@ void CUpDownClientListRem::ProcessItemUpdate(
 
 	if (!notified && client->m_uploadingfile
 		&& (client->m_uploadingfile->ShowPeers() || (client->m_nUploadState == US_UPLOADING))) {
-			// notify if KnowFile is selected, or if it's uploading (in case clients are in show uploading mode)
-		SourceItemType type;
-		switch (client->GetUploadState()) {
-			case US_UPLOADING:
-			case US_ONUPLOADQUEUE:
-				type = AVAILABLE_SOURCE;
-				break;
-			default:
-				type = UNAVAILABLE_SOURCE;
-				break;
+				// notify if KnowFile is selected, or if it's uploading (in case clients are in show uploading mode)
+			SourceItemType type;
+			switch (client->GetUploadState()) {
+				case US_UPLOADING:
+				case US_ONUPLOADQUEUE:
+					type = AVAILABLE_SOURCE;
+					break;
+				default:
+					type = UNAVAILABLE_SOURCE;
+					break;
+			}
+			Notify_SharedCtrlRefreshClient(client->ECID(), type);
 		}
-		Notify_SharedCtrlRefreshClient(client->ECID(), type);
-	}
 }
-
 
 /*
  * Download queue container: hold PartFiles with progress status
@@ -1690,7 +1721,7 @@ void CKnownFilesRem::ProcessItemUpdatePartfile(const CEC_PartFile_Tag *tag, CPar
 			if (src) {
 				file->AddA4AFSource(src->GetClient());
 			} else {
-				// client wasn't transmitted yet, try it later
+				// client wasn0t transmitted yet, try it later
 				clientIDs.push_back(id);
 			}
 		}
@@ -1941,7 +1972,7 @@ CSearchListRem::CSearchListRem(CRemoteConnect *conn) : CRemoteContainer<CSearchF
 
 wxString CSearchListRem::StartNewSearch(
 	uint32* nSearchID, SearchType search_type,
-	const CSearchList::CSearchParams& params)
+	CSearchList::CSearchParams& params)
 {
 	CECPacket search_req(EC_OP_SEARCH_START);
 	EC_SEARCH_TYPE ec_search_type = EC_SEARCH_LOCAL;
@@ -1963,6 +1994,21 @@ wxString CSearchListRem::StartNewSearch(
 	return wxEmptyString; // EC reply will have the error mesg is needed.
 }
 
+CSearchList::CSearchParams CSearchListRem::GetSearchParams(uint32 searchId)
+{
+	// TODO: Implement remote GetSearchParams
+	// For now, return empty params with LocalSearch type
+	CSearchList::CSearchParams params;
+	params.searchType = LocalSearch;
+	return params;
+}
+
+wxString CSearchListRem::RequestMoreResultsForSearch(uint32 searchId)
+{
+	// TODO: Implement remote RequestMoreResultsForSearch
+	// For now, return empty string (no error)
+	return wxEmptyString;
+}
 
 void CSearchListRem::StopSearch(bool)
 {
@@ -2009,20 +2055,6 @@ m_kadPublishInfo(0)
 		}
 	}
 }
-
-
-void CSearchFile::AddChild(CSearchFile* file)
-{
-	m_children.push_back(file);
-	file->m_parent = this;
-}
-
-
-// dtor is virtual - must be implemented
-CSearchFile::~CSearchFile()
-{
-}
-
 
 CSearchFile *CSearchListRem::CreateItem(const CEC_SearchFile_Tag *tag)
 {

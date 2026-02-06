@@ -273,8 +273,7 @@ END_EVENT_TABLE()
 
 
 CSearchList::CSearchList()
-	: m_searchMutex(wxMUTEX_RECURSIVE),
-	  m_searchTimer(this, 0 /* Timer-id doesn't matter. */ ),
+	: m_searchTimer(this, 0 /* Timer-id doesn't matter. */ ),
 	  m_searchType(LocalSearch),
 	  m_searchInProgress(false),
 	  m_currentSearch(-1),
@@ -372,11 +371,10 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 			m_KadSearchFinished = false;
 
 			// Register this search in the active searches map
-			{
-				wxMutexLocker lock(m_searchMutex);
-				m_activeSearches[*searchID] = type;
-				m_searchParams[*searchID] = params;
-			}
+			m_activeSearches[*searchID] = type;
+
+			// Store search parameters for this search ID
+			m_searchParams[*searchID] = params;
 		} catch (const wxString& what) {
 			AddLogLineC(what);
 			return _("Unexpected error while attempting Kad search: ") + what;
@@ -391,17 +389,15 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		m_searchInProgress = true;
 
 		// Register this search in the active searches map
-		{
-			wxMutexLocker lock(m_searchMutex);
-			m_activeSearches[*searchID] = type;
-			m_searchParams[*searchID] = params;
-		}
+		m_activeSearches[*searchID] = type;
+
+		// Store search parameters for this search ID
+		m_searchParams[*searchID] = params;
+
 		CPacket* searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_SEARCHREQUEST);
 
-#ifndef CLIENT_GUI
-				theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
-				theApp->serverconnect->SendPacket(searchPacket, (type == LocalSearch));
-#endif
+		theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
+		theApp->serverconnect->SendPacket(searchPacket, (type == LocalSearch));
 
 		if (type == GlobalSearch) {
 			m_searchPacket.reset(searchPacket);
@@ -426,7 +422,6 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 
 CSearchList::CSearchParams CSearchList::GetSearchParams(long searchID)
 {
-	wxMutexLocker lock(m_searchMutex);
 	ParamMap::iterator it = m_searchParams.find(searchID);
 	if (it != m_searchParams.end()) {
 		return it->second;
@@ -497,13 +492,8 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 		searchPacket = new CPacket(OP_GLOBSEARCHREQ3, data->GetLength() + (uint32_t)extData.GetLength(), OP_EDONKEYPROT);
 		searchPacket->CopyToDataBuffer(0, extData.GetRawBuffer(), extData.GetLength());
 		searchPacket->CopyToDataBuffer(extData.GetLength(), data->GetRawBuffer(), data->GetLength());
-#ifndef CLIENT_GUI
-		theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
-		// Cast away const because SendUDPPacket doesn't take const pointer
-		theApp->serverconnect->SendUDPPacket(searchPacket, const_cast<CServer*>(server), true);
-#endif
-
-		return wxEmptyString;
+		AddDebugLogLineN(logServerUDP, wxT("Requesting more results from server using OP_GLOBSEARCHREQ3: ") +
+			Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
 	} else if (server->GetUDPFlags() & SRV_UDPFLG_EXT_GETFILES) {
 		// Use OP_GLOBSEARCHREQ2 for servers that support extended getfiles
 		searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_GLOBSEARCHREQ2);
@@ -517,11 +507,9 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 	}
 
 	// Send the search request to the server
-#ifndef CLIENT_GUI
 	theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
 	// Cast away const because SendUDPPacket doesn't take const pointer
 	theApp->serverconnect->SendUDPPacket(searchPacket, const_cast<CServer*>(server), true);
-#endif
 
 	return wxEmptyString;
 }
@@ -530,12 +518,14 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 void CSearchList::LocalSearchEnd()
 {
 	if (m_searchType == GlobalSearch) {
-		wxCHECK_RET(m_searchPacket, wxT("Global search, but no packet"));
+		// Check if we have a valid search packet before proceeding
+		if (!m_searchPacket) {
+			AddDebugLogLineN(logSearch, wxT("Global search end called but no search packet available"));
+			return;
+		}
 
 		// Ensure that every global search starts over.
-#ifndef CLIENT_GUI
 		theApp->serverlist->RemoveObserver(&m_serverQueue);
-#endif
 		m_searchTimer.Start(750);
 	} else {
 		// Don't trigger retry here - let the UI (SearchDlg/SearchStateManager) handle it
@@ -572,12 +562,8 @@ uint32 CSearchList::GetSearchProgress() const
 			return 0xffff;
 
 		case GlobalSearch:
-#ifndef CLIENT_GUI
 			return 100 - (m_serverQueue.GetRemaining() * 100)
 					/ theApp->serverlist->GetServerCount();
-#else
-			return 0; // Remote GUI doesn't have server count
-#endif
 
 		default:
 			wxFAIL;
@@ -593,9 +579,7 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
 		// This was a pending event, handled after 'Stop' was pressed.
 		return;
 	} else if (!m_serverQueue.IsActive()) {
-#ifndef CLIENT_GUI
 		theApp->serverlist->AddObserver(&m_serverQueue);
-#endif
 	}
 
 	// UDP requests must not be sent to this server.
@@ -620,19 +604,15 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
 					CPacket *extSearchPacket = new CPacket(OP_GLOBSEARCHREQ3, m_searchPacket->GetPacketSize() + (uint32_t)data.GetLength(), OP_EDONKEYPROT);
 					extSearchPacket->CopyToDataBuffer(0, data.GetRawBuffer(), data.GetLength());
 					extSearchPacket->CopyToDataBuffer(data.GetLength(), m_searchPacket->GetDataBuffer(), m_searchPacket->GetPacketSize());
-#ifndef CLIENT_GUI
 					theStats::AddUpOverheadServer(extSearchPacket->GetPacketSize());
 					theApp->serverconnect->SendUDPPacket(extSearchPacket, server, true);
-#endif
 					AddDebugLogLineN(logServerUDP, wxT("Sending OP_GLOBSEARCHREQ3 to server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
 				} else if (server->GetUDPFlags() & SRV_UDPFLG_EXT_GETFILES) {
 					if (!m_64bitSearchPacket || server->SupportsLargeFilesUDP()) {
 						m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ2);
 						AddDebugLogLineN(logServerUDP, wxT("Sending OP_GLOBSEARCHREQ2 to server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
-#ifndef CLIENT_GUI
 						theStats::AddUpOverheadServer(m_searchPacket->GetPacketSize());
 						theApp->serverconnect->SendUDPPacket(m_searchPacket.get(), server, false);
-#endif
 					} else {
 						AddDebugLogLineN(logServerUDP, wxT("Skipped UDP search on server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()) + wxT(": No large file support"));
 					}
@@ -640,10 +620,8 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
 					if (!m_64bitSearchPacket || server->SupportsLargeFilesUDP()) {
 						m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ);
 						AddDebugLogLineN(logServerUDP, wxT("Sending OP_GLOBSEARCHREQ to server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
-#ifndef CLIENT_GUI
 						theStats::AddUpOverheadServer(m_searchPacket->GetPacketSize());
 						theApp->serverconnect->SendUDPPacket(m_searchPacket.get(), server, false);
-#endif
 					} else {
 						AddDebugLogLineN(logServerUDP, wxT("Skipped UDP search on server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()) + wxT(": No large file support"));
 					}
@@ -773,6 +751,22 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 	if (!resultVector.empty()) {
 		search::SearchResultRouter::Instance().RouteResults(searchId, resultVector);
 	}
+
+	// Check if more results are available
+	int iAddData = (int)(packet.GetLength() - packet.GetPosition());
+	if (iAddData == 1) {
+		uint8 ucMore = packet.ReadUInt8();
+		if (ucMore == 0x00 || ucMore == 0x01) {
+			bool hasMore = (ucMore == 1);
+			if (!hasMore) {
+				// This was the last result packet, mark search as complete
+				OnSearchComplete(searchId, searchType, !resultVector.empty());
+			}
+		}
+	} else if (iAddData == 0) {
+		// No more data, assume search is complete
+		OnSearchComplete(searchId, searchType, !resultVector.empty());
+	}
 }
 
 
@@ -857,7 +851,8 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 	for (size_t i = 0; i < results.size(); ++i) {
 		CSearchFile* item = results.at(i);
 
-		if ((toadd->GetFileHash() == item->GetFileHash()) && (toadd->GetFileSize() == item->GetFileSize())) {
+		// Compare only by hash since size might be unknown in some results
+		if (toadd->GetFileHash() == item->GetFileHash()) {
 			AddDebugLogLineN(logSearch, CFormat(wxT("Received duplicate results for '%s' : %s")) % item->GetFileName().GetPrintable() % item->GetFileHash().Encode());
 			// Add the child, possibly updating the parents filename.
 			item->AddChild(toadd);
@@ -913,7 +908,6 @@ void CSearchList::StopSearch(bool globalOnly)
 	if (m_searchType == GlobalSearch) {
 		// Remove this search from the active searches map
 		if (m_currentSearch != -1) {
-			wxMutexLocker lock(m_searchMutex);
 			m_activeSearches.erase(m_currentSearch);
 		}
 		
@@ -934,10 +928,7 @@ void CSearchList::StopSearch(bool globalOnly)
 		// Check if we have a valid search ID before stopping
 		if (m_currentSearch != -1) {
 			// Remove this search from the active searches map
-			{
-				wxMutexLocker lock(m_searchMutex);
-				m_activeSearches.erase(m_currentSearch);
-			}
+			m_activeSearches.erase(m_currentSearch);
 			
 			Kademlia::CSearchManager::StopSearch(m_currentSearch, false);
 			m_currentSearch = -1;
@@ -1369,10 +1360,7 @@ void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResul
 		% searchId % (int)type);
 
 	// Remove this search from the active searches map
-	{
-		wxMutexLocker lock(m_searchMutex);
-		m_activeSearches.erase(searchId);
-	}
+	m_activeSearches.erase(searchId);
 
 	// Mark search as finished
 	if (type == KadSearch) {

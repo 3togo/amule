@@ -23,7 +23,14 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#ifdef AMULE_DAEMON
+// This file contains GUI-specific code and should not be compiled in daemon mode
+#else
+
 #include "SearchLabelHelper.h"
+
+#include <common/MacrosProgramSpecific.h>	// Needed for NOT_ON_REMOTEGUI macro
+
 #include "SearchListCtrl.h"
 #include "SearchDlg.h"
 #include "SearchStateManager.h"
@@ -250,11 +257,8 @@ bool RetrySearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 		return false;
 	}
 
-
-// Update the page to show results from the new search
+	// Update the page to show results from the new search
 	page->ShowResults(newSearchId);
-
-
 
 		
 
@@ -363,3 +367,5 @@ bool RetryKadSearchWithState(CSearchListCtrl* page, CSearchDlg* parentDlg)
 	// when the search starts
 	return true;
 }
+
+#endif // !AMULE_DAEMON

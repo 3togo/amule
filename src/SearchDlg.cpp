@@ -719,7 +719,9 @@ void CSearchDlg::OnBnClickedClear(wxCommandEvent& WXUNUSED(event)) {
 	}
 }
 
-void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event)) {
+#ifndef CLIENT_GUI
+void CSearchDlg::OnBnClickedMore(wxCommandEvent& event)
+{
 	// Get the currently selected search tab
 	if (m_notebook->GetPageCount() > 0) {
 		CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(m_notebook->GetSelection()));
@@ -835,6 +837,8 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event)) {
 		m_notebook->SetPageText(currentTab, newText);
 	}
 }
+
+#endif
 
 void CSearchDlg::StartNewSearch() {
 	static uint32 m_nSearchID = 0;
