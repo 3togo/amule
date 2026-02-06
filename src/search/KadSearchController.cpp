@@ -1,4 +1,3 @@
-
 //
 // This file is part of the aMule Project.
 //
@@ -44,10 +43,18 @@ KadSearchController::KadSearchController()
     , m_maxNodesToQuery(DEFAULT_MAX_NODES)
     , m_nodesContacted(0)
 {
+    // No type-based registration; only ID-based registration is used.
 }
 
 KadSearchController::~KadSearchController()
 {
+    // Unregister from SearchResultRouter on destruction
+    long searchId = m_model->getSearchId();
+    if (searchId != -1) {
+        SearchResultRouter::Instance().UnregisterController(searchId);
+    }
+    // The type-based registration is cleaned up in the base class destructor
+    // via the virtual Unregister method.
 }
 
 void KadSearchController::startSearch(const SearchParams& params)
@@ -101,7 +108,7 @@ void KadSearchController::startSearch(const SearchParams& params)
 		m_model->setSearchId(searchId);
 		m_model->setSearchState(SearchState::Searching);
 
-		// Register with SearchResultRouter for result routing
+		// Register with SearchResultRouter for result routing by specific ID
 		SearchResultRouter::Instance().RegisterController(searchId, this);
 
 		// Set the current search ID in SearchList after registration
@@ -140,6 +147,7 @@ void KadSearchController::stopSearch()
     m_model->clearResults();
     
     // Use base class to handle common stop logic
+    // The base class will call our virtual Unregister method
     stopSearchBase();
 }
 

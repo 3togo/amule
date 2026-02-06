@@ -24,7 +24,6 @@
 //
 
 #include "SearchResultRouter.h"
-#include "SearchControllerBase.h"
 #include "SearchController.h"
 #include "SearchResultHandler.h"
 #include "SearchLogging.h"
@@ -34,6 +33,8 @@
 #include "../OtherFunctions.h" // For CFormat
 #include "../SearchFile.h"
 #include "../SearchList.h"
+#include <wx/string.h>
+#include <wx/utils.h>
 
 namespace search {
 
@@ -47,7 +48,7 @@ SearchResultRouter& SearchResultRouter::Instance()
     return instance;
 }
 
-void SearchResultRouter::RegisterController(uint32_t searchId, SearchControllerBase* controller)
+void SearchResultRouter::RegisterController(uint32_t searchId, SearchController* controller)
 {
     if (!controller) {
         SEARCH_CRITICAL(
@@ -88,46 +89,38 @@ bool SearchResultRouter::RouteResult(uint32_t searchId, CSearchFile* result)
     }
 
     SEARCH_DEBUG(
-        CFormat(wxT("Attempting to route result for SearchID=%u, File='%s'"))
+        CFormat(wxT("DEBUG: RouteResult called - SearchID=%u, FileName='%s'"))
             % searchId % result->GetFileName().GetPrintable());
 
-    // Try to route by specific search ID only - NO FALLBACK LOGIC
+    // First try to route by specific search ID
     ControllerMap::iterator it = m_controllers.find(searchId);
     if (it != m_controllers.end() && it->second) {
         // Get the controller as SearchResultHandler
         SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(it->second);
         if (handler) {
-            // Route result to controller's handler using original search ID
+            // Route result to controller's handler
             handler->handleResult(searchId, result);
 
             SEARCH_DEBUG( 
-                CFormat(wxT("Successfully routed result for search ID %u")) % searchId);
+                CFormat(wxT("Routed result for search ID %u")) % searchId);
             return true;
         }
     }
 
-    // No controller found - log detailed information about the failure
-    {
-        wxString activeControllersInfo = wxT("Active controllers: ");
-        for (const auto& controllerPair : m_controllers) {
-            activeControllersInfo += CFormat(wxT("[ID=%u] ")) % controllerPair.first;
-        }
-        
-        SEARCH_CRITICAL(
-            CFormat(wxT("UNROUTEABLE RESULT - SearchID=%u, File='%s', Reason='No controller registered'. %s"))
-            % searchId % result->GetFileName().GetPrintable() % activeControllersInfo);
+    // No controller found - add result to SearchList for display (fallback behavior)
+    SEARCH_DEBUG(
+        CFormat(wxT("No controller registered for search ID %u, adding result to SearchList"))
+        % searchId);
+
+    // Add result to SearchList for display
+    if (theApp && theApp->searchlist) {
+        theApp->searchlist->AddToList(result, false);
+        return true;
     }
 
-    // Track dropped results for diagnostics
-    static std::atomic<uint64_t> s_droppedSingleResults{0};
-    s_droppedSingleResults.fetch_add(1);
-    
-    // According to specification: "宁可丢弃无法明确路由的结果，也不进行猜测性处理"
-    // So we drop the result instead of trying to add it to SearchList
-    SEARCH_CRITICAL(
-        CFormat(wxT("DROPPED RESULT - SearchID=%u, File='%s', No controller available"))
-        % searchId % result->GetFileName().GetPrintable());
-    
+    // Clean up result since no one will handle it
+    delete result;
+
     return false;
 }
 
@@ -139,51 +132,39 @@ size_t SearchResultRouter::RouteResults(uint32_t searchId, const std::vector<CSe
         return 0;
     }
 
-    SEARCH_DEBUG(
-        CFormat(wxT("Attempting to route %u results for SearchID=%u"))
-            % (unsigned int)results.size() % searchId);
-
     size_t routedCount = 0;
-
-    // Try to route by specific search ID only - NO FALLBACK LOGIC
+    
+    // First try to route by specific search ID
     ControllerMap::iterator it = m_controllers.find(searchId);
     if (it != m_controllers.end() && it->second) {
+        // Get the controller as SearchResultHandler
         SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(it->second);
         if (handler) {
-            // Route all results to the controller using original search ID
+            // Route all results to controller's handler
             handler->handleResults(searchId, results);
             routedCount = results.size();
             
-            SEARCH_DEBUG(
-                CFormat(wxT("Successfully routed %u results for search ID %u")) 
-                % (unsigned int)routedCount % searchId);
+            SEARCH_DEBUG( 
+                CFormat(wxT("Routed %u results for search ID %u")) % (unsigned int)routedCount % searchId);
             return routedCount;
         }
     }
 
-    // No controller found - log detailed information about the failure
-    {
-        wxString activeControllersInfo = wxT("Active controllers: ");
-        for (const auto& controllerPair : m_controllers) {
-            activeControllersInfo += CFormat(wxT("[ID=%u] ")) % controllerPair.first;
-        }
-        
-        SEARCH_CRITICAL(
-            CFormat(wxT("UNROUTEABLE RESULTS - SearchID=%u, Count=%u, Reason='No controller registered'. %s"))
-            % searchId % (unsigned int)results.size() % activeControllersInfo);
-    }
-
-    // Track dropped results for diagnostics
-    static std::atomic<uint64_t> s_droppedBatchResults{0};
-    s_droppedBatchResults.fetch_add(results.size());
-    
-    // According to specification: "宁可丢弃无法明确路由的结果，也不进行猜测性处理"
-    // So we drop all results instead of trying to add them to SearchList
-    SEARCH_CRITICAL(
-        CFormat(wxT("DROPPED RESULTS - SearchID=%u, Count=%u, No controller available"))
+    // No controller found - add results directly to SearchList (fallback behavior)
+    SEARCH_DEBUG(
+        CFormat(wxT("No controller found for SearchID=%u, adding %u results directly to SearchList")) 
         % searchId % (unsigned int)results.size());
+        
+    for (CSearchFile* result : results) {
+        if (theApp && theApp->searchlist) {
+            CSearchFile* resultCopy = new CSearchFile(*result);
+            resultCopy->SetSearchID(searchId);
+            theApp->searchlist->AddToList(resultCopy, false);
+            routedCount++;
+        }
+    }
     
-    return 0;
+    return routedCount;
 }
 
 

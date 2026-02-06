@@ -24,6 +24,8 @@
 //
 
 #include <cstdlib>			// Needed for std::abort()
+#include <cstdio>			// Needed for fprintf
+#include <exception>			// Needed for std::exception
 
 #include "config.h"			// Needed for HAVE_CXXABI and HAVE_EXECINFO
 
@@ -64,46 +66,45 @@
  */
 void OnUnhandledException()
 {
-	// Revert to the original exception handler, to avoid
-	// infinate recursion, in case something goes wrong in
-	// this function.
-	std::set_terminate(std::abort);
-
-#ifdef HAVE_CXXABI
-	std::type_info *t = __cxxabiv1::__cxa_current_exception_type();
-	FILE* output = stderr;
-#else
-	FILE* output = stdout;
-	bool t = true;
-#endif
-	if (t) {
-		int status = -1;
-		char *dem = 0;
-#ifdef HAVE_CXXABI
-		// Note that "name" is the mangled name.
-		char const *name = t->name();
-
-		dem = __cxxabiv1::__cxa_demangle(name, 0, 0, &status);
-#else
-		const char* name = "Unknown";
-#endif
-		fprintf(output, "\nTerminated after throwing an instance of '%s'\n", (status ? name : dem));
-		free(dem);
-
-		try {
-			throw;
-		} catch (const std::exception& e) {
-			fprintf(output, "\twhat(): %s\n", e.what());
-		} catch (const CMuleException& e) {
-			fprintf(output, "\twhat(): %s\n", (const char*)unicode2char(e.what()));
-		} catch (const wxString& e) {
-			fprintf(output, "\twhat(): %s\n", (const char*)unicode2char(e));
-		} catch (...) {
-			// Unable to retrieve cause of exception
+	// Try to capture exception information before aborting
+	try {
+		// Get current exception info if available
+		std::exception_ptr eptr = std::current_exception();
+		if (eptr) {
+			try {
+				std::rethrow_exception(eptr);
+			} catch (const std::bad_alloc& e) {
+				fprintf(stderr, "Unhandled std::bad_alloc exception: %s\n", e.what());
+			} catch (const std::exception& e) {
+				fprintf(stderr, "Unhandled std::exception: %s\n", e.what());
+			} catch (...) {
+				fprintf(stderr, "Unhandled unknown exception\n");
+			}
+		} else {
+			fprintf(stderr, "Unhandled exception with no exception info available\n");
 		}
-
-		fprintf(output, "\tbacktrace:\n%s\n", (const char*)unicode2char(get_backtrace(1)));
+		
+		// Generate backtrace if possible
+		try {
+			wxString backtrace = get_backtrace(1);
+			if (!backtrace.IsEmpty()) {
+				fprintf(stderr, "Backtrace:\n");
+				// This is because the string is ansi anyway, and the conv classes are very slow
+				fprintf(stderr, "%s\n", (const char*)unicode2char(backtrace));
+			}
+		} catch (...) {
+			fprintf(stderr, "Failed to generate backtrace\n");
+		}
+		
+	} catch (...) {
+		// If even exception handling fails, just log basic info
+		fprintf(stderr, "Critical error in exception handler\n");
 	}
+	
+	// Ensure logs are flushed
+	fflush(stdout);
+	fflush(stderr);
+	
 	std::abort();
 }
 
@@ -433,8 +434,8 @@ wxString get_backtrace(unsigned n)
 	for (int i = n+1; i < num_entries; ++i) {
 		/* If we have no function name, use the result from addr2line */
 		if (funcname[i].IsEmpty()) {
-			if (hasLineNumberInfo) {
-				funcname[i] = out[2*i];
+			if (hasLineNumberInfo && out.GetCount() > 2 * static_cast<size_t>(i)) {
+				funcname[i] = out[2 * i];
 			} else {
 				funcname[i] = wxT("??");
 			}
@@ -442,16 +443,15 @@ wxString get_backtrace(unsigned n)
 		wxString btLine;
 		btLine << wxT("[") << i << wxT("] ") << funcname[i] << wxT(" in ");
 		/* If addr2line did not find a line number, use bt_string */
-		if (!hasLineNumberInfo || out[2*i+1].Mid(0,2) == wxT("??")) {
+		size_t requiredIndex = 2 * static_cast<size_t>(i) + 1;
+		if (!hasLineNumberInfo || out.GetCount() <= requiredIndex || out[requiredIndex].Mid(0,2) == wxT("??")) {
 			btLine += libname[i] + wxT("[") + address[i] + wxT("]");
-		} else if (hasLineNumberInfo) {
-#if TOO_VERBOSE_BACKTRACE
-			btLine += out[2*i+1];
-#else
-			btLine += out[2*i+1].AfterLast(wxT('/'));
-#endif
 		} else {
-			btLine += libname[i];
+#if TOO_VERBOSE_BACKTRACE
+			btLine += out[requiredIndex];
+#else
+			btLine += out[requiredIndex].AfterLast(wxT('/'));
+#endif
 		}
 
 		trace += btLine + wxT("\n");
