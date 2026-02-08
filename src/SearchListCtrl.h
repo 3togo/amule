@@ -125,6 +125,20 @@ public:
 	wxUIntPtr	GetSearchId();
 
 	/**
+	 * Returns the search type (Local, Global, Kad).
+	 *
+	 * @return The search type of the displayed results.
+	 */
+	wxString	GetSearchType() const { return m_searchType; }
+
+	/**
+	 * Sets the search type (Local, Global, Kad).
+	 *
+	 * @param type The search type to set.
+	 */
+	void		SetSearchType(const wxString& type) { m_searchType = type; }
+
+	/**
 	 * Sets the filter which decides which results should be shown.
 	 *
 	 * @param regExp A regular expression targeting the filenames.
@@ -241,6 +255,9 @@ protected:
 
 	//! The ID of the search-results which the list is displaying or zero if unset.
 	wxUIntPtr m_nResultsID;
+
+	//! The type of search (Local, Global, Kad) for validation
+	wxString m_searchType;
 
 	//! Custom drawing, needed to display children of search-results.
 	void OnDrawItem(int item, wxDC* dc, const wxRect& rect, const wxRect& rectHL, bool highlighted);

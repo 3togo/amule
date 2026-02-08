@@ -531,12 +531,29 @@ bool CSearchDlg::CheckTabNameExists(SearchType searchType, const wxString& searc
 	for (int i = 0; i < nPages; i++) {
 		wxString pageText = m_notebook->GetPageText(i);
 
-		// Extract the search term from the page text by removing prefix and count
+		// Check if this tab has the correct prefix
 		if (pageText.StartsWith(prefix)) {
-			wxString searchPart = pageText.Mid(prefix.length());		  // Remove prefix
-			wxString searchTerm = searchPart.BeforeLast(wxT('(')).Trim();  // Remove "(count)" part
-
-			if (searchTerm == searchString) {
+			wxString searchPart = pageText.Mid(prefix.length());  // Remove prefix
+			
+			// Remove any state information like [Searching], [No Results], etc.
+			// State information is in brackets at the beginning of searchPart
+			while (searchPart.StartsWith(wxT("["))) {
+				int endBracket = searchPart.Find(wxT("]"));
+				if (endBracket == wxNOT_FOUND) {
+					break;  // Malformed, break out
+				}
+				// Remove the [State] part including any space after it
+				searchPart = searchPart.Mid(endBracket + 1).Trim(true);  // Trim leading whitespace
+			}
+			
+			// Remove count information like "(5)" or "(3/5)"
+			int parenPos = searchPart.Find(wxT('('));
+			if (parenPos != wxNOT_FOUND) {
+				searchPart = searchPart.Left(parenPos).Trim();
+			}
+			
+			// Now we should have just the search term
+			if (searchPart == searchString) {
 				return true;
 			}
 		}
@@ -549,6 +566,19 @@ void CSearchDlg::CreateNewTab(const wxString& searchString, wxUIntPtr nSearchID)
 	CSearchListCtrl* list =
 		new CSearchListCtrl(m_notebook, ID_SEARCHLISTCTRL, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxNO_BORDER);
 	m_notebook->AddPage(list, searchString, true, 0);
+
+	// Parse search type from search string (e.g., "[Local] ", "[Global] ", "[Kad] ")
+	wxString searchType;
+	if (searchString.StartsWith(wxT("[Local] "))) {
+		searchType = wxT("Local");
+	} else if (searchString.StartsWith(wxT("[Global] "))) {
+		searchType = wxT("Global");
+	} else if (searchString.StartsWith(wxT("[Kad] "))) {
+		searchType = wxT("Kad");
+	}
+	
+	// Store search type in the list control for validation
+	list->SetSearchType(searchType);
 
 	// Ensure that new results are filtered
 	bool enable = CastChild(IDC_FILTERCHECK, wxCheckBox)->GetValue();
@@ -1250,39 +1280,78 @@ void CSearchDlg::UpdateTabLabelWithState(CSearchListCtrl* list, const wxString& 
 
 	for (uint32 i = 0; i < (uint32)m_notebook->GetPageCount(); ++i) {
 		if (m_notebook->GetPage(i) == list) {
-			// Get the current tab text
-			wxString tabText = m_notebook->GetPageText(i);
-			assert(!tabText.IsEmpty());
+			// Get the search type from the list control (stored variable)
+			wxString searchType = list->GetSearchType();
+			
+			// If search type is not set, parse it from current tab text for backward compatibility
+			if (searchType.IsEmpty()) {
+				wxString tabText = m_notebook->GetPageText(i);
+				assert(!tabText.IsEmpty());
+
+				// Parse search type from tab text
+				if (tabText.StartsWith(wxT("[Local] "))) {
+					searchType = wxT("Local");
+				} else if (tabText.StartsWith(wxT("[Global] "))) {
+					searchType = wxT("Global");
+				} else if (tabText.StartsWith(wxT("[Kad] "))) {
+					searchType = wxT("Kad");
+				}
+				
+				// Store the parsed search type for future use
+				list->SetSearchType(searchType);
+			}
+
+			// Get the keyword from SearchStateManager
+			long searchId = list->GetSearchId();
+			wxString keyword = m_stateManager.GetKeyword(searchId);
+			if (keyword.IsEmpty()) {
+				// Fallback: get keyword from current tab text
+				wxString tabText = m_notebook->GetPageText(i);
+				// Remove type prefix
+				if (tabText.StartsWith(wxT("[Local] "))) {
+					tabText = tabText.Mid(8);
+				} else if (tabText.StartsWith(wxT("[Global] "))) {
+					tabText = tabText.Mid(8);
+				} else if (tabText.StartsWith(wxT("[Kad] "))) {
+					tabText = tabText.Mid(6);
+				}
+				// Remove state prefix
+				if (tabText.StartsWith(wxT("["))) {
+					size_t stateEnd = tabText.Find(wxT("]"));
+					if (stateEnd != wxString::npos) {
+						tabText = tabText.Mid(stateEnd + 2);
+					}
+				}
+				// Remove count suffix
+				int parenPos = tabText.Find(wxT(" ("));
+				if (parenPos != wxNOT_FOUND) {
+					tabText = tabText.Left(parenPos);
+				}
+				keyword = tabText.Trim();
+			}
 
 			// Log the values for debugging
-			theLogger.AddLogLine(wxT("SearchDlg.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateTabLabelWithState: state='%s', tabText='%s'")) % state % tabText);
+			theLogger.AddLogLine(wxT("SearchDlg.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateTabLabelWithState: state='%s', searchType='%s', keyword='%s'")) % state % searchType % keyword);
 
-			// Preserve the search type prefix [Local], [Global], or [Kad]
-			wxString typePrefix;
-			if (tabText.StartsWith(wxT("[Local] "))) {
-				typePrefix = wxT("[Local] ");
-				tabText = tabText.Mid(8); // Remove "[Local] "
-			} else if (tabText.StartsWith(wxT("[Global] "))) {
-				typePrefix = wxT("[Global] ");
-				tabText = tabText.Mid(8); // Remove "[Global] "
-			} else if (tabText.StartsWith(wxT("[Kad] "))) {
-				typePrefix = wxT("[Kad] ");
-				tabText = tabText.Mid(6); // Remove "[Kad] "
+			// Build the new tab text using stored search type
+			wxString newText;
+			
+			// Add search type prefix
+			if (searchType == wxT("Local")) {
+				newText = wxT("[Local] ");
+			} else if (searchType == wxT("Global")) {
+				newText = wxT("[Global] ");
+			} else if (searchType == wxT("Kad")) {
+				newText = wxT("[Kad] ");
 			}
 
-			// Remove any existing state prefix (if different from type prefix)
-			if (tabText.StartsWith(wxT("["))) {
-				size_t stateEnd = tabText.Find(wxT("]"));
-				if (stateEnd != wxString::npos) {
-					tabText = tabText.Mid(stateEnd + 2); // Skip "] "
-				}
+			// Add state if provided
+			if (!state.IsEmpty()) {
+				newText += wxT("[") + state + wxT("] ");
 			}
-
-			// Remove any existing count suffix
-			int parenPos = tabText.Find(wxT(" ("));
-			if (parenPos != wxNOT_FOUND) {
-				tabText = tabText.Left(parenPos);
-			}
+			
+			// Add the keyword
+			newText += keyword;
 
 			// Get the result counts
 			size_t shown = list->GetItemCount();
@@ -1290,14 +1359,6 @@ void CSearchDlg::UpdateTabLabelWithState(CSearchListCtrl* list, const wxString& 
 
 			// Validate counts - hidden should not exceed shown
 			assert(shown >= hidden);
-
-			// Build the new tab text with type prefix and state
-			wxString newText = typePrefix;
-			if (!state.IsEmpty()) {
-				newText += wxT("[") + state + wxT("] ") + tabText;
-			} else {
-				newText += tabText;
-			}
 
 			// Add count information
 			// Always show count when there is a state (e.g., "No Results", "Retrying 1")

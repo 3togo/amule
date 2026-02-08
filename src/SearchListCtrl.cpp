@@ -82,7 +82,9 @@ CSearchListCtrl::CSearchListCtrl(
 CMuleListCtrl(parent, winid, pos, size, style | wxLC_OWNERDRAW, validator, name),
 m_filterKnown(false),
 m_invert(false),
-m_filterEnabled(false)
+m_filterEnabled(false),
+m_nResultsID(0),
+m_searchType(wxEmptyString)
 {
 	// Setting the sorter function.
 	SetSortFunc( SortProc );
@@ -94,8 +96,6 @@ m_filterEnabled(false)
 	InsertColumn( ID_SEARCH_COL_FILEID,  _("FileID"),    wxLIST_FORMAT_LEFT, 280, wxT("I") );
 	InsertColumn( ID_SEARCH_COL_STATUS,  _("Status"),    wxLIST_FORMAT_LEFT, 100, wxT("S") );
 	InsertColumn( ID_SEARCH_COL_DIRECTORY,  _("Directories"),    wxLIST_FORMAT_LEFT, 280, wxT("D") );  // I would have preferred "Directory" but this is already translated
-
-	m_nResultsID = 0;
 
 	// Only load settings for first list, otherwise sync with current lists
 	if ( s_lists.empty() ) {

@@ -83,6 +83,19 @@ void UpdateSearchStateWithCount(CSearchListCtrl* list, CSearchDlg* parentDlg, co
 
 	for (uint32 i = 0; i < (uint32)notebook->GetPageCount(); ++i) {
 		if (notebook->GetPage(i) == list) {
+			// Validate search type before updating
+			wxString storedSearchType = list->GetSearchType();
+			if (storedSearchType.IsEmpty()) {
+				// Search type not set yet (old tab or bug), set it now
+				list->SetSearchType(searchType);
+				storedSearchType = searchType;
+			} else if (storedSearchType != searchType) {
+				// Search type mismatch! This should not happen.
+				// Log error but continue to update to avoid leaving tab in inconsistent state
+				SEARCH_DEBUG_LABEL(CFormat(wxT("UpdateSearchStateWithCount: WARNING - Search type mismatch! Stored='%s', Expected='%s', searchId=%ld")) % storedSearchType % searchType % searchId);
+				// We'll still update, but this indicates a bug elsewhere
+			}
+			
 			// Build the new tab text using data from SearchStateManager
 			wxString newText;
 			
