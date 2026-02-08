@@ -267,12 +267,20 @@ void CSearchDlg::OnSearchClosing(wxBookCtrlEvent& evt) {
 	long searchId = ctrl->GetSearchId();
 	auto it = m_searchControllers.find(searchId);
 	if (it != m_searchControllers.end()) {
+		// Stop the search before removing the controller
+		it->second->stopSearch();
 		m_searchControllers.erase(it);
 	}
 
 	// Zero to avoid results added while destructing.
 	ctrl->ShowResults(0);
+	
+	// Remove results and stop the search using atomic method
+	theApp->searchlist->StopSearch(searchId, false);
 	theApp->searchlist->RemoveResults(searchId);
+	
+	// Remove from SearchStateManager
+	m_stateManager.RemoveSearch(searchId);
 
 	// Do cleanups if this was the last tab
 	if (m_notebook->GetPageCount() == 1) {
@@ -1150,13 +1158,127 @@ void CSearchDlg::StartNewSearch() {
 	// Always create a new tab to ensure each search gets its own tab
 	CreateNewTab(prefix + params.searchString, real_id);
 #else
-	// CLIENT_GUI mode: Use EC-based search
-	uint32 real_id = ++m_nSearchID;
-	
-	// Start the search via EC connection
-	theApp->searchlist->StartNewSearch(&real_id, search_type, params);
-	
-	// Create a new tab for this search
+	// CLIENT_GUI mode: Use EC-based search with atomic search system
+	// Create SearchController based on search type
+	search::ModernSearchType modernType;
+	switch (search_type) {
+		case LocalSearch:
+			modernType = search::ModernSearchType::LocalSearch;
+			break;
+		case GlobalSearch:
+			modernType = search::ModernSearchType::GlobalSearch;
+			break;
+		case KadSearch:
+			modernType = search::ModernSearchType::KadSearch;
+			break;
+		default:
+			modernType = search::ModernSearchType::LocalSearch;
+			break;
+	}
+
+	// Create SearchController using factory
+	auto controller = search::SearchControllerFactory::createController(modernType);
+	if (!controller) {
+		wxMessageBox(_("Failed to create search controller"), _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
+		FindWindow(IDC_STARTS)->Enable();
+		FindWindow(IDC_SDOWNLOAD)->Disable();
+		FindWindow(IDC_CANCELS)->Disable();
+		return;
+	}
+
+	// Convert CSearchParams to SearchParams
+	search::SearchParams searchParams;
+	searchParams.searchString = params.searchString;
+	searchParams.strKeyword = params.searchString; // For Kad searches
+	searchParams.typeText = params.typeText;
+	searchParams.extension = params.extension;
+	searchParams.minSize = params.minSize;
+	searchParams.maxSize = params.maxSize;
+	searchParams.availability = params.availability;
+	searchParams.searchType = modernType;
+
+	// Set up callbacks (same as non-CLIENT_GUI mode)
+	controller->setOnSearchStarted([this](uint32_t searchId) {
+		wxMutexLocker lock(m_uiUpdateMutex);
+		// Search started - find the tab and update its state
+		for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
+			CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
+			if (list && list->GetSearchId() == (long)searchId) {
+				// Enable the cancel button
+				FindWindow(IDC_CANCELS)->Enable();
+				break;
+			}
+		}
+	});
+
+	controller->setOnSearchCompleted([this](uint32_t searchId) {
+		wxMutexLocker lock(m_uiUpdateMutex);
+		// Search completed - update UI state
+		for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
+			CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
+			if (list && list->GetSearchId() == (long)searchId) {
+				// Re-enable start button, disable cancel button
+				FindWindow(IDC_STARTS)->Enable();
+				FindWindow(IDC_CANCELS)->Disable();
+				// Update hit count
+				UpdateHitCount(list);
+				break;
+			}
+		}
+	});
+
+	// Track if an error occurred
+	auto searchError = std::make_shared<bool>(false);
+	auto errorMessage = std::make_shared<wxString>();
+
+	controller->setOnError([this, searchError, errorMessage](uint32_t searchId, const wxString& error) {
+		wxMutexLocker lock(m_uiUpdateMutex);
+		// Handle errors
+		*searchError = true;
+		*errorMessage = error;
+		wxMessageBox(error, _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
+	});
+
+	// Start the search using the controller
+	controller->startSearch(searchParams);
+
+	// Get the search ID from the controller after starting
+	uint32 real_id = controller->getSearchId();
+	if (real_id == 0 || *searchError) {
+		if (!errorMessage->IsEmpty()) {
+			wxMessageBox(*errorMessage, _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
+		} else {
+			wxMessageBox(_("Failed to get search ID from controller"), _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
+		}
+		FindWindow(IDC_STARTS)->Enable();
+		FindWindow(IDC_SDOWNLOAD)->Disable();
+		FindWindow(IDC_CANCELS)->Disable();
+		return;
+	}
+
+	// Store the controller
+	m_searchControllers[real_id] = std::move(controller);
+
+	// Initialize the search in SearchStateManager
+	wxString searchTypeStr;
+	switch (search_type) {
+		case LocalSearch:
+			searchTypeStr = wxT("Local");
+			break;
+		case GlobalSearch:
+			searchTypeStr = wxT("Global");
+			break;
+		case KadSearch:
+			searchTypeStr = wxT("Kad");
+			break;
+		default:
+			searchTypeStr = wxT("Local");
+			break;
+	}
+	// Store search parameters for retry
+	m_stateManager.InitializeSearch(real_id, searchTypeStr, params.searchString, params);
+
+	// Search started successfully, now create a new tab
 	CreateNewTab(prefix + params.searchString, real_id);
 #endif
 }

@@ -41,6 +41,7 @@ namespace search {
 	class ED2KSearchPacketBuilder;
 	class KadSearchPacketBuilder;
 	class SearchResultHandler;
+	class PerSearchState;
 }
 
 
@@ -110,6 +111,9 @@ public:
 
 	/** Stops the current search (global or Kad), if any is in progress. */
 	void StopSearch(bool globalOnly = false);
+	
+	/** Stops a specific search by ID. */
+	void StopSearch(long searchID, bool globalOnly = false);
 
 	/** Returns the completion percentage of the current search. */
 	uint32 GetSearchProgress() const;
@@ -233,6 +237,56 @@ public:
 	/** Create a basic search-packet for the given search-type. */
 	CMemFilePtr CreateSearchData(CSearchParams& params, SearchType type, bool supports64bit, bool& packetUsing64bit);
 
+	/** Per-search state management methods */
+	
+	/**
+	 * Create or get per-search state for a search ID
+	 * 
+	 * @param searchId The search ID
+	 * @param searchType The search type
+	 * @param searchString The search string
+	 * @return Pointer to the PerSearchState, or nullptr on error
+	 */
+	search::PerSearchState* getOrCreateSearchState(long searchId, SearchType searchType, const wxString& searchString);
+	
+	/**
+	 * Get per-search state for a search ID
+	 * 
+	 * @param searchId The search ID
+	 * @return Pointer to the PerSearchState, or nullptr if not found
+	 */
+	search::PerSearchState* getSearchState(long searchId);
+	
+	/**
+	 * Get per-search state for a search ID (const version)
+	 * 
+	 * @param searchId The search ID
+	 * @return Pointer to the PerSearchState, or nullptr if not found
+	 */
+	const search::PerSearchState* getSearchState(long searchId) const;
+	
+	/**
+	 * Remove per-search state for a search ID
+	 * 
+	 * @param searchId The search ID to remove
+	 */
+	void removeSearchState(long searchId);
+	
+	/**
+	 * Check if a search state exists
+	 * 
+	 * @param searchId The search ID to check
+	 * @return true if the search state exists, false otherwise
+	 */
+	bool hasSearchState(long searchId) const;
+	
+	/**
+	 * Get all active search IDs
+	 * 
+	 * @return Vector of active search IDs
+	 */
+	std::vector<long> getActiveSearchIds() const;
+
 private:
 	/** Event-handler for global searches. */
 	void OnGlobalSearchTimer(CTimerEvent& evt);
@@ -241,46 +295,16 @@ private:
 	//! Timer used for global search intervals.
 	CTimer	m_searchTimer;
 
-	//! The current search-type, regarding the last/current search.
-	SearchType	m_searchType;
+	//! Map of active searches and their per-search state
+	//! This is the single source of truth for active searches
+	std::map<long, std::unique_ptr<search::PerSearchState>>	m_searchStates;
 
-	//! Specifies if a search is being performed.
-	bool		m_searchInProgress;
-
-	//! The ID of the current search (DEPRECATED - use m_activeSearches instead)
-	long		m_currentSearch;
-
-	//! Map of active searches and their types to track multiple concurrent searches
-	//! This is now the single source of truth for active searches
-	std::map<long, SearchType>	m_activeSearches;
-
-	//! Mutex for thread-safe access to active searches
+	//! Mutex for thread-safe access to search states
 	mutable wxMutex m_searchMutex;
 
-	//! The current packet used for searches.
-	std::unique_ptr<CPacket>	m_searchPacket;
-
-	//! Does the current search packet contain 64bit values?
-	bool		m_64bitSearchPacket;
-
-	//! If the current search is a KAD search this signals if it is finished.
-	bool		m_KadSearchFinished;
-
-	//! Retry count for Kad searches (to retry if no results)
-	int		m_KadSearchRetryCount;
-
 	//! Queue of servers to ask when doing global searches.
-	//! TODO: Replace with 'cookie' system.
+	//! TODO: Replace with per-search 'cookie' system.
 	CQueueObserver<CServer*> m_serverQueue;
-
-	//! Set of servers already queried for current search
-	std::set<uint32>	m_queriedServers;
-
-	//! Track if we're in "more results" mode
-	bool		m_moreResultsMode;
-
-	//! Maximum number of servers to query in "more results" mode
-	int		m_moreResultsMaxServers;
 
 	//! Shorthand for the map of results (key is a SearchID).
 	typedef std::map<long, CSearchResultList> ResultMap;

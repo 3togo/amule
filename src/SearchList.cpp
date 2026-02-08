@@ -275,14 +275,10 @@ END_EVENT_TABLE()
 
 
 CSearchList::CSearchList()
-	: m_searchTimer(this, 0 /* Timer-id doesn't matter. */ ),
-	  m_searchType(LocalSearch),
-	  m_searchInProgress(false),
-	  m_currentSearch(-1),
-	  m_64bitSearchPacket(false),
-	  m_KadSearchFinished(true)
+	: m_searchTimer(this, 0 /* Timer-id doesn't matter. */ )
 {
 	// Retry logic now handled by controllers
+	// Per-search state initialized on demand
 }
 
 
@@ -317,8 +313,81 @@ void CSearchList::RemoveResults(long searchID)
 
 uint32 CSearchList::GetNextSearchID()
 {
-	static uint32 nextID = 0;
-	return ++nextID;
+	// Use the new thread-safe search ID generator
+	return search::SearchIdGenerator::Instance().generateId();
+}
+
+// Per-search state management methods implementation
+
+search::PerSearchState* CSearchList::getOrCreateSearchState(long searchId, SearchType searchType, const wxString& searchString)
+{
+	wxMutexLocker lock(m_searchMutex);
+	
+	auto it = m_searchStates.find(searchId);
+	if (it != m_searchStates.end()) {
+		// Search state already exists, return it
+		return it->second.get();
+	}
+	
+	// Create new search state
+	auto state = std::make_unique<search::PerSearchState>(searchId, static_cast<uint8_t>(searchType), searchString);
+	auto* statePtr = state.get();
+	m_searchStates[searchId] = std::move(state);
+	
+	// Also store in legacy active searches map for compatibility
+	m_activeSearches[searchId] = searchType;
+	
+	return statePtr;
+}
+
+search::PerSearchState* CSearchList::getSearchState(long searchId)
+{
+	wxMutexLocker lock(m_searchMutex);
+	auto it = m_searchStates.find(searchId);
+	return (it != m_searchStates.end()) ? it->second.get() : nullptr;
+}
+
+const search::PerSearchState* CSearchList::getSearchState(long searchId) const
+{
+	wxMutexLocker lock(m_searchMutex);
+	auto it = m_searchStates.find(searchId);
+	return (it != m_searchStates.end()) ? it->second.get() : nullptr;
+}
+
+void CSearchList::removeSearchState(long searchId)
+{
+	wxMutexLocker lock(m_searchMutex);
+	
+	// Remove from search states map
+	m_searchStates.erase(searchId);
+	
+	// Also remove from legacy active searches map for compatibility
+	m_activeSearches.erase(searchId);
+	
+	// Remove search parameters
+	m_searchParams.erase(searchId);
+	
+	// Release the search ID for reuse
+	search::SearchIdGenerator::Instance().releaseId(searchId);
+}
+
+bool CSearchList::hasSearchState(long searchId) const
+{
+	wxMutexLocker lock(m_searchMutex);
+	return m_searchStates.find(searchId) != m_searchStates.end();
+}
+
+std::vector<long> CSearchList::getActiveSearchIds() const
+{
+	wxMutexLocker lock(m_searchMutex);
+	std::vector<long> ids;
+	ids.reserve(m_searchStates.size());
+	
+	for (const auto& pair : m_searchStates) {
+		ids.push_back(pair.first);
+	}
+	
+	return ids;
 }
 
 wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchParams& params)
@@ -357,7 +426,6 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		return error;
 	}
 
-	m_searchType = type;
 	if (type == KadSearch) {
 		try {
 			if (*searchID == 0xffffffff) {
@@ -369,11 +437,16 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 			Kademlia::CSearch* search = Kademlia::CSearchManager::PrepareFindKeywords(params.strKeyword, data->GetLength(), data->GetRawBuffer(), *searchID);
 
 			*searchID = search->GetSearchID();
-			m_currentSearch = *searchID;
-			m_KadSearchFinished = false;
-
-			// Register this search in the active searches map
-			m_activeSearches[*searchID] = type;
+			
+			// Create per-search state for Kad search
+			auto* searchState = getOrCreateSearchState(*searchID, type, params.searchString);
+			if (!searchState) {
+				return _("Failed to create per-search state for Kad search");
+			}
+			
+			// Initialize Kad search state
+			searchState->setKadSearchFinished(false);
+			searchState->setKadSearchRetryCount(0);
 
 			// Store search parameters for this search ID
 			m_searchParams[*searchID] = params;
@@ -387,11 +460,12 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		if (*searchID == 0) {
 			*searchID = GetNextSearchID();
 		}
-		m_currentSearch = *searchID;
-		m_searchInProgress = true;
-
-		// Register this search in the active searches map
-		m_activeSearches[*searchID] = type;
+		
+		// Create per-search state for ED2K search
+		auto* searchState = getOrCreateSearchState(*searchID, type, params.searchString);
+		if (!searchState) {
+			return _("Failed to create per-search state for ED2K search");
+		}
 
 		// Store search parameters for this search ID
 		m_searchParams[*searchID] = params;
@@ -404,9 +478,11 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		theApp->serverconnect->SendPacket(searchPacket, (type == LocalSearch));
 
 		if (type == GlobalSearch) {
-			m_searchPacket.reset(searchPacket);
-			m_64bitSearchPacket = packetUsing64bit;
-			m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ); // will be changed later when actually sending the packet!!
+			// Store search packet in per-search state
+			searchState->setSearchPacket(std::unique_ptr<CPacket>(searchPacket), packetUsing64bit);
+		} else {
+			// Local search packet is sent immediately, no need to store it
+			delete searchPacket;
 		}
 	}
 
@@ -900,36 +976,56 @@ void CSearchList::AddFileToDownloadByHash(const CMD4Hash& hash, uint8 cat)
 
 void CSearchList::StopSearch(bool globalOnly)
 {
-	if (m_searchType == GlobalSearch) {
-		// Remove this search from the active searches map
-		if (m_currentSearch != -1) {
-			m_activeSearches.erase(m_currentSearch);
-		}
-		
-		m_currentSearch = -1;
-		
-		// Reset search packet (unique_ptr handles deletion automatically)
-		m_searchPacket.reset();
-		
-		m_searchInProgress = false;
-
-		// Order is crucial here: on wx_MSW an additional event can be generated during the stop.
-		// So the packet has to be deleted first, so that OnGlobalSearchTimer() returns immediately
-		// without calling StopGlobalSearch() again.
-		m_searchTimer.Stop();
-
-		CoreNotify_Search_Update_Progress(0xffff);
-	} else if (m_searchType == KadSearch && !globalOnly) {
-		// Check if we have a valid search ID before stopping
-		if (m_currentSearch != -1) {
-			// Remove this search from the active searches map
-			m_activeSearches.erase(m_currentSearch);
-			
-			Kademlia::CSearchManager::StopSearch(m_currentSearch, false);
-			m_currentSearch = -1;
-		}
-		m_KadSearchFinished = true;
+	// This legacy function stops all searches
+	// For backward compatibility, we stop all active searches
+	auto activeIds = getActiveSearchIds();
+	for (long searchId : activeIds) {
+		StopSearch(searchId, globalOnly);
 	}
+}
+
+void CSearchList::StopSearch(long searchID, bool globalOnly)
+{
+	// Get the search state for this ID
+	auto* searchState = getSearchState(searchID);
+	if (!searchState) {
+		// Search not found, nothing to stop
+		return;
+	}
+	
+	// Get search type from state
+	uint8_t searchType = searchState->getSearchType();
+	
+	if (searchType == GlobalSearch) {
+		// Clear search packet for this search
+		searchState->clearSearchPacket();
+		
+		// Stop the timer if this was the last global search
+		bool hasOtherGlobalSearches = false;
+		auto allIds = getActiveSearchIds();
+		for (long id : allIds) {
+			if (id != searchID) {
+				auto* otherState = getSearchState(id);
+				if (otherState && otherState->getSearchType() == GlobalSearch) {
+					hasOtherGlobalSearches = true;
+					break;
+				}
+			}
+		}
+		
+		if (!hasOtherGlobalSearches) {
+			m_searchTimer.Stop();
+		}
+		
+		CoreNotify_Search_Update_Progress(0xffff);
+	} else if (searchType == KadSearch && !globalOnly) {
+		// Stop Kad search
+		Kademlia::CSearchManager::StopSearch(searchID, false);
+		searchState->setKadSearchFinished(true);
+	}
+	
+	// Remove the search state
+	removeSearchState(searchID);
 }
 
 
