@@ -246,6 +246,15 @@ private:
 	// Map of search ID to SearchController for active searches
 	std::map<uint32, std::unique_ptr<search::SearchController>> m_searchControllers;
 
+	// Map of search ID to search type for active searches
+	std::map<uint32, search::ModernSearchType> m_searchTypes;
+	
+	// Mutex to protect UI updates from concurrent network callbacks
+	mutable wxMutex m_uiUpdateMutex;
+
+	// Helper function to find existing tab by search text and type
+	CSearchListCtrl* FindExistingTab(const wxString& searchString, search::ModernSearchType searchType);
+
 	DECLARE_EVENT_TABLE()
 };
 

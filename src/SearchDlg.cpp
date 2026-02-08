@@ -975,6 +975,7 @@ void CSearchDlg::StartNewSearch() {
 	// Users can have multiple tabs with the same search term and type
 	int existingTabIndex = -1;
 
+#ifndef CLIENT_GUI
 	// Create SearchController based on search type
 	search::ModernSearchType modernType;
 	switch (search_type) {
@@ -1016,6 +1017,7 @@ void CSearchDlg::StartNewSearch() {
 	// Set up callbacks for the controller BEFORE starting the search
 	// We'll capture the search ID after the controller creates it
 	controller->setOnSearchStarted([this](uint32_t searchId) {
+		wxMutexLocker lock(m_uiUpdateMutex);
 		// Search started - find the tab and update its state
 		for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
 			CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
@@ -1028,6 +1030,7 @@ void CSearchDlg::StartNewSearch() {
 	});
 
 	controller->setOnSearchCompleted([this](uint32_t searchId) {
+		wxMutexLocker lock(m_uiUpdateMutex);
 		// Search completed - update UI state
 		for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
 			CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
@@ -1042,23 +1045,11 @@ void CSearchDlg::StartNewSearch() {
 		}
 	});
 
-	controller->setOnResultsReceived([this](uint32_t searchId, const std::vector<CSearchFile*>& results) {
-		// Results received - display them in the appropriate tab
-		for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
-			CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
-			if (list && list->GetSearchId() == (long)searchId) {
-				// Add each new result to the list control without clearing existing results
-				for (CSearchFile* result : results) {
-					list->AddResult(result);
-				}
-				// Update hit count
-				UpdateHitCount(list);
-				break;
-			}
-		}
-	});
+	// Instead of directly handling results, we'll let the SearchResultRouter handle them
+	// The controller will still receive results internally, but we won't process them here
 
 	controller->setOnMoreResults([this](uint32_t searchId, bool success, const wxString& message) {
+		wxMutexLocker lock(m_uiUpdateMutex);
 		// More results received - update the hit count in the tab
 		if (success && !message.IsEmpty()) {
 			// Find the tab for this search
@@ -1078,6 +1069,7 @@ void CSearchDlg::StartNewSearch() {
 	auto errorMessage = std::make_shared<wxString>();
 
 	controller->setOnError([this, searchError, errorMessage](uint32_t searchId, const wxString& error) {
+		wxMutexLocker lock(m_uiUpdateMutex);
 		// Handle errors
 		*searchError = true;
 		*errorMessage = error;
@@ -1127,6 +1119,16 @@ void CSearchDlg::StartNewSearch() {
 	// Search started successfully, now create a new tab
 	// Always create a new tab to ensure each search gets its own tab
 	CreateNewTab(prefix + params.searchString, real_id);
+#else
+	// CLIENT_GUI mode: Use EC-based search
+	uint32 real_id = ++m_nSearchID;
+	
+	// Start the search via EC connection
+	theApp->searchlist->StartNewSearch(&real_id, search_type, params);
+	
+	// Create a new tab for this search
+	CreateNewTab(prefix + params.searchString, real_id);
+#endif
 }
 
 void CSearchDlg::UpdateHitCount(CSearchListCtrl* page) {

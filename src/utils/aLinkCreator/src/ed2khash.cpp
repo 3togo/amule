@@ -31,7 +31,7 @@
 #include <wx/regex.h>
 
 #include "ed2khash.h"
-
+#include <memory>
 
 /// Constructor
 Ed2kHash::Ed2kHash():MD4()
@@ -98,15 +98,15 @@ bool Ed2kHash::SetED2KHashFromFile(const wxFileName& filename, MD4Hook hook)
                 {
                   if ((dataread + BUFSIZE) > PARTSIZE)
                     {
-                      read = file.Read(buf, PARTSIZE - dataread);
+                      read = file.Read(buf.get(), PARTSIZE - dataread);
                     }
                   else
                     {
-                      read = file.Read(buf, BUFSIZE);
+                      read = file.Read(buf.get(), BUFSIZE);
                     }
                   dataread += read;
                   totalread += read;
-                  MD4Update(&hdc, reinterpret_cast<unsigned char const *>(buf),
+                  MD4Update(&hdc, reinterpret_cast<unsigned char const *>(buf.get()),
                             read);
                 }
                 else

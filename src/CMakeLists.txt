@@ -120,6 +120,7 @@ if (BUILD_DAEMON)
 	target_compile_definitions (amuled
 		PRIVATE AMULE_DAEMON
 		PRIVATE wxUSE_GUI=0
+		PRIVATE NETWORK_PERF_MONITORING
 	)
 
 	target_include_directories (amuled
@@ -184,25 +185,6 @@ if (BUILD_MONOLITHIC)
 		${COMMON_SOURCES}
 		${CORE_SOURCES}
 		${GUI_SOURCES}
-		CaptchaDialog.cpp
-		CaptchaGenerator.cpp
-		PartFileConvert.cpp
-		PartFileConvertDlg.cpp
-		search/SearchControllerBase.cpp
-		search/SearchController.cpp
-		search/SearchControllerFactory.cpp
-		search/ED2KSearchController.cpp
-		search/ED2KSearchPacketBuilder.cpp
-		search/KadSearchController.cpp
-		search/KadSearchPacketBuilder.cpp
-		search/SearchAutoRetry.cpp
-		search/SearchModel.cpp
-		search/SearchPackageValidator.cpp
-		search/SearchPackageException.cpp
-		search/SearchResultRouter.cpp
-		search/SearchLogging.cpp
-		SearchStateManager.cpp
-		SearchLabelHelper.cpp
 	)
 
 	if (WIN32)
@@ -211,6 +193,14 @@ if (BUILD_MONOLITHIC)
 		)
 	endif()
 
+	target_compile_definitions (amule
+		PRIVATE NETWORK_PERF_MONITORING
+	)
+
+	target_include_directories (amule
+		PRIVATE ${SRC_DIR}
+	)
+
 	target_link_libraries (amule
 		PRIVATE ec
 		PRIVATE muleappcommon
@@ -218,7 +208,7 @@ if (BUILD_MONOLITHIC)
 		PRIVATE muleappgui
 		PRIVATE mulecommon
 		PRIVATE mulesocket
-		PRIVATE $<$<VERSION_LESS:${wxWidgets_VERSION_STRING},3.1.2>:wxWidgets::ADV>
+		PRIVATE wxWidgets::ADV
 		PRIVATE wxWidgets::NET
 	)
 
@@ -256,17 +246,8 @@ endif (BUILD_MONOLITHIC)
 if (BUILD_REMOTEGUI)
 	add_executable (amulegui
 		${COMMON_SOURCES}
-		${GUI_SOURCES}
-		kademlia/utils/UInt128.cpp
-		amule-remote-gui.cpp
+		${GUI_REMOTE_SOURCES}
 	)
-
-	# Use optimized UInt128 implementation if enabled and available
-	if (USE_OPTIMIZED_UINT128)
-		target_sources (amulegui
-			PRIVATE kademlia/utils/UInt128Optimized.cpp
-		)
-	endif()
 
 	if (WIN32)
 		target_sources (amulegui
@@ -275,7 +256,8 @@ if (BUILD_REMOTEGUI)
 	endif()
 
 	target_compile_definitions (amulegui
-		PRIVATE "CLIENT_GUI"
+		PRIVATE CLIENT_GUI
+		PRIVATE wxUSE_GUI=1
 	)
 
 	target_include_directories (amulegui
@@ -285,22 +267,24 @@ if (BUILD_REMOTEGUI)
 	target_link_libraries (amulegui
 		PRIVATE ec
 		PRIVATE muleappcommon
+		PRIVATE muleappcore
 		PRIVATE muleappgui
 		PRIVATE mulecommon
 		PRIVATE mulesocket
-		PRIVATE $<$<VERSION_LESS:${wxWidgets_VERSION_STRING},3.1.2>:wxWidgets::ADV>
+		PRIVATE wxWidgets::CORE
+		PRIVATE wxWidgets::ADV
 		PRIVATE wxWidgets::NET
 	)
 
 	if (HAVE_BFD)
-		target_link_libraries (amulegui
+		target_link_libraries (amulegui 
 			PRIVATE ${LIBBFD}
 		)
-	endif()
+	endif (HAVE_BFD)
 
 	if (WIN32)
-		set_target_properties (amulegui PROPERTIES
-			WIN32_EXECUTABLE TRUE
+		target_link_libraries (amulegui
+			shlwapi.lib
 		)
 	endif()
 
@@ -542,3 +526,4 @@ if (NEED_LIB_MULESOCKET)
 		)
 	endif()
 endif()
+

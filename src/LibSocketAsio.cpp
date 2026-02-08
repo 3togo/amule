@@ -241,10 +241,8 @@ public:
 
 		AddDebugLogLineF(logAsio, CFormat(wxT("Read2 %s %d - %d")) % m_IP % bytesToRead % readCache);
 		
-		// Performance monitoring integration
-		if (readCache > 0) {
-			network_perf::g_network_perf_monitor.record_received(readCache);
-		}
+		// Performance monitoring integration - use conditional macro
+		RECORD_NETWORK_RECEIVED(readCache);
 		if (m_readBufferContent) {
 			// Data left, post another event
 			PostReadEvent(1);
@@ -271,9 +269,9 @@ public:
 		}
 		AddDebugLogLineF(logAsio, CFormat(wxT("Write %d %s")) % nbytes % m_IP);
 		
-		// Performance monitoring integration
+		// Performance monitoring integration - use conditional macro
 		if (nbytes > 0) {
-			network_perf::g_network_perf_monitor.record_sent(nbytes);
+			RECORD_NETWORK_SENT(nbytes);
 		}
 		
 		m_sendBuffer = new char[nbytes];
@@ -793,7 +791,8 @@ public:
 		: ip::tcp::acceptor(s_io_service),
 		  m_libSocketServer(libSocketServer),
 		  m_currentSocket(NULL),
-		  m_strand(s_io_service)
+		  m_strand(s_io_service),
+		  m_shutdown(false)
 	{
 		m_ok = false;
 		m_socketAvailable = false;
@@ -813,6 +812,22 @@ public:
 
 	~CAsioSocketServerImpl()
 	{
+		// Set shutdown flag to prevent new operations from being posted
+		m_shutdown = true;
+		
+		// Cancel all pending asynchronous operations to prevent callbacks
+		// from accessing this object after it's been destroyed
+		error_code ec;
+		cancel(ec);
+		if (ec) {
+			AddDebugLogLineF(logAsio, CFormat(wxT("CAsioSocketServerImpl cancel failed: %s")) % ec.message());
+		}
+		
+		// Close the acceptor to release the socket
+		close(ec);
+		if (ec) {
+			AddDebugLogLineF(logAsio, CFormat(wxT("CAsioSocketServerImpl close failed: %s")) % ec.message());
+		}
 	}
 
 	// For wxSocketServer, Ok will return true if the server could bind to the specified address and is already listening for new connections.
@@ -884,6 +899,12 @@ private:
 				AddDebugLogLineN(logAsio, wxT("Error in HandleAccept: invalid socket"));
 			}
 		}
+		
+		// Check if we're shutting down before posting new operations
+		if (m_shutdown) {
+			return;
+		}
+		
 		// We were not successful. Try again.
 		// Post the request to the event queue to make sure it doesn't get called immediately.
 		m_strand.post(boost::bind(& CAsioSocketServerImpl::StartAccept, this), boost::asio::get_associated_allocator(boost::bind(& CAsioSocketServerImpl::StartAccept, this)));
@@ -898,6 +919,8 @@ private:
 	// Is there a socket available?
 	bool m_socketAvailable;
 	io_context::strand	m_strand;		// handle synchronisation in io_context thread pool
+	bool m_shutdown;  // Flag to indicate shutdown has begun
+
 };
 
 

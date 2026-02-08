@@ -76,3 +76,5 @@ Makefile.user
 *.vcxproj.user
 cpp20_build/
 .vscode/
+
+.codeartsdoer

@@ -30,6 +30,8 @@
 #include "search/SearchResultHandler.h"	// Result handler interface
 #include "search/SearchResultRouter.h"	// Result router
 
+#include "include/common/MacrosProgramSpecific.h"	// Needed for NOT_ON_REMOTEGUI
+
 #include <protocol/Protocols.h>
 #include <protocol/kad/Constants.h>
 #include <tags/ClientTags.h>
@@ -396,7 +398,9 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 
 		CPacket* searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_SEARCHREQUEST);
 
-		theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
+		NOT_ON_REMOTEGUI(
+			theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
+		)
 		theApp->serverconnect->SendPacket(searchPacket, (type == LocalSearch));
 
 		if (type == GlobalSearch) {
@@ -455,7 +459,7 @@ wxString CSearchList::RequestMoreResults(long searchID)
 }
 
 
-wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long searchID)
+wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long searchId)
 {
 	// Check if we're connected to eD2k
 	if (!theApp->IsConnectedED2K()) {
@@ -468,7 +472,7 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 	}
 
 	// Get the original search parameters
-	CSearchParams params = GetSearchParams(searchID);
+	CSearchParams params = GetSearchParams(searchId);
 	if (params.searchString.IsEmpty()) {
 		return _("No search parameters available for this search");
 	}
@@ -507,7 +511,9 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 	}
 
 	// Send the search request to the server
-	theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
+	NOT_ON_REMOTEGUI(
+		theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
+	)
 	// Cast away const because SendUDPPacket doesn't take const pointer
 	theApp->serverconnect->SendUDPPacket(searchPacket, const_cast<CServer*>(server), true);
 
@@ -568,7 +574,7 @@ uint32 CSearchList::GetSearchProgress() const
 }
 
 
-void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
+void CSearchList::OnGlobalSearchTimer(CTimerEvent& ev)
 {
 	// Ensure that the server-queue contains the current servers.
 	if (!m_searchPacket) {
@@ -600,14 +606,18 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
 					CPacket *extSearchPacket = new CPacket(OP_GLOBSEARCHREQ3, m_searchPacket->GetPacketSize() + (uint32_t)data.GetLength(), OP_EDONKEYPROT);
 					extSearchPacket->CopyToDataBuffer(0, data.GetRawBuffer(), data.GetLength());
 					extSearchPacket->CopyToDataBuffer(data.GetLength(), m_searchPacket->GetDataBuffer(), m_searchPacket->GetPacketSize());
-					theStats::AddUpOverheadServer(extSearchPacket->GetPacketSize());
+					NOT_ON_REMOTEGUI(
+											theStats::AddUpOverheadServer(extSearchPacket->GetPacketSize());
+					)
 					theApp->serverconnect->SendUDPPacket(extSearchPacket, server, true);
 					AddDebugLogLineN(logServerUDP, wxT("Sending OP_GLOBSEARCHREQ3 to server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
 				} else if (server->GetUDPFlags() & SRV_UDPFLG_EXT_GETFILES) {
 					if (!m_64bitSearchPacket || server->SupportsLargeFilesUDP()) {
 						m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ2);
 						AddDebugLogLineN(logServerUDP, wxT("Sending OP_GLOBSEARCHREQ2 to server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
-						theStats::AddUpOverheadServer(m_searchPacket->GetPacketSize());
+						NOT_ON_REMOTEGUI(
+													theStats::AddUpOverheadServer(m_searchPacket->GetPacketSize());
+						)
 						theApp->serverconnect->SendUDPPacket(m_searchPacket.get(), server, false);
 					} else {
 						AddDebugLogLineN(logServerUDP, wxT("Skipped UDP search on server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()) + wxT(": No large file support"));
@@ -616,7 +626,9 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& WXUNUSED(evt))
 					if (!m_64bitSearchPacket || server->SupportsLargeFilesUDP()) {
 						m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ);
 						AddDebugLogLineN(logServerUDP, wxT("Sending OP_GLOBSEARCHREQ to server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
-						theStats::AddUpOverheadServer(m_searchPacket->GetPacketSize());
+						NOT_ON_REMOTEGUI(
+													theStats::AddUpOverheadServer(m_searchPacket->GetPacketSize());
+						)
 						theApp->serverconnect->SendUDPPacket(m_searchPacket.get(), server, false);
 					} else {
 						AddDebugLogLineN(logServerUDP, wxT("Skipped UDP search on server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()) + wxT(": No large file support"));
@@ -744,9 +756,11 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 	}
 
 	// Process results through validator (this adds them to SearchList)
-	if (!resultVector.empty()) {
-		search::SearchResultRouter::Instance().RouteResults(searchId, resultVector);
-	}
+	NOT_ON_REMOTEGUI(
+		if (!resultVector.empty()) {
+			search::SearchResultRouter::Instance().RouteResults(searchId, resultVector);
+		}
+	)
 }
 
 
@@ -781,7 +795,9 @@ void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, u
 	CSearchFile* result = new CSearchFile(packet, optUTF8, searchId, serverIP, serverPort);
 
 	// Process result through validator (this adds it to SearchList)
-	search::SearchResultRouter::Instance().RouteResult(searchId, result);
+	NOT_ON_REMOTEGUI(
+		search::SearchResultRouter::Instance().RouteResult(searchId, result);
+	)
 }
 
 
@@ -1289,7 +1305,9 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt
 
 
 	// Process result through validator (this adds it to SearchList)
-	search::SearchResultRouter::Instance().RouteResult(searchID, tempFile);
+	NOT_ON_REMOTEGUI(
+		search::SearchResultRouter::Instance().RouteResult(searchID, tempFile);
+	)
 }
 
 void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)

@@ -31,6 +31,7 @@
 #include <vector>
 #include <wx/string.h>
 #include "../SearchFile.h"
+#include "../SearchList.h"  // Add this include for CSearchList::CSearchParams
 
 // Forward declarations
 namespace search {
@@ -87,6 +88,17 @@ public:
      * @return Number of results routed
      */
     size_t RouteResults(uint32_t searchId, const std::vector<CSearchFile*>& results);
+
+    /**
+     * Create a new search or reuse an existing one based on search text and type
+     * This is the central entry point for all search initiation
+     *
+     * @param searchText The search query text
+     * @param searchType The type of search (Global, Local, Kad)
+     * @param params Additional search parameters
+     * @return Search ID for the created/reused search
+     */
+    uint32_t CreateOrReuseSearch(const wxString& searchText, const wxString& searchType, const CSearchList::CSearchParams& params);
 
 private:
     // Private constructor for singleton

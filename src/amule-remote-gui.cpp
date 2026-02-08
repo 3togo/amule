@@ -415,12 +415,21 @@ int CamuleRemoteGuiApp::ShowAlert(wxString msg, wxString title, int flags)
 
 void CamuleRemoteGuiApp::AddRemoteLogLine(const wxString& line)
 {
-	amuledlg->AddLogLine(line);
+	// Remote GUI should use AddGuiLogLine instead of calling CamuleDlg directly
+	AddGuiLogLine(line);
 }
 
-int CamuleRemoteGuiApp::InitGui(bool geometry_enabled, wxString &geom_string)
+
+void CamuleRemoteGuiApp::AddGuiLogLine(const wxString& line)
 {
-	CamuleGuiBase::InitGui(geometry_enabled, geom_string);
+	// Stub implementation for remote GUI - log to console or ignore
+	wxLogDebug("Remote GUI Log: %s", line);
+}
+
+
+int CamuleRemoteGuiApp::InitGui(bool geometry_enable, wxString& geometry_string)
+{
+	CamuleGuiBase::InitGui(geometry_enable, geometry_string);
 	SetTopWindow(amuledlg);
 	AddLogLineN(_("Ready")); // The first log line after the window is up triggers output of all the ones before
 	return 0;
