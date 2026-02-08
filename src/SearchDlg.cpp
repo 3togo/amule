@@ -31,6 +31,7 @@
 #include <tags/FileTags.h>
 #include <wx/app.h>
 #include <wx/gauge.h> // Do_not_auto_remove (win32)
+#include "search/SearchModel.h" // Needed for search::ModernSearchType
 
 #include "GetTickCount.h"
 #include "Logger.h"
@@ -180,6 +181,57 @@ CSearchListCtrl *CSearchDlg::GetSearchList(wxUIntPtr id) {
 
     if (page->GetSearchId() == id) {
       return page;
+    }
+  }
+
+  return NULL;
+}
+
+CSearchListCtrl* CSearchDlg::FindExistingTab(const wxString& searchString, search::ModernSearchType searchType)
+{
+  // Convert ModernSearchType to legacy SearchType for comparison
+  SearchType legacyType;
+  switch (searchType) {
+    case search::ModernSearchType::LocalSearch:
+      legacyType = LocalSearch;
+      break;
+    case search::ModernSearchType::GlobalSearch:
+      legacyType = GlobalSearch;
+      break;
+    case search::ModernSearchType::KadSearch:
+      legacyType = KadSearch;
+      break;
+    default:
+      return NULL;
+  }
+
+  // First, try to find by exact search string and type using CheckTabNameExists
+  if (CheckTabNameExists(legacyType, searchString)) {
+    // We found a tab with this search string and type
+    // Now we need to find the actual CSearchListCtrl
+    int nPages = m_notebook->GetPageCount();
+    for (int i = 0; i < nPages; i++) {
+      CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+      if (page) {
+        // Get the search ID for this tab
+        long searchId = page->GetSearchId();
+        if (searchId != 0) {
+          // Check if this search ID exists in the state manager
+          if (m_stateManager.HasSearch(searchId)) {
+            // Check if this search ID matches the type we're looking for
+            wxString tabSearchType = m_stateManager.GetSearchType(searchId);
+            if ((legacyType == LocalSearch && tabSearchType == wxT("Local")) ||
+                (legacyType == GlobalSearch && tabSearchType == wxT("Global")) ||
+                (legacyType == KadSearch && tabSearchType == wxT("Kad"))) {
+              // Check if the keyword matches
+              wxString keyword = m_stateManager.GetKeyword(searchId);
+              if (keyword == searchString) {
+                return page;
+              }
+            }
+          }
+        }
+      }
     }
   }
 
@@ -534,52 +586,37 @@ void CSearchDlg::OnFilteringChange(wxCommandEvent &WXUNUSED(evt)) {
 
 bool CSearchDlg::CheckTabNameExists(SearchType searchType,
                                     const wxString &searchString) {
-  // Determine the prefix for this search type
-  wxString prefix;
+  // Convert SearchType to string for comparison with SearchStateManager
+  wxString searchTypeStr;
   switch (searchType) {
   case LocalSearch:
-    prefix = wxT("[Local] ");
+    searchTypeStr = wxT("Local");
     break;
   case GlobalSearch:
-    prefix = wxT("[Global] ");
+    searchTypeStr = wxT("Global");
     break;
   case KadSearch:
-    prefix = wxT("[Kad] ");
+    searchTypeStr = wxT("Kad");
     break;
   default:
-    prefix = wxEmptyString;
-    break;
+    return false;
   }
 
+  // Check all tabs using SearchStateManager for reliable identification
   int nPages = m_notebook->GetPageCount();
   for (int i = 0; i < nPages; i++) {
-    wxString pageText = m_notebook->GetPageText(i);
-
-    // Check if this tab has the correct prefix
-    if (pageText.StartsWith(prefix)) {
-      wxString searchPart = pageText.Mid(prefix.length()); // Remove prefix
-
-      // Remove any state information like [Searching], [No Results], etc.
-      // State information is in brackets at the beginning of searchPart
-      while (searchPart.StartsWith(wxT("["))) {
-        int endBracket = searchPart.Find(wxT("]"));
-        if (endBracket == wxNOT_FOUND) {
-          break; // Malformed, break out
+    CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+    if (page) {
+      long searchId = page->GetSearchId();
+      if (searchId != 0 && m_stateManager.HasSearch(searchId)) {
+        // Get search information from SearchStateManager
+        wxString tabSearchType = m_stateManager.GetSearchType(searchId);
+        wxString tabKeyword = m_stateManager.GetKeyword(searchId);
+        
+        // Check if type and keyword match
+        if (tabSearchType == searchTypeStr && tabKeyword == searchString) {
+          return true;
         }
-        // Remove the [State] part including any space after it
-        searchPart = searchPart.Mid(endBracket + 1)
-                         .Trim(true); // Trim leading whitespace
-      }
-
-      // Remove count information like "(5)" or "(3/5)"
-      int parenPos = searchPart.Find(wxT('('));
-      if (parenPos != wxNOT_FOUND) {
-        searchPart = searchPart.Left(parenPos).Trim();
-      }
-
-      // Now we should have just the search term
-      if (searchPart == searchString) {
-        return true;
       }
     }
   }
@@ -1111,31 +1148,39 @@ void CSearchDlg::StartNewSearch() {
   // We'll capture the search ID after the controller creates it
   controller->setOnSearchStarted([this](uint32_t searchId) {
     wxMutexLocker lock(m_uiUpdateMutex);
-    // Search started - find the tab and update its state
-    for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
-      CSearchListCtrl *list =
-          static_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
-      if (list && list->GetSearchId() == (long)searchId) {
-        // Enable the cancel button
-        FindWindow(IDC_CANCELS)->Enable();
-        break;
+    
+    // Check if dialog still exists and is not being destroyed
+    if (!IsBeingDeleted() && m_notebook) {
+      // Search started - find the tab and update its state
+      for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
+        CSearchListCtrl *list =
+            static_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+        if (list && list->GetSearchId() == (long)searchId) {
+          // Enable the cancel button
+          FindWindow(IDC_CANCELS)->Enable();
+          break;
+        }
       }
     }
   });
 
   controller->setOnSearchCompleted([this](uint32_t searchId) {
     wxMutexLocker lock(m_uiUpdateMutex);
-    // Search completed - update UI state
-    for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
-      CSearchListCtrl *list =
-          static_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
-      if (list && list->GetSearchId() == (long)searchId) {
-        // Re-enable start button, disable cancel button
-        FindWindow(IDC_STARTS)->Enable();
-        FindWindow(IDC_CANCELS)->Disable();
-        // Update hit count
-        UpdateHitCount(list);
-        break;
+    
+    // Check if dialog still exists and is not being destroyed
+    if (!IsBeingDeleted() && m_notebook) {
+      // Search completed - update UI state
+      for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
+        CSearchListCtrl *list =
+            static_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+        if (list && list->GetSearchId() == (long)searchId) {
+          // Re-enable start button, disable cancel button
+          FindWindow(IDC_STARTS)->Enable();
+          FindWindow(IDC_CANCELS)->Disable();
+          // Update hit count
+          UpdateHitCount(list);
+          break;
+        }
       }
     }
   });
@@ -1147,16 +1192,20 @@ void CSearchDlg::StartNewSearch() {
   controller->setOnMoreResults(
       [this](uint32_t searchId, bool success, const wxString &message) {
         wxMutexLocker lock(m_uiUpdateMutex);
-        // More results received - update the hit count in the tab
-        if (success && !message.IsEmpty()) {
-          // Find the tab for this search
-          for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
-            CSearchListCtrl *list =
-                static_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
-            if (list && list->GetSearchId() == (long)searchId) {
-              // Update the hit count
-              UpdateHitCount(list);
-              break;
+        
+        // Check if dialog still exists and is not being destroyed
+        if (!IsBeingDeleted() && m_notebook) {
+          // More results received - update the hit count in the tab
+          if (success && !message.IsEmpty()) {
+            // Find the tab for this search
+            for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
+              CSearchListCtrl *list =
+                  static_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+              if (list && list->GetSearchId() == (long)searchId) {
+                // Update the hit count
+                UpdateHitCount(list);
+                break;
+              }
             }
           }
         }
@@ -1169,11 +1218,15 @@ void CSearchDlg::StartNewSearch() {
   controller->setOnError([this, searchError, errorMessage](
                              uint32_t searchId, const wxString &error) {
     wxMutexLocker lock(m_uiUpdateMutex);
-    // Handle errors
-    *searchError = true;
-    *errorMessage = error;
-    wxMessageBox(error, _("Search error"), wxOK | wxCENTRE | wxICON_ERROR,
-                 this);
+    
+    // Check if dialog still exists and is not being destroyed
+    if (!IsBeingDeleted()) {
+      // Handle errors
+      *searchError = true;
+      *errorMessage = error;
+      wxMessageBox(error, _("Search error"), wxOK | wxCENTRE | wxICON_ERROR,
+                   this);
+    }
   });
 
   // Start the search using the controller
@@ -1369,117 +1422,126 @@ bool CSearchDlg::OnRetryRequested(uint32_t searchId) {
 
 void CSearchDlg::UpdateTabLabelWithState(CSearchListCtrl *list,
                                          const wxString &state) {
-  assert(list != nullptr);
-  assert(m_notebook != nullptr);
+  // Validate inputs
+  if (!list || !m_notebook) {
+    return;
+  }
 
-  for (uint32 i = 0; i < (uint32)m_notebook->GetPageCount(); ++i) {
-    if (m_notebook->GetPage(i) == list) {
-      // Get the search type from the list control (stored variable)
-      wxString searchType = list->GetSearchType();
+  // Check if the dialog is being destroyed
+  if (IsBeingDeleted()) {
+    return;
+  }
 
-      // If search type is not set, parse it from current tab text for backward
-      // compatibility
-      if (searchType.IsEmpty()) {
-        wxString tabText = m_notebook->GetPageText(i);
-        assert(!tabText.IsEmpty());
+  // Find the tab index for this list control
+  int tabIndex = m_notebook->FindPage(list);
+  if (tabIndex == wxNOT_FOUND) {
+    // Tab no longer exists, skip update
+    return;
+  }
 
-        // Parse search type from tab text
-        if (tabText.StartsWith(wxT("[Local] "))) {
-          searchType = wxT("Local");
-        } else if (tabText.StartsWith(wxT("[Global] "))) {
-          searchType = wxT("Global");
-        } else if (tabText.StartsWith(wxT("[Kad] "))) {
-          searchType = wxT("Kad");
-        }
+  // Get the search type from the list control (stored variable)
+  wxString searchType = list->GetSearchType();
 
-        // Store the parsed search type for future use
-        list->SetSearchType(searchType);
+  // If search type is not set, parse it from current tab text for backward
+  // compatibility
+  if (searchType.IsEmpty()) {
+    wxString tabText = m_notebook->GetPageText(tabIndex);
+    assert(!tabText.IsEmpty());
+
+    // Parse search type from tab text
+    if (tabText.StartsWith(wxT("[Local] "))) {
+      searchType = wxT("Local");
+    } else if (tabText.StartsWith(wxT("[Global] "))) {
+      searchType = wxT("Global");
+    } else if (tabText.StartsWith(wxT("[Kad] "))) {
+      searchType = wxT("Kad");
+    }
+
+    // Store the parsed search type for future use
+    list->SetSearchType(searchType);
+  }
+
+  // Get the keyword from SearchStateManager
+  long searchId = list->GetSearchId();
+  wxString keyword = m_stateManager.GetKeyword(searchId);
+  if (keyword.IsEmpty()) {
+    // Fallback: get keyword from current tab text
+    wxString tabText = m_notebook->GetPageText(tabIndex);
+    // Remove type prefix
+    if (tabText.StartsWith(wxT("[Local] "))) {
+      tabText = tabText.Mid(8);
+    } else if (tabText.StartsWith(wxT("[Global] "))) {
+      tabText = tabText.Mid(8);
+    } else if (tabText.StartsWith(wxT("[Kad] "))) {
+      tabText = tabText.Mid(6);
+    }
+    // Remove state prefix
+    if (tabText.StartsWith(wxT("["))) {
+      size_t stateEnd = tabText.Find(wxT("]"));
+      if (stateEnd != wxString::npos) {
+        tabText = tabText.Mid(stateEnd + 2);
       }
+    }
+    // Remove count suffix
+    int parenPos = tabText.Find(wxT(" ("));
+    if (parenPos != wxNOT_FOUND) {
+      tabText = tabText.Left(parenPos);
+    }
+    keyword = tabText.Trim();
+  }
 
-      // Get the keyword from SearchStateManager
-      long searchId = list->GetSearchId();
-      wxString keyword = m_stateManager.GetKeyword(searchId);
-      if (keyword.IsEmpty()) {
-        // Fallback: get keyword from current tab text
-        wxString tabText = m_notebook->GetPageText(i);
-        // Remove type prefix
-        if (tabText.StartsWith(wxT("[Local] "))) {
-          tabText = tabText.Mid(8);
-        } else if (tabText.StartsWith(wxT("[Global] "))) {
-          tabText = tabText.Mid(8);
-        } else if (tabText.StartsWith(wxT("[Kad] "))) {
-          tabText = tabText.Mid(6);
-        }
-        // Remove state prefix
-        if (tabText.StartsWith(wxT("["))) {
-          size_t stateEnd = tabText.Find(wxT("]"));
-          if (stateEnd != wxString::npos) {
-            tabText = tabText.Mid(stateEnd + 2);
-          }
-        }
-        // Remove count suffix
-        int parenPos = tabText.Find(wxT(" ("));
-        if (parenPos != wxNOT_FOUND) {
-          tabText = tabText.Left(parenPos);
-        }
-        keyword = tabText.Trim();
-      }
+  // Log the values for debugging
+  theLogger.AddLogLine(wxT("SearchDlg.cpp"), __LINE__, false, logStandard,
+                       CFormat(wxT("UpdateTabLabelWithState: state='%s', "
+                                   "searchType='%s', keyword='%s'")) %
+                           state % searchType % keyword);
 
-      // Log the values for debugging
-      theLogger.AddLogLine(wxT("SearchDlg.cpp"), __LINE__, false, logStandard,
-                           CFormat(wxT("UpdateTabLabelWithState: state='%s', "
-                                       "searchType='%s', keyword='%s'")) %
-                               state % searchType % keyword);
+  // Build the new tab text using stored search type
+  wxString newText;
 
-      // Build the new tab text using stored search type
-      wxString newText;
+  // Add search type prefix
+  if (searchType == wxT("Local")) {
+    newText = wxT("[Local] ");
+  } else if (searchType == wxT("Global")) {
+    newText = wxT("[Global] ");
+  } else if (searchType == wxT("Kad")) {
+    newText = wxT("[Kad] ");
+  }
 
-      // Add search type prefix
-      if (searchType == wxT("Local")) {
-        newText = wxT("[Local] ");
-      } else if (searchType == wxT("Global")) {
-        newText = wxT("[Global] ");
-      } else if (searchType == wxT("Kad")) {
-        newText = wxT("[Kad] ");
-      }
+  // Add state if provided
+  if (!state.IsEmpty()) {
+    newText += wxT("[") + state + wxT("] ");
+  }
 
-      // Add state if provided
-      if (!state.IsEmpty()) {
-        newText += wxT("[") + state + wxT("] ");
-      }
+  // Add the keyword
+  newText += keyword;
 
-      // Add the keyword
-      newText += keyword;
+  // Get the result counts
+  size_t shown = list->GetItemCount();
+  size_t hidden = list->GetHiddenItemCount();
 
-      // Get the result counts
-      size_t shown = list->GetItemCount();
-      size_t hidden = list->GetHiddenItemCount();
+  // Validate counts - hidden should not exceed shown
+  assert(shown >= hidden);
 
-      // Validate counts - hidden should not exceed shown
-      assert(shown >= hidden);
-
-      // Add count information
-      // Always show count when there is a state (e.g., "No Results", "Retrying
-      // 1") or when there are actual results
-      if (!state.IsEmpty() || shown > 0 || hidden > 0) {
-        if (hidden) {
-          newText +=
-              (CFormat(wxT(" (%u/%u)")) % shown % (shown + hidden)).GetString();
-        } else {
-          newText += (CFormat(wxT(" (%u)")) % shown).GetString();
-        }
-      }
-
-      // Log the final tab text for debugging
-      theLogger.AddLogLine(
-          wxT("SearchDlg.cpp"), __LINE__, false, logStandard,
-          CFormat(wxT("UpdateTabLabelWithState: Setting tab text to '%s'")) %
-              newText);
-
-      m_notebook->SetPageText(i, newText);
-      break;
+  // Add count information
+  // Always show count when there is a state (e.g., "No Results", "Retrying
+  // 1") or when there are actual results
+  if (!state.IsEmpty() || shown > 0 || hidden > 0) {
+    if (hidden) {
+      newText +=
+          (CFormat(wxT(" (%u/%u)")) % shown % (shown + hidden)).GetString();
+    } else {
+      newText += (CFormat(wxT(" (%u)")) % shown).GetString();
     }
   }
+
+  // Log the final tab text for debugging
+  theLogger.AddLogLine(
+      wxT("SearchDlg.cpp"), __LINE__, false, logStandard,
+      CFormat(wxT("UpdateTabLabelWithState: Setting tab text to '%s'")) %
+          newText);
+
+  m_notebook->SetPageText(tabIndex, newText);
 }
 
 // UpdateSearchState is now implemented as an external helper function in
