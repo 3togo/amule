@@ -35,13 +35,14 @@
 #include <map>		// Needed for std::map
 
 // Forward declarations
+class PerSearchState;
+
 namespace search {
 	class SearchAutoRetry;
 	class SearchPackageValidator;
 	class ED2KSearchPacketBuilder;
 	class KadSearchPacketBuilder;
 	class SearchResultHandler;
-	class PerSearchState;
 }
 
 
@@ -117,6 +118,9 @@ public:
 
 	/** Returns the completion percentage of the current search. */
 	uint32 GetSearchProgress() const;
+	
+	/** Returns the completion percentage of a specific search. */
+	uint32 GetSearchProgress(long searchId) const;
 
 	/** Returns the current search ID. */
 	long GetCurrentSearchId() const { return m_currentSearch; }
@@ -247,7 +251,7 @@ public:
 	 * @param searchString The search string
 	 * @return Pointer to the PerSearchState, or nullptr on error
 	 */
-	search::PerSearchState* getOrCreateSearchState(long searchId, SearchType searchType, const wxString& searchString);
+	::PerSearchState* getOrCreateSearchState(long searchId, SearchType searchType, const wxString& searchString);
 	
 	/**
 	 * Get per-search state for a search ID
@@ -255,7 +259,7 @@ public:
 	 * @param searchId The search ID
 	 * @return Pointer to the PerSearchState, or nullptr if not found
 	 */
-	search::PerSearchState* getSearchState(long searchId);
+	::PerSearchState* getSearchState(long searchId);
 	
 	/**
 	 * Get per-search state for a search ID (const version)
@@ -263,7 +267,7 @@ public:
 	 * @param searchId The search ID
 	 * @return Pointer to the PerSearchState, or nullptr if not found
 	 */
-	const search::PerSearchState* getSearchState(long searchId) const;
+	const ::PerSearchState* getSearchState(long searchId) const;
 	
 	/**
 	 * Remove per-search state for a search ID
@@ -297,7 +301,7 @@ private:
 
 	//! Map of active searches and their per-search state
 	//! This is the single source of truth for active searches
-	std::map<long, std::unique_ptr<search::PerSearchState>>	m_searchStates;
+	std::map<long, std::unique_ptr<::PerSearchState>>	m_searchStates;
 
 	//! Mutex for thread-safe access to search states
 	mutable wxMutex m_searchMutex;
@@ -319,6 +323,24 @@ private:
 	//! Map of search parameters for each search ID.
 	typedef std::map<long, CSearchParams> ParamMap;
 	ParamMap	m_searchParams;
+
+	//! Legacy variables - TO BE REMOVED during migration
+	//! Current search ID (legacy - use PerSearchState instead)
+	long m_currentSearch;
+	//! Whether a search is in progress (legacy)
+	bool m_searchInProgress;
+	//! Search packet for global searches (legacy - use PerSearchState instead)
+	std::unique_ptr<CPacket> m_searchPacket;
+	//! Whether search packet uses 64-bit values (legacy - use PerSearchState instead)
+	bool m_64bitSearchPacket;
+	//! Type of current search (legacy - use PerSearchState instead)
+	SearchType m_searchType;
+	//! Whether Kad search is finished (legacy - use PerSearchState instead)
+	bool m_KadSearchFinished;
+	//! Kad search retry count (legacy - use PerSearchState instead)
+	int m_KadSearchRetryCount;
+	//! Map of active searches (legacy - use m_searchStates instead)
+	std::map<long, SearchType> m_activeSearches;
 
 // Result handlers now managed by SearchResultRouter
 // Package validators now used by controllers directly

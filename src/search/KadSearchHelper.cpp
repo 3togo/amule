@@ -29,6 +29,10 @@
 #include "../amule.h"
 #include "../SearchList.h"
 #include "../MemFile.h"
+#include "../Logger.h"
+#include "../kademlia/kademlia/SearchManager.h"
+#include "../kademlia/kademlia/Kademlia.h"
+#include "PerSearchState.h"
 #include <wx/utils.h>
 
 // Kad headers
@@ -78,9 +82,28 @@ bool KadSearchHelper::CreateSearchPacket(const SearchParams& params,
 	oldParams.maxSize = params.maxSize;
 	oldParams.availability = params.availability;
 
-	// For now, we use SearchList's StartNewSearch method
-	// This is temporary during migration
-	return false;
+	// Use the existing CreateSearchData function from SearchList
+	// For Kad search, we always support 64-bit
+	bool supports64bit = true;
+	bool packetUsing64bit = false;
+	
+	// Use the global application instance to access SearchList
+	if (!theApp || !theApp->searchlist) {
+		return false;
+	}
+	
+	CSearchList::CMemFilePtr data = theApp->searchlist->CreateSearchData(oldParams, KadSearch, supports64bit, packetUsing64bit);
+	
+	if (!data.get()) {
+		return false;
+	}
+	
+	// Allocate memory for the packet data
+	packetSize = data->GetLength();
+	packetData = new uint8_t[packetSize];
+	memcpy(packetData, data->GetRawBuffer(), packetSize);
+	
+	return true;
 }
 
 bool KadSearchHelper::StartSearch(const uint8_t* packetData, uint32_t packetSize,
@@ -90,9 +113,38 @@ bool KadSearchHelper::StartSearch(const uint8_t* packetData, uint32_t packetSize
 		return false;
 	}
 
-	// For now, we use SearchList's StartNewSearch method
-	// This is temporary during migration
-	return false;
+	// Use Kademlia's search manager to start the search
+	try {
+		// If searchId is 0xffffffff, stop any existing search first
+		if (searchId == 0xffffffff) {
+			Kademlia::CSearchManager::StopSearch(0xffffffff, false);
+		}
+
+		// Start the Kad search
+		// The tab must be created with the Kad search ID, so searchId is updated.
+		Kademlia::CSearch* search = Kademlia::CSearchManager::PrepareFindKeywords(keyword, packetSize, packetData, searchId);
+
+		searchId = search->GetSearchID();
+		
+		// Create per-search state for this Kad search
+		if (theApp && theApp->searchlist) {
+			// We need to get the search string, but we only have the keyword
+			// For now, use the keyword as the search string
+			wxString searchString = keyword;
+			
+			auto* searchState = theApp->searchlist->getOrCreateSearchState(searchId, KadSearch, searchString);
+			if (searchState) {
+				// Initialize Kad search state
+				searchState->setKadSearchFinished(false);
+				searchState->setKadSearchRetryCount(0);
+			}
+		}
+		
+		return true;
+	} catch (const wxString& what) {
+		AddLogLineC(what);
+		return false;
+	}
 }
 
 bool KadSearchHelper::StopSearch(uint32_t searchId)
@@ -101,9 +153,15 @@ bool KadSearchHelper::StopSearch(uint32_t searchId)
 		return false;
 	}
 
-	// For now, we use SearchList's StopSearch method
-	// This is temporary during migration
-	return false;
+	// Stop the Kad search
+	Kademlia::CSearchManager::StopSearch(searchId, true);
+	
+	// Remove per-search state
+	if (theApp && theApp->searchlist) {
+		theApp->searchlist->removeSearchState(searchId);
+	}
+	
+	return true;
 }
 
 void KadSearchHelper::FreeSearchPacket(uint8_t* packetData)

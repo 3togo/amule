@@ -2,7 +2,8 @@
 // This file is part of the aMule Project.
 //
 // Copyright (c) 2003-2011 aMule Team ( admin@amule.org / http://www.amule.org )
-// Copyright (c) 2002-2011 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+// Copyright (c) 2002-2011 Merkur ( devs@emule-project.net /
+// http://www.emule-project.net )
 //
 // Any parts of this program derived from the xMule, lMule or eMule project,
 // or contributed by third-party developers are copyrighted by their
@@ -23,26 +24,26 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
-#include "SearchDlg.h"	// Interface declarations.
+#include "SearchDlg.h" // Interface declarations.
 
+#include <cassert>
 #include <common/Format.h>
 #include <tags/FileTags.h>
 #include <wx/app.h>
-#include <wx/gauge.h>  // Do_not_auto_remove (win32)
-#include <cassert>
+#include <wx/gauge.h> // Do_not_auto_remove (win32)
 
 #include "GetTickCount.h"
 #include "Logger.h"
 #include "MuleNotebook.h"
-#include "OtherFunctions.h"	 // Needed for GetTypeSize
+#include "OtherFunctions.h" // Needed for GetTypeSize
 #include "Preferences.h"
 #include "SearchLabelHelper.h"
-#include "SearchList.h"		 // Needed for CSearchList
-#include "SearchListCtrl.h"	 // Needed for CSearchListCtrl
+#include "SearchList.h"     // Needed for CSearchList
+#include "SearchListCtrl.h" // Needed for CSearchListCtrl
+#include "amule.h"          // Needed for theApp
+#include "amuleDlg.h"       // Needed for CamuleDlg
+#include "muuli_wdr.h"      // Needed for IDC_STARTS
 #include "search/SearchLogging.h"
-#include "amule.h"			 // Needed for theApp
-#include "amuleDlg.h"		 // Needed for CamuleDlg
-#include "muuli_wdr.h"		 // Needed for IDC_STARTS
 
 #define ID_SEARCHLISTCTRL wxID_HIGHEST + 667
 
@@ -72,8 +73,10 @@ EVT_MULENOTEBOOK_PAGE_CLOSING(ID_NOTEBOOK, CSearchDlg::OnSearchClosing)
 EVT_NOTEBOOK_PAGE_CHANGED(ID_NOTEBOOK, CSearchDlg::OnSearchPageChanged)
 
 // Event handlers for the parameter fields getting changed
-EVT_CUSTOM(wxEVT_COMMAND_TEXT_UPDATED, IDC_SEARCHNAME, CSearchDlg::OnFieldChanged)
-EVT_CUSTOM(wxEVT_COMMAND_TEXT_UPDATED, IDC_EDITSEARCHEXTENSION, CSearchDlg::OnFieldChanged)
+EVT_CUSTOM(wxEVT_COMMAND_TEXT_UPDATED, IDC_SEARCHNAME,
+           CSearchDlg::OnFieldChanged)
+EVT_CUSTOM(wxEVT_COMMAND_TEXT_UPDATED, IDC_EDITSEARCHEXTENSION,
+           CSearchDlg::OnFieldChanged)
 EVT_CUSTOM(wxEVT_COMMAND_SPINCTRL_UPDATED, wxID_ANY, CSearchDlg::OnFieldChanged)
 EVT_CUSTOM(wxEVT_COMMAND_CHOICE_SELECTED, wxID_ANY, CSearchDlg::OnFieldChanged)
 
@@ -87,1518 +90,1499 @@ EVT_BUTTON(ID_FILTER, CSearchDlg::OnFilteringChange)
 EVT_TIMER(wxID_ANY, CSearchDlg::OnTimeoutCheck)
 END_EVENT_TABLE()
 
-CSearchDlg::CSearchDlg(wxWindow* pParent) : wxPanel(pParent, -1) {
-	m_last_search_time = 0;
+CSearchDlg::CSearchDlg(wxWindow *pParent) : wxPanel(pParent, -1) {
+  m_last_search_time = 0;
 
-	wxSizer* content = searchDlg(this, true);
-	content->Show(this, true);
+  wxSizer *content = searchDlg(this, true);
+  content->Show(this, true);
 
-	m_progressbar = CastChild(ID_SEARCHPROGRESS, wxGauge);
-	m_progressbar->SetRange(100);
+  m_progressbar = CastChild(ID_SEARCHPROGRESS, wxGauge);
+  m_progressbar->SetRange(100);
 
-	m_notebook = CastChild(ID_NOTEBOOK, CMuleNotebook);
+  m_notebook = CastChild(ID_NOTEBOOK, CMuleNotebook);
 
 #ifdef __WXMAC__
-	// #warning TODO: restore the image list if/when wxMac supports locating the image
+  // #warning TODO: restore the image list if/when wxMac supports locating the
+  // image
 #else
-	// Initialise the image list
-	wxImageList* m_ImageList = new wxImageList(16, 16);
-	m_ImageList->Add(amuleSpecial(3));
-	m_ImageList->Add(amuleSpecial(4));
-	m_notebook->AssignImageList(m_ImageList);
+  // Initialise the image list
+  wxImageList *m_ImageList = new wxImageList(16, 16);
+  m_ImageList->Add(amuleSpecial(3));
+  m_ImageList->Add(amuleSpecial(4));
+  m_notebook->AssignImageList(m_ImageList);
 #endif
 
-	// Sanity sanity
-	wxChoice* searchchoice = CastChild(ID_SEARCHTYPE, wxChoice);
-	wxASSERT(searchchoice);
-	wxASSERT(searchchoice->GetString(0) == _("Local"));
-	wxASSERT(searchchoice->GetString(2) == _("Kad"));
-	wxASSERT(searchchoice->GetCount() == 3);
+  // Sanity sanity
+  wxChoice *searchchoice = CastChild(ID_SEARCHTYPE, wxChoice);
+  wxASSERT(searchchoice);
+  wxASSERT(searchchoice->GetString(0) == _("Local"));
+  wxASSERT(searchchoice->GetString(2) == _("Kad"));
+  wxASSERT(searchchoice->GetCount() == 3);
 
-	m_searchchoices = searchchoice->GetStrings();
+  m_searchchoices = searchchoice->GetStrings();
 
-	// Register as observer for search state changes
-	m_stateManager.RegisterObserver(this);
+  // Register as observer for search state changes
+  m_stateManager.RegisterObserver(this);
 
-	// Initialize timeout check timer (check every 5 seconds)
-	m_timeoutCheckTimer.SetOwner(this);
-	m_timeoutCheckTimer.Start(5000);
+  // Initialize timeout check timer (check every 5 seconds)
+  m_timeoutCheckTimer.SetOwner(this);
+  m_timeoutCheckTimer.Start(5000);
 
-	// Register as observer with search state manager
-	m_stateManager.RegisterObserver(this);
+  // Register as observer with search state manager
+  m_stateManager.RegisterObserver(this);
 
-	// Let's break it now.
+  // Let's break it now.
 
-	FixSearchTypes();
+  FixSearchTypes();
 
-	CastChild(IDC_TypeSearch, wxChoice)->SetSelection(0);
-	CastChild(IDC_SEARCHMINSIZE, wxChoice)->SetSelection(2);
-	CastChild(IDC_SEARCHMAXSIZE, wxChoice)->SetSelection(2);
+  CastChild(IDC_TypeSearch, wxChoice)->SetSelection(0);
+  CastChild(IDC_SEARCHMINSIZE, wxChoice)->SetSelection(2);
+  CastChild(IDC_SEARCHMAXSIZE, wxChoice)->SetSelection(2);
 
-	// Not there initially.
-	s_searchsizer->Show(s_extendedsizer, false);
-	s_searchsizer->Show(s_filtersizer, false);
+  // Not there initially.
+  s_searchsizer->Show(s_extendedsizer, false);
+  s_searchsizer->Show(s_filtersizer, false);
 
-	Layout();
+  Layout();
 }
 
-CSearchDlg::~CSearchDlg()
-{
-	// Unregister as observer for search state changes
-	m_stateManager.UnregisterObserver(this);
+CSearchDlg::~CSearchDlg() {
+  // Unregister as observer for search state changes
+  m_stateManager.UnregisterObserver(this);
 }
 
 void CSearchDlg::FixSearchTypes() {
-	wxChoice* searchchoice = CastChild(ID_SEARCHTYPE, wxChoice);
+  wxChoice *searchchoice = CastChild(ID_SEARCHTYPE, wxChoice);
 
-	searchchoice->Clear();
+  searchchoice->Clear();
 
-	int pos = 0;
+  int pos = 0;
 
-	// ED2K search options
-	if (thePrefs::GetNetworkED2K()) {
-		searchchoice->Insert(m_searchchoices[0], pos++);  // Local
-		searchchoice->Insert(m_searchchoices[1], pos++);  // Global
-	}
+  // ED2K search options
+  if (thePrefs::GetNetworkED2K()) {
+    searchchoice->Insert(m_searchchoices[0], pos++); // Local
+    searchchoice->Insert(m_searchchoices[1], pos++); // Global
+  }
 
-	// Kademlia search option
-	if (thePrefs::GetNetworkKademlia()) {
-		searchchoice->Insert(m_searchchoices[2], pos++);  // Kad
-	}
+  // Kademlia search option
+  if (thePrefs::GetNetworkKademlia()) {
+    searchchoice->Insert(m_searchchoices[2], pos++); // Kad
+  }
 
-	searchchoice->SetSelection(0);
+  searchchoice->SetSelection(0);
 }
 
-CSearchListCtrl* CSearchDlg::GetSearchList(wxUIntPtr id) {
-	int nPages = m_notebook->GetPageCount();
-	for (int i = 0; i < nPages; i++) {
-		CSearchListCtrl* page = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
+CSearchListCtrl *CSearchDlg::GetSearchList(wxUIntPtr id) {
+  int nPages = m_notebook->GetPageCount();
+  for (int i = 0; i < nPages; i++) {
+    CSearchListCtrl *page =
+        dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
 
-		if (page->GetSearchId() == id) {
-			return page;
-		}
-	}
+    if (page->GetSearchId() == id) {
+      return page;
+    }
+  }
 
-	return NULL;
+  return NULL;
 }
 
-void CSearchDlg::AddResult(CSearchFile* toadd) {
-	CSearchListCtrl* outputwnd = GetSearchList(toadd->GetSearchID());
+void CSearchDlg::AddResult(CSearchFile *toadd) {
+  CSearchListCtrl *outputwnd = GetSearchList(toadd->GetSearchID());
 
-	if (outputwnd) {
-		// Check if the tab is being closed before adding results
-		int pageIndex = m_notebook->FindPage(outputwnd);
-		if (pageIndex == wxNOT_FOUND) {
-			// Tab has been closed, discard this result
-			return;
-		}
+  if (outputwnd) {
+    // Check if the tab is being closed before adding results
+    int pageIndex = m_notebook->FindPage(outputwnd);
+    if (pageIndex == wxNOT_FOUND) {
+      // Tab has been closed, discard this result
+      return;
+    }
 
-		outputwnd->AddResult(toadd);
+    outputwnd->AddResult(toadd);
 
-		// Update the result count in the state manager
-		size_t shown = outputwnd->GetItemCount();
-		size_t hidden = outputwnd->GetHiddenItemCount();
-		m_stateManager.UpdateResultCount(toadd->GetSearchID(), shown, hidden);
+    // Update the result count in the state manager
+    size_t shown = outputwnd->GetItemCount();
+    size_t hidden = outputwnd->GetHiddenItemCount();
+    m_stateManager.UpdateResultCount(toadd->GetSearchID(), shown, hidden);
 
-		// Update the hit count in the tab label
-		UpdateHitCount(outputwnd);
-	}
+    // Update the hit count in the tab label
+    UpdateHitCount(outputwnd);
+  }
 }
 
-void CSearchDlg::UpdateResult(CSearchFile* toupdate) {
-	CSearchListCtrl* outputwnd = GetSearchList(toupdate->GetSearchID());
+void CSearchDlg::UpdateResult(CSearchFile *toupdate) {
+  CSearchListCtrl *outputwnd = GetSearchList(toupdate->GetSearchID());
 
-	if (outputwnd) {
-		// Check if the tab is being closed before updating results
-		int pageIndex = m_notebook->FindPage(outputwnd);
-		if (pageIndex == wxNOT_FOUND) {
-			// Tab has been closed, discard this update
-			return;
-		}
+  if (outputwnd) {
+    // Check if the tab is being closed before updating results
+    int pageIndex = m_notebook->FindPage(outputwnd);
+    if (pageIndex == wxNOT_FOUND) {
+      // Tab has been closed, discard this update
+      return;
+    }
 
-		outputwnd->UpdateResult(toupdate);
+    outputwnd->UpdateResult(toupdate);
 
-		// Update the result count in the state manager
-		size_t shown = outputwnd->GetItemCount();
-		size_t hidden = outputwnd->GetHiddenItemCount();
-		m_stateManager.UpdateResultCount(toupdate->GetSearchID(), shown, hidden);
+    // Update the result count in the state manager
+    size_t shown = outputwnd->GetItemCount();
+    size_t hidden = outputwnd->GetHiddenItemCount();
+    m_stateManager.UpdateResultCount(toupdate->GetSearchID(), shown, hidden);
 
-		// Update the hit count in the tab label
-		UpdateHitCount(outputwnd);
-	}
+    // Update the hit count in the tab label
+    UpdateHitCount(outputwnd);
+  }
 }
 
-void CSearchDlg::OnListItemSelected(wxListEvent& event) {
-	FindWindow(IDC_SDOWNLOAD)->Enable(true);
+void CSearchDlg::OnListItemSelected(wxListEvent &event) {
+  FindWindow(IDC_SDOWNLOAD)->Enable(true);
 
-	event.Skip();
+  event.Skip();
 }
 
-void CSearchDlg::OnExtendedSearchChange(wxCommandEvent& event) {
-	s_searchsizer->Show(s_extendedsizer, event.IsChecked());
+void CSearchDlg::OnExtendedSearchChange(wxCommandEvent &event) {
+  s_searchsizer->Show(s_extendedsizer, event.IsChecked());
 
-	Layout();
+  Layout();
 }
 
-void CSearchDlg::OnFilterCheckChange(wxCommandEvent& event) {
-	s_searchsizer->Show(s_filtersizer, event.IsChecked());
-	Layout();
+void CSearchDlg::OnFilterCheckChange(wxCommandEvent &event) {
+  s_searchsizer->Show(s_filtersizer, event.IsChecked());
+  Layout();
 
-	int nPages = m_notebook->GetPageCount();
-	for (int i = 0; i < nPages; i++) {
-		CSearchListCtrl* page = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
+  int nPages = m_notebook->GetPageCount();
+  for (int i = 0; i < nPages; i++) {
+    CSearchListCtrl *page =
+        dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
 
-		page->EnableFiltering(event.IsChecked());
+    page->EnableFiltering(event.IsChecked());
 
-		UpdateHitCount(page);
-	}
+    UpdateHitCount(page);
+  }
 }
 
-void CSearchDlg::OnSearchClosing(wxBookCtrlEvent& evt) {
-	// Abort global search if it was last tab that was closed.
-	if (evt.GetSelection() == ((int)m_notebook->GetPageCount() - 1)) {
-		OnBnClickedStop(nullEvent);
-	}
+void CSearchDlg::OnSearchClosing(wxBookCtrlEvent &evt) {
+  // Abort global search if it was last tab that was closed.
+  if (evt.GetSelection() == ((int)m_notebook->GetPageCount() - 1)) {
+    OnBnClickedStop(nullEvent);
+  }
 
-	CSearchListCtrl* ctrl = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(evt.GetSelection()));
-	wxASSERT(ctrl);
+  CSearchListCtrl *ctrl =
+      dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(evt.GetSelection()));
+  wxASSERT(ctrl);
 
-	// Clean up the SearchController for this search
-	long searchId = ctrl->GetSearchId();
-	auto it = m_searchControllers.find(searchId);
-	if (it != m_searchControllers.end()) {
-		// Stop the search before removing the controller
-		it->second->stopSearch();
-		m_searchControllers.erase(it);
-	}
+  // Clean up the SearchController for this search
+  long searchId = ctrl->GetSearchId();
+  auto it = m_searchControllers.find(searchId);
+  if (it != m_searchControllers.end()) {
+    // Stop the search before removing the controller
+    it->second->stopSearch();
+    m_searchControllers.erase(it);
+  }
 
-	// Zero to avoid results added while destructing.
-	ctrl->ShowResults(0);
-	
-	// Remove results and stop the search using atomic method
-	theApp->searchlist->StopSearch(searchId, false);
-	theApp->searchlist->RemoveResults(searchId);
-	
-	// Remove from SearchStateManager
-	m_stateManager.RemoveSearch(searchId);
+  // Zero to avoid results added while destructing.
+  ctrl->ShowResults(0);
 
-	// Do cleanups if this was the last tab
-	if (m_notebook->GetPageCount() == 1) {
-		FindWindow(IDC_SDOWNLOAD)->Enable(FALSE);
-		FindWindow(IDC_CLEAR_RESULTS)->Enable(FALSE);
-	}
+  // Remove results and stop the search using atomic method
+  theApp->searchlist->StopSearch(searchId, false);
+  theApp->searchlist->RemoveResults(searchId);
+
+  // Remove from SearchStateManager
+  m_stateManager.RemoveSearch(searchId);
+
+  // Do cleanups if this was the last tab
+  if (m_notebook->GetPageCount() == 1) {
+    FindWindow(IDC_SDOWNLOAD)->Enable(FALSE);
+    FindWindow(IDC_CLEAR_RESULTS)->Enable(FALSE);
+  }
 }
 
-void CSearchDlg::OnSearchPageChanged(wxBookCtrlEvent& WXUNUSED(evt)) {
-	int selection = m_notebook->GetSelection();
+void CSearchDlg::OnSearchPageChanged(wxBookCtrlEvent &WXUNUSED(evt)) {
+  int selection = m_notebook->GetSelection();
 
-	// Workaround for a bug in wxWidgets, where deletions of pages
-	// can result in an invalid selection. This has been reported as
-	// http://sourceforge.net/tracker/index.php?func=detail&aid=1865141&group_id=9863&atid=109863
-	if (selection >= (int)m_notebook->GetPageCount()) {
-		selection = m_notebook->GetPageCount() - 1;
-	}
+  // Workaround for a bug in wxWidgets, where deletions of pages
+  // can result in an invalid selection. This has been reported as
+  // http://sourceforge.net/tracker/index.php?func=detail&aid=1865141&group_id=9863&atid=109863
+  if (selection >= (int)m_notebook->GetPageCount()) {
+    selection = m_notebook->GetPageCount() - 1;
+  }
 
-	// Only enable the Download button for pages where files have been selected
-	if (selection != -1) {
-		CSearchListCtrl* ctrl = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(selection));
+  // Only enable the Download button for pages where files have been selected
+  if (selection != -1) {
+    CSearchListCtrl *ctrl =
+        dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(selection));
 
-		bool enable = (ctrl->GetSelectedItemCount() > 0);
-		FindWindow(IDC_SDOWNLOAD)->Enable(enable);
+    bool enable = (ctrl->GetSelectedItemCount() > 0);
+    FindWindow(IDC_SDOWNLOAD)->Enable(enable);
 
-		// Enable the More button only for eD2k searches (Local/Global), not for Kad
-		// Use SearchStateManager to get the search type instead of parsing tab text
-		long searchId = ctrl->GetSearchId();
-		wxString searchType = m_stateManager.GetSearchType(searchId);
-		bool isEd2kSearch = (searchType == wxT("Local") || searchType == wxT("Global"));
-		FindWindow(IDC_SEARCHMORE)->Enable(isEd2kSearch);
-	}
+    // Enable the More button only for eD2k searches (Local/Global), not for Kad
+    // Use SearchStateManager to get the search type instead of parsing tab text
+    long searchId = ctrl->GetSearchId();
+    wxString searchType = m_stateManager.GetSearchType(searchId);
+    bool isEd2kSearch =
+        (searchType == wxT("Local") || searchType == wxT("Global"));
+    FindWindow(IDC_SEARCHMORE)->Enable(isEd2kSearch);
+  }
 }
 
-void CSearchDlg::OnBnClickedStart(wxCommandEvent& WXUNUSED(evt)) {
-	if (!thePrefs::GetNetworkED2K() && !thePrefs::GetNetworkKademlia()) {
-		wxMessageBox(_("It's impossible to search when both eD2k and Kademlia are disabled."), _("Search error"),
-					 wxOK | wxCENTRE | wxICON_ERROR);
-		return;
-	}
+void CSearchDlg::OnBnClickedStart(wxCommandEvent &WXUNUSED(evt)) {
+  if (!thePrefs::GetNetworkED2K() && !thePrefs::GetNetworkKademlia()) {
+    wxMessageBox(_("It's impossible to search when both eD2k and Kademlia are "
+                   "disabled."),
+                 _("Search error"), wxOK | wxCENTRE | wxICON_ERROR);
+    return;
+  }
 
-	// Check if the selected search type is connected to its respective network
-	int selection = CastChild(ID_SEARCHTYPE, wxChoice)->GetSelection();
-	if (selection == wxNOT_FOUND) {
-		wxMessageBox(_("Please select a search type."), _("Search error"), wxOK | wxCENTRE | wxICON_WARNING);
-		return;
-	}
+  // Check if the selected search type is connected to its respective network
+  int selection = CastChild(ID_SEARCHTYPE, wxChoice)->GetSelection();
+  if (selection == wxNOT_FOUND) {
+    wxMessageBox(_("Please select a search type."), _("Search error"),
+                 wxOK | wxCENTRE | wxICON_WARNING);
+    return;
+  }
 
-	// Determine which network corresponds to the selected search type
-	bool isSearchTypeConnected = false;
+  // Determine which network corresponds to the selected search type
+  bool isSearchTypeConnected = false;
 
-	if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
-		// Full network support - 3 options (Local, Global, Kad)
-		switch (selection) {
-			case 0:	 // Local - needs ED2K connection
-				isSearchTypeConnected = theApp->IsConnectedED2K();
-				break;
-			case 1:	 // Global - needs ED2K connection
-				isSearchTypeConnected = theApp->IsConnectedED2K();
-				break;
-			case 2:	 // Kad - needs Kad connection
-				isSearchTypeConnected = theApp->IsConnectedKad();
-				break;
-		}
-	} else if (thePrefs::GetNetworkED2K()) {
-		// Only ED2K support - 2 options (Local, Global)
-		switch (selection) {
-			case 0:	 // Local - needs ED2K connection
-				isSearchTypeConnected = theApp->IsConnectedED2K();
-				break;
-			case 1:	 // Global - needs ED2K connection
-				isSearchTypeConnected = theApp->IsConnectedED2K();
-				break;
-		}
-	} else if (thePrefs::GetNetworkKademlia()) {
-		// Only Kad support - 1 option (Kad)
-		switch (selection) {
-			case 0:	 // Kad - needs Kad connection
-				isSearchTypeConnected = theApp->IsConnectedKad();
-				break;
-		}
-	}
+  if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
+    // Full network support - 3 options (Local, Global, Kad)
+    switch (selection) {
+    case 0: // Local - needs ED2K connection
+      isSearchTypeConnected = theApp->IsConnectedED2K();
+      break;
+    case 1: // Global - needs ED2K connection
+      isSearchTypeConnected = theApp->IsConnectedED2K();
+      break;
+    case 2: // Kad - needs Kad connection
+      isSearchTypeConnected = theApp->IsConnectedKad();
+      break;
+    }
+  } else if (thePrefs::GetNetworkED2K()) {
+    // Only ED2K support - 2 options (Local, Global)
+    switch (selection) {
+    case 0: // Local - needs ED2K connection
+      isSearchTypeConnected = theApp->IsConnectedED2K();
+      break;
+    case 1: // Global - needs ED2K connection
+      isSearchTypeConnected = theApp->IsConnectedED2K();
+      break;
+    }
+  } else if (thePrefs::GetNetworkKademlia()) {
+    // Only Kad support - 1 option (Kad)
+    switch (selection) {
+    case 0: // Kad - needs Kad connection
+      isSearchTypeConnected = theApp->IsConnectedKad();
+      break;
+    }
+  }
 
-	if (!isSearchTypeConnected) {
-		wxString searchTypeName;
-		if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
-			switch (selection) {
-				case 0:
-					searchTypeName = _("Local (eD2k)");
-					break;
-				case 1:
-					searchTypeName = _("Global (eD2k)");
-					break;
-				case 2:
-					searchTypeName = _("Kad");
-					break;
-			}
-		} else if (thePrefs::GetNetworkED2K()) {
-			switch (selection) {
-				case 0:
-					searchTypeName = _("Local (eD2k)");
-					break;
-				case 1:
-					searchTypeName = _("Global (eD2k)");
-					break;
-			}
-		} else if (thePrefs::GetNetworkKademlia()) {
-			searchTypeName = _("Kad");
-		}
+  if (!isSearchTypeConnected) {
+    wxString searchTypeName;
+    if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
+      switch (selection) {
+      case 0:
+        searchTypeName = _("Local (eD2k)");
+        break;
+      case 1:
+        searchTypeName = _("Global (eD2k)");
+        break;
+      case 2:
+        searchTypeName = _("Kad");
+        break;
+      }
+    } else if (thePrefs::GetNetworkED2K()) {
+      switch (selection) {
+      case 0:
+        searchTypeName = _("Local (eD2k)");
+        break;
+      case 1:
+        searchTypeName = _("Global (eD2k)");
+        break;
+      }
+    } else if (thePrefs::GetNetworkKademlia()) {
+      searchTypeName = _("Kad");
+    }
 
-		wxMessageBox(_("The selected search type (" + searchTypeName +
-					   ") is not connected to its network. Please connect first."),
-					 _("Search error"), wxOK | wxCENTRE | wxICON_WARNING);
-		return;
-	}
+    wxMessageBox(_("The selected search type (" + searchTypeName +
+                   ") is not connected to its network. Please connect first."),
+                 _("Search error"), wxOK | wxCENTRE | wxICON_WARNING);
+    return;
+  }
 
-	// We mustn't search more often than once every 2 secs
-	if ((GetTickCount() - m_last_search_time) > 2000) {
-		m_last_search_time = GetTickCount();
-		OnBnClickedStop(nullEvent);
-		StartNewSearch();
-	}
+  // We mustn't search more often than once every 2 secs
+  if ((GetTickCount() - m_last_search_time) > 2000) {
+    m_last_search_time = GetTickCount();
+    OnBnClickedStop(nullEvent);
+    StartNewSearch();
+  }
 }
 
 void CSearchDlg::UpdateStartButtonState() {
-	wxButton* startBtn = CastChild(IDC_STARTS, wxButton);
-	if (startBtn) {
-		// Check if networks are enabled
-		bool networksEnabled = thePrefs::GetNetworkED2K() || thePrefs::GetNetworkKademlia();
-		if (!networksEnabled) {
-			startBtn->Enable(false);
-			return;
-		}
+  wxButton *startBtn = CastChild(IDC_STARTS, wxButton);
+  if (startBtn) {
+    // Check if networks are enabled
+    bool networksEnabled =
+        thePrefs::GetNetworkED2K() || thePrefs::GetNetworkKademlia();
+    if (!networksEnabled) {
+      startBtn->Enable(false);
+      return;
+    }
 
-		// Check if there's search text
-		bool hasSearchText = !CastChild(IDC_SEARCHNAME, wxTextCtrl)->GetValue().IsEmpty();
-		if (!hasSearchText) {
-			startBtn->Enable(false);
-			return;
-		}
+    // Check if there's search text
+    bool hasSearchText =
+        !CastChild(IDC_SEARCHNAME, wxTextCtrl)->GetValue().IsEmpty();
+    if (!hasSearchText) {
+      startBtn->Enable(false);
+      return;
+    }
 
-		// Get the currently selected search type
-		int selection = CastChild(ID_SEARCHTYPE, wxChoice)->GetSelection();
-		if (selection == wxNOT_FOUND) {
-			startBtn->Enable(false);
-			return;
-		}
+    // Get the currently selected search type
+    int selection = CastChild(ID_SEARCHTYPE, wxChoice)->GetSelection();
+    if (selection == wxNOT_FOUND) {
+      startBtn->Enable(false);
+      return;
+    }
 
-		// Determine which network corresponds to the selected search type
-		bool isSearchTypeConnected = false;
+    // Determine which network corresponds to the selected search type
+    bool isSearchTypeConnected = false;
 
-		// Recreate the same logic as in StartNewSearch to map selection to search type
-		if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
-			// Full network support - 3 options (Local, Global, Kad)
-			switch (selection) {
-				case 0:	 // Local - needs ED2K connection
-					isSearchTypeConnected = theApp->IsConnectedED2K();
-					break;
-				case 1:	 // Global - needs ED2K connection
-					isSearchTypeConnected = theApp->IsConnectedED2K();
-					break;
-				case 2:	 // Kad - needs Kad connection
-					isSearchTypeConnected = theApp->IsConnectedKad();
-					break;
-			}
-		} else if (thePrefs::GetNetworkED2K()) {
-			// Only ED2K support - 2 options (Local, Global)
-			switch (selection) {
-				case 0:	 // Local - needs ED2K connection
-					isSearchTypeConnected = theApp->IsConnectedED2K();
-					break;
-				case 1:	 // Global - needs ED2K connection
-					isSearchTypeConnected = theApp->IsConnectedED2K();
-					break;
-			}
-		} else if (thePrefs::GetNetworkKademlia()) {
-			// Only Kad support - 1 option (Kad)
-			switch (selection) {
-				case 0:	 // Kad - needs Kad connection
-					isSearchTypeConnected = theApp->IsConnectedKad();
-					break;
-			}
-		}
+    // Recreate the same logic as in StartNewSearch to map selection to search
+    // type
+    if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
+      // Full network support - 3 options (Local, Global, Kad)
+      switch (selection) {
+      case 0: // Local - needs ED2K connection
+        isSearchTypeConnected = theApp->IsConnectedED2K();
+        break;
+      case 1: // Global - needs ED2K connection
+        isSearchTypeConnected = theApp->IsConnectedED2K();
+        break;
+      case 2: // Kad - needs Kad connection
+        isSearchTypeConnected = theApp->IsConnectedKad();
+        break;
+      }
+    } else if (thePrefs::GetNetworkED2K()) {
+      // Only ED2K support - 2 options (Local, Global)
+      switch (selection) {
+      case 0: // Local - needs ED2K connection
+        isSearchTypeConnected = theApp->IsConnectedED2K();
+        break;
+      case 1: // Global - needs ED2K connection
+        isSearchTypeConnected = theApp->IsConnectedED2K();
+        break;
+      }
+    } else if (thePrefs::GetNetworkKademlia()) {
+      // Only Kad support - 1 option (Kad)
+      switch (selection) {
+      case 0: // Kad - needs Kad connection
+        isSearchTypeConnected = theApp->IsConnectedKad();
+        break;
+      }
+    }
 
-		startBtn->Enable(hasSearchText && isSearchTypeConnected);
-	}
+    startBtn->Enable(hasSearchText && isSearchTypeConnected);
+  }
 }
 
-void CSearchDlg::OnFieldChanged(wxEvent& WXUNUSED(evt)) {
-	bool enable = false;
+void CSearchDlg::OnFieldChanged(wxEvent &WXUNUSED(evt)) {
+  bool enable = false;
 
-	// These are the IDs of the search-fields
-	int textfields[] = {IDC_SEARCHNAME, IDC_EDITSEARCHEXTENSION};
+  // These are the IDs of the search-fields
+  int textfields[] = {IDC_SEARCHNAME, IDC_EDITSEARCHEXTENSION};
 
-	for (uint16 i = 0; i < itemsof(textfields); i++) {
-		enable |= !CastChild(textfields[i], wxTextCtrl)->GetValue().IsEmpty();
-	}
+  for (uint16 i = 0; i < itemsof(textfields); i++) {
+    enable |= !CastChild(textfields[i], wxTextCtrl)->GetValue().IsEmpty();
+  }
 
-	// Check if either of the dropdowns have been changed
-	enable |= (CastChild(IDC_SEARCHMINSIZE, wxChoice)->GetSelection() != 2);
-	enable |= (CastChild(IDC_SEARCHMAXSIZE, wxChoice)->GetSelection() != 2);
-	enable |= (CastChild(IDC_TypeSearch, wxChoice)->GetSelection() > 0);
-	enable |= (CastChild(ID_AUTOCATASSIGN, wxChoice)->GetSelection() > 0);
+  // Check if either of the dropdowns have been changed
+  enable |= (CastChild(IDC_SEARCHMINSIZE, wxChoice)->GetSelection() != 2);
+  enable |= (CastChild(IDC_SEARCHMAXSIZE, wxChoice)->GetSelection() != 2);
+  enable |= (CastChild(IDC_TypeSearch, wxChoice)->GetSelection() > 0);
+  enable |= (CastChild(ID_AUTOCATASSIGN, wxChoice)->GetSelection() > 0);
 
-	// These are the IDs of the search-fields
-	int spinfields[] = {IDC_SPINSEARCHMIN, IDC_SPINSEARCHMAX, IDC_SPINSEARCHAVAIBILITY};
-	for (uint16 i = 0; i < itemsof(spinfields); i++) {
-		enable |= (CastChild(spinfields[i], wxSpinCtrl)->GetValue() > 0);
-	}
+  // These are the IDs of the search-fields
+  int spinfields[] = {IDC_SPINSEARCHMIN, IDC_SPINSEARCHMAX,
+                      IDC_SPINSEARCHAVAIBILITY};
+  for (uint16 i = 0; i < itemsof(spinfields); i++) {
+    enable |= (CastChild(spinfields[i], wxSpinCtrl)->GetValue() > 0);
+  }
 
-	// Enable the "Reset" button if any fields contain text
-	FindWindow(IDC_SEARCH_RESET)->Enable(enable);
+  // Enable the "Reset" button if any fields contain text
+  FindWindow(IDC_SEARCH_RESET)->Enable(enable);
 
-	// Update start button state based on field changes and connection status
-	UpdateStartButtonState();
+  // Update start button state based on field changes and connection status
+  UpdateStartButtonState();
 }
 
-void CSearchDlg::OnFilteringChange(wxCommandEvent& WXUNUSED(evt)) {
-	wxString filter = CastChild(ID_FILTER_TEXT, wxTextCtrl)->GetValue();
-	bool invert = CastChild(ID_FILTER_INVERT, wxCheckBox)->GetValue();
-	bool known = CastChild(ID_FILTER_KNOWN, wxCheckBox)->GetValue();
+void CSearchDlg::OnFilteringChange(wxCommandEvent &WXUNUSED(evt)) {
+  wxString filter = CastChild(ID_FILTER_TEXT, wxTextCtrl)->GetValue();
+  bool invert = CastChild(ID_FILTER_INVERT, wxCheckBox)->GetValue();
+  bool known = CastChild(ID_FILTER_KNOWN, wxCheckBox)->GetValue();
 
-	// Check that the expression compiles before we try to assign it
-	// Otherwise we will get an error-dialog for each result-list.
-	if (wxRegEx(filter, wxRE_DEFAULT | wxRE_ICASE).IsValid()) {
-		int nPages = m_notebook->GetPageCount();
-		for (int i = 0; i < nPages; i++) {
-			CSearchListCtrl* page = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
+  // Check that the expression compiles before we try to assign it
+  // Otherwise we will get an error-dialog for each result-list.
+  if (wxRegEx(filter, wxRE_DEFAULT | wxRE_ICASE).IsValid()) {
+    int nPages = m_notebook->GetPageCount();
+    for (int i = 0; i < nPages; i++) {
+      CSearchListCtrl *page =
+          dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
 
-			page->SetFilter(filter, invert, known);
+      page->SetFilter(filter, invert, known);
 
-			UpdateHitCount(page);
-		}
-	}
+      UpdateHitCount(page);
+    }
+  }
 }
 
-bool CSearchDlg::CheckTabNameExists(SearchType searchType, const wxString& searchString) {
-	// Determine the prefix for this search type
-	wxString prefix;
-	switch (searchType) {
-		case LocalSearch:
-			prefix = wxT("[Local] ");
-			break;
-		case GlobalSearch:
-			prefix = wxT("[Global] ");
-			break;
-		case KadSearch:
-			prefix = wxT("[Kad] ");
-			break;
-		default:
-			prefix = wxEmptyString;
-			break;
-	}
+bool CSearchDlg::CheckTabNameExists(SearchType searchType,
+                                    const wxString &searchString) {
+  // Determine the prefix for this search type
+  wxString prefix;
+  switch (searchType) {
+  case LocalSearch:
+    prefix = wxT("[Local] ");
+    break;
+  case GlobalSearch:
+    prefix = wxT("[Global] ");
+    break;
+  case KadSearch:
+    prefix = wxT("[Kad] ");
+    break;
+  default:
+    prefix = wxEmptyString;
+    break;
+  }
 
-	int nPages = m_notebook->GetPageCount();
-	for (int i = 0; i < nPages; i++) {
-		wxString pageText = m_notebook->GetPageText(i);
+  int nPages = m_notebook->GetPageCount();
+  for (int i = 0; i < nPages; i++) {
+    wxString pageText = m_notebook->GetPageText(i);
 
-		// Check if this tab has the correct prefix
-		if (pageText.StartsWith(prefix)) {
-			wxString searchPart = pageText.Mid(prefix.length());  // Remove prefix
-			
-			// Remove any state information like [Searching], [No Results], etc.
-			// State information is in brackets at the beginning of searchPart
-			while (searchPart.StartsWith(wxT("["))) {
-				int endBracket = searchPart.Find(wxT("]"));
-				if (endBracket == wxNOT_FOUND) {
-					break;  // Malformed, break out
-				}
-				// Remove the [State] part including any space after it
-				searchPart = searchPart.Mid(endBracket + 1).Trim(true);  // Trim leading whitespace
-			}
-			
-			// Remove count information like "(5)" or "(3/5)"
-			int parenPos = searchPart.Find(wxT('('));
-			if (parenPos != wxNOT_FOUND) {
-				searchPart = searchPart.Left(parenPos).Trim();
-			}
-			
-			// Now we should have just the search term
-			if (searchPart == searchString) {
-				return true;
-			}
-		}
-	}
+    // Check if this tab has the correct prefix
+    if (pageText.StartsWith(prefix)) {
+      wxString searchPart = pageText.Mid(prefix.length()); // Remove prefix
 
-	return false;
+      // Remove any state information like [Searching], [No Results], etc.
+      // State information is in brackets at the beginning of searchPart
+      while (searchPart.StartsWith(wxT("["))) {
+        int endBracket = searchPart.Find(wxT("]"));
+        if (endBracket == wxNOT_FOUND) {
+          break; // Malformed, break out
+        }
+        // Remove the [State] part including any space after it
+        searchPart = searchPart.Mid(endBracket + 1)
+                         .Trim(true); // Trim leading whitespace
+      }
+
+      // Remove count information like "(5)" or "(3/5)"
+      int parenPos = searchPart.Find(wxT('('));
+      if (parenPos != wxNOT_FOUND) {
+        searchPart = searchPart.Left(parenPos).Trim();
+      }
+
+      // Now we should have just the search term
+      if (searchPart == searchString) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
-void CSearchDlg::CreateNewTab(const wxString& searchString, wxUIntPtr nSearchID) {
-	CSearchListCtrl* list =
-		new CSearchListCtrl(m_notebook, ID_SEARCHLISTCTRL, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxNO_BORDER);
-	m_notebook->AddPage(list, searchString, true, 0);
+void CSearchDlg::CreateNewTab(const wxString &searchString,
+                              wxUIntPtr nSearchID) {
+  CSearchListCtrl *list =
+      new CSearchListCtrl(m_notebook, ID_SEARCHLISTCTRL, wxDefaultPosition,
+                          wxDefaultSize, wxLC_REPORT | wxNO_BORDER);
+  m_notebook->AddPage(list, searchString, true, 0);
 
-	// Parse search type from search string (e.g., "[Local] ", "[Global] ", "[Kad] ")
-	wxString searchType;
-	if (searchString.StartsWith(wxT("[Local] "))) {
-		searchType = wxT("Local");
-	} else if (searchString.StartsWith(wxT("[Global] "))) {
-		searchType = wxT("Global");
-	} else if (searchString.StartsWith(wxT("[Kad] "))) {
-		searchType = wxT("Kad");
-	}
-	
-	// Store search type in the list control for validation
-	list->SetSearchType(searchType);
+  // Parse search type from search string (e.g., "[Local] ", "[Global] ", "[Kad]
+  // ")
+  wxString searchType;
+  if (searchString.StartsWith(wxT("[Local] "))) {
+    searchType = wxT("Local");
+  } else if (searchString.StartsWith(wxT("[Global] "))) {
+    searchType = wxT("Global");
+  } else if (searchString.StartsWith(wxT("[Kad] "))) {
+    searchType = wxT("Kad");
+  }
 
-	// Ensure that new results are filtered
-	bool enable = CastChild(IDC_FILTERCHECK, wxCheckBox)->GetValue();
-	wxString filter = CastChild(ID_FILTER_TEXT, wxTextCtrl)->GetValue();
-	bool invert = CastChild(ID_FILTER_INVERT, wxCheckBox)->GetValue();
-	bool known = CastChild(ID_FILTER_KNOWN, wxCheckBox)->GetValue();
+  // Store search type in the list control for validation
+  list->SetSearchType(searchType);
 
-	list->SetFilter(filter, invert, known);
-	list->EnableFiltering(enable);
-	list->ShowResults(nSearchID);
+  // Ensure that new results are filtered
+  bool enable = CastChild(IDC_FILTERCHECK, wxCheckBox)->GetValue();
+  wxString filter = CastChild(ID_FILTER_TEXT, wxTextCtrl)->GetValue();
+  bool invert = CastChild(ID_FILTER_INVERT, wxCheckBox)->GetValue();
+  bool known = CastChild(ID_FILTER_KNOWN, wxCheckBox)->GetValue();
 
-	// Update the tab label with initial state and hit count
-	// The search should already be initialized in SearchStateManager from StartNewSearch
-	UpdateHitCount(list);
+  list->SetFilter(filter, invert, known);
+  list->EnableFiltering(enable);
+  list->ShowResults(nSearchID);
 
-	Layout();
-	FindWindow(IDC_CLEAR_RESULTS)->Enable(true);
+  // Update the tab label with initial state and hit count
+  // The search should already be initialized in SearchStateManager from
+  // StartNewSearch
+  UpdateHitCount(list);
 
-	// Enable the More button only for eD2k searches (Local/Global), not for Kad
-	bool isEd2kSearch = (searchString.StartsWith(wxT("[Local] ")) || searchString.StartsWith(wxT("[Global] ")));
-	FindWindow(IDC_SEARCHMORE)->Enable(isEd2kSearch);
+  Layout();
+  FindWindow(IDC_CLEAR_RESULTS)->Enable(true);
+
+  // Enable the More button only for eD2k searches (Local/Global), not for Kad
+  bool isEd2kSearch = (searchString.StartsWith(wxT("[Local] ")) ||
+                       searchString.StartsWith(wxT("[Global] ")));
+  FindWindow(IDC_SEARCHMORE)->Enable(isEd2kSearch);
 }
 
-void CSearchDlg::OnBnClickedStop(wxCommandEvent& WXUNUSED(evt)) {
-	// Stop all active searches using SearchControllers
-	for (auto& pair : m_searchControllers) {
-		if (pair.second) {
-			pair.second->stopSearch();
-		}
-	}
+void CSearchDlg::OnBnClickedStop(wxCommandEvent &WXUNUSED(evt)) {
+  // Stop all active searches using SearchControllers
+  for (auto &pair : m_searchControllers) {
+    if (pair.second) {
+      pair.second->stopSearch();
+    }
+  }
 
-	// Also call the legacy StopSearch for compatibility
-	theApp->searchlist->StopSearch();
-	ResetControls();
+  // Also call the legacy StopSearch for compatibility
+  theApp->searchlist->StopSearch();
+  ResetControls();
 }
 
 void CSearchDlg::ResetControls() {
-	m_progressbar->SetValue(0);
+  m_progressbar->SetValue(0);
 
-	FindWindow(IDC_CANCELS)->Disable();
-	FindWindow(IDC_STARTS)->Enable(!CastChild(IDC_SEARCHNAME, wxTextCtrl)->GetValue().IsEmpty());
-	FindWindow(IDC_SEARCHMORE)->Disable();
+  FindWindow(IDC_CANCELS)->Disable();
+  FindWindow(IDC_STARTS)
+      ->Enable(!CastChild(IDC_SEARCHNAME, wxTextCtrl)->GetValue().IsEmpty());
+  FindWindow(IDC_SEARCHMORE)->Disable();
 }
 
 void CSearchDlg::GlobalSearchEnd() {
-	// Update all search tabs to show proper state when global search ends
-	int nPages = m_notebook->GetPageCount();
-	for (int i = 0; i < nPages; ++i) {
-		CSearchListCtrl* page = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
-		if (page) {
-			long searchId = page->GetSearchId();
-			// Check if this is a Global search tab
-			wxString searchType = m_stateManager.GetSearchType(searchId);
-			if (searchType == wxT("Global")) {
-				// Update result count in state manager
-				size_t shown = page->GetItemCount();
-				size_t hidden = page->GetHiddenItemCount();
-				m_stateManager.UpdateResultCount(searchId, shown, hidden);
+  // Update all search tabs to show proper state when global search ends
+  int nPages = m_notebook->GetPageCount();
+  for (int i = 0; i < nPages; ++i) {
+    CSearchListCtrl *page =
+        dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+    if (page) {
+      long searchId = page->GetSearchId();
+      // Check if this is a Global search tab
+      wxString searchType = m_stateManager.GetSearchType(searchId);
+      if (searchType == wxT("Global")) {
+        // Update result count in state manager
+        size_t shown = page->GetItemCount();
+        size_t hidden = page->GetHiddenItemCount();
+        m_stateManager.UpdateResultCount(searchId, shown, hidden);
 
-				// Check if we need to retry (no results and retry count not exceeded)
-				if (shown == 0 && hidden == 0) {
-					// Request retry through state manager
-					if (m_stateManager.RequestRetry(searchId)) {
-						// Trigger the actual retry
-						OnRetryRequested(searchId);
-						// Retry initiated, don't mark as finished yet
-						continue;
-					}
-				}
+        // Check if we need to retry (no results and retry count not exceeded)
+        if (shown == 0 && hidden == 0) {
+          // Request retry through state manager
+          if (m_stateManager.RequestRetry(searchId)) {
+            // Trigger the actual retry
+            OnRetryRequested(searchId);
+            // Retry initiated, don't mark as finished yet
+            continue;
+          }
+        }
 
-				// End the search in the state manager (only if not retrying)
-				m_stateManager.EndSearch(searchId);
-			}
-		}
-	}
-	ResetControls();
+        // End the search in the state manager (only if not retrying)
+        m_stateManager.EndSearch(searchId);
+      }
+    }
+  }
+  ResetControls();
 }
 
 void CSearchDlg::LocalSearchEnd() {
-	// Update all search tabs to show proper state when local search ends
-	int nPages = m_notebook->GetPageCount();
-	for (int i = 0; i < nPages; ++i) {
-		CSearchListCtrl* page = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
-		if (page) {
-			long searchId = page->GetSearchId();
-			// Check if this is an ED2K search tab (Local or Global)
-			// Get the search type from state manager instead of parsing tab text
-			wxString searchType = m_stateManager.GetSearchType(searchId);
-			if (searchType == wxT("Local") || searchType == wxT("ED2K") || searchType == wxT("Global")) {
-				// Update result count in state manager
-				size_t shown = page->GetItemCount();
-				size_t hidden = page->GetHiddenItemCount();
-				m_stateManager.UpdateResultCount(searchId, shown, hidden);
+  // Update all search tabs to show proper state when local search ends
+  int nPages = m_notebook->GetPageCount();
+  for (int i = 0; i < nPages; ++i) {
+    CSearchListCtrl *page =
+        dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+    if (page) {
+      long searchId = page->GetSearchId();
+      // Check if this is an ED2K search tab (Local or Global)
+      // Get the search type from state manager instead of parsing tab text
+      wxString searchType = m_stateManager.GetSearchType(searchId);
+      if (searchType == wxT("Local") || searchType == wxT("ED2K") ||
+          searchType == wxT("Global")) {
+        // Update result count in state manager
+        size_t shown = page->GetItemCount();
+        size_t hidden = page->GetHiddenItemCount();
+        m_stateManager.UpdateResultCount(searchId, shown, hidden);
 
-				// Check if we need to retry (no results and retry count not exceeded)
-				if (shown == 0 && hidden == 0) {
-					// Request retry through state manager
-					if (m_stateManager.RequestRetry(searchId)) {
-						// Trigger the actual retry
-						OnRetryRequested(searchId);
-						// Retry initiated, don't mark as finished yet
-						continue;
-					}
-				}
+        // Check if we need to retry (no results and retry count not exceeded)
+        if (shown == 0 && hidden == 0) {
+          // Request retry through state manager
+          if (m_stateManager.RequestRetry(searchId)) {
+            // Trigger the actual retry
+            OnRetryRequested(searchId);
+            // Retry initiated, don't mark as finished yet
+            continue;
+          }
+        }
 
-				// End the search in the state manager (only if not retrying)
-				m_stateManager.EndSearch(searchId);
-			}
-		}
-	}
-	ResetControls();
+        // End the search in the state manager (only if not retrying)
+        m_stateManager.EndSearch(searchId);
+      }
+    }
+  }
+  ResetControls();
 }
 
 void CSearchDlg::KadSearchEnd(uint32 id) {
-	int nPages = m_notebook->GetPageCount();
-	for (int i = 0; i < nPages; ++i) {
-		CSearchListCtrl* page = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
-		long searchId = page->GetSearchId();
-		if (searchId == id ||
-			id == 0) {	// 0: just update all pages (there is only one KAD search running at a time anyway)
-			// Check if this is a Kad search
-			wxString searchType = m_stateManager.GetSearchType(searchId);
-			if (searchType == wxT("Kad")) {
-				// Update result count in state manager
-				size_t shown = page->GetItemCount();
-				size_t hidden = page->GetHiddenItemCount();
-				m_stateManager.UpdateResultCount(searchId, shown, hidden);
+  int nPages = m_notebook->GetPageCount();
+  for (int i = 0; i < nPages; ++i) {
+    CSearchListCtrl *page =
+        dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+    long searchId = page->GetSearchId();
+    if (searchId == id || id == 0) { // 0: just update all pages (there is only
+                                     // one KAD search running at a time anyway)
+      // Check if this is a Kad search
+      wxString searchType = m_stateManager.GetSearchType(searchId);
+      if (searchType == wxT("Kad")) {
+        // Update result count in state manager
+        size_t shown = page->GetItemCount();
+        size_t hidden = page->GetHiddenItemCount();
+        m_stateManager.UpdateResultCount(searchId, shown, hidden);
 
-				// Check if we need to retry (no results and retry count not exceeded)
-				if (shown == 0 && hidden == 0) {
-					// Request retry through state manager
-					if (m_stateManager.RequestRetry(searchId)) {
-						// Trigger the actual retry
-						OnRetryRequested(searchId);
-						// Retry initiated, don't mark as finished yet
-						continue;
-					}
-				}
+        // Check if we need to retry (no results and retry count not exceeded)
+        if (shown == 0 && hidden == 0) {
+          // Request retry through state manager
+          if (m_stateManager.RequestRetry(searchId)) {
+            // Trigger the actual retry
+            OnRetryRequested(searchId);
+            // Retry initiated, don't mark as finished yet
+            continue;
+          }
+        }
 
-				// End the search in the state manager (only if not retrying)
-				m_stateManager.EndSearch(searchId);
-			}
-		}
-	}
+        // End the search in the state manager (only if not retrying)
+        m_stateManager.EndSearch(searchId);
+      }
+    }
+  }
 }
 
-void CSearchDlg::OnBnClickedDownload(wxCommandEvent& WXUNUSED(evt)) {
-	int sel = m_notebook->GetSelection();
-	if (sel != -1) {
-		CSearchListCtrl* list = dynamic_cast<CSearchListCtrl*>(m_notebook->GetPage(sel));
+void CSearchDlg::OnBnClickedDownload(wxCommandEvent &WXUNUSED(evt)) {
+  int sel = m_notebook->GetSelection();
+  if (sel != -1) {
+    CSearchListCtrl *list =
+        dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(sel));
 
-		// Download with items added to category specified in the drop-down menu
-		list->DownloadSelected();
-	}
+    // Download with items added to category specified in the drop-down menu
+    list->DownloadSelected();
+  }
 }
 
-void CSearchDlg::OnBnClickedClear(wxCommandEvent& WXUNUSED(event)) {
-	if (m_notebook->GetPageCount() > 0) {
-		CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(m_notebook->GetSelection()));
-		list->DeleteAllItems();
-		UpdateHitCount(list);
-	}
+void CSearchDlg::OnBnClickedClear(wxCommandEvent &WXUNUSED(event)) {
+  if (m_notebook->GetPageCount() > 0) {
+    CSearchListCtrl *list = static_cast<CSearchListCtrl *>(
+        m_notebook->GetPage(m_notebook->GetSelection()));
+    list->DeleteAllItems();
+    UpdateHitCount(list);
+  }
 }
 
-void CSearchDlg::OnBnClickedMore(wxCommandEvent& WXUNUSED(event)) {
-	// Get the currently selected search tab
-	if (m_notebook->GetPageCount() > 0) {
-		CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(m_notebook->GetSelection()));
+void CSearchDlg::OnBnClickedMore(wxCommandEvent &WXUNUSED(event)) {
+  // Get the currently selected search tab
+  if (m_notebook->GetPageCount() > 0) {
+    CSearchListCtrl *list = static_cast<CSearchListCtrl *>(
+        m_notebook->GetPage(m_notebook->GetSelection()));
 
-		// Get the search ID for this tab - this is atomic
-		long searchId = list->GetSearchId();
+    // Get the search ID for this tab - this is atomic
+    long searchId = list->GetSearchId();
 
-		// Debug logging
-		AddDebugLogLineN(logSearch, CFormat(wxT("More button clicked: searchId=%ld")) % searchId);
-		AddDebugLogLineN(logSearch, CFormat(wxT("SearchManager has search: %s")) % (m_stateManager.HasSearch(searchId) ? wxT("yes") : wxT("no")));
+    // Debug logging
+    AddDebugLogLineN(logSearch,
+                     CFormat(wxT("More button clicked: searchId=%ld")) %
+                         searchId);
+    AddDebugLogLineN(
+        logSearch,
+        CFormat(wxT("SearchManager has search: %s")) %
+            (m_stateManager.HasSearch(searchId) ? wxT("yes") : wxT("no")));
 
-		// Use SearchStateManager to get the search type instead of parsing tab text
-		wxString searchType = m_stateManager.GetSearchType(searchId);
-		AddDebugLogLineN(logSearch, CFormat(wxT("Search type: %s")) % searchType);
+    // Use SearchStateManager to get the search type instead of parsing tab text
+    wxString searchType = m_stateManager.GetSearchType(searchId);
+    AddDebugLogLineN(logSearch, CFormat(wxT("Search type: %s")) % searchType);
 
-		// The "More" button should only work for eD2k network searches (Local/Global), not for Kad
-		bool isKadSearch = (searchType == wxT("Kad"));
-		if (isKadSearch) {
-			wxMessageBox(_("The 'More' button does not work for Kad searches."), _("Search Information"),
-						 wxOK | wxICON_INFORMATION);
-			return;
-		}
+    // The "More" button should only work for eD2k network searches
+    // (Local/Global), not for Kad
+    bool isKadSearch = (searchType == wxT("Kad"));
+    if (isKadSearch) {
+      wxMessageBox(_("The 'More' button does not work for Kad searches."),
+                   _("Search Information"), wxOK | wxICON_INFORMATION);
+      return;
+    }
 
-		// Determine if this is a Local or Global search
-		bool isLocalSearch = (searchType == wxT("Local"));
-		bool isGlobalSearch = (searchType == wxT("Global"));
+    // Determine if this is a Local or Global search
+    bool isLocalSearch = (searchType == wxT("Local"));
+    bool isGlobalSearch = (searchType == wxT("Global"));
 
-		// More button should work for both Local and Global searches
-		if (!isLocalSearch && !isGlobalSearch) {
-			// Unknown search type, try to determine from search parameters
-			CSearchList::CSearchParams params = theApp->searchlist->GetSearchParams(searchId);
-			if (params.searchType == KadSearch) {
-				wxMessageBox(_("The 'More' button does not work for Kad searches."), _("Search Information"),
-							 wxOK | wxICON_INFORMATION);
-				return;
-			}
-		}
+    // More button should work for both Local and Global searches
+    if (!isLocalSearch && !isGlobalSearch) {
+      // Unknown search type, try to determine from search parameters
+      CSearchList::CSearchParams params =
+          theApp->searchlist->GetSearchParams(searchId);
+      if (params.searchType == KadSearch) {
+        wxMessageBox(_("The 'More' button does not work for Kad searches."),
+                     _("Search Information"), wxOK | wxICON_INFORMATION);
+        return;
+      }
+    }
 
-		// Get search parameters from SearchStateManager
-		CSearchList::CSearchParams params;
-		AddDebugLogLineN(logSearch, wxT("Attempting to get search parameters..."));
-		if (!m_stateManager.GetSearchParams(searchId, params)) {
-			AddDebugLogLineN(logSearch, wxT("Failed to get search parameters!"));
-			wxMessageBox(_("No search parameters available for this search."), _("Search Error"),
-						 wxOK | wxICON_ERROR);
-			return;
-		}
+    // Get search parameters from SearchStateManager
+    CSearchList::CSearchParams params;
+    AddDebugLogLineN(logSearch, wxT("Attempting to get search parameters..."));
+    if (!m_stateManager.GetSearchParams(searchId, params)) {
+      AddDebugLogLineN(logSearch, wxT("Failed to get search parameters!"));
+      wxMessageBox(_("No search parameters available for this search."),
+                   _("Search Error"), wxOK | wxICON_ERROR);
+      return;
+    }
 
-		if (params.searchString.IsEmpty()) {
-			wxMessageBox(_("No search parameters available for this search."), _("Search Error"),
-						 wxOK | wxICON_ERROR);
-			return;
-		}
+    if (params.searchString.IsEmpty()) {
+      wxMessageBox(_("No search parameters available for this search."),
+                   _("Search Error"), wxOK | wxICON_ERROR);
+      return;
+    }
 
-		// Store the original search ID before making any changes
-		long originalSearchId = searchId;
+    // Store the original search ID before making any changes
+    long originalSearchId = searchId;
 
-		// Handle Local and Global searches differently
-		if (params.searchType == LocalSearch) {
-			// For Local searches, we need to convert to Global search
-			// This now reuses the same search ID and queries multiple servers
-			wxString error = theApp->searchlist->RequestMoreResultsForSearch(searchId);
-			if (!error.IsEmpty()) {
-				wxMessageBox(error, _("Search Error"), wxOK | wxICON_ERROR);
-				return;
-			}
+    // Handle Local and Global searches differently
+    if (params.searchType == LocalSearch) {
+      // For Local searches, we need to convert to Global search
+      // This now reuses the same search ID and queries multiple servers
+      wxString error =
+          theApp->searchlist->RequestMoreResultsForSearch(searchId);
+      if (!error.IsEmpty()) {
+        wxMessageBox(error, _("Search Error"), wxOK | wxICON_ERROR);
+        return;
+      }
 
-			// The search ID remains the same, results will be appended to the existing list
-			// No need to update the list control since we're using the same search ID
-		} else if (params.searchType == GlobalSearch) {
-			// For Global searches, we continue querying additional servers
-			// The search ID remains the same, but we query more servers
-			wxString error = theApp->searchlist->RequestMoreResultsForSearch(searchId);
-			if (!error.IsEmpty()) {
-				wxMessageBox(error, _("Search Error"), wxOK | wxICON_ERROR);
-				return;
-			}
+      // The search ID remains the same, results will be appended to the
+      // existing list No need to update the list control since we're using the
+      // same search ID
+    } else if (params.searchType == GlobalSearch) {
+      // For Global searches, we continue querying additional servers
+      // The search ID remains the same, but we query more servers
+      wxString error =
+          theApp->searchlist->RequestMoreResultsForSearch(searchId);
+      if (!error.IsEmpty()) {
+        wxMessageBox(error, _("Search Error"), wxOK | wxICON_ERROR);
+        return;
+      }
 
-			// For Global searches, the search ID doesn't change
-			// Results will be appended to the existing list
-		} else {
-			// Kad searches don't support "More" button
-			wxMessageBox(_("The 'More' button does not work for Kad searches."), _("Search Information"),
-						 wxOK | wxICON_INFORMATION);
-			return;
-		}
+      // For Global searches, the search ID doesn't change
+      // Results will be appended to the existing list
+    } else {
+      // Kad searches don't support "More" button
+      wxMessageBox(_("The 'More' button does not work for Kad searches."),
+                   _("Search Information"), wxOK | wxICON_INFORMATION);
+      return;
+    }
 
-		// Disable buttons during the new search
-		FindWindow(IDC_STARTS)->Disable();
-		FindWindow(IDC_SDOWNLOAD)->Disable();
-		FindWindow(IDC_CANCELS)->Enable();
+    // Disable buttons during the new search
+    FindWindow(IDC_STARTS)->Disable();
+    FindWindow(IDC_SDOWNLOAD)->Disable();
+    FindWindow(IDC_CANCELS)->Enable();
 
-		// Save the original tab text before modifying it
-		int currentTab = m_notebook->GetSelection();
-		wxString originalTabText = m_notebook->GetPageText(currentTab);
-		m_originalTabTexts[currentTab] = originalTabText;
+    // Save the original tab text before modifying it
+    int currentTab = m_notebook->GetSelection();
+    wxString originalTabText = m_notebook->GetPageText(currentTab);
+    m_originalTabTexts[currentTab] = originalTabText;
 
-		// Track this "More" button search for timeout detection
-		m_moreButtonSearches[currentTab] = wxDateTime::Now();
+    // Track this "More" button search for timeout detection
+    m_moreButtonSearches[currentTab] = wxDateTime::Now();
 
-		// Update the tab text to reflect that we're requesting more results
-		// Include the current hit count
-		size_t shown = list->GetItemCount();
-		size_t hidden = list->GetHiddenItemCount();
+    // Update the tab text to reflect that we're requesting more results
+    // Include the current hit count
+    size_t shown = list->GetItemCount();
+    size_t hidden = list->GetHiddenItemCount();
 
-		// Build the new tab text with hit count and "updating" status
-		wxString newText = originalTabText.BeforeLast(wxT('('));
-		if (hidden > 0) {
-			newText += wxString::Format(wxT(" (%zu + %zu hidden) (updating...)"), shown, hidden);
-		} else {
-			newText += wxString::Format(wxT(" (%zu) (updating...)"), shown);
-		}
-		m_notebook->SetPageText(currentTab, newText);
-	}
+    // Build the new tab text with hit count and "updating" status
+    wxString newText = originalTabText.BeforeLast(wxT('('));
+    if (hidden > 0) {
+      newText += wxString::Format(wxT(" (%zu + %zu hidden) (updating...)"),
+                                  shown, hidden);
+    } else {
+      newText += wxString::Format(wxT(" (%zu) (updating...)"), shown);
+    }
+    m_notebook->SetPageText(currentTab, newText);
+  }
 }
 
 void CSearchDlg::StartNewSearch() {
-	static uint32 m_nSearchID = 0;
-	m_nSearchID++;
+  static uint32 m_nSearchID = 0;
+  m_nSearchID++;
 
-	FindWindow(IDC_STARTS)->Disable();
-	FindWindow(IDC_SDOWNLOAD)->Disable();
-	FindWindow(IDC_CANCELS)->Enable();
+  FindWindow(IDC_STARTS)->Disable();
+  FindWindow(IDC_SDOWNLOAD)->Disable();
+  FindWindow(IDC_CANCELS)->Enable();
 
-	CSearchList::CSearchParams params;
+  CSearchList::CSearchParams params;
 
-	params.searchString = CastChild(IDC_SEARCHNAME, wxTextCtrl)->GetValue();
-	params.searchString.Trim(true);
-	params.searchString.Trim(false);
+  params.searchString = CastChild(IDC_SEARCHNAME, wxTextCtrl)->GetValue();
+  params.searchString.Trim(true);
+  params.searchString.Trim(false);
 
-	if (params.searchString.IsEmpty()) {
-		return;
-	}
+  if (params.searchString.IsEmpty()) {
+    return;
+  }
 
-	if (CastChild(IDC_EXTENDEDSEARCHCHECK, wxCheckBox)->GetValue()) {
-		params.extension = CastChild(IDC_EDITSEARCHEXTENSION, wxTextCtrl)->GetValue();
+  if (CastChild(IDC_EXTENDEDSEARCHCHECK, wxCheckBox)->GetValue()) {
+    params.extension =
+        CastChild(IDC_EDITSEARCHEXTENSION, wxTextCtrl)->GetValue();
 
-		uint32 sizemin = GetTypeSize((uint8)CastChild(IDC_SEARCHMINSIZE, wxChoice)->GetSelection());
-		uint32 sizemax = GetTypeSize((uint8)CastChild(IDC_SEARCHMAXSIZE, wxChoice)->GetSelection());
+    uint32 sizemin = GetTypeSize(
+        (uint8)CastChild(IDC_SEARCHMINSIZE, wxChoice)->GetSelection());
+    uint32 sizemax = GetTypeSize(
+        (uint8)CastChild(IDC_SEARCHMAXSIZE, wxChoice)->GetSelection());
 
-		// Parameter Minimum Size
-		params.minSize = (uint64_t)(CastChild(IDC_SPINSEARCHMIN, wxSpinCtrl)->GetValue()) * (uint64_t)sizemin;
+    // Parameter Minimum Size
+    params.minSize =
+        (uint64_t)(CastChild(IDC_SPINSEARCHMIN, wxSpinCtrl)->GetValue()) *
+        (uint64_t)sizemin;
 
-		// Parameter Maximum Size
-		params.maxSize = (uint64_t)(CastChild(IDC_SPINSEARCHMAX, wxSpinCtrl)->GetValue()) * (uint64_t)sizemax;
+    // Parameter Maximum Size
+    params.maxSize =
+        (uint64_t)(CastChild(IDC_SPINSEARCHMAX, wxSpinCtrl)->GetValue()) *
+        (uint64_t)sizemax;
 
-		if ((params.maxSize < params.minSize) && (params.maxSize)) {
-			wxMessageDialog dlg(this, _("Min size must be smaller than max size. Max size ignored."),
-								_("Search warning"), wxOK | wxCENTRE | wxICON_INFORMATION);
-			dlg.ShowModal();
+    if ((params.maxSize < params.minSize) && (params.maxSize)) {
+      wxMessageDialog dlg(
+          this, _("Min size must be smaller than max size. Max size ignored."),
+          _("Search warning"), wxOK | wxCENTRE | wxICON_INFORMATION);
+      dlg.ShowModal();
 
-			params.maxSize = 0;
-		}
+      params.maxSize = 0;
+    }
 
-		// Parameter Availability
-		params.availability = CastChild(IDC_SPINSEARCHAVAIBILITY, wxSpinCtrl)->GetValue();
+    // Parameter Availability
+    params.availability =
+        CastChild(IDC_SPINSEARCHAVAIBILITY, wxSpinCtrl)->GetValue();
 
-		switch (CastChild(IDC_TypeSearch, wxChoice)->GetSelection()) {
-			case 0:
-				params.typeText.Clear();
-				break;
-			case 1:
-				params.typeText = ED2KFTSTR_ARCHIVE;
-				break;
-			case 2:
-				params.typeText = ED2KFTSTR_AUDIO;
-				break;
-			case 3:
-				params.typeText = ED2KFTSTR_CDIMAGE;
-				break;
-			case 4:
-				params.typeText = ED2KFTSTR_IMAGE;
-				break;
-			case 5:
-				params.typeText = ED2KFTSTR_PROGRAM;
-				break;
-			case 6:
-				params.typeText = ED2KFTSTR_DOCUMENT;
-				break;
-			case 7:
-				params.typeText = ED2KFTSTR_VIDEO;
-				break;
-			default:
-				AddDebugLogLineC(logGeneral,
-								 CFormat(wxT("Warning! Unknown search-category (%s) selected!")) % params.typeText);
-				break;
-		}
-	}
+    switch (CastChild(IDC_TypeSearch, wxChoice)->GetSelection()) {
+    case 0:
+      params.typeText.Clear();
+      break;
+    case 1:
+      params.typeText = ED2KFTSTR_ARCHIVE;
+      break;
+    case 2:
+      params.typeText = ED2KFTSTR_AUDIO;
+      break;
+    case 3:
+      params.typeText = ED2KFTSTR_CDIMAGE;
+      break;
+    case 4:
+      params.typeText = ED2KFTSTR_IMAGE;
+      break;
+    case 5:
+      params.typeText = ED2KFTSTR_PROGRAM;
+      break;
+    case 6:
+      params.typeText = ED2KFTSTR_DOCUMENT;
+      break;
+    case 7:
+      params.typeText = ED2KFTSTR_VIDEO;
+      break;
+    default:
+      AddDebugLogLineC(
+          logGeneral,
+          CFormat(wxT("Warning! Unknown search-category (%s) selected!")) %
+              params.typeText);
+      break;
+    }
+  }
 
-	SearchType search_type = KadSearch;
+  SearchType search_type = KadSearch;
 
-	int selection = CastChild(ID_SEARCHTYPE, wxChoice)->GetSelection();
+  int selection = CastChild(ID_SEARCHTYPE, wxChoice)->GetSelection();
 
-	// Update selection accounting for removed BitTorrent and Hybrid search options
-	if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
-		// Full network support - only 3 options available now (Local, Global, Kad)
-		switch (selection) {
-			case 0:
-				search_type = LocalSearch;
-				break;
-			case 1:
-				search_type = GlobalSearch;
-				break;
-			case 2:
-				search_type = KadSearch;
-				break;
-			default:
-				wxFAIL;
-				break;
-		}
-	} else if (thePrefs::GetNetworkED2K()) {
-		// Only ED2K support - 2 options (Local, Global)
-		switch (selection) {
-			case 0:
-				search_type = LocalSearch;
-				break;
-			case 1:
-				search_type = GlobalSearch;
-				break;
-			default:
-				wxFAIL;
-				break;
-		}
-	} else if (thePrefs::GetNetworkKademlia()) {
-		// Only Kad support - 1 option (Kad)
-		switch (selection) {
-			case 0:
-				search_type = KadSearch;
-				break;
-			default:
-				wxFAIL;
-				break;
-		}
-	} else {
-		// No network support
-		AddLogLineC(_("No networks are enabled."));
-		return;
-	}
+  // Update selection accounting for removed BitTorrent and Hybrid search
+  // options
+  if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
+    // Full network support - only 3 options available now (Local, Global, Kad)
+    switch (selection) {
+    case 0:
+      search_type = LocalSearch;
+      break;
+    case 1:
+      search_type = GlobalSearch;
+      break;
+    case 2:
+      search_type = KadSearch;
+      break;
+    default:
+      wxFAIL;
+      break;
+    }
+  } else if (thePrefs::GetNetworkED2K()) {
+    // Only ED2K support - 2 options (Local, Global)
+    switch (selection) {
+    case 0:
+      search_type = LocalSearch;
+      break;
+    case 1:
+      search_type = GlobalSearch;
+      break;
+    default:
+      wxFAIL;
+      break;
+    }
+  } else if (thePrefs::GetNetworkKademlia()) {
+    // Only Kad support - 1 option (Kad)
+    switch (selection) {
+    case 0:
+      search_type = KadSearch;
+      break;
+    default:
+      wxFAIL;
+      break;
+    }
+  } else {
+    // No network support
+    AddLogLineC(_("No networks are enabled."));
+    return;
+  }
 
-	// Determine the search type prefix
-	wxString prefix;
-	switch (search_type) {
-		case LocalSearch:
-			prefix = wxT("[Local] ");
-			break;
-		case GlobalSearch:
-			prefix = wxT("[Global] ");
-			break;
-		case KadSearch:
-			prefix = wxT("[Kad] ");
-			break;
-		default:
-			prefix = wxEmptyString;
-			break;
-	}
+  // Determine the search type prefix
+  wxString prefix;
+  switch (search_type) {
+  case LocalSearch:
+    prefix = wxT("[Local] ");
+    break;
+  case GlobalSearch:
+    prefix = wxT("[Global] ");
+    break;
+  case KadSearch:
+    prefix = wxT("[Kad] ");
+    break;
+  default:
+    prefix = wxEmptyString;
+    break;
+  }
 
-	// Always create a new tab when clicking Start
-	// This ensures that each search request gets its own tab
-	// Users can have multiple tabs with the same search term and type
-	int existingTabIndex = -1;
+  // Always create a new tab when clicking Start
+  // This ensures that each search request gets its own tab
+  // Users can have multiple tabs with the same search term and type
+  int existingTabIndex = -1;
 
 #ifndef CLIENT_GUI
-	// Create SearchController based on search type
-	search::ModernSearchType modernType;
-	switch (search_type) {
-		case LocalSearch:
-			modernType = search::ModernSearchType::LocalSearch;
-			break;
-		case GlobalSearch:
-			modernType = search::ModernSearchType::GlobalSearch;
-			break;
-		case KadSearch:
-			modernType = search::ModernSearchType::KadSearch;
-			break;
-		default:
-			modernType = search::ModernSearchType::LocalSearch;
-			break;
-	}
+  // Create SearchController based on search type
+  search::ModernSearchType modernType;
+  switch (search_type) {
+  case LocalSearch:
+    modernType = search::ModernSearchType::LocalSearch;
+    break;
+  case GlobalSearch:
+    modernType = search::ModernSearchType::GlobalSearch;
+    break;
+  case KadSearch:
+    modernType = search::ModernSearchType::KadSearch;
+    break;
+  default:
+    modernType = search::ModernSearchType::LocalSearch;
+    break;
+  }
 
-	// Create SearchController using factory
-	auto controller = search::SearchControllerFactory::createController(modernType);
-	if (!controller) {
-		wxMessageBox(_("Failed to create search controller"), _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
-		FindWindow(IDC_STARTS)->Enable();
-		FindWindow(IDC_SDOWNLOAD)->Disable();
-		FindWindow(IDC_CANCELS)->Disable();
-		return;
-	}
+  // Create SearchController using factory
+  auto controller =
+      search::SearchControllerFactory::createController(modernType);
+  if (!controller) {
+    wxMessageBox(_("Failed to create search controller"), _("Search error"),
+                 wxOK | wxCENTRE | wxICON_ERROR, this);
+    FindWindow(IDC_STARTS)->Enable();
+    FindWindow(IDC_SDOWNLOAD)->Disable();
+    FindWindow(IDC_CANCELS)->Disable();
+    return;
+  }
 
-	// Convert CSearchParams to SearchParams
-	search::SearchParams searchParams;
-	searchParams.searchString = params.searchString;
-	searchParams.strKeyword = params.searchString; // For Kad searches
-	searchParams.typeText = params.typeText;
-	searchParams.extension = params.extension;
-	searchParams.minSize = params.minSize;
-	searchParams.maxSize = params.maxSize;
-	searchParams.availability = params.availability;
-	searchParams.searchType = modernType;
+  // Convert CSearchParams to SearchParams
+  search::SearchParams searchParams;
+  searchParams.searchString = params.searchString;
+  searchParams.strKeyword = params.searchString; // For Kad searches
+  searchParams.typeText = params.typeText;
+  searchParams.extension = params.extension;
+  searchParams.minSize = params.minSize;
+  searchParams.maxSize = params.maxSize;
+  searchParams.availability = params.availability;
+  searchParams.searchType = modernType;
 
-	// Set up callbacks for the controller BEFORE starting the search
-	// We'll capture the search ID after the controller creates it
-	controller->setOnSearchStarted([this](uint32_t searchId) {
-		wxMutexLocker lock(m_uiUpdateMutex);
-		// Search started - find the tab and update its state
-		for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
-			CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
-			if (list && list->GetSearchId() == (long)searchId) {
-				// Enable the cancel button
-				FindWindow(IDC_CANCELS)->Enable();
-				break;
-			}
-		}
-	});
+  // Set up callbacks for the controller BEFORE starting the search
+  // We'll capture the search ID after the controller creates it
+  controller->setOnSearchStarted([this](uint32_t searchId) {
+    wxMutexLocker lock(m_uiUpdateMutex);
+    // Search started - find the tab and update its state
+    for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
+      CSearchListCtrl *list =
+          static_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+      if (list && list->GetSearchId() == (long)searchId) {
+        // Enable the cancel button
+        FindWindow(IDC_CANCELS)->Enable();
+        break;
+      }
+    }
+  });
 
-	controller->setOnSearchCompleted([this](uint32_t searchId) {
-		wxMutexLocker lock(m_uiUpdateMutex);
-		// Search completed - update UI state
-		for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
-			CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
-			if (list && list->GetSearchId() == (long)searchId) {
-				// Re-enable start button, disable cancel button
-				FindWindow(IDC_STARTS)->Enable();
-				FindWindow(IDC_CANCELS)->Disable();
-				// Update hit count
-				UpdateHitCount(list);
-				break;
-			}
-		}
-	});
+  controller->setOnSearchCompleted([this](uint32_t searchId) {
+    wxMutexLocker lock(m_uiUpdateMutex);
+    // Search completed - update UI state
+    for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
+      CSearchListCtrl *list =
+          static_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+      if (list && list->GetSearchId() == (long)searchId) {
+        // Re-enable start button, disable cancel button
+        FindWindow(IDC_STARTS)->Enable();
+        FindWindow(IDC_CANCELS)->Disable();
+        // Update hit count
+        UpdateHitCount(list);
+        break;
+      }
+    }
+  });
 
-	// Instead of directly handling results, we'll let the SearchResultRouter handle them
-	// The controller will still receive results internally, but we won't process them here
+  // Instead of directly handling results, we'll let the SearchResultRouter
+  // handle them The controller will still receive results internally, but we
+  // won't process them here
 
-	controller->setOnMoreResults([this](uint32_t searchId, bool success, const wxString& message) {
-		wxMutexLocker lock(m_uiUpdateMutex);
-		// More results received - update the hit count in the tab
-		if (success && !message.IsEmpty()) {
-			// Find the tab for this search
-			for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
-				CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
-				if (list && list->GetSearchId() == (long)searchId) {
-					// Update the hit count
-					UpdateHitCount(list);
-					break;
-				}
-			}
-		}
-	});
+  controller->setOnMoreResults(
+      [this](uint32_t searchId, bool success, const wxString &message) {
+        wxMutexLocker lock(m_uiUpdateMutex);
+        // More results received - update the hit count in the tab
+        if (success && !message.IsEmpty()) {
+          // Find the tab for this search
+          for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
+            CSearchListCtrl *list =
+                static_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+            if (list && list->GetSearchId() == (long)searchId) {
+              // Update the hit count
+              UpdateHitCount(list);
+              break;
+            }
+          }
+        }
+      });
 
-	// Track if an error occurred
-	auto searchError = std::make_shared<bool>(false);
-	auto errorMessage = std::make_shared<wxString>();
+  // Track if an error occurred
+  auto searchError = std::make_shared<bool>(false);
+  auto errorMessage = std::make_shared<wxString>();
 
-	controller->setOnError([this, searchError, errorMessage](uint32_t searchId, const wxString& error) {
-		wxMutexLocker lock(m_uiUpdateMutex);
-		// Handle errors
-		*searchError = true;
-		*errorMessage = error;
-		wxMessageBox(error, _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
-	});
+  controller->setOnError([this, searchError, errorMessage](
+                             uint32_t searchId, const wxString &error) {
+    wxMutexLocker lock(m_uiUpdateMutex);
+    // Handle errors
+    *searchError = true;
+    *errorMessage = error;
+    wxMessageBox(error, _("Search error"), wxOK | wxCENTRE | wxICON_ERROR,
+                 this);
+  });
 
-	// Start the search using the controller
-	// The controller will create its own search ID and call the legacy system
-	controller->startSearch(searchParams);
+  // Start the search using the controller
+  // The controller will create its own search ID and call the legacy system
+  controller->startSearch(searchParams);
 
-	// Get the search ID from the controller after starting
-	uint32 real_id = controller->getSearchId();
-	if (real_id == 0 || *searchError) {
-		if (!errorMessage->IsEmpty()) {
-			wxMessageBox(*errorMessage, _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
-		} else {
-			wxMessageBox(_("Failed to get search ID from controller"), _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
-		}
-		FindWindow(IDC_STARTS)->Enable();
-		FindWindow(IDC_SDOWNLOAD)->Disable();
-		FindWindow(IDC_CANCELS)->Disable();
-		return;
-	}
+  // Get the search ID from the controller after starting
+  uint32 real_id = controller->getSearchId();
+  if (real_id == 0 || *searchError) {
+    if (!errorMessage->IsEmpty()) {
+      wxMessageBox(*errorMessage, _("Search error"),
+                   wxOK | wxCENTRE | wxICON_ERROR, this);
+    } else {
+      wxMessageBox(_("Failed to get search ID from controller"),
+                   _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
+    }
+    FindWindow(IDC_STARTS)->Enable();
+    FindWindow(IDC_SDOWNLOAD)->Disable();
+    FindWindow(IDC_CANCELS)->Disable();
+    return;
+  }
 
-	// Store the controller
-	m_searchControllers[real_id] = std::move(controller);
+  // Store the controller
+  m_searchControllers[real_id] = std::move(controller);
 
-	// Initialize the search in SearchStateManager
-	wxString searchTypeStr;
-	switch (search_type) {
-		case LocalSearch:
-			searchTypeStr = wxT("Local");
-			break;
-		case GlobalSearch:
-			searchTypeStr = wxT("Global");
-			break;
-		case KadSearch:
-			searchTypeStr = wxT("Kad");
-			break;
-		default:
-			searchTypeStr = wxT("Local");
-			break;
-	}
-	// Store search parameters for retry
-	m_stateManager.InitializeSearch(real_id, searchTypeStr, params.searchString, params);
+  // Initialize the search in SearchStateManager
+  wxString searchTypeStr;
+  switch (search_type) {
+  case LocalSearch:
+    searchTypeStr = wxT("Local");
+    break;
+  case GlobalSearch:
+    searchTypeStr = wxT("Global");
+    break;
+  case KadSearch:
+    searchTypeStr = wxT("Kad");
+    break;
+  default:
+    searchTypeStr = wxT("Local");
+    break;
+  }
+  // Store search parameters for retry
+  m_stateManager.InitializeSearch(real_id, searchTypeStr, params.searchString,
+                                  params);
 
-	// Search started successfully, now create a new tab
-	// Always create a new tab to ensure each search gets its own tab
-	CreateNewTab(prefix + params.searchString, real_id);
+  // Search started successfully, now create a new tab
+  // Always create a new tab to ensure each search gets its own tab
+  CreateNewTab(prefix + params.searchString, real_id);
 #else
-	// CLIENT_GUI mode: Use EC-based search with atomic search system
-	// Create SearchController based on search type
-	search::ModernSearchType modernType;
-	switch (search_type) {
-		case LocalSearch:
-			modernType = search::ModernSearchType::LocalSearch;
-			break;
-		case GlobalSearch:
-			modernType = search::ModernSearchType::GlobalSearch;
-			break;
-		case KadSearch:
-			modernType = search::ModernSearchType::KadSearch;
-			break;
-		default:
-			modernType = search::ModernSearchType::LocalSearch;
-			break;
-	}
+  // CLIENT_GUI mode: Use EC-based search with atomic search system
+  // CLIENT_GUI mode (remote GUI): Use EC-based search with atomic search system
+  // Use the new atomic search system
+  // Start the search using the new atomic method
+  uint32 real_id = 0;
+  wxString error = theApp->searchlist->StartNewSearch(&real_id, search_type, params);
 
-	// Create SearchController using factory
-	auto controller = search::SearchControllerFactory::createController(modernType);
-	if (!controller) {
-		wxMessageBox(_("Failed to create search controller"), _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
-		FindWindow(IDC_STARTS)->Enable();
-		FindWindow(IDC_SDOWNLOAD)->Disable();
-		FindWindow(IDC_CANCELS)->Disable();
-		return;
-	}
+  if (!error.IsEmpty() || real_id == 0) {
+    wxMessageBox(error.IsEmpty() ? _("Failed to start search") : error,
+                 _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
+    FindWindow(IDC_STARTS)->Enable();
+    FindWindow(IDC_SDOWNLOAD)->Disable();
+    FindWindow(IDC_CANCELS)->Disable();
+    return;
+  }
 
-	// Convert CSearchParams to SearchParams
-	search::SearchParams searchParams;
-	searchParams.searchString = params.searchString;
-	searchParams.strKeyword = params.searchString; // For Kad searches
-	searchParams.typeText = params.typeText;
-	searchParams.extension = params.extension;
-	searchParams.minSize = params.minSize;
-	searchParams.maxSize = params.maxSize;
-	searchParams.availability = params.availability;
-	searchParams.searchType = modernType;
+  // Search started successfully, now create a new tab
+  // Always create a new tab to ensure each search gets its own tab
+  CreateNewTab(prefix + params.searchString, real_id);
 
-	// Set up callbacks (same as non-CLIENT_GUI mode)
-	controller->setOnSearchStarted([this](uint32_t searchId) {
-		wxMutexLocker lock(m_uiUpdateMutex);
-		// Search started - find the tab and update its state
-		for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
-			CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
-			if (list && list->GetSearchId() == (long)searchId) {
-				// Enable the cancel button
-				FindWindow(IDC_CANCELS)->Enable();
-				break;
-			}
-		}
-	});
-
-	controller->setOnSearchCompleted([this](uint32_t searchId) {
-		wxMutexLocker lock(m_uiUpdateMutex);
-		// Search completed - update UI state
-		for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
-			CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
-			if (list && list->GetSearchId() == (long)searchId) {
-				// Re-enable start button, disable cancel button
-				FindWindow(IDC_STARTS)->Enable();
-				FindWindow(IDC_CANCELS)->Disable();
-				// Update hit count
-				UpdateHitCount(list);
-				break;
-			}
-		}
-	});
-
-	// Track if an error occurred
-	auto searchError = std::make_shared<bool>(false);
-	auto errorMessage = std::make_shared<wxString>();
-
-	controller->setOnError([this, searchError, errorMessage](uint32_t searchId, const wxString& error) {
-		wxMutexLocker lock(m_uiUpdateMutex);
-		// Handle errors
-		*searchError = true;
-		*errorMessage = error;
-		wxMessageBox(error, _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
-	});
-
-	// Start the search using the controller
-	controller->startSearch(searchParams);
-
-	// Get the search ID from the controller after starting
-	uint32 real_id = controller->getSearchId();
-	if (real_id == 0 || *searchError) {
-		if (!errorMessage->IsEmpty()) {
-			wxMessageBox(*errorMessage, _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
-		} else {
-			wxMessageBox(_("Failed to get search ID from controller"), _("Search error"), wxOK | wxCENTRE | wxICON_ERROR, this);
-		}
-		FindWindow(IDC_STARTS)->Enable();
-		FindWindow(IDC_SDOWNLOAD)->Disable();
-		FindWindow(IDC_CANCELS)->Disable();
-		return;
-	}
-
-	// Store the controller
-	m_searchControllers[real_id] = std::move(controller);
-
-	// Initialize the search in SearchStateManager
-	wxString searchTypeStr;
-	switch (search_type) {
-		case LocalSearch:
-			searchTypeStr = wxT("Local");
-			break;
-		case GlobalSearch:
-			searchTypeStr = wxT("Global");
-			break;
-		case KadSearch:
-			searchTypeStr = wxT("Kad");
-			break;
-		default:
-			searchTypeStr = wxT("Local");
-			break;
-	}
-	// Store search parameters for retry
-	m_stateManager.InitializeSearch(real_id, searchTypeStr, params.searchString, params);
-
-	// Search started successfully, now create a new tab
-	CreateNewTab(prefix + params.searchString, real_id);
+  // Search started successfully, now create a new tab
+  CreateNewTab(prefix + params.searchString, real_id);
 #endif
 }
 
-void CSearchDlg::UpdateHitCount(CSearchListCtrl* page) {
-	if (!page) {
-		return;
-	}
+void CSearchDlg::UpdateHitCount(CSearchListCtrl *page) {
+  if (!page) {
+    return;
+  }
 
-	// Get the search ID
-	long searchId = page->GetSearchId();
-	if (searchId == 0) {
-		return;
-	}
+  // Get the search ID
+  long searchId = page->GetSearchId();
+  if (searchId == 0) {
+    return;
+  }
 
-	// Update result count in SearchStateManager
-	size_t shown = page->GetItemCount();
-	size_t hidden = page->GetHiddenItemCount();
+  // Update result count in SearchStateManager
+  size_t shown = page->GetItemCount();
+  size_t hidden = page->GetHiddenItemCount();
 
-	// Log the hit count values for debugging
-	SEARCH_DEBUG_COUNT(CFormat(wxT("UpdateHitCount: searchId=%ld, shown=%u, hidden=%u")) % searchId % shown % hidden);
+  // Log the hit count values for debugging
+  SEARCH_DEBUG_COUNT(
+      CFormat(wxT("UpdateHitCount: searchId=%ld, shown=%u, hidden=%u")) %
+      searchId % shown % hidden);
 
-	// Ensure the search exists in state manager before updating
-	if (!m_stateManager.HasSearch(searchId)) {
-		// Search not initialized yet - this shouldn't happen but handle it gracefully
-		SEARCH_DEBUG_COUNT(CFormat(wxT("UpdateHitCount: Search ID %ld not found in state manager, skipping update")) % searchId);
-		return;
-	}
+  // Ensure the search exists in state manager before updating
+  if (!m_stateManager.HasSearch(searchId)) {
+    // Search not initialized yet - this shouldn't happen but handle it
+    // gracefully
+    SEARCH_DEBUG_COUNT(CFormat(wxT("UpdateHitCount: Search ID %ld not found in "
+                                   "state manager, skipping update")) %
+                       searchId);
+    return;
+  }
 
-	m_stateManager.UpdateResultCount(searchId, shown, hidden);
+  m_stateManager.UpdateResultCount(searchId, shown, hidden);
 
-	// Update the tab label with current state from SearchStateManager
-	SearchState state = m_stateManager.GetSearchState(searchId);
-	int retryCount = m_stateManager.GetRetryCount(searchId);
+  // Update the tab label with current state from SearchStateManager
+  SearchState state = m_stateManager.GetSearchState(searchId);
+  int retryCount = m_stateManager.GetRetryCount(searchId);
 
-	wxString stateStr;
-	switch (state) {
-		case STATE_SEARCHING:
-			stateStr = wxT("Searching");
-			break;
-		case STATE_RETRYING:
-			stateStr = (CFormat(wxT("Retrying %d")) % retryCount).GetString();
-			break;
-		case STATE_NO_RESULTS:
-			stateStr = wxT("No Results");
-			break;
-		case STATE_HAS_RESULTS:
-		case STATE_POPULATING:
-		case STATE_IDLE:
-			stateStr = wxEmptyString;
-			break;
-	}
+  wxString stateStr;
+  switch (state) {
+  case STATE_SEARCHING:
+    stateStr = wxT("Searching");
+    break;
+  case STATE_RETRYING:
+    stateStr = (CFormat(wxT("Retrying %d")) % retryCount).GetString();
+    break;
+  case STATE_NO_RESULTS:
+    stateStr = wxT("No Results");
+    break;
+  case STATE_HAS_RESULTS:
+  case STATE_POPULATING:
+  case STATE_IDLE:
+    stateStr = wxEmptyString;
+    break;
+  }
 
-	// Update the tab label with state information using counts from SearchStateManager
-	UpdateSearchStateWithCount(page, this, stateStr, shown, hidden);
+  // Update the tab label with state information using counts from
+  // SearchStateManager
+  UpdateSearchStateWithCount(page, this, stateStr, shown, hidden);
 }
 
-void CSearchDlg::OnSearchStateChanged(uint32_t searchId, SearchState state, int retryCount)
-{
-	// Find the search list control for this search ID
-	CSearchListCtrl* list = GetSearchList(searchId);
-	if (!list) {
-		return;
-	}
+void CSearchDlg::OnSearchStateChanged(uint32_t searchId, SearchState state,
+                                      int retryCount) {
+  // Find the search list control for this search ID
+  CSearchListCtrl *list = GetSearchList(searchId);
+  if (!list) {
+    return;
+  }
 
-	// Convert state to string
-	wxString stateStr;
-	switch (state) {
-		case STATE_SEARCHING:
-			stateStr = wxT("Searching");
-			break;
-		case STATE_RETRYING:
-			stateStr = (CFormat(wxT("Retrying %d")) % retryCount).GetString();
-			break;
-		case STATE_NO_RESULTS:
-			stateStr = wxT("No Results");
-			break;
-		case STATE_HAS_RESULTS:
-		case STATE_POPULATING:
-		case STATE_IDLE:
-			stateStr = wxEmptyString;
-			break;
-	}
+  // Convert state to string
+  wxString stateStr;
+  switch (state) {
+  case STATE_SEARCHING:
+    stateStr = wxT("Searching");
+    break;
+  case STATE_RETRYING:
+    stateStr = (CFormat(wxT("Retrying %d")) % retryCount).GetString();
+    break;
+  case STATE_NO_RESULTS:
+    stateStr = wxT("No Results");
+    break;
+  case STATE_HAS_RESULTS:
+  case STATE_POPULATING:
+  case STATE_IDLE:
+    stateStr = wxEmptyString;
+    break;
+  }
 
-	// Get the result counts from SearchStateManager
-	size_t shown, hidden;
-	m_stateManager.GetResultCount(searchId, shown, hidden);
+  // Get the result counts from SearchStateManager
+  size_t shown, hidden;
+  m_stateManager.GetResultCount(searchId, shown, hidden);
 
-	// Update the tab label with state information and correct counts
-	UpdateSearchStateWithCount(list, this, stateStr, shown, hidden);
+  // Update the tab label with state information and correct counts
+  UpdateSearchStateWithCount(list, this, stateStr, shown, hidden);
 }
 
-bool CSearchDlg::OnRetryRequested(uint32_t searchId)
-{
-	// Find the search list control for this search ID
-	CSearchListCtrl* list = GetSearchList(searchId);
-	if (!list) {
-		return false;
-	}
+bool CSearchDlg::OnRetryRequested(uint32_t searchId) {
+  // Find the search list control for this search ID
+  CSearchListCtrl *list = GetSearchList(searchId);
+  if (!list) {
+    return false;
+  }
 
-	// Get the search type from SearchStateManager
-	wxString searchType = m_stateManager.GetSearchType(searchId);
+  // Get the search type from SearchStateManager
+  wxString searchType = m_stateManager.GetSearchType(searchId);
 
-	// Reset state to Searching before triggering retry
-	// This ensures the UI shows "Searching" instead of jumping to "No Results"
-	m_stateManager.UpdateState(searchId, STATE_SEARCHING);
+  // Reset state to Searching before triggering retry
+  // This ensures the UI shows "Searching" instead of jumping to "No Results"
+  m_stateManager.UpdateState(searchId, STATE_SEARCHING);
 
-	// Retry based on search type
-	if (searchType == wxT("Kad")) {
-		return RetryKadSearchWithState(list, this);
-	} else if (searchType == wxT("Local") || searchType == wxT("ED2K") || searchType == wxT("Global")) {
-		return RetrySearchWithState(list, this);
-	}
+  // Retry based on search type
+  if (searchType == wxT("Kad")) {
+    return RetryKadSearchWithState(list, this);
+  } else if (searchType == wxT("Local") || searchType == wxT("ED2K") ||
+             searchType == wxT("Global")) {
+    return RetrySearchWithState(list, this);
+  }
 
-	return false;
+  return false;
 }
 
-void CSearchDlg::UpdateTabLabelWithState(CSearchListCtrl* list, const wxString& state) {
-	assert(list != nullptr);
-	assert(m_notebook != nullptr);
+void CSearchDlg::UpdateTabLabelWithState(CSearchListCtrl *list,
+                                         const wxString &state) {
+  assert(list != nullptr);
+  assert(m_notebook != nullptr);
 
-	for (uint32 i = 0; i < (uint32)m_notebook->GetPageCount(); ++i) {
-		if (m_notebook->GetPage(i) == list) {
-			// Get the search type from the list control (stored variable)
-			wxString searchType = list->GetSearchType();
-			
-			// If search type is not set, parse it from current tab text for backward compatibility
-			if (searchType.IsEmpty()) {
-				wxString tabText = m_notebook->GetPageText(i);
-				assert(!tabText.IsEmpty());
+  for (uint32 i = 0; i < (uint32)m_notebook->GetPageCount(); ++i) {
+    if (m_notebook->GetPage(i) == list) {
+      // Get the search type from the list control (stored variable)
+      wxString searchType = list->GetSearchType();
 
-				// Parse search type from tab text
-				if (tabText.StartsWith(wxT("[Local] "))) {
-					searchType = wxT("Local");
-				} else if (tabText.StartsWith(wxT("[Global] "))) {
-					searchType = wxT("Global");
-				} else if (tabText.StartsWith(wxT("[Kad] "))) {
-					searchType = wxT("Kad");
-				}
-				
-				// Store the parsed search type for future use
-				list->SetSearchType(searchType);
-			}
+      // If search type is not set, parse it from current tab text for backward
+      // compatibility
+      if (searchType.IsEmpty()) {
+        wxString tabText = m_notebook->GetPageText(i);
+        assert(!tabText.IsEmpty());
 
-			// Get the keyword from SearchStateManager
-			long searchId = list->GetSearchId();
-			wxString keyword = m_stateManager.GetKeyword(searchId);
-			if (keyword.IsEmpty()) {
-				// Fallback: get keyword from current tab text
-				wxString tabText = m_notebook->GetPageText(i);
-				// Remove type prefix
-				if (tabText.StartsWith(wxT("[Local] "))) {
-					tabText = tabText.Mid(8);
-				} else if (tabText.StartsWith(wxT("[Global] "))) {
-					tabText = tabText.Mid(8);
-				} else if (tabText.StartsWith(wxT("[Kad] "))) {
-					tabText = tabText.Mid(6);
-				}
-				// Remove state prefix
-				if (tabText.StartsWith(wxT("["))) {
-					size_t stateEnd = tabText.Find(wxT("]"));
-					if (stateEnd != wxString::npos) {
-						tabText = tabText.Mid(stateEnd + 2);
-					}
-				}
-				// Remove count suffix
-				int parenPos = tabText.Find(wxT(" ("));
-				if (parenPos != wxNOT_FOUND) {
-					tabText = tabText.Left(parenPos);
-				}
-				keyword = tabText.Trim();
-			}
+        // Parse search type from tab text
+        if (tabText.StartsWith(wxT("[Local] "))) {
+          searchType = wxT("Local");
+        } else if (tabText.StartsWith(wxT("[Global] "))) {
+          searchType = wxT("Global");
+        } else if (tabText.StartsWith(wxT("[Kad] "))) {
+          searchType = wxT("Kad");
+        }
 
-			// Log the values for debugging
-			theLogger.AddLogLine(wxT("SearchDlg.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateTabLabelWithState: state='%s', searchType='%s', keyword='%s'")) % state % searchType % keyword);
+        // Store the parsed search type for future use
+        list->SetSearchType(searchType);
+      }
 
-			// Build the new tab text using stored search type
-			wxString newText;
-			
-			// Add search type prefix
-			if (searchType == wxT("Local")) {
-				newText = wxT("[Local] ");
-			} else if (searchType == wxT("Global")) {
-				newText = wxT("[Global] ");
-			} else if (searchType == wxT("Kad")) {
-				newText = wxT("[Kad] ");
-			}
+      // Get the keyword from SearchStateManager
+      long searchId = list->GetSearchId();
+      wxString keyword = m_stateManager.GetKeyword(searchId);
+      if (keyword.IsEmpty()) {
+        // Fallback: get keyword from current tab text
+        wxString tabText = m_notebook->GetPageText(i);
+        // Remove type prefix
+        if (tabText.StartsWith(wxT("[Local] "))) {
+          tabText = tabText.Mid(8);
+        } else if (tabText.StartsWith(wxT("[Global] "))) {
+          tabText = tabText.Mid(8);
+        } else if (tabText.StartsWith(wxT("[Kad] "))) {
+          tabText = tabText.Mid(6);
+        }
+        // Remove state prefix
+        if (tabText.StartsWith(wxT("["))) {
+          size_t stateEnd = tabText.Find(wxT("]"));
+          if (stateEnd != wxString::npos) {
+            tabText = tabText.Mid(stateEnd + 2);
+          }
+        }
+        // Remove count suffix
+        int parenPos = tabText.Find(wxT(" ("));
+        if (parenPos != wxNOT_FOUND) {
+          tabText = tabText.Left(parenPos);
+        }
+        keyword = tabText.Trim();
+      }
 
-			// Add state if provided
-			if (!state.IsEmpty()) {
-				newText += wxT("[") + state + wxT("] ");
-			}
-			
-			// Add the keyword
-			newText += keyword;
+      // Log the values for debugging
+      theLogger.AddLogLine(wxT("SearchDlg.cpp"), __LINE__, false, logStandard,
+                           CFormat(wxT("UpdateTabLabelWithState: state='%s', "
+                                       "searchType='%s', keyword='%s'")) %
+                               state % searchType % keyword);
 
-			// Get the result counts
-			size_t shown = list->GetItemCount();
-			size_t hidden = list->GetHiddenItemCount();
+      // Build the new tab text using stored search type
+      wxString newText;
 
-			// Validate counts - hidden should not exceed shown
-			assert(shown >= hidden);
+      // Add search type prefix
+      if (searchType == wxT("Local")) {
+        newText = wxT("[Local] ");
+      } else if (searchType == wxT("Global")) {
+        newText = wxT("[Global] ");
+      } else if (searchType == wxT("Kad")) {
+        newText = wxT("[Kad] ");
+      }
 
-			// Add count information
-			// Always show count when there is a state (e.g., "No Results", "Retrying 1")
-			// or when there are actual results
-			if (!state.IsEmpty() || shown > 0 || hidden > 0) {
-				if (hidden) {
-					newText += (CFormat(wxT(" (%u/%u)")) % shown % (shown + hidden)).GetString();
-				} else {
-					newText += (CFormat(wxT(" (%u)")) % shown).GetString();
-				}
-			}
+      // Add state if provided
+      if (!state.IsEmpty()) {
+        newText += wxT("[") + state + wxT("] ");
+      }
 
-			// Log the final tab text for debugging
-			theLogger.AddLogLine(wxT("SearchDlg.cpp"), __LINE__, false, logStandard, CFormat(wxT("UpdateTabLabelWithState: Setting tab text to '%s'")) % newText);
+      // Add the keyword
+      newText += keyword;
 
-			m_notebook->SetPageText(i, newText);
-			break;
-		}
-	}
+      // Get the result counts
+      size_t shown = list->GetItemCount();
+      size_t hidden = list->GetHiddenItemCount();
+
+      // Validate counts - hidden should not exceed shown
+      assert(shown >= hidden);
+
+      // Add count information
+      // Always show count when there is a state (e.g., "No Results", "Retrying
+      // 1") or when there are actual results
+      if (!state.IsEmpty() || shown > 0 || hidden > 0) {
+        if (hidden) {
+          newText +=
+              (CFormat(wxT(" (%u/%u)")) % shown % (shown + hidden)).GetString();
+        } else {
+          newText += (CFormat(wxT(" (%u)")) % shown).GetString();
+        }
+      }
+
+      // Log the final tab text for debugging
+      theLogger.AddLogLine(
+          wxT("SearchDlg.cpp"), __LINE__, false, logStandard,
+          CFormat(wxT("UpdateTabLabelWithState: Setting tab text to '%s'")) %
+              newText);
+
+      m_notebook->SetPageText(i, newText);
+      break;
+    }
+  }
 }
 
-// UpdateSearchState is now implemented as an external helper function in SearchLabelHelper.cpp
+// UpdateSearchState is now implemented as an external helper function in
+// SearchLabelHelper.cpp
 
-void CSearchDlg::OnBnClickedReset(wxCommandEvent& WXUNUSED(evt)) {
-	CastChild(IDC_SEARCHNAME, wxTextCtrl)->Clear();
-	CastChild(IDC_EDITSEARCHEXTENSION, wxTextCtrl)->Clear();
-	CastChild(IDC_SPINSEARCHMIN, wxSpinCtrl)->SetValue(0);
-	CastChild(IDC_SEARCHMINSIZE, wxChoice)->SetSelection(2);
-	CastChild(IDC_SPINSEARCHMAX, wxSpinCtrl)->SetValue(0);
-	CastChild(IDC_SEARCHMAXSIZE, wxChoice)->SetSelection(2);
-	CastChild(IDC_SPINSEARCHAVAIBILITY, wxSpinCtrl)->SetValue(0);
-	CastChild(IDC_TypeSearch, wxChoice)->SetSelection(0);
-	CastChild(ID_AUTOCATASSIGN, wxChoice)->SetSelection(0);
+void CSearchDlg::OnBnClickedReset(wxCommandEvent &WXUNUSED(evt)) {
+  CastChild(IDC_SEARCHNAME, wxTextCtrl)->Clear();
+  CastChild(IDC_EDITSEARCHEXTENSION, wxTextCtrl)->Clear();
+  CastChild(IDC_SPINSEARCHMIN, wxSpinCtrl)->SetValue(0);
+  CastChild(IDC_SEARCHMINSIZE, wxChoice)->SetSelection(2);
+  CastChild(IDC_SPINSEARCHMAX, wxSpinCtrl)->SetValue(0);
+  CastChild(IDC_SEARCHMAXSIZE, wxChoice)->SetSelection(2);
+  CastChild(IDC_SPINSEARCHAVAIBILITY, wxSpinCtrl)->SetValue(0);
+  CastChild(IDC_TypeSearch, wxChoice)->SetSelection(0);
+  CastChild(ID_AUTOCATASSIGN, wxChoice)->SetSelection(0);
 
-	FindWindow(IDC_SEARCH_RESET)->Enable(FALSE);
+  FindWindow(IDC_SEARCH_RESET)->Enable(FALSE);
 }
 
 void CSearchDlg::UpdateCatChoice() {
-	wxChoice* c_cat = CastChild(ID_AUTOCATASSIGN, wxChoice);
-	c_cat->Clear();
+  wxChoice *c_cat = CastChild(ID_AUTOCATASSIGN, wxChoice);
+  c_cat->Clear();
 
-	c_cat->Append(_("Main"));
+  c_cat->Append(_("Main"));
 
-	for (unsigned i = 1; i < theApp->glob_prefs->GetCatCount(); i++) {
-		c_cat->Append(theApp->glob_prefs->GetCategory(i)->title);
-	}
+  for (unsigned i = 1; i < theApp->glob_prefs->GetCatCount(); i++) {
+    c_cat->Append(theApp->glob_prefs->GetCategory(i)->title);
+  }
 
-	c_cat->SetSelection(0);
+  c_cat->SetSelection(0);
 }
 
-void CSearchDlg::UpdateProgress(uint32 new_value) { m_progressbar->SetValue(new_value); }
+void CSearchDlg::UpdateProgress(uint32 new_value) {
+  m_progressbar->SetValue(new_value);
+}
 
-void CSearchDlg::OnTimeoutCheck(wxTimerEvent& event) {
-	wxDateTime now = wxDateTime::Now();
-	const int TIMEOUT_SECONDS = 30;	 // 30 second timeout
+void CSearchDlg::OnTimeoutCheck(wxTimerEvent &event) {
+  wxDateTime now = wxDateTime::Now();
+  const int TIMEOUT_SECONDS = 30; // 30 second timeout
 
-	// Check for timed-out "More" button searches
-	for (auto it = m_moreButtonSearches.begin(); it != m_moreButtonSearches.end();) {
-		int tabIndex = it->first;
-		wxDateTime startTime = it->second;
+  // Check for timed-out "More" button searches
+  for (auto it = m_moreButtonSearches.begin();
+       it != m_moreButtonSearches.end();) {
+    int tabIndex = it->first;
+    wxDateTime startTime = it->second;
 
-		wxTimeSpan elapsed = now - startTime;
+    wxTimeSpan elapsed = now - startTime;
 
-		if (elapsed.GetSeconds().ToLong() >= TIMEOUT_SECONDS) {
-			// Timeout occurred
-			HandleMoreButtonTimeout(tabIndex);
-			it = m_moreButtonSearches.erase(it);
-		} else {
-			++it;
-		}
-	}
+    if (elapsed.GetSeconds().ToLong() >= TIMEOUT_SECONDS) {
+      // Timeout occurred
+      HandleMoreButtonTimeout(tabIndex);
+      it = m_moreButtonSearches.erase(it);
+    } else {
+      ++it;
+    }
+  }
 }
 
 void CSearchDlg::HandleMoreButtonTimeout(int tabIndex) {
-	// Check if the tab index is still valid
-	if (tabIndex < 0 || tabIndex >= m_notebook->GetPageCount()) {
-		// Tab no longer exists, clean up
-		m_originalTabTexts.erase(tabIndex);
-		return;
-	}
-	// Tab index is already provided, use it directly
+  // Check if the tab index is still valid
+  if (tabIndex < 0 || tabIndex >= m_notebook->GetPageCount()) {
+    // Tab no longer exists, clean up
+    m_originalTabTexts.erase(tabIndex);
+    return;
+  }
+  // Tab index is already provided, use it directly
 
-	// Tab index is already provided, use it directly
-	int tabToFix = tabIndex;
+  // Tab index is already provided, use it directly
+  int tabToFix = tabIndex;
 
-	if (tabToFix >= 0) {
-		// Restore the original tab text
-		auto it = m_originalTabTexts.find(tabIndex);
-		if (it != m_originalTabTexts.end()) {
-			m_notebook->SetPageText(tabToFix, it->second);
-			m_originalTabTexts.erase(it);
-		} else {
-			// Fallback: remove "updating..." from current text
-			wxString tabText = m_notebook->GetPageText(tabToFix);
-			if (tabText.Contains(wxT("(updating...)"))) {
-				tabText.Replace(wxT("(updating...)"), wxT(""));
-				m_notebook->SetPageText(tabToFix, tabText);
-			}
-		}
-	}
+  if (tabToFix >= 0) {
+    // Restore the original tab text
+    auto it = m_originalTabTexts.find(tabIndex);
+    if (it != m_originalTabTexts.end()) {
+      m_notebook->SetPageText(tabToFix, it->second);
+      m_originalTabTexts.erase(it);
+    } else {
+      // Fallback: remove "updating..." from current text
+      wxString tabText = m_notebook->GetPageText(tabToFix);
+      if (tabText.Contains(wxT("(updating...)"))) {
+        tabText.Replace(wxT("(updating...)"), wxT(""));
+        m_notebook->SetPageText(tabToFix, tabText);
+      }
+    }
+  }
 
-	// Show message to user
-	wxMessageBox(_("The 'More' button request timed out. The search may have "
-				   "completed but the status was not updated.\n\n"
-				   "Please check the results in the current tab. If no new "
-				   "results appear, you can try clicking 'More' again."),
-				 _("Search Timeout"), wxOK | wxICON_WARNING);
+  // Show message to user
+  wxMessageBox(_("The 'More' button request timed out. The search may have "
+                 "completed but the status was not updated.\n\n"
+                 "Please check the results in the current tab. If no new "
+                 "results appear, you can try clicking 'More' again."),
+               _("Search Timeout"), wxOK | wxICON_WARNING);
 
-	// Re-enable buttons
-	FindWindow(IDC_STARTS)->Enable();
-	FindWindow(IDC_SDOWNLOAD)->Enable();
-	FindWindow(IDC_CANCELS)->Disable();
+  // Re-enable buttons
+  FindWindow(IDC_STARTS)->Enable();
+  FindWindow(IDC_SDOWNLOAD)->Enable();
+  FindWindow(IDC_CANCELS)->Disable();
 }
 
-void CSearchDlg::OnSearchTypeChanged(wxCommandEvent& evt) {
-	// Call the base event handler
-	UpdateStartButtonState();
-	evt.Skip();
+void CSearchDlg::OnSearchTypeChanged(wxCommandEvent &evt) {
+  // Call the base event handler
+  UpdateStartButtonState();
+  evt.Skip();
 }
 
 // File_checked_for_headers

@@ -73,6 +73,13 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		search/SearchControllerBase.cpp
 		search/ED2KSearchPacketBuilder.cpp
 		search/KadSearchPacketBuilder.cpp
+		search/PerSearchState.cpp
+		search/SearchIdGenerator.cpp
+		search/ED2KSearchHelper.cpp
+		search/KadSearchHelper.cpp
+		search/SearchAutoRetry.cpp
+		search/SearchPackageException.cpp
+		search/SearchPackageValidator.cpp
 		GuiEvents.cpp
 	)
 endif()

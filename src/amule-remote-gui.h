@@ -578,6 +578,7 @@ public:
 		const CSearchList::CSearchParams& params);
 
 	void StopSearch(bool globalOnly = false);
+	void StopSearch(long searchId, bool globalOnly = false);
 
 	// Stub methods for remote GUI - these should be handled on the server side
 	CSearchList::CSearchParams GetSearchParams(long searchId) { return CSearchList::CSearchParams(); }

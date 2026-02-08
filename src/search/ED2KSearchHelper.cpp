@@ -26,9 +26,13 @@
 
 #include "ED2KSearchHelper.h"
 #include "SearchController.h"
-#include "SearchTypeConverter.h"
 #include "../amule.h"
 #include "../ServerConnect.h"
+#include "../SearchList.h"
+#include "../Statistics.h"
+#include "../Packet.h"
+#include <protocol/Protocols.h>
+#include "../include/common/MacrosProgramSpecific.h"
 #include "../Server.h"
 #include "../SearchList.h"
 #include "../Packet.h"
@@ -53,42 +57,90 @@ bool ED2KSearchHelper::SupportsLargeFiles()
 	return server != NULL && (server->GetTCPFlags() & SRV_TCPFLG_LARGEFILES);
 }
 
-bool ED2KSearchHelper::CreateSearchPacket(const SearchParams& params, bool isLocalSearch,
+bool ED2KSearchHelper::CreateSearchPacket(const SearchParams& params, ModernSearchType searchType,
 					  uint8_t*& packetData, uint32_t& packetSize)
 {
 	if (!theApp || !theApp->searchlist) {
 		return false;
 	}
 
-	// Convert to old parameter format
-	CSearchList::CSearchParams oldParams;
-	oldParams.searchString = params.searchString;
-	oldParams.strKeyword = params.strKeyword;
-	oldParams.typeText = params.typeText;
-	oldParams.extension = params.extension;
-	oldParams.minSize = params.minSize;
-	oldParams.maxSize = params.maxSize;
-	oldParams.availability = params.availability;
-
-	// Determine search type
-	::SearchType type = SearchTypeConverter::toLegacy(searchType);
-
-	// Check if server supports 64-bit
+	// Convert ModernSearchType to legacy SearchType
+	SearchType legacyType = static_cast<SearchType>(static_cast<int>(searchType));
+	
+	// Convert SearchParams to CSearchParams
+	CSearchList::CSearchParams legacyParams;
+	legacyParams.searchString = params.searchString;
+	legacyParams.strKeyword = params.strKeyword;
+	legacyParams.typeText = params.typeText;
+	legacyParams.extension = params.extension;
+	legacyParams.minSize = params.minSize;
+	legacyParams.maxSize = params.maxSize;
+	legacyParams.availability = params.availability;
+	legacyParams.searchType = legacyType;
+	
+	// Use the existing CreateSearchData function from SearchList
 	bool supports64bit = SupportsLargeFiles();
 	bool packetUsing64bit = false;
-
-	// For now, we use SearchList's StartNewSearch method
-	// This is temporary during migration
-	// We'll implement proper packet creation in Phase 3
-	return false;
+	legacyParams.searchString = params.searchString;
+	legacyParams.strKeyword = params.strKeyword;
+	legacyParams.typeText = params.typeText;
+	legacyParams.extension = params.extension;
+	legacyParams.minSize = params.minSize;
+	legacyParams.maxSize = params.maxSize;
+	legacyParams.availability = params.availability;
+	legacyParams.searchType = legacyType;
+	
+	// Use the existing CreateSearchData function from SearchList
+	// Note: This requires access to the SearchList instance
+	// For now, we'll use the global application instance
+	if (!theApp || !theApp->searchlist) {
+		return false;
+	}
+	
+	CSearchList::CMemFilePtr data = theApp->searchlist->CreateSearchData(legacyParams, legacyType, supports64bit, packetUsing64bit);
+	
+	if (!data.get()) {
+		return false;
+	}
+	
+	// Allocate memory for the packet data
+	packetSize = data->GetLength();
+	packetData = new uint8_t[packetSize];
+	memcpy(packetData, data->GetRawBuffer(), packetSize);
+	
+	return true;
 }
 
 bool ED2KSearchHelper::SendSearchPacket(const uint8_t* packetData, uint32_t packetSize,
-					 bool isLocalSearch)
+					 ModernSearchType searchType)
 {
-	// For now, we use SearchList's StartNewSearch method
-	// This is temporary during migration
-	return false;
+	if (!packetData || packetSize == 0) {
+		return false;
+	}
+	
+	// Convert ModernSearchType to legacy SearchType
+	SearchType legacyType = static_cast<SearchType>(static_cast<int>(searchType));
+	
+	// Create a CPacket from the raw data
+	CPacket* searchPacket = new CPacket(packetSize, OP_EDONKEYPROT, OP_SEARCHREQUEST);
+	memcpy(const_cast<uint8_t*>(searchPacket->GetDataBuffer()), packetData, packetSize);
+	
+	// Send the packet based on search type
+	bool isLocalSearch = (legacyType == LocalSearch);
+	
+	NOT_ON_REMOTEGUI(
+		theStats::AddUpOverheadServer(searchPacket->GetPacketSize())
+	);
+	
+	// Use the global server connection
+	if (!theApp || !theApp->serverconnect) {
+		delete searchPacket;
+		return false;
+	}
+	
+	theApp->serverconnect->SendPacket(searchPacket, isLocalSearch);
+	
+	return true;
 }
 
 void ED2KSearchHelper::FreeSearchPacket(uint8_t* packetData)

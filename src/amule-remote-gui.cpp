@@ -1981,6 +1981,25 @@ void CSearchListRem::StopSearch(bool)
 	}
 }
 
+void CSearchListRem::StopSearch(long searchId, bool)
+{
+	// For remote GUI, we need to set the current search first, then stop it
+	// Store the current search ID
+	long old_curr_search = m_curr_search;
+	
+	// Set the search to be stopped as current
+	m_curr_search = searchId;
+	
+	// Stop the current search
+	if (m_curr_search != -1) {
+		CECPacket search_req(EC_OP_SEARCH_STOP);
+		m_conn->SendPacket(&search_req);
+	}
+	
+	// Restore the old current search ID (or set to -1 if we stopped the current one)
+	m_curr_search = old_curr_search;
+}
+
 
 void CSearchListRem::HandlePacket(const CECPacket *packet)
 {

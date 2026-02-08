@@ -29,6 +29,8 @@
 #include "search/SearchPackageException.h"	// Package exception
 #include "search/SearchResultHandler.h"	// Result handler interface
 #include "search/SearchResultRouter.h"	// Result router
+#include "search/PerSearchState.h"	// Per-search state management
+#include "search/SearchIdGenerator.h"	// Search ID generation
 
 #include "include/common/MacrosProgramSpecific.h"	// Needed for NOT_ON_REMOTEGUI
 
@@ -276,6 +278,13 @@ END_EVENT_TABLE()
 
 CSearchList::CSearchList()
 	: m_searchTimer(this, 0 /* Timer-id doesn't matter. */ )
+	, m_currentSearch(-1)
+	, m_searchInProgress(false)
+	, m_searchPacket(nullptr)
+	, m_64bitSearchPacket(false)
+	, m_searchType(LocalSearch)
+	, m_KadSearchFinished(false)
+	, m_KadSearchRetryCount(0)
 {
 	// Retry logic now handled by controllers
 	// Per-search state initialized on demand
@@ -319,7 +328,7 @@ uint32 CSearchList::GetNextSearchID()
 
 // Per-search state management methods implementation
 
-search::PerSearchState* CSearchList::getOrCreateSearchState(long searchId, SearchType searchType, const wxString& searchString)
+::PerSearchState* CSearchList::getOrCreateSearchState(long searchId, SearchType searchType, const wxString& searchString)
 {
 	wxMutexLocker lock(m_searchMutex);
 	
@@ -330,7 +339,7 @@ search::PerSearchState* CSearchList::getOrCreateSearchState(long searchId, Searc
 	}
 	
 	// Create new search state
-	auto state = std::make_unique<search::PerSearchState>(searchId, static_cast<uint8_t>(searchType), searchString);
+	auto state = std::make_unique<::PerSearchState>(searchId, static_cast<uint8_t>(searchType), searchString);
 	auto* statePtr = state.get();
 	m_searchStates[searchId] = std::move(state);
 	
@@ -340,14 +349,14 @@ search::PerSearchState* CSearchList::getOrCreateSearchState(long searchId, Searc
 	return statePtr;
 }
 
-search::PerSearchState* CSearchList::getSearchState(long searchId)
+::PerSearchState* CSearchList::getSearchState(long searchId)
 {
 	wxMutexLocker lock(m_searchMutex);
 	auto it = m_searchStates.find(searchId);
 	return (it != m_searchStates.end()) ? it->second.get() : nullptr;
 }
 
-const search::PerSearchState* CSearchList::getSearchState(long searchId) const
+const ::PerSearchState* CSearchList::getSearchState(long searchId) const
 {
 	wxMutexLocker lock(m_searchMutex);
 	auto it = m_searchStates.find(searchId);
@@ -599,8 +608,24 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 
 void CSearchList::LocalSearchEnd()
 {
-	if (m_searchType == GlobalSearch) {
-		wxCHECK_RET(m_searchPacket, wxT("Global search, but no packet"));
+	if (m_currentSearch == -1) {
+		// No active search
+		return;
+	}
+	
+	// Get the per-search state
+	::PerSearchState* state = getSearchState(m_currentSearch);
+	if (!state) {
+		// No state found for this search ID
+		return;
+	}
+	
+	// Get search type from per-search state
+	uint8_t searchType = state->getSearchType();
+	
+	if (searchType == GlobalSearch) {
+		CPacket* searchPacket = state->getSearchPacket();
+		wxCHECK_RET(searchPacket, wxT("Global search, but no packet"));
 
 		// Ensure that every global search starts over.
 		theApp->serverlist->RemoveObserver(&m_serverQueue);
@@ -613,7 +638,7 @@ void CSearchList::LocalSearchEnd()
 		
 		// Only mark the search as finished if we have results
 		if (hasResults) {
-			OnSearchComplete(m_currentSearch, m_searchType, hasResults);
+			OnSearchComplete(m_currentSearch, static_cast<SearchType>(searchType), hasResults);
 		} else {
 			// No results - let the UI handle retry through SearchStateManager
 			// Just mark the search as finished internally
@@ -625,21 +650,49 @@ void CSearchList::LocalSearchEnd()
 
 uint32 CSearchList::GetSearchProgress() const
 {
-	if (m_searchType == KadSearch) {
+	// Call the new version with current search ID
+	return GetSearchProgress(m_currentSearch);
+}
+
+uint32 CSearchList::GetSearchProgress(long searchId) const
+{
+	if (searchId == -1) {
+		// No active search
+		return 0;
+	}
+	
+	// Get the per-search state
+	const ::PerSearchState* state = getSearchState(searchId);
+	if (!state) {
+		// No state found for this search ID
+		return 0;
+	}
+	
+	// Get search type from per-search state
+	uint8_t searchType = state->getSearchType();
+	
+	if (searchType == KadSearch) {
 		// We cannot measure the progress of Kad searches.
 		// But we can tell when they are over.
-		return m_KadSearchFinished ? 0xfffe : 0;
+		return state->isKadSearchFinished() ? 0xfffe : 0;
 	}
-	if (m_searchInProgress == false) {	// true only for ED2K search
-		// No search, no progress ;)
+	
+	// Check if search is in progress
+	// Note: m_searchInProgress is a legacy global flag
+	// In the new architecture, we should track per-search progress
+	// For now, we check if this is the current search
+	if (searchId != m_currentSearch || !m_searchInProgress) {
+		// Not the current search or no search in progress
 		return 0;
 	}
 
-	switch (m_searchType) {
+	switch (searchType) {
 		case LocalSearch:
 			return 0xffff;
 
 		case GlobalSearch:
+			// TODO: Global search progress should be calculated per-search
+			// For now, use the legacy server queue
 			return 100 - (m_serverQueue.GetRemaining() * 100)
 					/ theApp->serverlist->GetServerCount();
 
@@ -652,11 +705,26 @@ uint32 CSearchList::GetSearchProgress() const
 
 void CSearchList::OnGlobalSearchTimer(CTimerEvent& ev)
 {
-	// Ensure that the server-queue contains the current servers.
-	if (!m_searchPacket) {
+	if (m_currentSearch == -1) {
+		// No active search
+		return;
+	}
+	
+	// Get the per-search state for the current search
+	::PerSearchState* state = getSearchState(m_currentSearch);
+	if (!state) {
+		// No state found for this search ID
+		return;
+	}
+	
+	// Get search packet from per-search state
+	CPacket* searchPacket = state->getSearchPacket();
+	if (!searchPacket) {
 		// This was a pending event, handled after 'Stop' was pressed.
 		return;
-	} else if (!m_serverQueue.IsActive()) {
+	}
+	
+	if (!m_serverQueue.IsActive()) {
 		theApp->serverlist->AddObserver(&m_serverQueue);
 	}
 
@@ -679,38 +747,38 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& ev)
 					data.WriteUInt32(tagCount);
 					CTagVarInt flags(CT_SERVER_UDPSEARCH_FLAGS, SRVCAP_UDP_NEWTAGS_LARGEFILES);
 					flags.WriteNewEd2kTag(&data);
-					CPacket *extSearchPacket = new CPacket(OP_GLOBSEARCHREQ3, m_searchPacket->GetPacketSize() + (uint32_t)data.GetLength(), OP_EDONKEYPROT);
+					CPacket *extSearchPacket = new CPacket(OP_GLOBSEARCHREQ3, searchPacket->GetPacketSize() + (uint32_t)data.GetLength(), OP_EDONKEYPROT);
 					extSearchPacket->CopyToDataBuffer(0, data.GetRawBuffer(), data.GetLength());
-					extSearchPacket->CopyToDataBuffer(data.GetLength(), m_searchPacket->GetDataBuffer(), m_searchPacket->GetPacketSize());
+					extSearchPacket->CopyToDataBuffer(data.GetLength(), searchPacket->GetDataBuffer(), searchPacket->GetPacketSize());
 					NOT_ON_REMOTEGUI(
 											theStats::AddUpOverheadServer(extSearchPacket->GetPacketSize());
 					)
 					theApp->serverconnect->SendUDPPacket(extSearchPacket, server, true);
 					AddDebugLogLineN(logServerUDP, wxT("Sending OP_GLOBSEARCHREQ3 to server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
 				} else if (server->GetUDPFlags() & SRV_UDPFLG_EXT_GETFILES) {
-					if (!m_64bitSearchPacket || server->SupportsLargeFilesUDP()) {
-						m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ2);
+					if (!state->is64bitPacket() || server->SupportsLargeFilesUDP()) {
+						searchPacket->SetOpCode(OP_GLOBSEARCHREQ2);
 						AddDebugLogLineN(logServerUDP, wxT("Sending OP_GLOBSEARCHREQ2 to server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
 						NOT_ON_REMOTEGUI(
-													theStats::AddUpOverheadServer(m_searchPacket->GetPacketSize());
+													theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
 						)
-						theApp->serverconnect->SendUDPPacket(m_searchPacket.get(), server, false);
+						theApp->serverconnect->SendUDPPacket(searchPacket, server, false);
 					} else {
 						AddDebugLogLineN(logServerUDP, wxT("Skipped UDP search on server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()) + wxT(": No large file support"));
 					}
 				} else {
-					if (!m_64bitSearchPacket || server->SupportsLargeFilesUDP()) {
-						m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ);
+					if (!state->is64bitPacket() || server->SupportsLargeFilesUDP()) {
+						searchPacket->SetOpCode(OP_GLOBSEARCHREQ);
 						AddDebugLogLineN(logServerUDP, wxT("Sending OP_GLOBSEARCHREQ to server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()));
 						NOT_ON_REMOTEGUI(
-													theStats::AddUpOverheadServer(m_searchPacket->GetPacketSize());
+													theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
 						)
-						theApp->serverconnect->SendUDPPacket(m_searchPacket.get(), server, false);
+						theApp->serverconnect->SendUDPPacket(searchPacket, server, false);
 					} else {
 						AddDebugLogLineN(logServerUDP, wxT("Skipped UDP search on server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()) + wxT(": No large file support"));
 					}
 				}
-				CoreNotify_Search_Update_Progress(GetSearchProgress());
+				CoreNotify_Search_Update_Progress(GetSearchProgress(m_currentSearch));
 				return;
 			}
 		}
@@ -1425,6 +1493,18 @@ void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)
 
 void CSearchList::SetKadSearchFinished()
 {
+	if (m_currentSearch == -1) {
+		// No active search
+		return;
+	}
+	
+	// Get the per-search state
+	::PerSearchState* state = getSearchState(m_currentSearch);
+	if (!state) {
+		// No state found for this search ID
+		return;
+	}
+	
 	// Check if we have any results for the current search
 	ResultMap::iterator it = m_results.find(m_currentSearch);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
@@ -1436,8 +1516,8 @@ void CSearchList::SetKadSearchFinished()
 		OnSearchComplete(m_currentSearch, KadSearch, hasResults);
 	} else {
 		// No results - let the UI handle retry through SearchStateManager
-		// Just mark the Kad search as finished internally
-		m_KadSearchFinished = true;
+		// Just mark the Kad search as finished internally in per-search state
+		state->setKadSearchFinished(true);
 	}
 }
 
