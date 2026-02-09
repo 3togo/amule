@@ -500,7 +500,16 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 				*searchID = GetNextSearchID();
 			} else {
 				// If searchID was provided, reserve it in the generator to ensure uniqueness
-				if (!search::SearchIdGenerator::Instance().reserveId(*searchID)) {
+				// First check if it's already active (e.g., from duplicate detection)
+				if (search::SearchIdGenerator::Instance().isValidId(*searchID)) {
+					// ID is already active - this happens for duplicate active searches
+					// Don't try to reserve it (it's already reserved)
+					AddDebugLogLineC(logSearch, CFormat(wxT("Reusing active search ID %u for Kad search"))
+						% *searchID);
+				} else if (!search::SearchIdGenerator::Instance().reserveId(*searchID)) {
+					// Add debugging info
+					AddDebugLogLineC(logSearch, CFormat(wxT("Failed to reserve search ID %u for Kad search: already in use or invalid"))
+						% *searchID);
 					return _("Search ID is already in use");
 				}
 			}
@@ -556,7 +565,16 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 			*searchID = GetNextSearchID();
 		} else {
 			// If searchID was provided, reserve it in the generator to ensure uniqueness
-			if (!search::SearchIdGenerator::Instance().reserveId(*searchID)) {
+			// First check if it's already active (e.g., from duplicate detection)
+			if (search::SearchIdGenerator::Instance().isValidId(*searchID)) {
+				// ID is already active - this happens for duplicate active searches
+				// Don't try to reserve it (it's already reserved)
+				AddDebugLogLineC(logSearch, CFormat(wxT("Reusing active search ID %u for ED2K search"))
+					% *searchID);
+			} else if (!search::SearchIdGenerator::Instance().reserveId(*searchID)) {
+				// Add debugging info
+				AddDebugLogLineC(logSearch, CFormat(wxT("Failed to reserve search ID %u for ED2K search: already in use or invalid"))
+					% *searchID);
 				return _("Search ID is already in use");
 			}
 		}
@@ -735,6 +753,14 @@ void CSearchList::LocalSearchEnd()
 		} else {
 			// No results - let the UI handle retry through SearchStateManager
 			// Just mark the search as finished internally
+			// Release the search ID since search is complete (no results)
+			if (search::SearchIdGenerator::Instance().releaseId(m_currentSearch)) {
+				AddDebugLogLineC(logSearch, CFormat(wxT("Released search ID %u (no results)"))
+					% m_currentSearch);
+			} else {
+				AddDebugLogLineC(logSearch, CFormat(wxT("Failed to release search ID %u (no results) - already released?"))
+					% m_currentSearch);
+			}
 			m_searchInProgress = false;
 		}
 	}
@@ -893,6 +919,15 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& ev)
 	} else {
 		// No results - let the UI handle retry through SearchStateManager
 		// Notify the UI that global search has ended
+		// Release the search ID since search is complete (no results)
+		if (search::SearchIdGenerator::Instance().releaseId(m_currentSearch)) {
+			AddDebugLogLineC(logSearch, CFormat(wxT("Released search ID %u (global search, no results)"))
+				% m_currentSearch);
+		} else {
+			AddDebugLogLineC(logSearch, CFormat(wxT("Failed to release search ID %u (global search, no results) - already released?"))
+				% m_currentSearch);
+		}
+		
 		Notify_GlobalSearchEnd();
 		// Just mark the search as finished internally
 		m_searchInProgress = false;
@@ -1648,9 +1683,26 @@ void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResul
 	// Mark search as finished
 	if (type == KadSearch) {
 		m_KadSearchFinished = true;
+		// Release Kad search ID
+		if (search::SearchIdGenerator::Instance().releaseId(searchId)) {
+			AddDebugLogLineC(logSearch, CFormat(wxT("Released Kad search ID %u (search completed with results)"))
+				% searchId);
+		} else {
+			AddDebugLogLineC(logSearch, CFormat(wxT("Failed to release Kad search ID %u (search completed) - already released?"))
+				% searchId);
+		}
 	} else {
 		m_searchInProgress = false;
 		Notify_SearchLocalEnd();
+		
+		// Release the search ID for non-Kad searches
+		if (search::SearchIdGenerator::Instance().releaseId(searchId)) {
+			AddDebugLogLineC(logSearch, CFormat(wxT("Released search ID %u (search completed with results)"))
+				% searchId);
+		} else {
+			AddDebugLogLineC(logSearch, CFormat(wxT("Failed to release search ID %u (search completed) - already released?"))
+				% searchId);
+		}
 	}
 }
 
@@ -1669,6 +1721,13 @@ void CSearchList::OnSearchRetry(long searchId, SearchType type, int retryNum)
 				% retryNum % searchId);
 		return;
 	}
+
+	// Release the old search ID before retrying
+	if (search::SearchIdGenerator::Instance().releaseId(searchId)) {
+		AddDebugLogLineC(logSearch, CFormat(wxT("Released search ID %u before retry"))
+			% searchId);
+	}
+	// Note: if release fails, the ID might already be released (e.g., search completed)
 
 	// Start new search with same parameters
 	uint32 newSearchId = 0;

@@ -1106,7 +1106,7 @@ static CECPacket *Get_EC_Response_Search(const CECPacket *request)
 			}
 		/* fall through */
 		case EC_SEARCH_LOCAL: {
-			uint32 search_id = 0xffffffff;
+			uint32 search_id = 0;  // Let SearchList generate a new ID
 			wxString error = theApp->searchlist->StartNewSearch(&search_id, core_search_type, params);
 			if (!error.IsEmpty()) {
 				response = error;
