@@ -251,9 +251,22 @@ private:
 	
 	// Mutex to protect UI updates from concurrent network callbacks
 	mutable wxMutex m_uiUpdateMutex;
+	
+	// Mutex to protect search creation and prevent race conditions
+	mutable wxMutex m_searchCreationMutex;
 
 	// Helper function to find existing tab by search text and type
 	CSearchListCtrl* FindExistingTab(const wxString& searchString, search::ModernSearchType searchType);
+
+	/**
+	 * Thread-safe function to get existing search ID for duplicate search
+	 * 
+	 * @param searchType The type of search (Local, Global, Kad)
+	 * @param searchString The search string/keyword
+	 * @param[out] existingSearchId The existing search ID if found, 0 otherwise
+	 * @return true if an existing tab with same search was found, false otherwise
+	 */
+	bool GetExistingSearchId(SearchType searchType, const wxString& searchString, uint32& existingSearchId);
 
 	DECLARE_EVENT_TABLE()
 };

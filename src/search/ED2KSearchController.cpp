@@ -28,6 +28,7 @@
 #include "ED2KSearchPacketBuilder.h"
 #include "SearchPackageValidator.h"
 #include "SearchResultRouter.h"
+#include "SearchIdGenerator.h"
 #include "SearchLogging.h"
 #include "../ServerList.h"
 #include "../Server.h"
@@ -428,14 +429,8 @@ void ED2KSearchController::handleResults(uint32_t searchId, const std::vector<CS
 
 uint32_t ED2KSearchController::GenerateSearchId()
 {
-    // Generate a unique search ID
-    // This is a simple implementation - could be improved with a global counter
-    static uint32_t s_nextSearchId = 0;
-    s_nextSearchId = (s_nextSearchId + 1) % 0xFFFFFFFE;
-    if (s_nextSearchId == 0) {
-	s_nextSearchId = 1;
-    }
-    return s_nextSearchId;
+    // Use the centralized SearchIdGenerator for consistency across all search types
+    return search::SearchIdGenerator::Instance().generateId();
 }
 
 } // namespace search

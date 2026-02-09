@@ -28,6 +28,11 @@
 #define KADSEARCHCONTROLLER_H
 
 #include "SearchControllerBase.h"
+
+// Forward declarations
+namespace Kademlia {
+    class CSearch;
+}
 #include <memory>
 
 // Forward declarations
@@ -76,6 +81,9 @@ private:
     int m_nodesContacted;
     static constexpr int DEFAULT_MAX_NODES = 500;
     static constexpr int PROGRESS_UPDATE_INTERVAL = 10;
+    
+    // Kademlia search object
+    Kademlia::CSearch* m_kadSearch;
 
     // Helper methods
     void updateProgress();

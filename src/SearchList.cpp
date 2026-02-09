@@ -366,16 +366,24 @@ const ::PerSearchState* CSearchList::getSearchState(long searchId) const
 void CSearchList::removeSearchState(long searchId)
 {
 	wxMutexLocker lock(m_searchMutex);
-	
+
+	// Get the search type to determine if we need to remove Kad ID mapping
+	auto* searchState = getSearchState(searchId);
+	if (searchState && searchState->getSearchType() == static_cast<uint8_t>(KadSearch)) {
+		// Remove the Kad search ID mapping
+		uint32_t kadSearchId = 0xffffff00 | (searchId & 0xff);
+		m_kadSearchIdMap.erase(kadSearchId);
+	}
+
 	// Remove from search states map
 	m_searchStates.erase(searchId);
-	
+
 	// Also remove from legacy active searches map for compatibility
 	m_activeSearches.erase(searchId);
-	
+
 	// Remove search parameters
 	m_searchParams.erase(searchId);
-	
+
 	// Release the search ID for reuse
 	search::SearchIdGenerator::Instance().releaseId(searchId);
 }
@@ -391,12 +399,40 @@ std::vector<long> CSearchList::getActiveSearchIds() const
 	wxMutexLocker lock(m_searchMutex);
 	std::vector<long> ids;
 	ids.reserve(m_searchStates.size());
-	
+
 	for (const auto& pair : m_searchStates) {
 		ids.push_back(pair.first);
 	}
-	
+
 	return ids;
+}
+
+void CSearchList::mapKadSearchId(uint32_t kadSearchId, long originalSearchId)
+{
+	wxMutexLocker lock(m_searchMutex);
+	m_kadSearchIdMap[kadSearchId] = originalSearchId;
+
+	AddDebugLogLineC(logSearch, CFormat(wxT("Mapped Kad search ID %u to original search ID %ld"))
+		% kadSearchId % originalSearchId);
+}
+
+long CSearchList::getOriginalSearchId(uint32_t kadSearchId) const
+{
+	wxMutexLocker lock(m_searchMutex);
+	KadSearchIdMap::const_iterator it = m_kadSearchIdMap.find(kadSearchId);
+	if (it != m_kadSearchIdMap.end()) {
+		return it->second;
+	}
+	return 0;
+}
+
+void CSearchList::removeKadSearchIdMapping(uint32_t kadSearchId)
+{
+	wxMutexLocker lock(m_searchMutex);
+	m_kadSearchIdMap.erase(kadSearchId);
+
+	AddDebugLogLineC(logSearch, CFormat(wxT("Removed Kad search ID mapping for %u"))
+		% kadSearchId);
 }
 
 wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchParams& params)
@@ -406,6 +442,28 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		return _("Kad search can't be done if Kad is not running");
 	} else if ((type == LocalSearch || type == GlobalSearch) && !theApp->IsConnectedED2K()) {
 		return _("eD2k search can't be done if eD2k is not connected");
+	}
+
+	// Check for duplicate searches (same type and search string)
+	// This prevents multiple searches with identical parameters
+	wxMutexLocker lock(m_searchMutex);
+	for (const auto& pair : m_searchParams) {
+		const CSearchParams& existingParams = pair.second;
+		::PerSearchState* state = getSearchState(pair.first);
+		if (state && state->getSearchType() == static_cast<uint8_t>(type)) {
+			// Check if search string matches
+			if (existingParams.searchString == params.searchString) {
+				// Found a duplicate search
+				// Return the existing search ID
+				*searchID = pair.first;
+				
+				AddDebugLogLineC(logSearch, CFormat(wxT("Duplicate search detected in SearchList: type=%d, string='%s', existing ID=%u"))
+					% (int)type % params.searchString % *searchID);
+				
+				// Return empty string to indicate success (reusing existing search)
+				return wxEmptyString;
+			}
+		}
 	}
 
 	if (type == KadSearch) {
@@ -437,22 +495,50 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 
 	if (type == KadSearch) {
 		try {
-			if (*searchID == 0xffffffff) {
-				Kademlia::CSearchManager::StopSearch(0xffffffff, false);
+			// Generate search ID through SearchIdGenerator for consistency
+			if (*searchID == 0) {
+				*searchID = GetNextSearchID();
+			} else {
+				// If searchID was provided, reserve it in the generator to ensure uniqueness
+				if (!search::SearchIdGenerator::Instance().reserveId(*searchID)) {
+					return _("Search ID is already in use");
+				}
 			}
 
-			// searchstring will get tokenized there
-			// The tab must be created with the Kad search ID, so searchID is updated.
-			Kademlia::CSearch* search = Kademlia::CSearchManager::PrepareFindKeywords(params.strKeyword, data->GetLength(), data->GetRawBuffer(), *searchID);
+			// Convert to Kademlia's special ID format (0xffffff??)
+			// This ensures Kademlia uses our ID instead of generating its own
+			uint32_t kadSearchId = 0xffffff00 | (*searchID & 0xff);
 
-			*searchID = search->GetSearchID();
-			
+			// Stop any existing search with this ID (for safety)
+			Kademlia::CSearchManager::StopSearch(kadSearchId, false);
+
+			// searchstring will get tokenized there
+			// Pass our generated ID to Kademlia
+			Kademlia::CSearch* search = Kademlia::CSearchManager::PrepareFindKeywords(params.strKeyword, data->GetLength(), data->GetRawBuffer(), kadSearchId);
+
+			// Verify Kademlia used our ID
+			if (search->GetSearchID() != kadSearchId) {
+				AddDebugLogLineC(logSearch, CFormat(wxT("Kademlia changed search ID: expected %u, got %u"))
+					% kadSearchId % search->GetSearchID());
+				// Release our reserved ID
+				search::SearchIdGenerator::Instance().releaseId(*searchID);
+				delete search;
+				return _("Kademlia search ID mismatch");
+			}
+
+			// Map Kad search ID to original search ID for result routing
+			mapKadSearchId(kadSearchId, *searchID);
+
 			// Create per-search state for Kad search
 			auto* searchState = getOrCreateSearchState(*searchID, type, params.searchString);
 			if (!searchState) {
+				// Release the reserved ID on failure
+				search::SearchIdGenerator::Instance().releaseId(*searchID);
+				removeKadSearchIdMapping(kadSearchId);
+				delete search;
 				return _("Failed to create per-search state for Kad search");
 			}
-			
+
 			// Initialize Kad search state
 			searchState->setKadSearchFinished(false);
 			searchState->setKadSearchRetryCount(0);
@@ -465,14 +551,21 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		}
 	} else if (type == LocalSearch || type == GlobalSearch) {
 		// This is an ed2k search, local or global
-		// Initialize search ID if not already set
+		// Always generate search ID through SearchIdGenerator for consistency
 		if (*searchID == 0) {
 			*searchID = GetNextSearchID();
+		} else {
+			// If searchID was provided, reserve it in the generator to ensure uniqueness
+			if (!search::SearchIdGenerator::Instance().reserveId(*searchID)) {
+				return _("Search ID is already in use");
+			}
 		}
 		
 		// Create per-search state for ED2K search
 		auto* searchState = getOrCreateSearchState(*searchID, type, params.searchString);
 		if (!searchState) {
+			// Release the reserved ID on failure
+			search::SearchIdGenerator::Instance().releaseId(*searchID);
 			return _("Failed to create per-search state for ED2K search");
 		}
 
@@ -1060,14 +1153,14 @@ void CSearchList::StopSearch(long searchID, bool globalOnly)
 		// Search not found, nothing to stop
 		return;
 	}
-	
+
 	// Get search type from state
 	uint8_t searchType = searchState->getSearchType();
-	
+
 	if (searchType == GlobalSearch) {
 		// Clear search packet for this search
 		searchState->clearSearchPacket();
-		
+
 		// Stop the timer if this was the last global search
 		bool hasOtherGlobalSearches = false;
 		auto allIds = getActiveSearchIds();
@@ -1080,18 +1173,24 @@ void CSearchList::StopSearch(long searchID, bool globalOnly)
 				}
 			}
 		}
-		
+
 		if (!hasOtherGlobalSearches) {
 			m_searchTimer.Stop();
 		}
-		
+
 		CoreNotify_Search_Update_Progress(0xffff);
 	} else if (searchType == KadSearch && !globalOnly) {
-		// Stop Kad search
-		Kademlia::CSearchManager::StopSearch(searchID, false);
+		// Convert original search ID to Kad search ID format
+		uint32_t kadSearchId = 0xffffff00 | (searchID & 0xff);
+
+		// Remove the Kad search ID mapping
+		removeKadSearchIdMapping(kadSearchId);
+
+		// Stop Kad search using the Kad search ID
+		Kademlia::CSearchManager::StopSearch(kadSearchId, false);
 		searchState->setKadSearchFinished(true);
 	}
-	
+
 	// Remove the search state
 	removeSearchState(searchID);
 }
@@ -1423,6 +1522,17 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt128 *fileID,
 	const wxString& name, uint64_t size, const wxString& type, uint32_t kadPublishInfo, const TagPtrList& taglist)
 {
+	// Convert Kad search ID to original search ID for routing
+	long originalSearchId = getOriginalSearchId(searchID);
+	if (originalSearchId == 0) {
+		AddDebugLogLineC(logSearch, CFormat(wxT("KademliaSearchKeyword: No mapping found for Kad search ID %u, result will be lost"))
+			% searchID);
+		return;
+	}
+
+	AddDebugLogLineC(logSearch, CFormat(wxT("KademliaSearchKeyword: Routing result from Kad ID %u to original ID %ld"))
+		% searchID % originalSearchId);
+
 	EUtf8Str eStrEncode = utf8strRaw;
 
 	CMemFile temp(250);
@@ -1464,13 +1574,13 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID, const Kademlia::CUInt
 
 	temp.Seek(0, wxFromStart);
 
-	CSearchFile *tempFile = new CSearchFile(temp, (eStrEncode == utf8strRaw), searchID, 0, 0, wxEmptyString, true);
+	CSearchFile *tempFile = new CSearchFile(temp, (eStrEncode == utf8strRaw), originalSearchId, 0, 0, wxEmptyString, true);
 	tempFile->SetKadPublishInfo(kadPublishInfo);
 
 
 	// Process result through validator (this adds it to SearchList)
 	NOT_ON_REMOTEGUI(
-		search::SearchResultRouter::Instance().RouteResult(searchID, tempFile);
+		search::SearchResultRouter::Instance().RouteResult(originalSearchId, tempFile);
 	)
 }
 

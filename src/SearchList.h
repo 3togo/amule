@@ -271,25 +271,48 @@ public:
 	
 	/**
 	 * Remove per-search state for a search ID
-	 * 
+	 *
 	 * @param searchId The search ID to remove
 	 */
 	void removeSearchState(long searchId);
-	
+
 	/**
 	 * Check if a search state exists
-	 * 
+	 *
 	 * @param searchId The search ID to check
 	 * @return true if the search state exists, false otherwise
 	 */
 	bool hasSearchState(long searchId) const;
-	
+
 	/**
 	 * Get all active search IDs
-	 * 
+	 *
 	 * @return Vector of active search IDs
 	 */
 	std::vector<long> getActiveSearchIds() const;
+
+	/**
+	 * Map a Kad search ID to an original search ID
+	 *
+	 * @param kadSearchId The Kad search ID (0xffffff?? format)
+	 * @param originalSearchId The original search ID
+	 */
+	void mapKadSearchId(uint32_t kadSearchId, long originalSearchId);
+
+	/**
+	 * Get the original search ID for a Kad search ID
+	 *
+	 * @param kadSearchId The Kad search ID (0xffffff?? format)
+	 * @return The original search ID, or 0 if not found
+	 */
+	long getOriginalSearchId(uint32_t kadSearchId) const;
+
+	/**
+	 * Remove a Kad search ID mapping
+	 *
+	 * @param kadSearchId The Kad search ID to remove
+	 */
+	void removeKadSearchIdMapping(uint32_t kadSearchId);
 
 private:
 	/** Event-handler for global searches. */
@@ -323,6 +346,12 @@ private:
 	//! Map of search parameters for each search ID.
 	typedef std::map<long, CSearchParams> ParamMap;
 	ParamMap	m_searchParams;
+
+	//! Map of Kad search IDs to original search IDs
+	//! Kad uses special IDs in format 0xffffff??, but we need to route results
+	//! to the original search ID used by SearchResultRouter
+	typedef std::map<uint32_t, long> KadSearchIdMap;
+	KadSearchIdMap	m_kadSearchIdMap;
 
 	//! Legacy variables - TO BE REMOVED during migration
 	//! Current search ID (legacy - use PerSearchState instead)

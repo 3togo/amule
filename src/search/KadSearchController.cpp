@@ -29,6 +29,7 @@
 #include "SearchPackageValidator.h"
 #include "SearchResultRouter.h"
 #include "SearchLogging.h"
+#include "SearchIdGenerator.h"
 #include "../amule.h"
 #include "../SearchFile.h"
 #include "../SearchList.h"
@@ -43,11 +44,24 @@ KadSearchController::KadSearchController()
     : SearchControllerBase()
     , m_maxNodesToQuery(DEFAULT_MAX_NODES)
     , m_nodesContacted(0)
+    , m_kadSearch(nullptr)
 {
 }
 
 KadSearchController::~KadSearchController()
 {
+    // Clean up Kademlia search object
+    // Note: CSearchManager owns the search object and will delete it
+    // Just call StopSearch to let CSearchManager handle cleanup
+    if (m_kadSearch) {
+        uint32_t kadSearchId = m_kadSearch->GetSearchID();
+        // Remove the Kad search ID mapping
+        if (theApp && theApp->searchlist) {
+            theApp->searchlist->removeKadSearchIdMapping(kadSearchId);
+        }
+        Kademlia::CSearchManager::StopSearch(kadSearchId, false);
+        m_kadSearch = nullptr;
+    }
 }
 
 void KadSearchController::startSearch(const SearchParams& params)
@@ -91,10 +105,10 @@ void KadSearchController::startSearch(const SearchParams& params)
 	m_model->setSearchParams(params);
 	m_model->setSearchId(searchId);
 	m_model->setSearchState(SearchState::Searching);
-	
+
 	// Register with SearchResultRouter for result routing
 	SearchResultRouter::Instance().RegisterController(searchId, this);
-	
+
 	// Send packet to Kad network
 	if (theApp && Kademlia::CKademlia::IsRunning()) {
 	    // Set the current search ID in SearchList before sending
@@ -104,21 +118,35 @@ void KadSearchController::startSearch(const SearchParams& params)
 
 	    // Use legacy Kad search implementation
 	    try {
+		// Convert our search ID to Kademlia's format (0xffffff??)
+		// This ensures Kademlia uses our ID instead of generating its own
+		uint32_t kadSearchId = 0xffffff00 | (searchId & 0xff);
+
 		Kademlia::CSearch* search = Kademlia::CSearchManager::PrepareFindKeywords(
 		    params.strKeyword,
 		    packetSize,
 		    packetData,
-		    searchId
+		    kadSearchId
 		);
 
-		// Update search ID from Kad search manager
-		uint32_t oldSearchId = searchId;
-		searchId = search->GetSearchID();
-		m_model->setSearchId(searchId);
+		// Verify Kademlia used our ID
+		if (search->GetSearchID() != kadSearchId) {
+		    AddDebugLogLineC(logSearch, CFormat(wxT("Kademlia changed search ID: expected %u, got %u"))
+			% kadSearchId % search->GetSearchID());
+		    delete search;
+		    error = _("Kademlia search ID mismatch");
+		    handleSearchError(searchId, error);
+		    delete[] packetData;
+		    return;
+		}
 
-		// Re-register with new search ID
-		SearchResultRouter::Instance().UnregisterController(oldSearchId);
-		SearchResultRouter::Instance().RegisterController(searchId, this);
+		// Map Kad search ID to original search ID for result routing
+		if (theApp->searchlist) {
+		    theApp->searchlist->mapKadSearchId(kadSearchId, searchId);
+		}
+
+		// Store the Kademlia search object for later reference
+		m_kadSearch = search;
 
 		notifySearchStarted(searchId);
 	    } catch (const wxString& what) {
@@ -141,15 +169,28 @@ void KadSearchController::startSearch(const SearchParams& params)
 
 void KadSearchController::stopSearch()
 {
+    // Stop Kademlia search if active
+    if (m_kadSearch) {
+        uint32_t kadSearchId = m_kadSearch->GetSearchID();
+        // Remove the Kad search ID mapping
+        if (theApp && theApp->searchlist) {
+            theApp->searchlist->removeKadSearchIdMapping(kadSearchId);
+        }
+        // CSearchManager owns the search object and will delete it
+        Kademlia::CSearchManager::StopSearch(kadSearchId, false);
+        // Just clear our pointer, don't delete - CSearchManager handles deletion
+        m_kadSearch = nullptr;
+    }
+
     // Unregister from SearchResultRouter
     long searchId = m_model->getSearchId();
     if (searchId != -1) {
-	SearchResultRouter::Instance().UnregisterController(searchId);
+        SearchResultRouter::Instance().UnregisterController(searchId);
     }
-    
+
     // Clear results
     m_model->clearResults();
-    
+
     // Use base class to handle common stop logic
     stopSearchBase();
 }
@@ -264,14 +305,8 @@ bool KadSearchController::isValidKadNetwork() const
 
 uint32_t KadSearchController::GenerateSearchId()
 {
-    // Generate a unique search ID for Kad
-    // Kad uses a different ID space than ED2K
-    static uint32_t s_nextKadSearchId = 0;
-    s_nextKadSearchId = (s_nextKadSearchId + 1) % 0xFFFFFFFE;
-    if (s_nextKadSearchId == 0) {
-	s_nextKadSearchId = 1;
-    }
-    return s_nextKadSearchId;
+    // Use the centralized SearchIdGenerator for consistency across all search types
+    return search::SearchIdGenerator::Instance().generateId();
 }
 
 } // namespace search
