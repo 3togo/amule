@@ -101,6 +101,15 @@ bool KadSearchHelper::CreateSearchPacket(const SearchParams& params,
 	// Allocate memory for the packet data
 	packetSize = data->GetLength();
 	packetData = new uint8_t[packetSize];
+	
+	// Add bounds checking - ensure we have valid data
+	wxASSERT(packetSize > 0);
+	if (packetSize == 0) {
+		delete[] packetData;
+		packetData = NULL;
+		return false;
+	}
+	
 	memcpy(packetData, data->GetRawBuffer(), packetSize);
 	
 	return true;

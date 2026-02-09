@@ -277,17 +277,10 @@ END_EVENT_TABLE()
 
 
 CSearchList::CSearchList()
-	: m_searchTimer(this, 0 /* Timer-id doesn't matter. */ )
-	, m_currentSearch(-1)
-	, m_searchInProgress(false)
-	, m_searchPacket(nullptr)
-	, m_64bitSearchPacket(false)
-	, m_searchType(LocalSearch)
-	, m_KadSearchFinished(false)
-	, m_KadSearchRetryCount(0)
 {
 	// Retry logic now handled by controllers
 	// Per-search state initialized on demand
+	// All legacy global state has been removed
 }
 
 
@@ -341,11 +334,12 @@ uint32 CSearchList::GetNextSearchID()
 	// Create new search state
 	auto state = std::make_unique<::PerSearchState>(searchId, static_cast<uint8_t>(searchType), searchString);
 	auto* statePtr = state.get();
+
+	// Set the owner reference for callbacks
+	statePtr->setSearchList(this);
+
 	m_searchStates[searchId] = std::move(state);
-	
-	// Also store in legacy active searches map for compatibility
-	m_activeSearches[searchId] = searchType;
-	
+
 	return statePtr;
 }
 
@@ -379,8 +373,6 @@ void CSearchList::removeSearchState(long searchId)
 	m_searchStates.erase(searchId);
 
 	// Also remove from legacy active searches map for compatibility
-	m_activeSearches.erase(searchId);
-
 	// Remove search parameters
 	m_searchParams.erase(searchId);
 

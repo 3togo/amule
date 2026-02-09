@@ -37,7 +37,8 @@ CUInt128Optimized::CUInt128Optimized(const CUInt128Optimized& value, unsigned nu
     }
 
     // Pad with random bytes
-    for (unsigned i = numULONGs; i < 3; i++) {
+    // NOTE: CUInt128Optimized has 4 uint32 chunks (128 bits), so we need to pad up to index 3
+    for (unsigned i = numULONGs; i < 4; i++) {
         Set32BitChunk(i, rand());
     }
 }

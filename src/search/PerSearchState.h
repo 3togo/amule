@@ -32,9 +32,12 @@
 #include <wx/thread.h>
 #include "../Types.h"
 #include "../Packet.h"
+#include "../Timer.h"
+#include "../ObservableQueue.h"
 
 // Forward declarations
 class CServer;
+class CSearchList;
 
 /**
  * PerSearchState - Manages state for a single search
@@ -178,36 +181,167 @@ public:
     void incrementKadSearchRetryCount();
     
     /**
+     * Set the search active state
+     *
+     * @param active Whether the search is active
+     */
+    void setSearchActive(bool active);
+    
+    /**
+     * Check if the search is active
+     *
+     * @return true if the search is active, false otherwise
+     */
+    bool isSearchActive() const { return m_searchActive; }
+    
+    /**
      * Lock the state for thread-safe access
      */
     void lock() const { m_mutex.Lock(); }
-    
+
     /**
      * Unlock the state
      */
     void unlock() const { m_mutex.Unlock(); }
-    
+
+    // Server queue management for global searches
+    /**
+     * Set the server queue for this search
+     * @param queue The server queue to use
+     */
+    void setServerQueue(std::unique_ptr<CQueueObserver<CServer*>> queue);
+
+    /**
+     * Get the server queue for this search
+     * @return The server queue, or nullptr if not set
+     */
+    CQueueObserver<CServer*>* getServerQueue() const;
+
+    /**
+     * Check if the server queue is active
+     * @return true if the queue is active
+     */
+    bool isServerQueueActive() const;
+
+    /**
+     * Get the number of remaining servers in the queue
+     * @return Number of remaining servers
+     */
+    size_t getRemainingServerCount() const;
+
+    /**
+     * Get the next server from the queue
+     * @return The next server, or nullptr if no more servers
+     */
+    CServer* getNextServer();
+
+    // Timer management for global searches
+    /**
+     * Set the timer for this search
+     * @param timer The timer to use
+     */
+    void setTimer(std::unique_ptr<CTimer> timer);
+
+    /**
+     * Get the timer for this search
+     * @return The timer, or nullptr if not set
+     */
+    CTimer* getTimer() const;
+
+    /**
+     * Check if the timer is running
+     * @return true if the timer is running
+     */
+    bool isTimerRunning() const;
+
+    /**
+     * Start the timer
+     * @param millisecs Timer frequency in milliseconds
+     * @param oneShot Whether to run only once
+     * @return true if started successfully
+     */
+    bool startTimer(int millisecs, bool oneShot = false);
+
+    /**
+     * Stop the timer
+     */
+    void stopTimer();
+
+    // Progress tracking
+    /**
+     * Get the search progress percentage
+     * @param totalServers Total number of servers for progress calculation
+     * @return Progress percentage (0-100)
+     */
+    uint32_t getProgress(size_t totalServers) const;
+
+    /**
+     * Get the search progress percentage (auto-detect total servers)
+     * @return Progress percentage (0-100)
+     */
+    uint32_t getProgress() const;
+
+    /**
+     * Set the total server count for progress calculation
+     * @param totalServers Total number of servers
+     */
+    void setTotalServerCount(size_t totalServers);
+
+    /**
+     * Get the total server count
+     * @return Total server count
+     */
+    size_t getTotalServerCount() const;
+
+    // Owner reference
+    /**
+     * Set the owning CSearchList (for callback purposes)
+     * @param owner The owning CSearchList
+     */
+    void setSearchList(CSearchList* owner);
+
+    /**
+     * Get the owning CSearchList
+     * @return The owning CSearchList, or nullptr if not set
+     */
+    CSearchList* getSearchList() const;
+
 private:
     // Search identification
     uint32_t m_searchId;
     uint8_t m_searchType;
     wxString m_searchString;
-    
+
     // Search packet (for global searches)
     std::unique_ptr<CPacket> m_searchPacket;
     bool m_64bitSearchPacket;
-    
+
     // Server tracking
     std::set<uint32_t> m_queriedServers;
-    
+
     // More results mode
     bool m_moreResultsMode;
     int m_moreResultsMaxServers;
-    
+
     // Kad search state
     bool m_KadSearchFinished;
     int m_KadSearchRetryCount;
-    
+
+    // Search active state
+    bool m_searchActive;
+
+    // NEW: Per-search server queue for global searches
+    std::unique_ptr<CQueueObserver<CServer*>> m_serverQueue;
+
+    // NEW: Per-search timer for global searches
+    std::unique_ptr<CTimer> m_timer;
+
+    // NEW: Total server count for progress tracking
+    size_t m_totalServerCount;
+
+    // NEW: Owner reference for callbacks
+    CSearchList* m_owner;
+
     // Mutex for thread-safe access
     mutable wxMutex m_mutex;
 };

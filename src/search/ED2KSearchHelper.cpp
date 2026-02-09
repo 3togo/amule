@@ -106,6 +106,15 @@ bool ED2KSearchHelper::CreateSearchPacket(const SearchParams& params, ModernSear
 	// Allocate memory for the packet data
 	packetSize = data->GetLength();
 	packetData = new uint8_t[packetSize];
+	
+	// Add bounds checking - ensure we have valid data
+	wxASSERT(packetSize > 0);
+	if (packetSize == 0) {
+		delete[] packetData;
+		packetData = NULL;
+		return false;
+	}
+	
 	memcpy(packetData, data->GetRawBuffer(), packetSize);
 	
 	return true;
@@ -123,6 +132,14 @@ bool ED2KSearchHelper::SendSearchPacket(const uint8_t* packetData, uint32_t pack
 	
 	// Create a CPacket from the raw data
 	CPacket* searchPacket = new CPacket(packetSize, OP_EDONKEYPROT, OP_SEARCHREQUEST);
+	
+	// Add bounds checking - ensure packet size matches data size
+	wxASSERT(packetSize == searchPacket->GetPacketSize());
+	if (packetSize != searchPacket->GetPacketSize()) {
+		delete searchPacket;
+		return false;
+	}
+	
 	memcpy(const_cast<uint8_t*>(searchPacket->GetDataBuffer()), packetData, packetSize);
 	
 	// Send the packet based on search type

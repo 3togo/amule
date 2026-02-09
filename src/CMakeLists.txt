@@ -208,9 +208,15 @@ if (BUILD_MONOLITHIC)
 		PRIVATE muleappgui
 		PRIVATE mulecommon
 		PRIVATE mulesocket
-		PRIVATE wxWidgets::ADV
 		PRIVATE wxWidgets::NET
 	)
+
+	# wxWidgets::ADV was merged into CORE in version 3.1.2+
+	if (TARGET wxWidgets::ADV)
+		target_link_libraries (amule
+			PRIVATE wxWidgets::ADV
+		)
+	endif()
 
 	if (HAVE_BFD)
 		target_link_libraries (amule
@@ -272,9 +278,15 @@ if (BUILD_REMOTEGUI)
 		PRIVATE mulecommon
 		PRIVATE mulesocket
 		PRIVATE wxWidgets::CORE
-		PRIVATE wxWidgets::ADV
 		PRIVATE wxWidgets::NET
 	)
+
+	# wxWidgets::ADV was merged into CORE in version 3.1.2+
+	if (TARGET wxWidgets::ADV)
+		target_link_libraries (amulegui
+			PRIVATE wxWidgets::ADV
+		)
+	endif()
 
 	if (HAVE_BFD)
 		target_link_libraries (amulegui 

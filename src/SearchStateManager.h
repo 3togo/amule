@@ -27,6 +27,7 @@
 #define SEARCHSTATEMANAGER_H
 
 #include <wx/string.h>
+#include <wx/thread.h>
 #include <map>
 #include <set>
 #include <cstdint>
@@ -286,6 +287,9 @@ private:
 	// Set of observers
 	typedef std::set<ISearchStateObserver*> ObserverSet;
 	ObserverSet m_observers;
+
+	// Mutex for thread-safe access
+	mutable wxMutex m_mutex;
 };
 
 #endif // SEARCHSTATEMANAGER_H

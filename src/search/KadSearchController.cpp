@@ -111,11 +111,6 @@ void KadSearchController::startSearch(const SearchParams& params)
 
 	// Send packet to Kad network
 	if (theApp && Kademlia::CKademlia::IsRunning()) {
-	    // Set the current search ID in SearchList before sending
-	    if (theApp->searchlist) {
-		theApp->searchlist->SetCurrentSearch(searchId);
-	    }
-
 	    // Use legacy Kad search implementation
 	    try {
 		// Convert our search ID to Kademlia's format (0xffffff??)

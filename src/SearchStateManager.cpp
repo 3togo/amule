@@ -42,6 +42,7 @@ SearchStateManager::~SearchStateManager()
 
 void SearchStateManager::RegisterObserver(ISearchStateObserver* observer)
 {
+	wxMutexLocker lock(m_mutex);
 	if (observer) {
 		m_observers.insert(observer);
 	}
@@ -49,6 +50,7 @@ void SearchStateManager::RegisterObserver(ISearchStateObserver* observer)
 
 void SearchStateManager::UnregisterObserver(ISearchStateObserver* observer)
 {
+	wxMutexLocker lock(m_mutex);
 	if (observer) {
 		m_observers.erase(observer);
 	}
@@ -79,9 +81,10 @@ void SearchStateManager::InitializeSearch(uint32_t searchId, const wxString& sea
 	data.maxSize = params.maxSize;
 	data.availability = params.availability;
 	
-	printf("InitializeSearch: storing params for searchId=%u, searchString='%s'\n", searchId, (const char*)data.searchString.utf8_str());
-	m_searches[searchId] = data;
-	printf("InitializeSearch: m_searches size=%zu\n", m_searches.size());
+	{
+		wxMutexLocker lock(m_mutex);
+		m_searches[searchId] = data;
+	}
 
 	// Notify observers of the new search
 	NotifyObservers(searchId, STATE_SEARCHING, 0);
@@ -89,50 +92,89 @@ void SearchStateManager::InitializeSearch(uint32_t searchId, const wxString& sea
 
 void SearchStateManager::UpdateResultCount(uint32_t searchId, size_t shown, size_t hidden)
 {
-	SearchMap::iterator it = m_searches.find(searchId);
-	if (it == m_searches.end()) {
-		return;
+	bool needNotify = false;
+	SearchState oldState = STATE_IDLE;
+	int retryCount = 0;
+	
+	{
+		wxMutexLocker lock(m_mutex);
+		
+		SearchMap::iterator it = m_searches.find(searchId);
+		if (it == m_searches.end()) {
+			return;
+		}
+
+		SearchData& data = it->second;
+		data.shownCount = shown;
+		data.hiddenCount = hidden;
+
+		// Update state based on result count
+		if (shown > 0 || hidden > 0) {
+			// Results found - reset retry count and update state
+			if (data.retryCount > 0) {
+				data.retryCount = 0;
+			}
+			// Only update state if we were in a non-result state
+			if (data.state == STATE_SEARCHING ||
+				data.state == STATE_RETRYING ||
+				data.state == STATE_NO_RESULTS) {
+				// Update state directly without calling UpdateState to avoid double lock
+				if (data.state != STATE_HAS_RESULTS) {
+					oldState = data.state;
+					data.state = STATE_HAS_RESULTS;
+					retryCount = data.retryCount;
+					needNotify = true;
+				}
+			}
+		}
 	}
-
-	SearchData& data = it->second;
-	data.shownCount = shown;
-	data.hiddenCount = hidden;
-
-	// Update state based on result count
-	if (shown > 0 || hidden > 0) {
-		// Results found - reset retry count and update state
-		if (data.retryCount > 0) {
-			data.retryCount = 0;
-		}
-		// Only update state if we were in a non-result state
-		if (data.state == STATE_SEARCHING ||
-			data.state == STATE_RETRYING ||
-			data.state == STATE_NO_RESULTS) {
-			UpdateState(searchId, STATE_HAS_RESULTS);
-		}
+	
+	// Notify observers outside the lock to avoid deadlocks
+	if (needNotify) {
+		NotifyObservers(searchId, STATE_HAS_RESULTS, retryCount);
 	}
 }
 
 void SearchStateManager::EndSearch(uint32_t searchId)
 {
-	SearchMap::iterator it = m_searches.find(searchId);
-	if (it == m_searches.end()) {
-		return;
-	}
-
-	SearchData& data = it->second;
-
-	// Determine final state based on results
-	if (data.shownCount > 0 || data.hiddenCount > 0) {
-		UpdateState(searchId, STATE_HAS_RESULTS);
-	} else {
-		// No results - check if we should retry
-		if (data.retryCount < MAX_RETRIES) {
-			// Don't set to NO_RESULTS yet, let retry mechanism handle it
-			// The retry will be initiated by the caller
+	bool shouldUpdateState = false;
+	bool hasResults = false;
+	int retryCount = 0;
+	
+	{
+		wxMutexLocker lock(m_mutex);
+		
+		SearchMap::iterator it = m_searches.find(searchId);
+		if (it == m_searches.end()) {
 			return;
+		}
+
+		SearchData& data = it->second;
+
+		// Determine final state based on results
+		if (data.shownCount > 0 || data.hiddenCount > 0) {
+			shouldUpdateState = true;
+			hasResults = true;
 		} else {
-			// Max retries reached, set to NO_RESULTS
+			// No results - check if we should retry
+			if (data.retryCount < MAX_RETRIES) {
+				// Don't set to NO_RESULTS yet, let retry mechanism handle it
+				// The retry will be initiated by the caller
+				return;
+			} else {
+				// Max retries reached, set to NO_RESULTS
+				shouldUpdateState = true;
+				hasResults = false;
+			}
+		}
+		retryCount = data.retryCount;
+	}
+	
+	// Update state outside the lock to avoid double lock
+	if (shouldUpdateState) {
+		if (hasResults) {
+			UpdateState(searchId, STATE_HAS_RESULTS);
+		} else {
 			UpdateState(searchId, STATE_NO_RESULTS);
 		}
 	}
@@ -140,32 +182,44 @@ void SearchStateManager::EndSearch(uint32_t searchId)
 
 bool SearchStateManager::RequestRetry(uint32_t searchId)
 {
-	SearchMap::iterator it = m_searches.find(searchId);
-	if (it == m_searches.end()) {
-		return false;
+	bool canRetry = false;
+	int newRetryCount = 0;
+	
+	{
+		wxMutexLocker lock(m_mutex);
+		
+		SearchMap::iterator it = m_searches.find(searchId);
+		if (it == m_searches.end()) {
+			return false;
+		}
+
+		SearchData& data = it->second;
+
+		// Check if we've reached the retry limit
+		if (data.retryCount >= MAX_RETRIES) {
+			return false;
+		}
+
+		// Increment retry count
+		data.retryCount++;
+		newRetryCount = data.retryCount;
+		canRetry = true;
 	}
-
-	SearchData& data = it->second;
-
-	// Check if we've reached the retry limit
-	if (data.retryCount >= MAX_RETRIES) {
-		return false;
+	
+	// Update state to retrying outside the lock
+	if (canRetry) {
+		UpdateState(searchId, STATE_RETRYING);
+		// Notify observers with the new retry count
+		NotifyObservers(searchId, STATE_RETRYING, newRetryCount);
 	}
-
-	// Increment retry count
-	data.retryCount++;
-
-	// Update state to retrying
-	UpdateState(searchId, STATE_RETRYING);
-
-	// Notify observers
-	NotifyObservers(searchId, STATE_RETRYING, data.retryCount);
-
+	
 	return true;
 }
 
 SearchState SearchStateManager::GetSearchState(uint32_t searchId) const
 {
+	wxMutexLocker lock(m_mutex);
+	
 	SearchMap::const_iterator it = m_searches.find(searchId);
 	if (it == m_searches.end()) {
 		return STATE_IDLE;
@@ -175,6 +229,8 @@ SearchState SearchStateManager::GetSearchState(uint32_t searchId) const
 
 void SearchStateManager::StoreSearchParams(uint32_t searchId, const CSearchList::CSearchParams& params)
 {
+	wxMutexLocker lock(m_mutex);
+	
 	SearchMap::iterator it = m_searches.find(searchId);
 	if (it == m_searches.end()) {
 		return;
@@ -193,12 +249,12 @@ void SearchStateManager::StoreSearchParams(uint32_t searchId, const CSearchList:
 
 bool SearchStateManager::GetSearchParams(uint32_t searchId, CSearchList::CSearchParams& params) const
 {
+	wxMutexLocker lock(m_mutex);
+	
 	SearchMap::const_iterator it = m_searches.find(searchId);
 	if (it == m_searches.end()) {
-		printf("GetSearchParams: searchId=%u not found in m_searches (size=%zu)\n", searchId, m_searches.size());
 		return false;
 	}
-	printf("GetSearchParams: searchId=%u found, searchString='%s'\n", searchId, (const char*)it->second.searchString.utf8_str());
 
 	const SearchData& data = it->second;
 	// Retrieve all stored search parameters
@@ -214,6 +270,8 @@ bool SearchStateManager::GetSearchParams(uint32_t searchId, CSearchList::CSearch
 
 int SearchStateManager::GetRetryCount(uint32_t searchId) const
 {
+	wxMutexLocker lock(m_mutex);
+	
 	SearchMap::const_iterator it = m_searches.find(searchId);
 	if (it == m_searches.end()) {
 		return 0;
@@ -223,6 +281,8 @@ int SearchStateManager::GetRetryCount(uint32_t searchId) const
 
 wxString SearchStateManager::GetSearchType(uint32_t searchId) const
 {
+	wxMutexLocker lock(m_mutex);
+	
 	SearchMap::const_iterator it = m_searches.find(searchId);
 	if (it == m_searches.end()) {
 		return wxEmptyString;
@@ -232,6 +292,8 @@ wxString SearchStateManager::GetSearchType(uint32_t searchId) const
 
 wxString SearchStateManager::GetKeyword(uint32_t searchId) const
 {
+	wxMutexLocker lock(m_mutex);
+	
 	SearchMap::const_iterator it = m_searches.find(searchId);
 	if (it == m_searches.end()) {
 		return wxEmptyString;
@@ -241,6 +303,8 @@ wxString SearchStateManager::GetKeyword(uint32_t searchId) const
 
 void SearchStateManager::GetResultCount(uint32_t searchId, size_t& shown, size_t& hidden) const
 {
+	wxMutexLocker lock(m_mutex);
+	
 	shown = 0;
 	hidden = 0;
 
@@ -255,27 +319,42 @@ void SearchStateManager::GetResultCount(uint32_t searchId, size_t& shown, size_t
 
 bool SearchStateManager::HasSearch(uint32_t searchId) const
 {
+	wxMutexLocker lock(m_mutex);
 	return m_searches.find(searchId) != m_searches.end();
 }
 
 void SearchStateManager::RemoveSearch(uint32_t searchId)
 {
+	wxMutexLocker lock(m_mutex);
 	m_searches.erase(searchId);
 }
 
 void SearchStateManager::UpdateState(uint32_t searchId, SearchState newState)
 {
-	SearchMap::iterator it = m_searches.find(searchId);
-	if (it == m_searches.end()) {
-		return;
+	bool needNotify = false;
+	int retryCount = 0;
+	
+	{
+		wxMutexLocker lock(m_mutex);
+		
+		SearchMap::iterator it = m_searches.find(searchId);
+		if (it == m_searches.end()) {
+			return;
+		}
+
+		SearchData& data = it->second;
+
+		// Only update if state is changing
+		if (data.state != newState) {
+			data.state = newState;
+			retryCount = data.retryCount;
+			needNotify = true;
+		}
 	}
-
-	SearchData& data = it->second;
-
-	// Only update if state is changing
-	if (data.state != newState) {
-		data.state = newState;
-		NotifyObservers(searchId, newState, data.retryCount);
+	
+	// Notify observers outside the lock to avoid deadlocks
+	if (needNotify) {
+		NotifyObservers(searchId, newState, retryCount);
 	}
 }
 

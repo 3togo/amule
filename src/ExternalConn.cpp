@@ -1604,8 +1604,19 @@ CECPacket *CECServerSocket::ProcessRequest2(const CECPacket *request)
 
 		case EC_OP_SEARCH_PROGRESS:
 			response = new CECPacket(EC_OP_SEARCH_PROGRESS);
-			response->AddTag(CECTag(EC_TAG_SEARCH_STATUS,
-				theApp->searchlist->GetSearchProgress()));
+			// Get the most recent active search ID for progress
+			// Note: In the new per-search architecture, progress is tracked per-tab
+			// This returns progress of the most recently started active search
+			{
+				auto activeIds = theApp->searchlist->getActiveSearchIds();
+				uint32_t progress = 0;
+				if (!activeIds.empty()) {
+					// Get progress of the most recent active search
+					progress = theApp->searchlist->GetSearchProgress(activeIds.back());
+				}
+				// Add progress status tag
+				response->AddTag(CECTag(EC_TAG_SEARCH_STATUS, progress));
+			}
 			break;
 
 		case EC_OP_DOWNLOAD_SEARCH_RESULT:

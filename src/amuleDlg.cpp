@@ -705,6 +705,16 @@ void CamuleDlg::ResetLog(int id)
 
 void CamuleDlg::AddLogLine(const wxString& line)
 {
+	// ARCHITECTURAL PRINCIPLE: This function MUST ONLY be called from the main thread
+	//
+	// This is the ONLY function that directly accesses wxWidgets GUI components.
+	// All calls from worker threads must go through AddGuiLogLine() which uses
+	// the wxWidgets event queue to serialize GUI updates to the main thread.
+	//
+	// This prevents heap corruption by ensuring wxWidgets internal state is
+	// never accessed concurrently from multiple threads.
+	wxASSERT_MSG(wxThread::IsMain(), wxT("CamuleDlg::AddLogLine called from wrong thread!"));
+
 	bool addtostatusbar = line[0] == '!';
 	wxString bufferline = line.Mid(1);
 

@@ -387,8 +387,20 @@ protected:
 	 * This list is used to contain log messages that are to be displayed
 	 * on the GUI, when it is currently impossible to do so. This is in order
 	 * to allows us to queue messages till after the dialog has been created.
+	 *
+	 * ARCHITECTURAL NOTE: This is a producer-consumer queue where:
+	 * - Producer: Worker threads add messages via AddGuiLogLine()
+	 * - Consumer: Main thread processes messages in the event loop
+	 * - Access is serialized by wxWidgets event queue (no mutex needed)
 	 */
 	std::list<wxString> m_logLines;
+
+	/**
+	 * Flag indicating whether the GUI is fully initialized and ready
+	 * to display log messages. This prevents heap corruption from
+	 * accessing wxWidgets components before they're ready.
+	 */
+	bool m_guiReady;
 };
 
 

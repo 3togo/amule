@@ -105,6 +105,7 @@ CamuleGuiBase::CamuleGuiBase()
 	wxSizerFlags::DisableConsistencyChecks();
 
 	amuledlg = NULL;
+	m_guiReady = false;  // GUI not ready yet
 }
 
 
@@ -203,6 +204,17 @@ int CamuleGuiBase::InitGui(bool geometry_enabled, wxString &geom_string)
 		amuledlg = new CamuleDlg(NULL, m_FrameTitle);
 	}
 
+	// CRITICAL: Mark GUI as ready after dialog is fully constructed
+	// This prevents heap corruption from accessing GUI components before
+	// they're fully initialized
+	m_guiReady = true;
+
+	// Process any queued log messages that were accumulated during GUI initialization
+	while (!m_logLines.empty()) {
+		amuledlg->AddLogLine(m_logLines.front());
+		m_logLines.pop_front();
+	}
+
 	return 0;
 }
 
@@ -246,13 +258,38 @@ bool CamuleGuiBase::CopyTextToClipboard(wxString strText)
 
 void CamuleGuiBase::AddGuiLogLine(const wxString& line)
 {
-	if (amuledlg) {
-		while ( !m_logLines.empty() ) {
+	// ARCHITECTURAL PRINCIPLE: Complete separation of GUI from business logic
+	//
+	// This function implements a producer-consumer pattern:
+	// - Producer: Can be called from ANY thread (worker or main)
+	// - Consumer: Main thread processes messages via wxWidgets event queue
+	// - Serialization: wxWidgets event queue ensures single-threaded GUI access
+	//
+	// This prevents heap corruption by ensuring:
+	// 1. NO direct GUI access from worker threads
+	// 2. All GUI operations happen on main thread only
+	// 3. wxWidgets internal state is never accessed concurrently
+
+	if (!wxThread::IsMain()) {
+		// Worker thread: Queue the message for main thread processing
+		// This is the ONLY way worker threads can trigger GUI updates
+		CLoggingEvent Event(false, false, true, line);
+		theLogger.AddPendingEvent(Event);
+		return;
+	}
+
+	// Main thread: Process queued messages and update GUI
+	if (amuledlg && m_guiReady) {
+		// GUI is ready, process messages
+		while (!m_logLines.empty()) {
 			amuledlg->AddLogLine(m_logLines.front());
 			m_logLines.pop_front();
 		}
+		// Process the current message
 		amuledlg->AddLogLine(line);
 	} else {
+		// Dialog not created or not ready yet, queue the message
+		// This is safe because we're on the main thread
 		m_logLines.push_back(line);
 	}
 }

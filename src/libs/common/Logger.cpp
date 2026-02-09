@@ -158,11 +158,15 @@ void CLogger::AddLogLine(
 #endif
 
 	if (toGUI && !wxThread::IsMain()) {
-		// put to background
+		// ARCHITECTURAL PRINCIPLE: Worker threads must use event queue for GUI updates
+		//
+		// This is the ONLY way worker threads can trigger GUI updates.
+		// The event queue ensures serialization on the main thread, preventing
+		// concurrent access to wxWidgets internal state.
 		CLoggingEvent Event(critical, toStdout, toGUI, msg);
 		AddPendingEvent(Event);
 	} else {
-		// Try to handle events immediately when possible (to save to file).
+		// Main thread or non-GUI update: handle immediately
 		DoLines(msg, critical, toStdout, toGUI);
 	}
 }
@@ -270,6 +274,8 @@ void CLogger::DoLine(const wxString & line, bool toStdout, bool GUI_ONLY(toGUI))
 #ifndef AMULE_DAEMON
 	// write to Listcontrol
 	if (toGUI) {
+		// ARCHITECTURAL PRINCIPLE: This is called from the main thread only
+		// (via the event queue). No mutex needed because we're single-threaded here.
 		theApp->AddGuiLogLine(line);
 	}
 #endif

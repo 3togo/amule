@@ -116,17 +116,8 @@ public:
 	/** Stops a specific search by ID. */
 	void StopSearch(long searchID, bool globalOnly = false);
 
-	/** Returns the completion percentage of the current search. */
-	uint32 GetSearchProgress() const;
-	
 	/** Returns the completion percentage of a specific search. */
 	uint32 GetSearchProgress(long searchId) const;
-
-	/** Returns the current search ID. */
-	long GetCurrentSearchId() const { return m_currentSearch; }
-
-	/** Sets the current search ID. */
-	void SetCurrentSearch(long searchId) { m_currentSearch = searchId; }
 
 	/**
 	 * Requests more results for a specific search ID.
@@ -219,9 +210,6 @@ public:
 
 	/** Mark current KAD search as finished */
 	void SetKadSearchFinished();
-
-	/** Get the current search ID */
-	long GetCurrentSearchID() const { return m_currentSearch; }
 
 	/** Get the next unique search ID */
 	uint32 GetNextSearchID();
@@ -319,19 +307,12 @@ private:
 	void OnGlobalSearchTimer(CTimerEvent& evt);
 
 
-	//! Timer used for global search intervals.
-	CTimer	m_searchTimer;
-
 	//! Map of active searches and their per-search state
 	//! This is the single source of truth for active searches
 	std::map<long, std::unique_ptr<::PerSearchState>>	m_searchStates;
 
 	//! Mutex for thread-safe access to search states
 	mutable wxMutex m_searchMutex;
-
-	//! Queue of servers to ask when doing global searches.
-	//! TODO: Replace with per-search 'cookie' system.
-	CQueueObserver<CServer*> m_serverQueue;
 
 	//! Shorthand for the map of results (key is a SearchID).
 	typedef std::map<long, CSearchResultList> ResultMap;
@@ -352,24 +333,6 @@ private:
 	//! to the original search ID used by SearchResultRouter
 	typedef std::map<uint32_t, long> KadSearchIdMap;
 	KadSearchIdMap	m_kadSearchIdMap;
-
-	//! Legacy variables - TO BE REMOVED during migration
-	//! Current search ID (legacy - use PerSearchState instead)
-	long m_currentSearch;
-	//! Whether a search is in progress (legacy)
-	bool m_searchInProgress;
-	//! Search packet for global searches (legacy - use PerSearchState instead)
-	std::unique_ptr<CPacket> m_searchPacket;
-	//! Whether search packet uses 64-bit values (legacy - use PerSearchState instead)
-	bool m_64bitSearchPacket;
-	//! Type of current search (legacy - use PerSearchState instead)
-	SearchType m_searchType;
-	//! Whether Kad search is finished (legacy - use PerSearchState instead)
-	bool m_KadSearchFinished;
-	//! Kad search retry count (legacy - use PerSearchState instead)
-	int m_KadSearchRetryCount;
-	//! Map of active searches (legacy - use m_searchStates instead)
-	std::map<long, SearchType> m_activeSearches;
 
 // Result handlers now managed by SearchResultRouter
 // Package validators now used by controllers directly
