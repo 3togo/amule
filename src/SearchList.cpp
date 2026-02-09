@@ -710,61 +710,67 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 
 void CSearchList::LocalSearchEnd()
 {
-	if (m_currentSearch == -1) {
-		// No active search
-		return;
+	// Find the active local search
+	wxMutexLocker lock(m_searchMutex);
+	long searchId = -1;
+	::PerSearchState* state = nullptr;
+
+	// Find the most recent active local search
+	for (auto it = m_searchStates.rbegin(); it != m_searchStates.rend(); ++it) {
+		if (it->second && it->second->getSearchType() == LocalSearch && it->second->isSearchActive()) {
+			searchId = it->first;
+			state = it->second.get();
+			break;
+		}
 	}
-	
-	// Get the per-search state
-	::PerSearchState* state = getSearchState(m_currentSearch);
+
 	if (!state) {
-		// No state found for this search ID
+		// No active local search
 		return;
 	}
-	
+
 	// Get search type from per-search state
 	uint8_t searchType = state->getSearchType();
-	
+
 	if (searchType == GlobalSearch) {
 		CPacket* searchPacket = state->getSearchPacket();
 		wxCHECK_RET(searchPacket, wxT("Global search, but no packet"));
 
 		// Ensure that every global search starts over.
-		theApp->serverlist->RemoveObserver(&m_serverQueue);
-		m_searchTimer.Start(750);
+		CQueueObserver<CServer*>* serverQueue = state->getServerQueue();
+		if (serverQueue) {
+			theApp->serverlist->RemoveObserver(serverQueue);
+		}
+		CTimer* timer = state->getTimer();
+		if (timer) {
+			state->startTimer(750, false);
+		}
 	} else {
 		// Don't trigger retry here - let the UI (SearchDlg/SearchStateManager) handle it
 		// The retry mechanism is now managed by SearchStateManager to ensure proper state transitions
-		ResultMap::iterator it = m_results.find(m_currentSearch);
+		ResultMap::iterator it = m_results.find(searchId);
 		bool hasResults = (it != m_results.end()) && !it->second.empty();
-		
+
 		// Only mark the search as finished if we have results
 		if (hasResults) {
-			OnSearchComplete(m_currentSearch, static_cast<SearchType>(searchType), hasResults);
+			OnSearchComplete(searchId, static_cast<SearchType>(searchType), hasResults);
 		} else {
 			// No results - let the UI handle retry through SearchStateManager
 			// Just mark the search as finished internally
 			// Release the search ID since search is complete (no results)
-			if (search::SearchIdGenerator::Instance().releaseId(m_currentSearch)) {
+			if (search::SearchIdGenerator::Instance().releaseId(searchId)) {
 				AddDebugLogLineC(logSearch, CFormat(wxT("Released search ID %u (no results)"))
-					% m_currentSearch);
+					% searchId);
 			} else {
 				AddDebugLogLineC(logSearch, CFormat(wxT("Failed to release search ID %u (no results) - already released?"))
-					% m_currentSearch);
+					% searchId);
 			}
-			// Remove from active searches map
-			m_activeSearches.erase(m_currentSearch);
-			m_searchInProgress = false;
+			// Mark search as inactive
+			state->setSearchActive(false);
 		}
 	}
 }
 
-
-uint32 CSearchList::GetSearchProgress() const
-{
-	// Call the new version with current search ID
-	return GetSearchProgress(m_currentSearch);
-}
 
 uint32 CSearchList::GetSearchProgress(long searchId) const
 {
@@ -772,29 +778,26 @@ uint32 CSearchList::GetSearchProgress(long searchId) const
 		// No active search
 		return 0;
 	}
-	
+
 	// Get the per-search state
 	const ::PerSearchState* state = getSearchState(searchId);
 	if (!state) {
 		// No state found for this search ID
 		return 0;
 	}
-	
+
 	// Get search type from per-search state
 	uint8_t searchType = state->getSearchType();
-	
+
 	if (searchType == KadSearch) {
 		// We cannot measure the progress of Kad searches.
 		// But we can tell when they are over.
 		return state->isKadSearchFinished() ? 0xfffe : 0;
 	}
-	
-	// Check if search is in progress
-	// Note: m_searchInProgress is a legacy global flag
-	// In the new architecture, we should track per-search progress
-	// For now, we check if this is the current search
-	if (searchId != m_currentSearch || !m_searchInProgress) {
-		// Not the current search or no search in progress
+
+	// Check if search is active
+	if (!state->isSearchActive()) {
+		// Search is not active
 		return 0;
 	}
 
@@ -803,10 +806,8 @@ uint32 CSearchList::GetSearchProgress(long searchId) const
 			return 0xffff;
 
 		case GlobalSearch:
-			// TODO: Global search progress should be calculated per-search
-			// For now, use the legacy server queue
-			return 100 - (m_serverQueue.GetRemaining() * 100)
-					/ theApp->serverlist->GetServerCount();
+			// Calculate progress based on per-search server queue
+			return state->getProgress();
 
 		default:
 			wxFAIL;
@@ -817,27 +818,40 @@ uint32 CSearchList::GetSearchProgress(long searchId) const
 
 void CSearchList::OnGlobalSearchTimer(CTimerEvent& ev)
 {
-	if (m_currentSearch == -1) {
-		// No active search
-		return;
+	// Find the active global search
+	wxMutexLocker lock(m_searchMutex);
+	long searchId = -1;
+	::PerSearchState* state = nullptr;
+
+	// Find the most recent active global search
+	for (auto it = m_searchStates.rbegin(); it != m_searchStates.rend(); ++it) {
+		if (it->second && it->second->getSearchType() == GlobalSearch && it->second->isSearchActive()) {
+			searchId = it->first;
+			state = it->second.get();
+			break;
+		}
 	}
-	
-	// Get the per-search state for the current search
-	::PerSearchState* state = getSearchState(m_currentSearch);
+
 	if (!state) {
-		// No state found for this search ID
+		// No active global search
 		return;
 	}
-	
+
 	// Get search packet from per-search state
 	CPacket* searchPacket = state->getSearchPacket();
 	if (!searchPacket) {
 		// This was a pending event, handled after 'Stop' was pressed.
 		return;
 	}
-	
-	if (!m_serverQueue.IsActive()) {
-		theApp->serverlist->AddObserver(&m_serverQueue);
+
+	CQueueObserver<CServer*>* serverQueue = state->getServerQueue();
+	if (!serverQueue) {
+		// No server queue set
+		return;
+	}
+
+	if (!serverQueue->IsActive()) {
+		theApp->serverlist->AddObserver(serverQueue);
 	}
 
 	// UDP requests must not be sent to this server.
@@ -845,8 +859,8 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& ev)
 	if (localServer) {
 		uint32 localIP = localServer->GetIP();
 		uint16 localPort = localServer->GetPort();
-		while (m_serverQueue.GetRemaining()) {
-			CServer* server = m_serverQueue.GetNext();
+		while (serverQueue->GetRemaining()) {
+			CServer* server = serverQueue->GetNext();
 
 			// Compare against the currently connected server.
 			if ((server->GetPort() == localPort) && (server->GetIP() == localIP)) {
@@ -890,7 +904,7 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& ev)
 						AddDebugLogLineN(logServerUDP, wxT("Skipped UDP search on server ") + Uint32_16toStringIP_Port(server->GetIP(), server->GetPort()) + wxT(": No large file support"));
 					}
 				}
-				CoreNotify_Search_Update_Progress(GetSearchProgress(m_currentSearch));
+				CoreNotify_Search_Update_Progress(GetSearchProgress(searchId));
 				return;
 			}
 		}
@@ -899,33 +913,31 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& ev)
 
 	// Don't trigger retry here - let the UI (SearchDlg/SearchStateManager) handle it
 	// The retry mechanism is now managed by SearchStateManager to ensure proper state transitions
-	ResultMap::iterator it = m_results.find(m_currentSearch);
+	ResultMap::iterator it = m_results.find(searchId);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
 
 	// Only mark the search as finished if we have results
 	if (hasResults) {
-		OnSearchComplete(m_currentSearch, m_searchType, hasResults);
+		OnSearchComplete(searchId, GlobalSearch, hasResults);
 		// Only stop if not retrying
-		if (m_searchInProgress) {
-			StopSearch(true);
+		if (state->isSearchActive()) {
+			StopSearch(searchId, true);
 		}
 	} else {
 		// No results - let the UI handle retry through SearchStateManager
 		// Notify the UI that global search has ended
 		// Release the search ID since search is complete (no results)
-		if (search::SearchIdGenerator::Instance().releaseId(m_currentSearch)) {
+		if (search::SearchIdGenerator::Instance().releaseId(searchId)) {
 			AddDebugLogLineC(logSearch, CFormat(wxT("Released search ID %u (global search, no results)"))
-				% m_currentSearch);
+				% searchId);
 		} else {
 			AddDebugLogLineC(logSearch, CFormat(wxT("Failed to release search ID %u (global search, no results) - already released?"))
-				% m_currentSearch);
+				% searchId);
 		}
-		
-		// Remove from active searches map
-		m_activeSearches.erase(m_currentSearch);
+
+		// Mark search as inactive
+		state->setSearchActive(false);
 		Notify_GlobalSearchEnd();
-		// Just mark the search as finished internally
-		m_searchInProgress = false;
 	}
 }
 
@@ -981,7 +993,7 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 
 	{
 		wxMutexLocker lock(m_searchMutex);
-		if (!m_activeSearches.empty()) {
+		if (!m_searchStates.empty()) {
 			// Check if this is from the local server (TCP) or a remote server (UDP)
 			// TCP responses are for local searches, UDP responses are for global searches
 			bool isFromLocalServer = false;
@@ -993,23 +1005,24 @@ void CSearchList::ProcessSearchAnswer(const uint8_t* in_packet, uint32_t size, b
 			}
 
 			// Find the most recent search matching the response type
-			for (auto it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
-				if (isFromLocalServer && it->second == LocalSearch) {
-					searchId = it->first;
-					searchType = LocalSearch;
-					break;
-				} else if (!isFromLocalServer && it->second == GlobalSearch) {
-					searchId = it->first;
-					searchType = GlobalSearch;
-					break;
+			for (auto it = m_searchStates.rbegin(); it != m_searchStates.rend(); ++it) {
+				if (it->second && it->second->isSearchActive()) {
+					uint8_t type = it->second->getSearchType();
+					if (isFromLocalServer && type == LocalSearch) {
+						searchId = it->first;
+						searchType = LocalSearch;
+						break;
+					} else if (!isFromLocalServer && type == GlobalSearch) {
+						searchId = it->first;
+						searchType = GlobalSearch;
+						break;
+					}
 				}
 			}
 		}
 	}
 
 	// If no valid search ID found, drop the results
-	// We should NOT use m_currentSearch as a fallback because it can cause
-	// results from different searches to be mixed together
 	if (searchId == -1) {
 		AddDebugLogLineN(logSearch, wxString::Format(wxT("Received search results from %s:%u but no matching active search found, dropping results"),
 			(uint32_t)serverIP, serverPort));
@@ -1038,11 +1051,11 @@ void CSearchList::ProcessUDPSearchAnswer(const CMemFile& packet, bool optUTF8, u
 	long searchId = -1;
 	{
 		wxMutexLocker lock(m_searchMutex);
-		if (!m_activeSearches.empty()) {
+		if (!m_searchStates.empty()) {
 			// Find the most recent global search (UDP is only used for global searches)
 			// We need to ensure we don't accidentally route to a local search
-			for (auto it = m_activeSearches.rbegin(); it != m_activeSearches.rend(); ++it) {
-				if (it->second == GlobalSearch) {
+			for (auto it = m_searchStates.rbegin(); it != m_searchStates.rend(); ++it) {
+				if (it->second && it->second->isSearchActive() && it->second->getSearchType() == GlobalSearch) {
 					searchId = it->first;
 					break;
 				}
@@ -1188,25 +1201,11 @@ void CSearchList::StopSearch(long searchID, bool globalOnly)
 	uint8_t searchType = searchState->getSearchType();
 
 	if (searchType == GlobalSearch) {
+		// Stop the timer for this search
+		searchState->stopTimer();
+
 		// Clear search packet for this search
 		searchState->clearSearchPacket();
-
-		// Stop the timer if this was the last global search
-		bool hasOtherGlobalSearches = false;
-		auto allIds = getActiveSearchIds();
-		for (long id : allIds) {
-			if (id != searchID) {
-				auto* otherState = getSearchState(id);
-				if (otherState && otherState->getSearchType() == GlobalSearch) {
-					hasOtherGlobalSearches = true;
-					break;
-				}
-			}
-		}
-
-		if (!hasOtherGlobalSearches) {
-			m_searchTimer.Stop();
-		}
 
 		CoreNotify_Search_Update_Progress(0xffff);
 	} else if (searchType == KadSearch && !globalOnly) {
@@ -1633,41 +1632,48 @@ void CSearchList::UpdateSearchFileByHash(const CMD4Hash& hash)
 
 void CSearchList::SetKadSearchFinished()
 {
-	if (m_currentSearch == -1) {
-		// No active search
-		return;
+	// Find the active Kad search
+	wxMutexLocker lock(m_searchMutex);
+	long searchId = -1;
+	::PerSearchState* state = nullptr;
+
+	// Find the most recent active Kad search
+	for (auto it = m_searchStates.rbegin(); it != m_searchStates.rend(); ++it) {
+		if (it->second && it->second->getSearchType() == KadSearch && it->second->isSearchActive()) {
+			searchId = it->first;
+			state = it->second.get();
+			break;
+		}
 	}
-	
-	// Get the per-search state
-	::PerSearchState* state = getSearchState(m_currentSearch);
+
 	if (!state) {
-		// No state found for this search ID
+		// No active Kad search
 		return;
 	}
-	
+
 	// Check if we have any results for the current search
-	ResultMap::iterator it = m_results.find(m_currentSearch);
+	ResultMap::iterator it = m_results.find(searchId);
 	bool hasResults = (it != m_results.end()) && !it->second.empty();
 
 	// Don't trigger retry here - let the UI (SearchDlg/SearchStateManager) handle it
 	// The retry mechanism is now managed by SearchStateManager to ensure proper state transitions
 	// Only mark the search as finished if we have results
 	if (hasResults) {
-		OnSearchComplete(m_currentSearch, KadSearch, hasResults);
+		OnSearchComplete(searchId, KadSearch, hasResults);
 	} else {
 		// No results - let the UI handle retry through SearchStateManager
 		// Just mark the Kad search as finished internally in per-search state
 		state->setKadSearchFinished(true);
 		// Release the search ID since search is complete (no results)
-		if (search::SearchIdGenerator::Instance().releaseId(m_currentSearch)) {
+		if (search::SearchIdGenerator::Instance().releaseId(searchId)) {
 			AddDebugLogLineC(logSearch, CFormat(wxT("Released Kad search ID %u (no results)"))
-				% m_currentSearch);
+				% searchId);
 		} else {
 			AddDebugLogLineC(logSearch, CFormat(wxT("Failed to release Kad search ID %u (no results) - already released?"))
-				% m_currentSearch);
+				% searchId);
 		}
-		// Remove from active searches map
-		m_activeSearches.erase(m_currentSearch);
+		// Mark search as inactive
+		state->setSearchActive(false);
 	}
 }
 
@@ -1682,12 +1688,20 @@ void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResul
 	AddDebugLogLineC(logSearch, CFormat(wxT("Marking search finished: ID=%ld, Type=%d"))
 		% searchId % (int)type);
 
-	// Remove this search from the active searches map
-	m_activeSearches.erase(searchId);
+	// Get the per-search state
+	::PerSearchState* state = getSearchState(searchId);
+	if (state) {
+		// Mark search as inactive
+		state->setSearchActive(false);
+
+		// Mark Kad search as finished
+		if (type == KadSearch) {
+			state->setKadSearchFinished(true);
+		}
+	}
 
 	// Mark search as finished
 	if (type == KadSearch) {
-		m_KadSearchFinished = true;
 		// Release Kad search ID
 		if (search::SearchIdGenerator::Instance().releaseId(searchId)) {
 			AddDebugLogLineC(logSearch, CFormat(wxT("Released Kad search ID %u (search completed with results)"))
@@ -1697,9 +1711,8 @@ void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResul
 				% searchId);
 		}
 	} else {
-		m_searchInProgress = false;
 		Notify_SearchLocalEnd();
-		
+
 		// Release the search ID for non-Kad searches
 		if (search::SearchIdGenerator::Instance().releaseId(searchId)) {
 			AddDebugLogLineC(logSearch, CFormat(wxT("Released search ID %u (search completed with results)"))
@@ -1728,13 +1741,16 @@ void CSearchList::OnSearchRetry(long searchId, SearchType type, int retryNum)
 	}
 
 	// Clean up old search state before retrying
-	// Remove from active searches
-	m_activeSearches.erase(searchId);
+	// Get the per-search state and mark it as inactive
+	::PerSearchState* state = getSearchState(searchId);
+	if (state) {
+		state->setSearchActive(false);
+	}
 	// Remove search parameters (they will be recreated with new ID)
 	m_searchParams.erase(searchId);
 	// Remove per-search state
 	removeSearchState(searchId);
-	
+
 	// Release the old search ID before retrying
 	if (search::SearchIdGenerator::Instance().releaseId(searchId)) {
 		AddDebugLogLineC(logSearch, CFormat(wxT("Released search ID %u before retry"))

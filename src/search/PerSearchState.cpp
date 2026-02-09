@@ -27,6 +27,7 @@
 #include "../Logger.h"
 #include <common/Format.h>
 #include "../ServerList.h"  // For global server count
+#include "../SearchList.h"  // For SearchType enum
 
 PerSearchState::PerSearchState(uint32_t searchId, uint8_t searchType, const wxString& searchString)
     : m_searchId(searchId)
@@ -206,7 +207,7 @@ bool PerSearchState::startTimer(int millisecs, bool oneShot)
 
     bool result = m_timer->Start(millisecs, oneShot);
 
-    AddDebugLogLineC(logSearch, CFormat(wxT("Timer %s for ID=%u: interval=%dms, oneShot=%d") % (result ? wxT("started") : wxT("failed to start")) % m_searchId % millisecs % oneShot);
+    AddDebugLogLineC(logSearch, CFormat(wxT("Timer %s for ID=%u: interval=%dms, oneShot=%d")) % (result ? wxT("started") : wxT("failed to start")) % m_searchId % millisecs % oneShot);
 
     return result;
 }
