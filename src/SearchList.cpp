@@ -600,10 +600,9 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		if (type == GlobalSearch) {
 			// Store search packet in per-search state
 			searchState->setSearchPacket(std::unique_ptr<CPacket>(searchPacket), packetUsing64bit);
-		} else {
-			// Local search packet is sent immediately, no need to store it
-			delete searchPacket;
 		}
+		// Note: For local searches, SendPacket with delpacket=true takes ownership of the packet
+		// For global searches, delpacket=false so we retain ownership and store it in searchState
 	}
 
 	// Log search start
@@ -761,6 +760,8 @@ void CSearchList::LocalSearchEnd()
 				AddDebugLogLineC(logSearch, CFormat(wxT("Failed to release search ID %u (no results) - already released?"))
 					% m_currentSearch);
 			}
+			// Remove from active searches map
+			m_activeSearches.erase(m_currentSearch);
 			m_searchInProgress = false;
 		}
 	}
@@ -928,6 +929,8 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent& ev)
 				% m_currentSearch);
 		}
 		
+		// Remove from active searches map
+		m_activeSearches.erase(m_currentSearch);
 		Notify_GlobalSearchEnd();
 		// Just mark the search as finished internally
 		m_searchInProgress = false;
@@ -1663,6 +1666,16 @@ void CSearchList::SetKadSearchFinished()
 		// No results - let the UI handle retry through SearchStateManager
 		// Just mark the Kad search as finished internally in per-search state
 		state->setKadSearchFinished(true);
+		// Release the search ID since search is complete (no results)
+		if (search::SearchIdGenerator::Instance().releaseId(m_currentSearch)) {
+			AddDebugLogLineC(logSearch, CFormat(wxT("Released Kad search ID %u (no results)"))
+				% m_currentSearch);
+		} else {
+			AddDebugLogLineC(logSearch, CFormat(wxT("Failed to release Kad search ID %u (no results) - already released?"))
+				% m_currentSearch);
+		}
+		// Remove from active searches map
+		m_activeSearches.erase(m_currentSearch);
 	}
 }
 
@@ -1722,6 +1735,14 @@ void CSearchList::OnSearchRetry(long searchId, SearchType type, int retryNum)
 		return;
 	}
 
+	// Clean up old search state before retrying
+	// Remove from active searches
+	m_activeSearches.erase(searchId);
+	// Remove search parameters (they will be recreated with new ID)
+	m_searchParams.erase(searchId);
+	// Remove per-search state
+	removeSearchState(searchId);
+	
 	// Release the old search ID before retrying
 	if (search::SearchIdGenerator::Instance().releaseId(searchId)) {
 		AddDebugLogLineC(logSearch, CFormat(wxT("Released search ID %u before retry"))
