@@ -1389,11 +1389,23 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 		// instead of: AND AND "a" min=1 max=2
 		// we use:     AND "a" AND min=1 max=2
 
+		// CRITICAL FIX: Handle Kad searches with empty expression
+		// For Kad searches with a single keyword, the parser removes the keyword
+		// from _SearchExpr.m_aExpr because it's used as the Kad keyword.
+		// This results in an empty packet if we don't handle it specially.
 		if (_SearchExpr.m_aExpr.GetCount() > 0) {
 			if (++iParameterCount < parametercount) {
 				target.WriteBooleanAND();
 			}
 			target.WriteMetaDataSearchParam(_SearchExpr.m_aExpr[0]);
+		} else if (type == KadSearch && !params.strKeyword.IsEmpty()) {
+			// For Kad searches with empty expression, use the keyword directly
+			if (++iParameterCount < parametercount) {
+				target.WriteBooleanAND();
+			}
+			target.WriteMetaDataSearchParam(params.strKeyword);
+			AddDebugLogLineC(logSearch, CFormat(wxT("Using Kad keyword directly for packet: '%s'"))
+				% params.strKeyword);
 		}
 
 		if (!typeText.IsEmpty()) {
