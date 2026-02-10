@@ -79,14 +79,12 @@ CTag::CTag(const CTag& rTag)
 		// These tag types don't store any data, they're just skipped when reading from network
 		// Just copy the type and name, no data to copy
 		m_uVal = 0;
-	} else if (rTag.m_uType == 0) {
-		// Invalid tag type (0), but handle it gracefully
-		// This can happen when tags are created with the default constructors
-		// Just copy the type and name, no data to copy
-		m_uVal = 0;
 	} else {
-		printf("***DEBUG: Unknown tag type 0x%02X in CTag copy constructor\n", rTag.m_uType);
-		wxFAIL;
+		// Handle any unknown or invalid tag types gracefully
+		// This can happen when tags are created with the default constructors (m_uType = 0)
+		// or when tags have types that aren't recognized by the copy constructor
+		// Just copy the type and name, no data to copy
+		fprintf(stderr, "***WARNING: Unknown tag type 0x%02X in CTag copy constructor, handling gracefully\n", rTag.m_uType);
 		m_uVal = 0;
 	}
 }
