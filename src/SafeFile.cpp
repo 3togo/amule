@@ -322,8 +322,9 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 						// Get confidence level
 						int32_t confidence = ucsdet_getConfidence(match, &status);
 						
-						if (U_SUCCESS(status) && confidence >= 50) {
-							// Only use ICU detection if confidence is >= 50%
+						if (U_SUCCESS(status) && confidence >= 30) {
+							// Use ICU detection if confidence is >= 30%
+							// Lower threshold to better detect encodings like GB2312
 							// Use ICU to convert directly from detected charset to UTF-8
 							UErrorCode convStatus = U_ZERO_ERROR;
 							
