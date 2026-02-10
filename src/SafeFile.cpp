@@ -249,7 +249,61 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 		}
 	} else {
 		// Raw strings are written as Latin-1 (see CFileDataIO::WriteStringCore)
-		str = wxString(val, wxConvISO8859_1, raw_len);
+		// However, for Kad search results, we should detect if the string is actually UTF-8
+		// even when bOptUTF8 is false (backward compatibility)
+		bool isLikelyUTF8 = true;
+		
+		// Check if the string is valid UTF-8
+		for (uint16 i = 0; i < raw_len; i++) {
+			unsigned char c = val[i];
+			if (c > 127) {
+				// Multi-byte UTF-8 sequence
+				int expectedBytes = 0;
+				if ((c & 0xE0) == 0xC0) {
+					expectedBytes = 2;
+				} else if ((c & 0xF0) == 0xE0) {
+					expectedBytes = 3;
+				} else if ((c & 0xF8) == 0xF0) {
+					expectedBytes = 4;
+				} else {
+					// Invalid UTF-8 start byte
+					isLikelyUTF8 = false;
+					break;
+				}
+				
+				// Check if we have enough bytes
+				if (i + expectedBytes > raw_len) {
+					isLikelyUTF8 = false;
+					break;
+				}
+				
+				// Check continuation bytes
+				for (int j = 1; j < expectedBytes; j++) {
+					if ((val[i + j] & 0xC0) != 0x80) {
+						isLikelyUTF8 = false;
+						break;
+					}
+				}
+				
+				if (!isLikelyUTF8) {
+					break;
+				}
+				
+				i += expectedBytes - 1;
+			}
+		}
+		
+		if (isLikelyUTF8) {
+			// Try to decode as UTF-8
+			str = UTF82unicode(val);
+			if (str.IsEmpty()) {
+				// Fallback to Latin-1
+				str = wxString(val, wxConvISO8859_1, raw_len);
+			}
+		} else {
+			// Use Latin-1 encoding
+			str = wxString(val, wxConvISO8859_1, raw_len);
+		}
 	}
 
 	return str;
