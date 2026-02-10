@@ -258,8 +258,20 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 		// 3. System locale (for legacy clients)
 		// 4. Latin-1 (fallback)
 		
-		// Try UTF-8 first
-		str = UTF82unicode(val);
+		// Check for UTF-16 BOM (little-endian: FF FE, big-endian: FE FF)
+		int skipBytes = 0;
+		if (raw_len >= 2) {
+			if ((unsigned char)val[0] == 0xFF && (unsigned char)val[1] == 0xFE) {
+				// UTF-16 LE BOM
+				skipBytes = 2;
+			} else if ((unsigned char)val[0] == 0xFE && (unsigned char)val[1] == 0xFF) {
+				// UTF-16 BE BOM
+				skipBytes = 2;
+			}
+		}
+		
+		// Try UTF-8 first (with BOM skip if needed)
+		str = UTF82unicode(val + skipBytes);
 		
 		// Check if the UTF-8 decoding produced a valid string without replacement characters
 		bool isValidUTF8 = !str.IsEmpty();
@@ -280,7 +292,7 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 			UCharsetDetector* csd = ucsdet_open(&status);
 			if (U_SUCCESS(status)) {
 				// Set the input text for detection
-				ucsdet_setText(csd, val, raw_len, &status);
+				ucsdet_setText(csd, val + skipBytes, raw_len - skipBytes, &status);
 				
 				if (U_SUCCESS(status)) {
 					// Detect the charset
@@ -295,11 +307,11 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 							UErrorCode convStatus = U_ZERO_ERROR;
 							
 							// Calculate output buffer size (UTF-8 can be up to 4 bytes per char)
-							int32_t utf8Capacity = raw_len * 4;
+							int32_t utf8Capacity = (raw_len - skipBytes) * 4;
 							std::vector<char> utf8Dest(utf8Capacity);
 							
 							// Convert using ucnv_convert (returns length on success)
-							int32_t utf8Length = ucnv_convert("UTF-8", charset, utf8Dest.data(), utf8Capacity, val, raw_len, &convStatus);
+							int32_t utf8Length = ucnv_convert("UTF-8", charset, utf8Dest.data(), utf8Capacity, val + skipBytes, raw_len - skipBytes, &convStatus);
 							
 							if (U_SUCCESS(convStatus)) {
 								// Convert UTF-8 to wxString
@@ -323,18 +335,18 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 			
 			// If ICU detection failed, fall back to system locale
 			if (!U_SUCCESS(status) || str.IsEmpty()) {
-				str = wxString(val, wxConvLocal);
+				str = wxString(val + skipBytes, wxConvLocal);
 			}
 #else
 			// No ICU available, use system locale encoding
 			// This handles cases where the string is in the local encoding (e.g., GBK for Chinese)
-			str = wxString(val, wxConvLocal);
+			str = wxString(val + skipBytes, wxConvLocal);
 #endif
 			
 			// Check if system locale decoding produced valid results
 			if (str.IsEmpty()) {
 				// System locale failed, fall back to Latin-1
-				str = wxString(val, wxConvISO8859_1, raw_len);
+				str = wxString(val + skipBytes, wxConvISO8859_1, raw_len - skipBytes);
 			}
 		}
 	}
