@@ -75,6 +75,10 @@ CTag::CTag(const CTag& rTag)
 		m_nSize = rTag.GetBsobSize();
 		m_pData = new unsigned char[rTag.GetBsobSize()];
 		memcpy(m_pData, rTag.GetBsob(), rTag.GetBsobSize());
+	} else if (rTag.m_uType == TAGTYPE_BOOL || rTag.m_uType == TAGTYPE_BOOLARRAY) {
+		// These tag types don't store any data, they're just skipped when reading from network
+		// Just copy the type and name, no data to copy
+		m_uVal = 0;
 	} else {
 		wxFAIL;
 		m_uVal = 0;
