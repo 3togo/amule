@@ -61,6 +61,7 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		ThreadTasks.cpp
 		protocol/ProtocolCoordinator.cpp
 		SearchList.cpp
+		SearchTimeoutManager.cpp
 		Server.cpp
 		PartFileConvert.cpp
 		PartFileConvertDlg.cpp
