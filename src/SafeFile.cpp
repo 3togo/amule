@@ -254,10 +254,10 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 		
 		// Try multiple encodings in order of likelihood
 		// 1. Check for BOMs and skip them
-		// 2. Use ICU to detect the actual encoding (best approach for non-UTF encodings)
+		// 2. Try UTF-16 (fixes beginning corruption)
 		// 3. Try UTF-8 (most common for modern Kad clients)
-		// 4. Try UTF-16 LE/BE
-		// 5. System locale (for legacy clients)
+		// 4. Use ICU to detect the actual encoding (best for non-UTF encodings)
+		// 5. System locale (LANG/LANGUAGE environment variables)
 		// 6. Latin-1 (fallback)
 		
 		// Check for BOMs and determine skip bytes
@@ -284,10 +284,64 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 			}
 		}
 		
+		// Step 2: Try UTF-16 LE (without BOM) - this fixes the beginning corruption
+		if (!hasBOM && raw_len >= 2) {
+			const uint16_t* utf16le = reinterpret_cast<const uint16_t*>(val);
+			size_t utf16leLen = raw_len / 2;
+			
+			// Convert UTF-16 LE to wxString
+			str = wxString(reinterpret_cast<const char*>(utf16le), wxMBConvUTF16LE(), utf16leLen * 2);
+			
+			if (!str.IsEmpty()) {
+				// Check for replacement characters
+				wxString replacementChar = wxChar(0xFFFD);
+				if (!str.Contains(replacementChar)) {
+					// Successfully decoded UTF-16 LE
+					return str;
+				}
+				str.Clear();
+			}
+			
+			// Try UTF-16 BE (without BOM)
+			if (str.IsEmpty() && raw_len >= 2) {
+				const uint16_t* utf16be = reinterpret_cast<const uint16_t*>(val);
+				size_t utf16beLen = raw_len / 2;
+				
+				// Convert UTF-16 BE to wxString
+				str = wxString(reinterpret_cast<const char*>(utf16be), wxMBConvUTF16BE(), utf16beLen * 2);
+				
+				if (!str.IsEmpty()) {
+					// Check for replacement characters
+					wxString replacementChar = wxChar(0xFFFD);
+					if (!str.Contains(replacementChar)) {
+						// Successfully decoded UTF-16 BE
+						return str;
+					}
+					str.Clear();
+				}
+			}
+		}
+		
+		// Step 3: Try UTF-8 (with BOM skip if needed)
+		str = UTF82unicode(val + skipBytes);
+		
+		// Check if the UTF-8 decoding produced a valid string without replacement characters
+		bool isValidUTF8 = !str.IsEmpty();
+		if (isValidUTF8) {
+			// Check for replacement characters (U+FFFD) which indicate invalid UTF-8
+			wxString replacementChar = wxChar(0xFFFD);
+			if (str.Contains(replacementChar)) {
+				isValidUTF8 = false;
+			}
+		}
+		
+		if (isValidUTF8) {
+			return str;
+		}
+		
+		// Step 4: Use ICU to detect the actual encoding (best for non-UTF encodings)
 #ifdef HAVE_ICU
-		// First, try ICU to detect the encoding - this is the best approach for non-UTF encodings
 		UErrorCode status = U_ZERO_ERROR;
-		bool icuSucceeded = false;
 		
 		UCharsetDetector* csd = ucsdet_open(&status);
 		if (U_SUCCESS(status)) {
@@ -324,7 +378,8 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 								
 								// Check if the conversion produced valid results
 								if (!str.IsEmpty()) {
-									icuSucceeded = true;
+									ucsdet_close(csd);
+									return str;
 								}
 							}
 						}
@@ -334,115 +389,18 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 			
 			ucsdet_close(csd);
 		}
+#endif
 		
-		// If ICU detection succeeded, we're done
-		if (icuSucceeded) {
+		// Step 5: System locale (LANG/LANGUAGE environment variables)
+		// This handles cases where the string is in the local encoding
+		str = wxString(val + skipBytes, wxConvLocal);
+		
+		if (!str.IsEmpty()) {
 			return str;
 		}
-#endif
 		
-		// ICU detection failed or not available, try UTF-8
-		str = UTF82unicode(val + skipBytes);
-		
-		// Check if the UTF-8 decoding produced a valid string without replacement characters
-		bool isValidUTF8 = !str.IsEmpty();
-		if (isValidUTF8) {
-			// Check for replacement characters (U+FFFD) which indicate invalid UTF-8
-			wxString replacementChar = wxChar(0xFFFD);
-			if (str.Contains(replacementChar)) {
-				isValidUTF8 = false;
-			}
-		}
-		
-		// If UTF-8 failed, try UTF-16
-		if (!isValidUTF8 && raw_len - skipBytes >= 2) {
-			// Try UTF-16 LE (without BOM)
-			const uint16_t* utf16le = reinterpret_cast<const uint16_t*>(val + skipBytes);
-			size_t utf16leLen = (raw_len - skipBytes) / 2;
-			
-			// Convert UTF-16 LE to wxString
-			str = wxString(reinterpret_cast<const char*>(utf16le), wxMBConvUTF16LE(), utf16leLen * 2);
-			
-			if (!str.IsEmpty()) {
-				// Check for replacement characters
-				wxString replacementChar = wxChar(0xFFFD);
-				if (str.Contains(replacementChar)) {
-					str.Clear();
-				} else {
-					isValidUTF8 = true; // Successfully decoded
-				}
-			}
-			
-			// If UTF-16 LE failed, try UTF-16 BE
-			if (str.IsEmpty() && raw_len - skipBytes >= 2) {
-				const uint16_t* utf16be = reinterpret_cast<const uint16_t*>(val + skipBytes);
-				size_t utf16beLen = (raw_len - skipBytes) / 2;
-				
-				// Convert UTF-16 BE to wxString
-				str = wxString(reinterpret_cast<const char*>(utf16be), wxMBConvUTF16BE(), utf16beLen * 2);
-				
-				if (!str.IsEmpty()) {
-					// Check for replacement characters
-					wxString replacementChar = wxChar(0xFFFD);
-					if (str.Contains(replacementChar)) {
-						str.Clear();
-					} else {
-						isValidUTF8 = true; // Successfully decoded
-					}
-				}
-			}
-		}
-		
-		if (!isValidUTF8) {
-			// UTF-8 and UTF-16 failed, try ICU again with lower confidence threshold
-#ifdef HAVE_ICU
-			status = U_ZERO_ERROR;
-			
-			csd = ucsdet_open(&status);
-			if (U_SUCCESS(status)) {
-				ucsdet_setText(csd, val + skipBytes, raw_len - skipBytes, &status);
-				
-				if (U_SUCCESS(status)) {
-					const UCharsetMatch* match = ucsdet_detect(csd, &status);
-					
-					if (U_SUCCESS(status) && match) {
-						const char* charset = ucsdet_getName(match, &status);
-						
-						if (U_SUCCESS(status) && charset) {
-							// Use ICU to convert (lower confidence threshold)
-							UErrorCode convStatus = U_ZERO_ERROR;
-							
-							int32_t utf8Capacity = (raw_len - skipBytes) * 4;
-							std::vector<char> utf8Dest(utf8Capacity);
-							
-							int32_t utf8Length = ucnv_convert("UTF-8", charset, utf8Dest.data(), utf8Capacity, val + skipBytes, raw_len - skipBytes, &convStatus);
-							
-							if (U_SUCCESS(convStatus)) {
-								str = wxString::FromUTF8(utf8Dest.data(), utf8Length);
-							}
-						}
-					}
-				}
-				
-				ucsdet_close(csd);
-			}
-			
-			// If ICU detection failed, fall back to system locale
-			if (!U_SUCCESS(status) || str.IsEmpty()) {
-				str = wxString(val + skipBytes, wxConvLocal);
-			}
-#else
-			// No ICU available, use system locale encoding
-			// This handles cases where the string is in the local encoding (e.g., GBK for Chinese)
-			str = wxString(val + skipBytes, wxConvLocal);
-#endif
-			
-			// Check if system locale decoding produced valid results
-			if (str.IsEmpty()) {
-				// System locale failed, fall back to Latin-1
-				str = wxString(val + skipBytes, wxConvISO8859_1, raw_len - skipBytes);
-			}
-		}
+		// Step 6: Latin-1 fallback
+		str = wxString(val + skipBytes, wxConvISO8859_1, raw_len - skipBytes);
 	}
 
 	return str;
