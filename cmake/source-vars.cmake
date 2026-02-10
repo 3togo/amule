@@ -16,6 +16,8 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON OR BUILD_REMOTEGUI)
 		CatDialog.cpp
 		search/SearchLogging.cpp
 		Server.cpp
+		SearchTimeoutManager.cpp
+		SafeFile.cpp
 	)
 endif()
 

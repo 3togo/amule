@@ -197,6 +197,19 @@ if (BUILD_MONOLITHIC)
 		PRIVATE NETWORK_PERF_MONITORING
 	)
 
+	# Add ICU support if available
+	if (ICU_FOUND)
+		target_compile_definitions (amule
+			PRIVATE HAVE_ICU
+		)
+		target_include_directories (amule
+			PRIVATE ${ICU_INCLUDE_DIRS}
+		)
+		target_link_libraries (amule
+			PRIVATE ${ICU_LIBRARIES}
+		)
+	endif()
+
 	target_include_directories (amule
 		PRIVATE ${SRC_DIR}
 	)

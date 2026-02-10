@@ -72,6 +72,12 @@ include (cmake/manpage_install.cmake)
 include (cmake/options.cmake)
 include (cmake/search-dirs.cmake)
 
+# ICU for better encoding detection
+option(ENABLE_ICU "Enable ICU for better encoding detection" ON)
+if(ENABLE_ICU)
+    include(cmake/icu.cmake)
+endif()
+
 if (BUILD_AMULECMD OR BUILD_WEBSERVER)
 	include (cmake/FindReadline.cmake)
 endif()
