@@ -254,19 +254,32 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 		
 		// Try multiple encodings in order of likelihood
 		// 1. UTF-8 (most common for modern Kad clients)
-		// 2. ICU-based encoding detection (if available)
-		// 3. System locale (for legacy clients)
-		// 4. Latin-1 (fallback)
+		// 2. UTF-16 (with or without BOM)
+		// 3. ICU-based encoding detection (if available)
+		// 4. System locale (for legacy clients)
+		// 5. Latin-1 (fallback)
 		
-		// Check for UTF-16 BOM (little-endian: FF FE, big-endian: FE FF)
+		// Check for BOMs and determine skip bytes
 		int skipBytes = 0;
+		bool hasBOM = false;
+		
 		if (raw_len >= 2) {
 			if ((unsigned char)val[0] == 0xFF && (unsigned char)val[1] == 0xFE) {
 				// UTF-16 LE BOM
 				skipBytes = 2;
+				hasBOM = true;
 			} else if ((unsigned char)val[0] == 0xFE && (unsigned char)val[1] == 0xFF) {
 				// UTF-16 BE BOM
 				skipBytes = 2;
+				hasBOM = true;
+			}
+		}
+		
+		if (!hasBOM && raw_len >= 3) {
+			if ((unsigned char)val[0] == 0xEF && (unsigned char)val[1] == 0xBB && (unsigned char)val[2] == 0xBF) {
+				// UTF-8 BOM
+				skipBytes = 3;
+				hasBOM = true;
 			}
 		}
 		
@@ -280,6 +293,45 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 			wxString replacementChar = wxChar(0xFFFD);
 			if (str.Contains(replacementChar)) {
 				isValidUTF8 = false;
+			}
+		}
+		
+		// If UTF-8 failed or has too many replacement characters, try UTF-16
+		if (!isValidUTF8 && raw_len - skipBytes >= 2) {
+			// Try UTF-16 LE (without BOM)
+			const uint16_t* utf16le = reinterpret_cast<const uint16_t*>(val + skipBytes);
+			size_t utf16leLen = (raw_len - skipBytes) / 2;
+			
+			// Convert UTF-16 LE to wxString
+			str = wxString(reinterpret_cast<const char*>(utf16le), wxMBConvUTF16LE(), utf16leLen * 2);
+			
+			if (!str.IsEmpty()) {
+				// Check for replacement characters
+				wxString replacementChar = wxChar(0xFFFD);
+				if (str.Contains(replacementChar)) {
+					str.Clear();
+				} else {
+					isValidUTF8 = true; // Successfully decoded
+				}
+			}
+			
+			// If UTF-16 LE failed, try UTF-16 BE
+			if (str.IsEmpty() && raw_len - skipBytes >= 2) {
+				const uint16_t* utf16be = reinterpret_cast<const uint16_t*>(val + skipBytes);
+				size_t utf16beLen = (raw_len - skipBytes) / 2;
+				
+				// Convert UTF-16 BE to wxString
+				str = wxString(reinterpret_cast<const char*>(utf16be), wxMBConvUTF16BE(), utf16beLen * 2);
+				
+				if (!str.IsEmpty()) {
+					// Check for replacement characters
+					wxString replacementChar = wxChar(0xFFFD);
+					if (str.Contains(replacementChar)) {
+						str.Clear();
+					} else {
+						isValidUTF8 = true; // Successfully decoded
+					}
+				}
 			}
 		}
 		
