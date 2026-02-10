@@ -1373,6 +1373,12 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 
 	parametercount += _SearchExpr.m_aExpr.GetCount();
 
+	// For Kad searches with empty expression, the keyword is written directly
+	// and should be counted as a parameter
+	if (_SearchExpr.m_aExpr.GetCount() == 0 && type == KadSearch && !params.strKeyword.IsEmpty()) {
+		++parametercount;
+	}
+
 	/* Leave the unicode comment there, please... */
 	CSearchExprTarget target(data.get(), true /*I assume everyone is unicoded */ ? utf8strRaw : utf8strNone, supports64bit, packetUsing64bit);
 
