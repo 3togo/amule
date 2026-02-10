@@ -960,8 +960,11 @@ void CKademliaUDPListener::ProcessSearchResponse(CMemFile& bio)
 		// supposed to be 'viewed' by user only and not feed into the Kad engine again!
 		// If that tag list is once used for something else than for viewing, special care has to be taken for any
 		// string conversion!
+		// NOTE: Changed to use UTF-8 (bOptACP=false) to prevent corruption in file names.
+		// The SafeFile.cpp ReadOnlyString function now handles automatic encoding detection
+		// including ICU-based detection when available.
 		CScopedContainer<TagPtrList> tags;
-		bio.ReadTagPtrList(tags.get(), true/*bOptACP*/);
+		bio.ReadTagPtrList(tags.get(), false/*bOptACP*/);
 		CSearchManager::ProcessResult(target, answer, tags.get());
 		count--;
 	}
