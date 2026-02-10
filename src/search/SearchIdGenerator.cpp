@@ -151,21 +151,18 @@ size_t SearchIdGenerator::getActiveCount() const
 
 uint32_t SearchIdGenerator::generateNewId()
 {
-    // First try to reuse a released ID
-    if (!m_releasedIds.empty()) {
-        uint32_t reusedId = *m_releasedIds.begin();
-        m_releasedIds.erase(m_releasedIds.begin());
-        return reusedId;
-    }
-    
-    // Otherwise generate a new ID
+    // CRITICAL FIX: For per-search tab architecture, IDs should NEVER be reused
+    // Each search gets a unique, monotonically increasing ID
+    // This prevents duplicate tab issues when IDs are reused
+
+    // Always generate a new ID (never reuse released IDs)
     uint32_t newId = m_nextId++;
-    
+
     // Handle wrap-around (unlikely but possible)
     if (m_nextId == 0) {
         m_nextId = 1;
     }
-    
+
     return newId;
 }
 

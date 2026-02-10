@@ -227,7 +227,7 @@ public:
 	typedef CSmartPtr<CMemFile> CMemFilePtr;
 
 	/** Create a basic search-packet for the given search-type. */
-	CMemFilePtr CreateSearchData(CSearchParams& params, SearchType type, bool supports64bit, bool& packetUsing64bit);
+	CMemFilePtr CreateSearchData(CSearchParams& params, SearchType type, bool supports64bit, bool& packetUsing64bit, const wxString& kadKeyword = wxEmptyString);
 
 	/** Per-search state management methods */
 	
@@ -261,8 +261,9 @@ public:
 	 * Remove per-search state for a search ID
 	 *
 	 * @param searchId The search ID to remove
+	 * @param releaseId Whether to release the search ID for reuse (default: true)
 	 */
-	void removeSearchState(long searchId);
+	void removeSearchState(long searchId, bool releaseId = true);
 
 	/**
 	 * Check if a search state exists
@@ -319,10 +320,6 @@ private:
 
 	//! Map of all search-results added.
 	ResultMap	m_results;
-
-	//! Contains the results type desired in the current search.
-	//! If not empty, results of different types are filtered.
-	wxString	m_resultType;
 
 	//! Map of search parameters for each search ID.
 	typedef std::map<long, CSearchParams> ParamMap;

@@ -77,10 +77,16 @@ static CSearchExpr _SearchExpr;
 
 wxArrayString _astrParserErrors;
 
+// Mutex for thread-safe access to the global parser state
+static wxMutex s_parserMutex;
+
 
 // Helper function for lexer.
 void ParsedSearchExpression(const CSearchExpr* pexpr)
 {
+	// Lock the parser mutex for thread safety
+	wxMutexLocker lock(s_parserMutex);
+
 	int iOpAnd = 0;
 	int iOpOr = 0;
 	int iOpNot = 0;
@@ -357,7 +363,7 @@ const ::PerSearchState* CSearchList::getSearchState(long searchId) const
 	return (it != m_searchStates.end()) ? it->second.get() : nullptr;
 }
 
-void CSearchList::removeSearchState(long searchId)
+void CSearchList::removeSearchState(long searchId, bool releaseId)
 {
 	wxMutexLocker lock(m_searchMutex);
 
@@ -376,8 +382,10 @@ void CSearchList::removeSearchState(long searchId)
 	// Remove search parameters
 	m_searchParams.erase(searchId);
 
-	// Release the search ID for reuse
-	search::SearchIdGenerator::Instance().releaseId(searchId);
+	// Release the search ID for reuse (if requested)
+	if (releaseId) {
+		search::SearchIdGenerator::Instance().releaseId(searchId);
+	}
 }
 
 bool CSearchList::hasSearchState(long searchId) const
@@ -436,27 +444,11 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		return _("eD2k search can't be done if eD2k is not connected");
 	}
 
-	// Check for duplicate searches (same type and search string)
-	// This prevents multiple searches with identical parameters
-	wxMutexLocker lock(m_searchMutex);
-	for (const auto& pair : m_searchParams) {
-		const CSearchParams& existingParams = pair.second;
-		::PerSearchState* state = getSearchState(pair.first);
-		if (state && state->getSearchType() == static_cast<uint8_t>(type)) {
-			// Check if search string matches
-			if (existingParams.searchString == params.searchString) {
-				// Found a duplicate search
-				// Return the existing search ID
-				*searchID = pair.first;
-				
-				AddDebugLogLineC(logSearch, CFormat(wxT("Duplicate search detected in SearchList: type=%d, string='%s', existing ID=%u"))
-					% (int)type % params.searchString % *searchID);
-				
-				// Return empty string to indicate success (reusing existing search)
-				return wxEmptyString;
-			}
-		}
-	}
+	// CRITICAL FIX: Removed duplicate detection for per-search tab architecture
+	// In a per-search tab system, each search should get its own unique ID and tab
+	// Duplicate detection prevents users from running multiple searches with the same parameters
+	// which is a valid use case (e.g., searching the same term on different servers over time)
+	// The SearchIdGenerator now generates unique, non-reusable IDs, so duplicate IDs are impossible
 
 	if (type == KadSearch) {
 		Kademlia::WordList words;
@@ -472,7 +464,8 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 	bool packetUsing64bit;
 
 	// This MemFile is automatically free'd
-	CMemFilePtr data = CreateSearchData(params, type, supports64bit, packetUsing64bit);
+	// Pass Kad keyword from params for Kad searches
+	CMemFilePtr data = CreateSearchData(params, type, supports64bit, packetUsing64bit, (type == KadSearch) ? params.strKeyword : wxString(wxEmptyString));
 
 	if (data.get() == NULL) {
 		wxASSERT(_astrParserErrors.GetCount());
@@ -543,6 +536,7 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 			// Initialize Kad search state
 			searchState->setKadSearchFinished(false);
 			searchState->setKadSearchRetryCount(0);
+			searchState->setKadKeyword(params.strKeyword);  // Store Kad keyword per-search
 
 			// Store search parameters for this search ID
 			m_searchParams[*searchID] = params;
@@ -1225,7 +1219,7 @@ void CSearchList::StopSearch(long searchID, bool globalOnly)
 }
 
 
-CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, SearchType type, bool supports64bit, bool& packetUsing64bit)
+CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, SearchType type, bool supports64bit, bool& packetUsing64bit, const wxString& kadKeyword)
 {
 	// Count the number of used parameters
 	unsigned int parametercount = 0;
@@ -1249,13 +1243,24 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(CSearchParams& params, Se
 	// Must write parametercount - 1 parameter headers
 	CMemFilePtr data(new CMemFile(100));
 
+	// Lock the parser mutex for thread-safe access to global parser state
+	wxMutexLocker parserLock(s_parserMutex);
+
 	_astrParserErrors.Empty();
 	_SearchExpr.m_aExpr.Empty();
 
-	s_strCurKadKeyword.Clear();
-	if (type == KadSearch) {
+	// Use the provided Kad keyword instead of global state
+	if (type == KadSearch && !kadKeyword.IsEmpty()) {
+		wxASSERT( !kadKeyword.IsEmpty() );
+		// Store it in the global variable for backward compatibility with ParsedSearchExpression
+		// TODO: Refactor ParsedSearchExpression to accept kadKeyword as parameter
+		s_strCurKadKeyword = kadKeyword;
+	} else if (type == KadSearch) {
+		// Fallback to params.strKeyword if kadKeyword not provided
 		wxASSERT( !params.strKeyword.IsEmpty() );
 		s_strCurKadKeyword = params.strKeyword;
+	} else {
+		s_strCurKadKeyword.Clear();
 	}
 
 	LexInit(params.searchString);
@@ -1722,6 +1727,13 @@ void CSearchList::OnSearchComplete(long searchId, SearchType type, bool hasResul
 				% searchId);
 		}
 	}
+
+	// CRITICAL FIX: Remove search state and parameters from maps when search completes
+	// This prevents duplicate detection from finding inactive searches and reusing their IDs
+	// Note: ID was already released above, so pass false to avoid double-release
+	AddDebugLogLineC(logSearch, CFormat(wxT("Removing search state and parameters for completed search ID=%ld"))
+		% searchId);
+	removeSearchState(searchId, false);
 }
 
 

@@ -228,17 +228,17 @@ private:
 	// Timer for checking "More" button timeouts
 	wxTimer		m_timeoutCheckTimer;
 
-	// Track active "More" button searches by tab index
-	std::map<int, wxDateTime> m_moreButtonSearches;
+	// Track active "More" button searches by search ID
+	std::map<uint32, wxDateTime> m_moreButtonSearches;
 
-	// Store original tab texts for "More" button searches by tab index
-	std::map<int, wxString> m_originalTabTexts;
+	// Store original tab texts for "More" button searches by search ID
+	std::map<uint32, wxString> m_originalTabTexts;
 
 	// Handle timeout checks
 	void		OnTimeoutCheck(wxTimerEvent& event);
 
 	// Handle "More" button timeout
-	void		HandleMoreButtonTimeout(int tabIndex);
+	void		HandleMoreButtonTimeout(uint32 searchId);
 
 	// Search state manager
 	SearchStateManager			m_stateManager;

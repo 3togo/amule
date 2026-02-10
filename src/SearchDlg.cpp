@@ -45,6 +45,7 @@
 #include "amuleDlg.h"       // Needed for CamuleDlg
 #include "muuli_wdr.h"      // Needed for IDC_STARTS
 #include "search/SearchLogging.h"
+#include "search/SearchIdGenerator.h"  // Needed for search ID generation
 
 #define ID_SEARCHLISTCTRL wxID_HIGHEST + 667
 
@@ -971,13 +972,15 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent &WXUNUSED(event)) {
     FindWindow(IDC_SDOWNLOAD)->Disable();
     FindWindow(IDC_CANCELS)->Enable();
 
-    // Save the original tab text before modifying it
+    // Get the current tab index for text manipulation
     int currentTab = m_notebook->GetSelection();
     wxString originalTabText = m_notebook->GetPageText(currentTab);
-    m_originalTabTexts[currentTab] = originalTabText;
 
-    // Track this "More" button search for timeout detection
-    m_moreButtonSearches[currentTab] = wxDateTime::Now();
+    // Save the original tab text before modifying it - use search ID as key
+    m_originalTabTexts[searchId] = originalTabText;
+
+    // Track this "More" button search for timeout detection - use search ID as key
+    m_moreButtonSearches[searchId] = wxDateTime::Now();
 
     // Update the tab text to reflect that we're requesting more results
     // Include the current hit count
@@ -999,9 +1002,6 @@ void CSearchDlg::OnBnClickedMore(wxCommandEvent &WXUNUSED(event)) {
 void CSearchDlg::StartNewSearch() {
   // Use mutex to prevent race conditions in search creation
   wxMutexLocker creationLock(m_searchCreationMutex);
-  
-  static uint32 m_nSearchID = 0;
-  m_nSearchID++;
 
   FindWindow(IDC_STARTS)->Disable();
   FindWindow(IDC_SDOWNLOAD)->Disable();
@@ -1134,37 +1134,11 @@ void CSearchDlg::StartNewSearch() {
     return;
   }
 
-  // Check if a tab with the same search text and type already exists
-  // This must be done BEFORE generating any search ID to prevent duplicates
-  uint32 existingSearchId = 0;
-  if (GetExistingSearchId(search_type, params.searchString, existingSearchId)) {
-    // Tab already exists - switch to it and update search state
-    int nPages = m_notebook->GetPageCount();
-    for (int i = 0; i < nPages; i++) {
-      CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
-      if (page && page->GetSearchId() == (long)existingSearchId) {
-        // Found the existing tab - switch to it
-        m_notebook->SetSelection(i);
-        
-        // Update the search state to show it's active again
-        m_stateManager.UpdateState(existingSearchId, STATE_SEARCHING);
-        
-        // Update the tab label
-        UpdateHitCount(page);
-        
-        // Re-enable controls
-        FindWindow(IDC_STARTS)->Enable();
-        FindWindow(IDC_SDOWNLOAD)->Disable();
-        FindWindow(IDC_CANCELS)->Enable();
-        
-        // Log the duplicate search detection
-        AddDebugLogLineC(logSearch, CFormat(wxT("Duplicate search detected - using existing tab with ID %u for '%s' (type: %d)"))
-          % existingSearchId % params.searchString % (int)search_type);
-        
-        return; // Don't start a new search
-      }
-    }
-  }
+  // CRITICAL FIX: Removed duplicate detection for per-search tab architecture
+  // In a per-search tab system, each search should get its own unique ID and tab
+  // Users should be able to run multiple searches with the same parameters
+  // (e.g., searching the same term at different times)
+  // The SearchIdGenerator now generates unique, non-reusable IDs
 
   // Determine the search type prefix
   wxString prefix;
@@ -1334,61 +1308,9 @@ void CSearchDlg::StartNewSearch() {
     return;
   }
 
-  // Check if a tab with this search ID already exists (duplicate search)
-  bool isDuplicate = false;
-  
-  int nPages = m_notebook->GetPageCount();
-  for (int i = 0; i < nPages; i++) {
-    CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
-    if (page && page->GetSearchId() == (long)real_id) {
-      // Found existing tab
-      existingTabIndex = i;
-      isDuplicate = true;
-      break;
-    }
-  }
-  
-  if (isDuplicate && existingTabIndex >= 0) {
-    // Switch to existing tab instead of creating a new one
-    m_notebook->SetSelection(existingTabIndex);
-    
-    // Update the search state to show it's active again
-    wxString searchTypeStr;
-    switch (search_type) {
-    case LocalSearch:
-      searchTypeStr = wxT("Local");
-      break;
-    case GlobalSearch:
-      searchTypeStr = wxT("Global");
-      break;
-    case KadSearch:
-      searchTypeStr = wxT("Kad");
-      break;
-    default:
-      searchTypeStr = wxT("Local");
-      break;
-    }
-    
-    m_stateManager.UpdateState(real_id, STATE_SEARCHING);
-    
-    // Update the tab label
-    CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(existingTabIndex));
-    if (page) {
-      UpdateHitCount(page);
-    }
-    
-    // Re-enable controls
-    FindWindow(IDC_STARTS)->Enable();
-    FindWindow(IDC_SDOWNLOAD)->Disable();
-    FindWindow(IDC_CANCELS)->Enable();
-    
-    // Log the duplicate search detection
-    AddDebugLogLineC(logSearch, CFormat(wxT("Duplicate search detected in modern controller - using existing tab with ID %u"))
-      % real_id);
-    
-    // Don't store the controller or create a new tab
-    return;
-  }
+  // CRITICAL FIX: Removed duplicate detection for per-search tab architecture
+  // Each search should get its own unique tab with a unique ID
+  // With non-reusable IDs from SearchIdGenerator, duplicate IDs are impossible
 
   // Store the controller
   m_searchControllers[real_id] = std::move(controller);
@@ -1433,84 +1355,32 @@ void CSearchDlg::StartNewSearch() {
     return;
   }
 
-  // Check if this is a duplicate search (existing tab found)
-  // SearchList::StartNewSearch returns the existing search ID for duplicates
-  bool isDuplicate = false;
-  int existingTabIndex = -1;
-  
-  // Check if a tab with this search ID already exists
-  int nPages = m_notebook->GetPageCount();
-  for (int i = 0; i < nPages; i++) {
-    CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
-    if (page && page->GetSearchId() == (long)real_id) {
-      // Found existing tab
-      existingTabIndex = i;
-      isDuplicate = true;
-      break;
-    }
+  // CRITICAL FIX: Removed duplicate detection for per-search tab architecture
+  // Each search should get its own unique tab with a unique ID
+  // With non-reusable IDs from SearchIdGenerator, duplicate IDs are impossible
+
+  // Create a new tab for this search
+  CreateNewTab(prefix + params.searchString, real_id);
+
+  // Initialize the search in SearchStateManager
+  wxString searchTypeStr;
+  switch (search_type) {
+  case LocalSearch:
+    searchTypeStr = wxT("Local");
+    break;
+  case GlobalSearch:
+    searchTypeStr = wxT("Global");
+    break;
+  case KadSearch:
+    searchTypeStr = wxT("Kad");
+    break;
+  default:
+    searchTypeStr = wxT("Local");
+    break;
   }
-  
-  if (isDuplicate && existingTabIndex >= 0) {
-    // Switch to existing tab instead of creating a new one
-    m_notebook->SetSelection(existingTabIndex);
-    
-    // Update the search state to show it's active again
-    wxString searchTypeStr;
-    switch (search_type) {
-    case LocalSearch:
-      searchTypeStr = wxT("Local");
-      break;
-    case GlobalSearch:
-      searchTypeStr = wxT("Global");
-      break;
-    case KadSearch:
-      searchTypeStr = wxT("Kad");
-      break;
-    default:
-      searchTypeStr = wxT("Local");
-      break;
-    }
-    
-    m_stateManager.UpdateState(real_id, STATE_SEARCHING);
-    
-    // Update the tab label
-    CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(existingTabIndex));
-    if (page) {
-      UpdateHitCount(page);
-    }
-    
-    // Re-enable controls
-    FindWindow(IDC_STARTS)->Enable();
-    FindWindow(IDC_SDOWNLOAD)->Disable();
-    FindWindow(IDC_CANCELS)->Enable();
-    
-    // Log the duplicate search detection
-    AddDebugLogLineC(logSearch, CFormat(wxT("Duplicate search detected in CLIENT_GUI - using existing tab with ID %u"))
-      % real_id);
-  } else {
-    // Create a new tab for this search
-    CreateNewTab(prefix + params.searchString, real_id);
-    
-    // Initialize the search in SearchStateManager
-    wxString searchTypeStr;
-    switch (search_type) {
-    case LocalSearch:
-      searchTypeStr = wxT("Local");
-      break;
-    case GlobalSearch:
-      searchTypeStr = wxT("Global");
-      break;
-    case KadSearch:
-      searchTypeStr = wxT("Kad");
-      break;
-    default:
-      searchTypeStr = wxT("Local");
-      break;
-    }
-    // Store search parameters for retry
-    m_stateManager.InitializeSearch(real_id, searchTypeStr, params.searchString,
-                                    params);
-  }
+  // Store search parameters for retry
+  m_stateManager.InitializeSearch(real_id, searchTypeStr, params.searchString,
+                                  params);
 #endif
 }
 
@@ -1798,14 +1668,14 @@ void CSearchDlg::OnTimeoutCheck(wxTimerEvent &event) {
   // Check for timed-out "More" button searches
   for (auto it = m_moreButtonSearches.begin();
        it != m_moreButtonSearches.end();) {
-    int tabIndex = it->first;
+    uint32 searchId = it->first;
     wxDateTime startTime = it->second;
 
     wxTimeSpan elapsed = now - startTime;
 
     if (elapsed.GetSeconds().ToLong() >= TIMEOUT_SECONDS) {
       // Timeout occurred
-      HandleMoreButtonTimeout(tabIndex);
+      HandleMoreButtonTimeout(searchId);
       it = m_moreButtonSearches.erase(it);
     } else {
       ++it;
@@ -1813,31 +1683,35 @@ void CSearchDlg::OnTimeoutCheck(wxTimerEvent &event) {
   }
 }
 
-void CSearchDlg::HandleMoreButtonTimeout(int tabIndex) {
-  // Check if the tab index is still valid
-  if (tabIndex < 0 || tabIndex >= m_notebook->GetPageCount()) {
+void CSearchDlg::HandleMoreButtonTimeout(uint32 searchId) {
+  // Find the tab index for this search ID
+  int tabIndex = -1;
+  for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
+    CSearchListCtrl* list = static_cast<CSearchListCtrl*>(m_notebook->GetPage(i));
+    if (list && list->GetSearchId() == (long)searchId) {
+      tabIndex = i;
+      break;
+    }
+  }
+
+  // Check if we found the tab
+  if (tabIndex < 0) {
     // Tab no longer exists, clean up
-    m_originalTabTexts.erase(tabIndex);
+    m_originalTabTexts.erase(searchId);
     return;
   }
-  // Tab index is already provided, use it directly
 
-  // Tab index is already provided, use it directly
-  int tabToFix = tabIndex;
-
-  if (tabToFix >= 0) {
-    // Restore the original tab text
-    auto it = m_originalTabTexts.find(tabIndex);
-    if (it != m_originalTabTexts.end()) {
-      m_notebook->SetPageText(tabToFix, it->second);
-      m_originalTabTexts.erase(it);
-    } else {
-      // Fallback: remove "updating..." from current text
-      wxString tabText = m_notebook->GetPageText(tabToFix);
-      if (tabText.Contains(wxT("(updating...)"))) {
-        tabText.Replace(wxT("(updating...)"), wxT(""));
-        m_notebook->SetPageText(tabToFix, tabText);
-      }
+  // Restore the original tab text
+  auto it = m_originalTabTexts.find(searchId);
+  if (it != m_originalTabTexts.end()) {
+    m_notebook->SetPageText(tabIndex, it->second);
+    m_originalTabTexts.erase(it);
+  } else {
+    // Fallback: remove "updating..." from current text
+    wxString tabText = m_notebook->GetPageText(tabIndex);
+    if (tabText.Contains(wxT("(updating...)"))) {
+      tabText.Replace(wxT("(updating...)"), wxT(""));
+      m_notebook->SetPageText(tabIndex, tabText);
     }
   }
 
