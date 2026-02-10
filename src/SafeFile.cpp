@@ -252,25 +252,34 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 		// However, for Kad search results, we should detect if the string is actually UTF-8
 		// even when bOptUTF8 is false (backward compatibility)
 		
-		// First, try UTF-8 and check if it produces valid results
+		// Try multiple encodings in order of likelihood
+		// 1. UTF-8 (most common for modern Kad clients)
+		// 2. System locale (for legacy clients)
+		// 3. Latin-1 (fallback)
+		
+		// Try UTF-8 first
 		str = UTF82unicode(val);
 		
-		// Check if the UTF-8 decoding produced a valid string
+		// Check if the UTF-8 decoding produced a valid string without replacement characters
 		bool isValidUTF8 = !str.IsEmpty();
-		
 		if (isValidUTF8) {
-			// Additional validation: check if the decoded string has any replacement characters
-			// which would indicate invalid UTF-8 sequences
-			wxString replacementChar = wxChar(0xFFFD); // Unicode replacement character
+			// Check for replacement characters (U+FFFD) which indicate invalid UTF-8
+			wxString replacementChar = wxChar(0xFFFD);
 			if (str.Contains(replacementChar)) {
-				// Invalid UTF-8 detected, fall back to Latin-1
 				isValidUTF8 = false;
 			}
 		}
 		
 		if (!isValidUTF8) {
-			// UTF-8 decoding failed or produced invalid results, use Latin-1
-			str = wxString(val, wxConvISO8859_1, raw_len);
+			// UTF-8 failed, try system locale encoding
+			// This handles cases where the string is in the local encoding (e.g., GBK for Chinese)
+			str = wxString(val, wxConvLocal);
+			
+			// Check if system locale decoding produced valid results
+			if (str.IsEmpty()) {
+				// System locale failed, fall back to Latin-1
+				str = wxString(val, wxConvISO8859_1, raw_len);
+			}
 		}
 	}
 
