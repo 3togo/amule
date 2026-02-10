@@ -50,9 +50,17 @@ bool KadSearchPacketBuilder::CreateSearchPacket(const SearchParams& params,
 	return false;
     }
 
+    AddDebugLogLineC(logSearch, CFormat(wxT("KadSearchPacketBuilder: Creating packet for keyword='%s', searchString='%s'"))
+	% params.strKeyword % params.searchString);
+
+    // For Kad searches, we need to build the packet directly
+    // The legacy parser doesn't work well for Kad searches because it expects
+    // the search string to be parsed, but Kad uses the extracted keyword directly
+    // We'll use the legacy CreateSearchData method but with the keyword as the search string
+
     // Convert to old parameter format
     CSearchList::CSearchParams oldParams;
-    oldParams.searchString = params.searchString;
+    oldParams.searchString = params.strKeyword;  // Use keyword as search string for Kad
     oldParams.strKeyword = params.strKeyword;
     oldParams.typeText = params.typeText;
     oldParams.extension = params.extension;
@@ -60,8 +68,8 @@ bool KadSearchPacketBuilder::CreateSearchPacket(const SearchParams& params,
     oldParams.maxSize = params.maxSize;
     oldParams.availability = params.availability;
 
-    AddDebugLogLineC(logSearch, CFormat(wxT("KadSearchPacketBuilder: Creating packet for keyword='%s', searchString='%s'"))
-	% oldParams.strKeyword % oldParams.searchString);
+    AddDebugLogLineC(logSearch, CFormat(wxT("KadSearchPacketBuilder: Using keyword as search string: '%s'"))
+	% oldParams.searchString);
 
     // Use SearchList's CreateSearchData method
     bool packetUsing64bit = false;
