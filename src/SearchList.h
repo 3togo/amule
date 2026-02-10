@@ -304,8 +304,8 @@ public:
 	void removeKadSearchIdMapping(uint32_t kadSearchId);
 
 private:
-	/** Event-handler for global searches. */
-	void OnGlobalSearchTimer(CTimerEvent& evt);
+	/** Event-handler for search timers (both local timeout and global search). */
+	void OnSearchTimer(CTimerEvent& evt);
 
 
 	//! Map of active searches and their per-search state

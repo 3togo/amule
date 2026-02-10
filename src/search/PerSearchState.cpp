@@ -128,8 +128,16 @@ void PerSearchState::incrementKadSearchRetryCount()
 {
     wxMutexLocker lock(m_mutex);
     m_KadSearchRetryCount++;
-    
+
     AddDebugLogLineC(logSearch, CFormat(wxT("Kad search retry count incremented for ID=%u: newCount=%d")) % m_searchId % m_KadSearchRetryCount);
+}
+
+void PerSearchState::setKadKeyword(const wxString& keyword)
+{
+    wxMutexLocker lock(m_mutex);
+    m_kadKeyword = keyword;
+
+    AddDebugLogLineC(logSearch, CFormat(wxT("Kad keyword set for ID=%u: keyword='%s'")) % m_searchId % keyword);
 }
 
 void PerSearchState::setSearchActive(bool active)

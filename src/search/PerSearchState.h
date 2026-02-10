@@ -179,7 +179,21 @@ public:
      * Increment Kad search retry count
      */
     void incrementKadSearchRetryCount();
-    
+
+    /**
+     * Set the Kad keyword for this search
+     *
+     * @param keyword The Kad keyword
+     */
+    void setKadKeyword(const wxString& keyword);
+
+    /**
+     * Get the Kad keyword for this search
+     *
+     * @return The Kad keyword
+     */
+    wxString getKadKeyword() const { return m_kadKeyword; }
+
     /**
      * Set the search active state
      *
@@ -326,6 +340,7 @@ private:
     // Kad search state
     bool m_KadSearchFinished;
     int m_KadSearchRetryCount;
+    wxString m_kadKeyword;  // Per-search Kad keyword
 
     // Search active state
     bool m_searchActive;

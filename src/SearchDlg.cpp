@@ -133,6 +133,17 @@ CSearchDlg::CSearchDlg(wxWindow *pParent) : wxPanel(pParent, -1) {
   // Register as observer with search state manager
   m_stateManager.RegisterObserver(this);
 
+  // Set up search completion callback for UnifiedSearchManager
+  m_unifiedSearchManager.setSearchCompletedCallback(
+    [this](uint32_t searchId, bool hasResults) {
+      // Notify the search state manager that the search completed
+      if (hasResults) {
+        m_stateManager.UpdateState(searchId, STATE_HAS_RESULTS);
+      } else {
+        m_stateManager.UpdateState(searchId, STATE_NO_RESULTS);
+      }
+    });
+
   // Let's break it now.
 
   FixSearchTypes();
@@ -1339,12 +1350,51 @@ void CSearchDlg::StartNewSearch() {
   // Always create a new tab to ensure each search gets its own tab
   CreateNewTab(prefix + params.searchString, real_id);
 #else
-  // CLIENT_GUI mode: Use EC-based search with atomic search system
-  // CLIENT_GUI mode (remote GUI): Use EC-based search with atomic search system
-  // Use the new atomic search system
-  // Start the search using the new atomic method
-  uint32 real_id = 0;
-  wxString error = theApp->searchlist->StartNewSearch(&real_id, search_type, params);
+  // CLIENT_GUI mode: Use UnifiedSearchManager for all search types
+  // This provides a common abstraction layer for Local, Global, and Kad searches
+
+  // Convert legacy SearchType to ModernSearchType
+  search::ModernSearchType modernSearchType;
+  wxString searchTypeStr;
+  wxString prefix;
+
+  switch (search_type) {
+  case LocalSearch:
+    modernSearchType = search::ModernSearchType::LocalSearch;
+    searchTypeStr = wxT("Local");
+    prefix = wxT("Local: ");
+    break;
+  case GlobalSearch:
+    modernSearchType = search::ModernSearchType::GlobalSearch;
+    searchTypeStr = wxT("Global");
+    prefix = wxT("Global: ");
+    break;
+  case KadSearch:
+    modernSearchType = search::ModernSearchType::KadSearch;
+    searchTypeStr = wxT("Kad");
+    prefix = wxT("Kad: ");
+    break;
+  default:
+    modernSearchType = search::ModernSearchType::LocalSearch;
+    searchTypeStr = wxT("Local");
+    prefix = wxT("Local: ");
+    break;
+  }
+
+  // Create SearchParams for the new architecture
+  search::SearchParams searchParams;
+  searchParams.searchString = params.searchString;
+  searchParams.strKeyword = params.strKeyword;
+  searchParams.typeText = params.typeText;
+  searchParams.extension = params.extension;
+  searchParams.minSize = params.minSize;
+  searchParams.maxSize = params.maxSize;
+  searchParams.availability = params.availability;
+  searchParams.searchType = modernSearchType;
+
+  // Start the search using UnifiedSearchManager
+  wxString error;
+  uint32 real_id = m_unifiedSearchManager.startSearch(searchParams, error);
 
   if (!error.IsEmpty() || real_id == 0) {
     wxMessageBox(error.IsEmpty() ? _("Failed to start search") : error,
@@ -1355,30 +1405,10 @@ void CSearchDlg::StartNewSearch() {
     return;
   }
 
-  // CRITICAL FIX: Removed duplicate detection for per-search tab architecture
-  // Each search should get its own unique tab with a unique ID
-  // With non-reusable IDs from SearchIdGenerator, duplicate IDs are impossible
-
   // Create a new tab for this search
   CreateNewTab(prefix + params.searchString, real_id);
 
   // Initialize the search in SearchStateManager
-  wxString searchTypeStr;
-  switch (search_type) {
-  case LocalSearch:
-    searchTypeStr = wxT("Local");
-    break;
-  case GlobalSearch:
-    searchTypeStr = wxT("Global");
-    break;
-  case KadSearch:
-    searchTypeStr = wxT("Kad");
-    break;
-  default:
-    searchTypeStr = wxT("Local");
-    break;
-  }
-  // Store search parameters for retry
   m_stateManager.InitializeSearch(real_id, searchTypeStr, params.searchString,
                                   params);
 #endif

@@ -37,6 +37,7 @@
 #include "SearchStateManager.h"	// Needed for SearchStateManager and ISearchStateObserver
 #include "search/SearchController.h"	// Needed for SearchController
 #include "search/SearchControllerFactory.h"	// Needed for SearchControllerFactory
+#include "search/UnifiedSearchManager.h"	// Needed for UnifiedSearchManager
 
 
 class CMuleNotebook;
@@ -242,6 +243,9 @@ private:
 
 	// Search state manager
 	SearchStateManager			m_stateManager;
+
+	// Unified search manager - common abstraction layer for all search types
+	search::UnifiedSearchManager	m_unifiedSearchManager;
 
 	// Map of search ID to SearchController for active searches
 	std::map<uint32, std::unique_ptr<search::SearchController>> m_searchControllers;

@@ -278,7 +278,7 @@ protected:
 // CSearchList
 
 BEGIN_EVENT_TABLE(CSearchList, wxEvtHandler)
-	EVT_MULE_TIMER(wxID_ANY, CSearchList::OnGlobalSearchTimer)
+	EVT_MULE_TIMER(wxID_ANY, CSearchList::OnSearchTimer)
 END_EVENT_TABLE()
 
 
@@ -586,6 +586,53 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		if (type == GlobalSearch) {
 			// Store search packet in per-search state
 			searchState->setSearchPacket(std::unique_ptr<CPacket>(searchPacket), packetUsing64bit);
+
+			// CRITICAL FIX: Initialize global search timer and server queue immediately
+			// For global searches, we need to start querying other servers via UDP
+			// The timer triggers OnGlobalSearchTimer which sends UDP requests to other servers
+			// This initialization must happen here, not in LocalSearchEnd(), because:
+			// 1. LocalSearchEnd() is only called when TCP results arrive from the local server
+			// 2. Global searches may not receive TCP results (they primarily use UDP)
+			// 3. Without this initialization, the global search timer never starts and the search gets stuck
+
+			// Create and set up the server queue
+			auto serverQueue = std::make_unique<CQueueObserver<CServer*>>();
+			searchState->setServerQueue(std::move(serverQueue));
+
+			// Create and set up the timer
+			auto timer = std::make_unique<CTimer>(this, *searchID);
+			searchState->setTimer(std::move(timer));
+
+			// Start the timer immediately to begin querying other servers
+			// The timer fires every 750ms and sends UDP requests to the next server in the queue
+			if (!searchState->startTimer(750, false)) {
+				AddDebugLogLineC(logSearch, CFormat(wxT("Failed to start global search timer for ID=%u"))
+					% *searchID);
+			} else {
+				AddDebugLogLineC(logSearch, CFormat(wxT("Global search timer started for ID=%u"))
+					% *searchID);
+			}
+		} else if (type == LocalSearch) {
+			// CRITICAL FIX: Add timeout mechanism for local searches
+			// Local searches can get stuck if the server doesn't respond or returns no results
+			// We need a timeout to ensure the search is marked as complete even if no results arrive
+			// The timeout is set to 30 seconds, which is reasonable for a local search
+			static const int LOCAL_SEARCH_TIMEOUT_MS = 30000;
+
+			// Create and set up a timeout timer
+			auto timeoutTimer = std::make_unique<CTimer>(this, *searchID);
+			searchState->setTimer(std::move(timeoutTimer));
+
+			// Start the timeout timer (one-shot)
+			// This will trigger OnGlobalSearchTimer after timeout, which will check if the search is still active
+			// If no results have arrived, the timer handler will mark the search as complete
+			if (!searchState->startTimer(LOCAL_SEARCH_TIMEOUT_MS, true)) {
+				AddDebugLogLineC(logSearch, CFormat(wxT("Failed to start local search timeout timer for ID=%u"))
+					% *searchID);
+			} else {
+				AddDebugLogLineC(logSearch, CFormat(wxT("Local search timeout timer started for ID=%u (timeout=%dms)"))
+					% *searchID % LOCAL_SEARCH_TIMEOUT_MS);
+			}
 		}
 		// Note: For local searches, SendPacket with delpacket=true takes ownership of the packet
 		// For global searches, delpacket=false so we retain ownership and store it in searchState
@@ -704,22 +751,29 @@ wxString CSearchList::RequestMoreResultsFromServer(const CServer* server, long s
 
 void CSearchList::LocalSearchEnd()
 {
-	// Find the active local search
+	// Find the active ED2K search (Local or Global)
+	// This function is called when TCP search results are received from the local server
 	wxMutexLocker lock(m_searchMutex);
 	long searchId = -1;
 	::PerSearchState* state = nullptr;
 
-	// Find the most recent active local search
+	// Find the most recent active ED2K search (Local or Global)
+	// Note: We need to check both LocalSearch and GlobalSearch because:
+	// 1. For LocalSearch: TCP results mark the end of the search
+	// 2. For GlobalSearch: TCP results from the local server arrive first, then UDP results from other servers
 	for (auto it = m_searchStates.rbegin(); it != m_searchStates.rend(); ++it) {
-		if (it->second && it->second->getSearchType() == LocalSearch && it->second->isSearchActive()) {
-			searchId = it->first;
-			state = it->second.get();
-			break;
+		if (it->second && it->second->isSearchActive()) {
+			uint8_t type = it->second->getSearchType();
+			if (type == LocalSearch || type == GlobalSearch) {
+				searchId = it->first;
+				state = it->second.get();
+				break;
+			}
 		}
 	}
 
 	if (!state) {
-		// No active local search
+		// No active ED2K search
 		return;
 	}
 
@@ -727,19 +781,14 @@ void CSearchList::LocalSearchEnd()
 	uint8_t searchType = state->getSearchType();
 
 	if (searchType == GlobalSearch) {
-		CPacket* searchPacket = state->getSearchPacket();
-		wxCHECK_RET(searchPacket, wxT("Global search, but no packet"));
-
-		// Ensure that every global search starts over.
-		CQueueObserver<CServer*>* serverQueue = state->getServerQueue();
-		if (serverQueue) {
-			theApp->serverlist->RemoveObserver(serverQueue);
-		}
-		CTimer* timer = state->getTimer();
-		if (timer) {
-			state->startTimer(750, false);
-		}
-	} else {
+		// For global search, the timer should already be running (started in StartNewSearch)
+		// The TCP results from the local server have been received, but the global search
+		// continues via UDP to other servers (handled by OnGlobalSearchTimer)
+		// Nothing to do here - the timer is already running and will continue querying servers
+		AddDebugLogLineC(logSearch, CFormat(wxT("Global search TCP results received for ID=%u, continuing with UDP queries"))
+			% searchId);
+	} else if (searchType == LocalSearch) {
+		// For local search, TCP results mark the end of the search
 		// Don't trigger retry here - let the UI (SearchDlg/SearchStateManager) handle it
 		// The retry mechanism is now managed by SearchStateManager to ensure proper state transitions
 		ResultMap::iterator it = m_results.find(searchId);
@@ -810,27 +859,63 @@ uint32 CSearchList::GetSearchProgress(long searchId) const
 }
 
 
-void CSearchList::OnGlobalSearchTimer(CTimerEvent& ev)
+void CSearchList::OnSearchTimer(CTimerEvent& ev)
 {
-	// Find the active global search
+	// Find the active search (could be global or local for timeout)
 	wxMutexLocker lock(m_searchMutex);
 	long searchId = -1;
 	::PerSearchState* state = nullptr;
 
-	// Find the most recent active global search
+	// Find the most recent active search (Global or Local)
+	// Note: We need to check both types because local searches now use a timeout timer
 	for (auto it = m_searchStates.rbegin(); it != m_searchStates.rend(); ++it) {
-		if (it->second && it->second->getSearchType() == GlobalSearch && it->second->isSearchActive()) {
-			searchId = it->first;
-			state = it->second.get();
-			break;
+		if (it->second && it->second->isSearchActive()) {
+			uint8_t searchType = it->second->getSearchType();
+			if (searchType == GlobalSearch || searchType == LocalSearch) {
+				searchId = it->first;
+				state = it->second.get();
+				break;
+			}
 		}
 	}
 
 	if (!state) {
-		// No active global search
+		// No active search
 		return;
 	}
 
+	// Get search type from per-search state
+	uint8_t searchType = state->getSearchType();
+
+	// Handle local search timeout
+	if (searchType == LocalSearch) {
+		// Local search timeout - check if we have results
+		ResultMap::iterator it = m_results.find(searchId);
+		bool hasResults = (it != m_results.end()) && !it->second.empty();
+
+		// Stop the timer (it's a one-shot timer)
+		state->stopTimer();
+
+		// Mark the search as complete
+		if (hasResults) {
+			AddDebugLogLineC(logSearch, CFormat(wxT("Local search timeout with results for ID=%u"))
+				% searchId);
+			OnSearchComplete(searchId, LocalSearch, hasResults);
+		} else {
+			AddDebugLogLineC(logSearch, CFormat(wxT("Local search timeout with no results for ID=%u"))
+				% searchId);
+			// Release the search ID
+			if (search::SearchIdGenerator::Instance().releaseId(searchId)) {
+				AddDebugLogLineC(logSearch, CFormat(wxT("Released search ID %u (local search timeout, no results)"))
+					% searchId);
+			}
+			// Mark search as inactive
+			state->setSearchActive(false);
+		}
+		return;
+	}
+
+	// Handle global search (existing logic)
 	// Get search packet from per-search state
 	CPacket* searchPacket = state->getSearchPacket();
 	if (!searchPacket) {

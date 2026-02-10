@@ -120,6 +120,7 @@ if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 		SharedFilesCtrl.cpp
 		SearchListCtrl.cpp
 		search/SearchModel.cpp
+		search/UnifiedSearchManager.cpp
 		GeoIPConfigDlg.cpp
 	)
 endif()
