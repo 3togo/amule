@@ -237,10 +237,8 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 
 	Read(val, raw_len);
 	wxString str;
-	wxString codecInfo; // To store which codec was detected
 
 	if (CHECK_BOM(raw_len, val)) {
-		codecInfo = _("[UTF-8+BOM]");
 		// This is a UTF8 string with a BOM header, skip header.
 		str = UTF82unicode(val + 3);
 	} else if (bOptUTF8) {
@@ -300,8 +298,7 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 		}
 		
 		if (isValidUTF8) {
-			codecInfo = _("[UTF-8]");
-			return codecInfo + str;
+			return str;
 		}
 		
 		// Step 3: Use ICU to detect the actual encoding (best for non-UTF encodings)
@@ -344,9 +341,8 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 								
 								// Check if the conversion produced valid results
 								if (!str.IsEmpty()) {
-									codecInfo = wxString::Format(_("[%s-%d%%]"), wxString(charset).Upper().c_str(), confidence);
 									ucsdet_close(csd);
-									return codecInfo + str;
+									return str;
 								}
 							}
 						}
@@ -372,8 +368,7 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 				wxString replacementChar = wxChar(0xFFFD);
 				if (!str.Contains(replacementChar)) {
 					// Successfully decoded UTF-16 LE
-					codecInfo = _("[UTF-16LE]");
-					return codecInfo + str;
+					return str;
 				}
 				str.Clear();
 			}
@@ -391,8 +386,7 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 					wxString replacementChar = wxChar(0xFFFD);
 					if (!str.Contains(replacementChar)) {
 						// Successfully decoded UTF-16 BE
-						codecInfo = _("[UTF-16BE]");
-						return codecInfo + str;
+						return str;
 					}
 					str.Clear();
 				}
@@ -404,16 +398,14 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 		str = wxString(val + skipBytes, wxConvLocal);
 		
 		if (!str.IsEmpty()) {
-			codecInfo = _("[LOCALE]");
-			return codecInfo + str;
+			return str;
 		}
 		
 		// Step 6: Latin-1 fallback
 		str = wxString(val + skipBytes, wxConvISO8859_1, raw_len - skipBytes);
-		codecInfo = _("[ISO-8859-1]");
 	}
 
-	return codecInfo + str;
+	return str;
 }
 
 
