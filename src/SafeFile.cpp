@@ -254,9 +254,9 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 		
 		// Try multiple encodings in order of likelihood
 		// 1. Check for BOMs and skip them
-		// 2. Try UTF-16 (fixes beginning corruption)
-		// 3. Try UTF-8 (most common for modern Kad clients)
-		// 4. Use ICU to detect the actual encoding (best for non-UTF encodings)
+		// 2. Try UTF-8 (most common for modern Kad clients)
+		// 3. Use ICU to detect the actual encoding (best for non-UTF encodings)
+		// 4. Try UTF-16 LE/BE (only if UTF-8 fails and ICU fails)
 		// 5. System locale (LANG/LANGUAGE environment variables)
 		// 6. Latin-1 (fallback)
 		
@@ -284,45 +284,7 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 			}
 		}
 		
-		// Step 2: Try UTF-16 LE (without BOM) - this fixes the beginning corruption
-		if (!hasBOM && raw_len >= 2) {
-			const uint16_t* utf16le = reinterpret_cast<const uint16_t*>(val);
-			size_t utf16leLen = raw_len / 2;
-			
-			// Convert UTF-16 LE to wxString
-			str = wxString(reinterpret_cast<const char*>(utf16le), wxMBConvUTF16LE(), utf16leLen * 2);
-			
-			if (!str.IsEmpty()) {
-				// Check for replacement characters
-				wxString replacementChar = wxChar(0xFFFD);
-				if (!str.Contains(replacementChar)) {
-					// Successfully decoded UTF-16 LE
-					return str;
-				}
-				str.Clear();
-			}
-			
-			// Try UTF-16 BE (without BOM)
-			if (str.IsEmpty() && raw_len >= 2) {
-				const uint16_t* utf16be = reinterpret_cast<const uint16_t*>(val);
-				size_t utf16beLen = raw_len / 2;
-				
-				// Convert UTF-16 BE to wxString
-				str = wxString(reinterpret_cast<const char*>(utf16be), wxMBConvUTF16BE(), utf16beLen * 2);
-				
-				if (!str.IsEmpty()) {
-					// Check for replacement characters
-					wxString replacementChar = wxChar(0xFFFD);
-					if (!str.Contains(replacementChar)) {
-						// Successfully decoded UTF-16 BE
-						return str;
-					}
-					str.Clear();
-				}
-			}
-		}
-		
-		// Step 3: Try UTF-8 (with BOM skip if needed)
+		// Step 2: Try UTF-8 (most common for modern Kad clients)
 		str = UTF82unicode(val + skipBytes);
 		
 		// Check if the UTF-8 decoding produced a valid string without replacement characters
@@ -339,7 +301,7 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 			return str;
 		}
 		
-		// Step 4: Use ICU to detect the actual encoding (best for non-UTF encodings)
+		// Step 3: Use ICU to detect the actual encoding (best for non-UTF encodings)
 #ifdef HAVE_ICU
 		UErrorCode status = U_ZERO_ERROR;
 		
@@ -390,6 +352,45 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 			ucsdet_close(csd);
 		}
 #endif
+		
+		// Step 4: Try UTF-16 (only if UTF-8 and ICU failed)
+		if (!hasBOM && raw_len >= 2) {
+			// Try UTF-16 LE (without BOM)
+			const uint16_t* utf16le = reinterpret_cast<const uint16_t*>(val);
+			size_t utf16leLen = raw_len / 2;
+			
+			// Convert UTF-16 LE to wxString
+			str = wxString(reinterpret_cast<const char*>(utf16le), wxMBConvUTF16LE(), utf16leLen * 2);
+			
+			if (!str.IsEmpty()) {
+				// Check for replacement characters
+				wxString replacementChar = wxChar(0xFFFD);
+				if (!str.Contains(replacementChar)) {
+					// Successfully decoded UTF-16 LE
+					return str;
+				}
+				str.Clear();
+			}
+			
+			// Try UTF-16 BE (without BOM)
+			if (str.IsEmpty() && raw_len >= 2) {
+				const uint16_t* utf16be = reinterpret_cast<const uint16_t*>(val);
+				size_t utf16beLen = raw_len / 2;
+				
+				// Convert UTF-16 BE to wxString
+				str = wxString(reinterpret_cast<const char*>(utf16be), wxMBConvUTF16BE(), utf16beLen * 2);
+				
+				if (!str.IsEmpty()) {
+					// Check for replacement characters
+					wxString replacementChar = wxChar(0xFFFD);
+					if (!str.Contains(replacementChar)) {
+						// Successfully decoded UTF-16 BE
+						return str;
+					}
+					str.Clear();
+				}
+			}
+		}
 		
 		// Step 5: System locale (LANG/LANGUAGE environment variables)
 		// This handles cases where the string is in the local encoding
