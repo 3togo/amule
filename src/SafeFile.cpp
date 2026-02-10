@@ -253,11 +253,12 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 		// even when bOptUTF8 is false (backward compatibility)
 		
 		// Try multiple encodings in order of likelihood
-		// 1. UTF-8 (most common for modern Kad clients)
-		// 2. UTF-16 (with or without BOM)
-		// 3. ICU-based encoding detection (if available)
-		// 4. System locale (for legacy clients)
-		// 5. Latin-1 (fallback)
+		// 1. Check for BOMs and skip them
+		// 2. Use ICU to detect the actual encoding (best approach for non-UTF encodings)
+		// 3. Try UTF-8 (most common for modern Kad clients)
+		// 4. Try UTF-16 LE/BE
+		// 5. System locale (for legacy clients)
+		// 6. Latin-1 (fallback)
 		
 		// Check for BOMs and determine skip bytes
 		int skipBytes = 0;
@@ -283,7 +284,64 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 			}
 		}
 		
-		// Try UTF-8 first (with BOM skip if needed)
+#ifdef HAVE_ICU
+		// First, try ICU to detect the encoding - this is the best approach for non-UTF encodings
+		UErrorCode status = U_ZERO_ERROR;
+		bool icuSucceeded = false;
+		
+		UCharsetDetector* csd = ucsdet_open(&status);
+		if (U_SUCCESS(status)) {
+			// Set the input text for detection
+			ucsdet_setText(csd, val + skipBytes, raw_len - skipBytes, &status);
+			
+			if (U_SUCCESS(status)) {
+				// Detect the charset
+				const UCharsetMatch* match = ucsdet_detect(csd, &status);
+				
+				if (U_SUCCESS(status) && match) {
+					// Get the detected charset name
+					const char* charset = ucsdet_getName(match, &status);
+					
+					if (U_SUCCESS(status) && charset) {
+						// Get confidence level
+						int32_t confidence = ucsdet_getConfidence(match, &status);
+						
+						if (U_SUCCESS(status) && confidence >= 50) {
+							// Only use ICU detection if confidence is >= 50%
+							// Use ICU to convert directly from detected charset to UTF-8
+							UErrorCode convStatus = U_ZERO_ERROR;
+							
+							// Calculate output buffer size (UTF-8 can be up to 4 bytes per char)
+							int32_t utf8Capacity = (raw_len - skipBytes) * 4;
+							std::vector<char> utf8Dest(utf8Capacity);
+							
+							// Convert using ucnv_convert (returns length on success)
+							int32_t utf8Length = ucnv_convert("UTF-8", charset, utf8Dest.data(), utf8Capacity, val + skipBytes, raw_len - skipBytes, &convStatus);
+							
+							if (U_SUCCESS(convStatus)) {
+								// Convert UTF-8 to wxString
+								str = wxString::FromUTF8(utf8Dest.data(), utf8Length);
+								
+								// Check if the conversion produced valid results
+								if (!str.IsEmpty()) {
+									icuSucceeded = true;
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			ucsdet_close(csd);
+		}
+		
+		// If ICU detection succeeded, we're done
+		if (icuSucceeded) {
+			return str;
+		}
+#endif
+		
+		// ICU detection failed or not available, try UTF-8
 		str = UTF82unicode(val + skipBytes);
 		
 		// Check if the UTF-8 decoding produced a valid string without replacement characters
@@ -296,7 +354,7 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 			}
 		}
 		
-		// If UTF-8 failed or has too many replacement characters, try UTF-16
+		// If UTF-8 failed, try UTF-16
 		if (!isValidUTF8 && raw_len - skipBytes >= 2) {
 			// Try UTF-16 LE (without BOM)
 			const uint16_t* utf16le = reinterpret_cast<const uint16_t*>(val + skipBytes);
@@ -336,47 +394,31 @@ wxString CFileDataIO::ReadOnlyString(bool bOptUTF8, uint16 raw_len) const
 		}
 		
 		if (!isValidUTF8) {
+			// UTF-8 and UTF-16 failed, try ICU again with lower confidence threshold
 #ifdef HAVE_ICU
-			// Use ICU for better encoding detection
-			UErrorCode status = U_ZERO_ERROR;
+			status = U_ZERO_ERROR;
 			
-			// Create a charset detector
-			UCharsetDetector* csd = ucsdet_open(&status);
+			csd = ucsdet_open(&status);
 			if (U_SUCCESS(status)) {
-				// Set the input text for detection
 				ucsdet_setText(csd, val + skipBytes, raw_len - skipBytes, &status);
 				
 				if (U_SUCCESS(status)) {
-					// Detect the charset
 					const UCharsetMatch* match = ucsdet_detect(csd, &status);
 					
 					if (U_SUCCESS(status) && match) {
-						// Get the detected charset name
 						const char* charset = ucsdet_getName(match, &status);
 						
-						if (U_SUCCESS(status)) {
-							// Use ICU to convert directly from detected charset to UTF-8
+						if (U_SUCCESS(status) && charset) {
+							// Use ICU to convert (lower confidence threshold)
 							UErrorCode convStatus = U_ZERO_ERROR;
 							
-							// Calculate output buffer size (UTF-8 can be up to 4 bytes per char)
 							int32_t utf8Capacity = (raw_len - skipBytes) * 4;
 							std::vector<char> utf8Dest(utf8Capacity);
 							
-							// Convert using ucnv_convert (returns length on success)
 							int32_t utf8Length = ucnv_convert("UTF-8", charset, utf8Dest.data(), utf8Capacity, val + skipBytes, raw_len - skipBytes, &convStatus);
 							
 							if (U_SUCCESS(convStatus)) {
-								// Convert UTF-8 to wxString
 								str = wxString::FromUTF8(utf8Dest.data(), utf8Length);
-								
-								// Check if the conversion produced valid results
-								if (str.IsEmpty()) {
-									// Conversion failed, fall back
-									status = U_INVALID_CHAR_FOUND;
-								}
-							} else {
-								// Conversion failed
-								status = convStatus;
 							}
 						}
 					}
