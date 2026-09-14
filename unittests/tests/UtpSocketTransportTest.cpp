@@ -35,6 +35,7 @@
 
 #include <UtpSocketTransport.h>
 
+#include <algorithm>
 #include <functional>
 #include <stdexcept>
 #include <thread>
@@ -205,7 +206,7 @@ TEST(UtpSocketTransport, FlushWithNothingQueuedMakesNoCall)
 	ASSERT_TRUE(ops.lastWriteSocket == nullptr);
 }
 
-TEST(UtpSocketTransport, ReadingToEmptyTellsTheLibraryOnce)
+TEST(UtpSocketTransport, EmptyingBelowBoundDoesNotTellTheLibrary)
 {
 	FakeOperations ops;
 	FakeEvents events;
@@ -219,14 +220,37 @@ TEST(UtpSocketTransport, ReadingToEmptyTellsTheLibraryOnce)
 	// Still buffered, so libutp has not been kept waiting.
 	ASSERT_EQUALS(0, ops.drainedCalls);
 
+	// Emptying below the bound never reopens a closed window; the old empty-only rule
+	// missed packet readers that cross the bound while retaining a backlog.
 	ASSERT_EQUALS(3u, transport.Read(out, 3));
-	ASSERT_EQUALS(1, ops.drainedCalls);
+	ASSERT_EQUALS(0, ops.drainedCalls);
 
-	// Reading an empty buffer is a would-block, not another drain.
 	ASSERT_EQUALS(0u, transport.Read(out, 3));
-	ASSERT_EQUALS(1, ops.drainedCalls);
+	ASSERT_EQUALS(0, ops.drainedCalls);
 	ASSERT_TRUE(transport.BlocksRead());
 	ASSERT_EQUALS(0, transport.LastError());
+}
+
+TEST(UtpSocketTransport, PacketReaderReopensWindowWithoutEmptying)
+{
+	FakeOperations ops;
+	CUtpSocketTransport transport = MakeTransport(ops);
+	const auto payload = Pattern(CUtpStream::kDefaultReadBound + 10);
+	transport.OnPayload(payload.data(), payload.size());
+	uint8_t out[16] = { 0 };
+	// CEMSocket reads a six-byte header, then a body, and returns with a backlog.
+	// Still above the high-water, so the window is closed and nothing is owed.
+	ASSERT_EQUALS(6u, transport.Read(out, 6));
+	ASSERT_EQUALS(0, ops.drainedCalls);
+	// Crossing it reopens the window, with the buffer still far from empty.
+	uint8_t bulk[4096] = { 0 };
+	while (transport.ReadBufferSize() > CUtpStream::kDefaultReadBound - 4096) {
+		transport.Read(bulk, sizeof(bulk));
+	}
+	ASSERT_EQUALS(1, ops.drainedCalls);
+	ASSERT_TRUE(transport.ReadBufferSize() != 0);
+	ASSERT_EQUALS(6u, transport.Read(out, 6));
+	ASSERT_EQUALS(1, ops.drainedCalls);
 }
 
 TEST(UtpSocketTransport, CloseHappensExactlyOnce)
@@ -434,7 +458,21 @@ TEST(UtpSocketTransport, AnOfferIsBoundedRatherThanTheWholeBacklog)
 
 TEST(UtpSocketTransport, WritingWhileFlushingDoesNotCorruptTheQueue)
 {
-	// Concurrency smoke coverage only; passing is not proof of locking.
+	// Only meaningful under ThreadSanitizer: passing unsanitised proves
+	// nothing, because a data race is free to produce the right answer.
+	//
+	//   cmake -S . -B build -DBUILD_TESTING=YES
+	//   cmake -S . -B build -DBUILD_TESTING=YES \
+	//     -DCMAKE_CXX_FLAGS="-fsanitize=thread -g -O1" \
+	//     -DCMAKE_C_FLAGS="-fsanitize=thread -g -O1" \
+	//     -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread"
+	//   cmake --build build --target UtpSocketTransportTest
+	//
+	// The first configure is not redundant: TSan cannot run the crypto++
+	// version probe, so the cache has to be populated without it. In a
+	// container add --security-opt seccomp=unconfined, or TSan dies unable to
+	// disable ASLR. Removing this class's locks yields 16 reported races,
+	// naming CUtpStream::Write on the deque.
 	FakeOperations ops;
 	ops.acceptLimit = 32;
 	CUtpSocketTransport transport = MakeTransport(ops);
@@ -793,6 +831,51 @@ TEST(UtpSocketTransport, AThrowingFlushSinkDoesNotStopLaterRequests)
 	const int before = events.flushRequests;
 	transport.Write(payload.data(), static_cast<uint32_t>(payload.size()));
 	ASSERT_TRUE(events.flushRequests > before);
+}
+
+TEST(UtpSocketTransport, CryptParametersTravelWithTheSocketNotTheAddress)
+{
+	// The removed reverse lookup keyed on the destination, which can host more
+	// than one client: it could pick the wrong peer's hash and leave the real
+	// recipient unable to decrypt. The socket knows its own peer.
+	FakeOperations ops;
+	CUtpSocketTransport transport = MakeTransport(ops);
+	const uint8_t *hash = nullptr;
+	ASSERT_FALSE(transport.CryptParameters(&hash));
+
+	const uint8_t peerHash[16] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+	transport.SetCryptParameters(true, peerHash);
+	ASSERT_TRUE(transport.CryptParameters(&hash));
+	for (unsigned i = 0; i < 16; ++i) {
+		ASSERT_EQUALS((int)peerHash[i], (int)hash[i]);
+	}
+}
+
+TEST(UtpSocketTransport, TheUserHashIsCopiedBecauseItsOwnerCanBeReplaced)
+{
+	// AttachToAlreadyKnown() replaces the client during the hello exchange
+	// while the socket outlives the swap, so borrowing the hash would leave a
+	// pointer into a dead client.
+	FakeOperations ops;
+	CUtpSocketTransport transport = MakeTransport(ops);
+	uint8_t owned[16] = { 0xAA };
+	transport.SetCryptParameters(true, owned);
+	std::fill(std::begin(owned), std::end(owned), uint8_t(0xFF));
+
+	const uint8_t *hash = nullptr;
+	ASSERT_TRUE(transport.CryptParameters(&hash));
+	ASSERT_EQUALS(0xAA, (int)hash[0]);
+}
+
+TEST(UtpSocketTransport, AskingToEncryptWithoutAHashEncryptsNothing)
+{
+	// Encrypting with no key material would derive one from whatever happened
+	// to be there, which the peer cannot reproduce.
+	FakeOperations ops;
+	CUtpSocketTransport transport = MakeTransport(ops);
+	transport.SetCryptParameters(true, nullptr);
+	const uint8_t *hash = nullptr;
+	ASSERT_FALSE(transport.CryptParameters(&hash));
 }
 
 // File_checked_for_headers

@@ -62,9 +62,11 @@
 #endif
 
 #include "LibSocket.h"
-#include <wx/thread.h>     // wxMutex
-#include <wx/intl.h>       // _()
-#include <common/Format.h> // Needed for CFormat
+#include "StreamTransport.h" // IStreamTransport, for the attached-stream branches
+#include "GuiEvents.h"       // CoreNotify_LibSocket*, the transport event bridge
+#include <wx/thread.h>       // wxMutex
+#include <wx/intl.h>         // _()
+#include <common/Format.h>   // Needed for CFormat
 #include "Logger.h"
 #include "GuiEvents.h"
 #include "amuleIPV4Address.h"
@@ -1206,17 +1208,21 @@ CLibSocket::~CLibSocket()
 
 bool CLibSocket::Connect(const amuleIPV4Address &adr, bool wait)
 {
+	if (m_transport) {
+		// An accepted stream has a peer; dialling would open a second one.
+		return false;
+	}
 	return m_aSocket->Connect(adr, wait);
 }
 
 bool CLibSocket::IsConnected() const
 {
-	return m_aSocket->IsConnected();
+	return m_transport ? m_transport->IsConnected() : m_aSocket->IsConnected();
 }
 
 bool CLibSocket::IsOk() const
 {
-	return m_aSocket->IsOk();
+	return m_transport ? m_transport->IsOk() : m_aSocket->IsOk();
 }
 
 void CLibSocket::EnableTcpKeepalive(int idleSec, int probeIntervalSec, int probeCount)
@@ -1236,16 +1242,23 @@ void CLibSocket::SetConnectTimeout(int ms)
 
 wxString CLibSocket::GetPeer()
 {
-	return m_aSocket->GetPeer();
+	return m_transport ? wxString(m_transport->GetPeerAddress().ToString()) : m_aSocket->GetPeer();
 }
 
 uint32 CLibSocket::GetPeerInt()
 {
-	return m_aSocket->GetPeerInt();
+	// Narrowed only here: this accessor's type is the ed2k wire form.
+	return m_transport ? m_transport->GetPeerAddress().ToIPv4NetworkOrderOrZero()
+			   : m_aSocket->GetPeerInt();
 }
 
 void CLibSocket::Destroy()
 {
+	// First: closing can produce callbacks, which must not land on a
+	// half-destroyed wrapper.
+	if (m_transport) {
+		m_transport->Close();
+	}
 	m_aSocket->Destroy();
 }
 
@@ -1270,22 +1283,26 @@ void CLibSocket::Notify(bool notify)
 
 uint32 CLibSocket::Read(void *buffer, uint32 nbytes)
 {
-	return m_aSocket->Read((char *)buffer, nbytes);
+	return m_transport ? m_transport->Read(buffer, nbytes) : m_aSocket->Read((char *)buffer, nbytes);
 }
 
 uint32 CLibSocket::Write(const void *buffer, uint32 nbytes)
 {
-	return m_aSocket->Write(buffer, nbytes);
+	return m_transport ? m_transport->Write(buffer, nbytes) : m_aSocket->Write(buffer, nbytes);
 }
 
 void CLibSocket::Close()
 {
+	if (m_transport) {
+		m_transport->Close();
+		return;
+	}
 	m_aSocket->Close();
 }
 
 int CLibSocket::LastError() const
 {
-	return m_aSocket->LastError();
+	return m_transport ? m_transport->LastError() : m_aSocket->LastError();
 }
 
 void CLibSocket::SetLocal(const amuleIPV4Address &local)
@@ -1297,12 +1314,12 @@ void CLibSocket::SetLocal(const amuleIPV4Address &local)
 
 bool CLibSocket::BlocksRead() const
 {
-	return m_aSocket->BlocksRead();
+	return m_transport ? m_transport->BlocksRead() : m_aSocket->BlocksRead();
 }
 
 bool CLibSocket::BlocksWrite() const
 {
-	return m_aSocket->BlocksWrite();
+	return m_transport ? m_transport->BlocksWrite() : m_aSocket->BlocksWrite();
 }
 
 void CLibSocket::EventProcessed()
@@ -1324,7 +1341,50 @@ void CLibSocket::LinkSocketImpl(std::shared_ptr<class CAsioSocketImpl> socket)
 
 const wxChar *CLibSocket::GetIP() const
 {
-	return m_aSocket->GetIP();
+	// Taken at attach, not built here: this hands back a borrowed pointer, and
+	// building it on demand would mutate a member from a const accessor that
+	// the upload thread is free to call.
+	return m_transport ? m_peerText.c_str() : m_aSocket->GetIP();
+}
+
+void CLibSocket::AttachTransport(std::unique_ptr<IStreamTransport> transport)
+{
+	m_transport = std::move(transport);
+	// Fixed for the transport's lifetime, so GetIP() can hand out a pointer
+	// into it without building anything.
+	m_peerText = wxString(m_transport->GetPeerAddress().ToString());
+}
+
+// Queued rather than called: CoreNotify_* marshals to the main thread, which
+// is what makes a flush request raised on the upload thread safe to answer.
+void CLibSocket::OnStreamReadable()
+{
+	CoreNotify_LibSocketReceive(this, 0);
+}
+
+void CLibSocket::OnStreamWritable()
+{
+	CoreNotify_LibSocketSend(this, 0);
+}
+
+void CLibSocket::OnStreamLost()
+{
+	CoreNotify_LibSocketLost(this);
+}
+
+void CLibSocket::OnFlushRequested()
+{
+	// Not LibSocketSend: that reaches CEMSocket::OnSend, which reports a
+	// completed write and never offers the queue, so the peer is never
+	// answered.
+	CoreNotify_LibSocketFlush(this);
+}
+
+void CLibSocket::FlushTransport()
+{
+	if (m_transport) {
+		m_transport->Flush();
+	}
 }
 
 bool CLibSocket::GetProxyState() const
@@ -2142,6 +2202,14 @@ void LibSocketSend(CLibSocket *socket, int error)
 		AddDebugLogLineF(logAsio, CFormat("LibSocketSend %s %d") % socket->GetIP() % error);
 		socket->OnSend(error);
 	}
+}
+
+void LibSocketFlush(CLibSocket *socket)
+{
+	if (socket->IsDestroying()) {
+		return;
+	}
+	socket->FlushTransport();
 }
 
 void LibSocketReceive(CLibSocket *socket, int error)

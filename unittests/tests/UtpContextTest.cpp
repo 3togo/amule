@@ -25,6 +25,7 @@
 #include <muleunit/test.h>
 #include "UtpContext.h"
 #include "Packet.h"
+#include "libs/common/Format.h"
 #include <vector>
 
 using namespace muleunit;
@@ -40,6 +41,14 @@ struct State
 	uint16_t port = 0;
 	std::vector<uint8_t> payload;
 	IUtpDatagramSink *sink = nullptr;
+	IUtpStreamAcceptor *acceptor = nullptr;
+	CUtpPeerRegistry registered;
+};
+
+class CFakeAcceptor : public IUtpStreamAcceptor
+{
+public:
+	bool AcceptStream(std::unique_ptr<IStreamTransport> &, uint32_t, uint16_t) override { return false; }
 };
 
 class FakeLibrary : public IUtpLibrary
@@ -54,6 +63,11 @@ public:
 		++s.creates;
 		s.sink = &sink;
 		return s.createSucceeds;
+	}
+	void SetAcceptor(IUtpStreamAcceptor *acceptor) override { s.acceptor = acceptor; }
+	bool HasRegisteredPeer(uint32_t ip, uint16_t port) const override
+	{
+		return s.registered.Has(ip, port);
 	}
 	void Destroy() override
 	{
@@ -84,15 +98,18 @@ public:
 	uint16_t port = 0;
 	bool encrypted = true, kad = true, hasHash = true;
 	uint32_t key = 1;
-	void SendUtpDatagram(const uint8_t *data, size_t len, uint32_t address, uint16_t service) override
+	void SendUtpDatagram(const uint8_t *data,
+		size_t len,
+		uint32_t address,
+		uint16_t service,
+		bool encrypt,
+		const uint8_t *userHash) override
 	{
-		QueueUtpDatagram<CPacket>(*this,
-			data,
-			len,
-			address,
-			service,
-			!peerHash.empty(),
-			peerHash.empty() ? nullptr : peerHash.data());
+		// The caller's parameters win when it supplies them; the peerHash
+		// member is the older per-sink default these cases were written around.
+		const bool obfuscate = encrypt || !peerHash.empty();
+		const uint8_t *hash = encrypt ? userHash : (peerHash.empty() ? nullptr : peerHash.data());
+		QueueUtpDatagram<CPacket>(*this, data, len, address, service, obfuscate, hash);
 	}
 	void SendPacket(CPacket *raw,
 		uint32_t address,
@@ -162,7 +179,7 @@ TEST(UtpContext, LibrarySendIsPlaintextWhenNoPeerKnown)
 	CUtpContext context(std::make_unique<FakeLibrary>(state), sink);
 	ASSERT_TRUE(context.Configure());
 	const uint8_t payload[] = { 0x41, 0x00, 0xFF, 0xB2 };
-	state.sink->SendUtpDatagram(payload, sizeof(payload), 0x04030201, 65535);
+	state.sink->SendUtpDatagram(payload, sizeof(payload), 0x04030201, 65535, false, nullptr);
 	ASSERT_EQUALS(6, (int)sink.wire.size());
 	ASSERT_EQUALS(0xB2, (int)sink.wire[0]);
 	ASSERT_EQUALS(0x00, (int)sink.wire[1]);
@@ -185,7 +202,7 @@ TEST(UtpContext, LibrarySendIsEncryptedWithHashWhenPeerKnown)
 	CUtpContext context(std::make_unique<FakeLibrary>(state), sink);
 	ASSERT_TRUE(context.Configure());
 	const uint8_t payload[] = { 0x41, 0x00, 0xFF, 0xB2 };
-	state.sink->SendUtpDatagram(payload, sizeof(payload), 0x04030201, 65535);
+	state.sink->SendUtpDatagram(payload, sizeof(payload), 0x04030201, 65535, false, nullptr);
 	ASSERT_EQUALS(6, (int)sink.wire.size());
 	ASSERT_EQUALS(0xB2, (int)sink.wire[0]);
 	ASSERT_EQUALS(0x00, (int)sink.wire[1]);
@@ -259,15 +276,15 @@ TEST(UtpContext, EmptyPayloadIsHandedToLibraryWithoutEnvelope)
 TEST(UtpContext, OutgoingEmptyAndInvalidPayloads)
 {
 	Sink sink;
-	sink.SendUtpDatagram(nullptr, 0, 1, 2);
+	sink.SendUtpDatagram(nullptr, 0, 1, 2, false, nullptr);
 	ASSERT_EQUALS(2, (int)sink.wire.size());
 	ASSERT_EQUALS(0xB2, (int)sink.wire[0]);
 	ASSERT_EQUALS(0x00, (int)sink.wire[1]);
 	sink.wire.clear();
-	sink.SendUtpDatagram(nullptr, 1, 1, 2);
+	sink.SendUtpDatagram(nullptr, 1, 1, 2, false, nullptr);
 	ASSERT_TRUE(sink.wire.empty());
 	const uint8_t payload[] = { 0x41 };
-	sink.SendUtpDatagram(payload, 65506, 1, 2);
+	sink.SendUtpDatagram(payload, 65506, 1, 2, false, nullptr);
 	ASSERT_TRUE(sink.wire.empty());
 }
 
@@ -314,6 +331,104 @@ TEST(UtpContext, TheUdpBudgetLeavesRoomForTheObfuscationHeader)
 	// libutp was sizing against before the crypt header was accounted for.
 	ASSERT_TRUE(UtpUdpMtu(false) + kUtpEnvelopeBytes + kUtpCryptHeaderBytes <= 1402ull);
 	ASSERT_TRUE(UtpUdpMtu(true) + kUtpEnvelopeBytes + kUtpCryptHeaderBytes <= 1232ull);
+}
+
+TEST(UtpContext, FrameClassificationTable)
+{
+	// Mirrors libutp's own validity test (UTP_Version): type below ST_NUM_STATES,
+	// first extension below 3, version 1. Anything else it would not look at.
+	const struct
+	{
+		const char *label;
+		uint8_t verType;
+		uint8_t extension;
+		size_t length;
+		EUtpFrameKind expected;
+	} cases[] = {
+		{ "syn v1", 0x41, 0, 20, EUtpFrameKind::Syn },
+		{ "data v1", 0x01, 0, 20, EUtpFrameKind::Existing },
+		{ "fin v1", 0x11, 0, 20, EUtpFrameKind::Existing },
+		{ "state v1", 0x21, 0, 20, EUtpFrameKind::Existing },
+		{ "reset v1", 0x31, 0, 20, EUtpFrameKind::Existing },
+		{ "syn with extension 2", 0x41, 2, 20, EUtpFrameKind::Syn },
+		{ "unknown type 5", 0x51, 0, 20, EUtpFrameKind::Malformed },
+		{ "version 0", 0x40, 0, 20, EUtpFrameKind::Malformed },
+		{ "version 2", 0x42, 0, 20, EUtpFrameKind::Malformed },
+		{ "extension 3", 0x41, 3, 20, EUtpFrameKind::Malformed },
+		{ "one byte short", 0x41, 0, 19, EUtpFrameKind::Malformed },
+		{ "empty", 0x41, 0, 0, EUtpFrameKind::Malformed },
+	};
+	for (const auto &row : cases) {
+		CFormat format("%s: ver_type=0x%02x ext=%u len=%u");
+		const wxString message =
+			format % row.label % row.verType % row.extension % unsigned(row.length);
+		uint8_t frame[20] = { 0 };
+		frame[0] = row.verType;
+		frame[1] = row.extension;
+		const uint8_t *payload = row.length == 0 ? nullptr : frame;
+		ASSERT_TRUE_M(ClassifyUtpFrame(payload, row.length) == row.expected, message);
+	}
+}
+
+TEST(UtpContext, ARegisteredPeerSurvivesOneOfItsSocketsClosing)
+{
+	// One endpoint can hold more than one socket: a peer behind a NAT reusing
+	// its source port, or a second connection opened while the first is dying.
+	// Forgetting on the first close would strand the survivor, whose traffic
+	// would then be answered with an RST as though it came from a stranger.
+	CUtpPeerRegistry registry;
+	ASSERT_FALSE(registry.Has(0x0100007F, 4672));
+
+	registry.Add(0x0100007F, 4672);
+	registry.Add(0x0100007F, 4672);
+	ASSERT_TRUE(registry.Has(0x0100007F, 4672));
+	ASSERT_EQUALS(1u, (unsigned)registry.Size());
+
+	registry.Remove(0x0100007F, 4672);
+	ASSERT_TRUE(registry.Has(0x0100007F, 4672));
+	registry.Remove(0x0100007F, 4672);
+	ASSERT_FALSE(registry.Has(0x0100007F, 4672));
+	ASSERT_EQUALS(0u, (unsigned)registry.Size());
+}
+
+TEST(UtpContext, TheRegistryKeysOnAddressAndPortTogether)
+{
+	// Same address, different port is a different peer; so is the reverse.
+	CUtpPeerRegistry registry;
+	registry.Add(0x0100007F, 4672);
+	ASSERT_FALSE(registry.Has(0x0100007F, 4673));
+	ASSERT_FALSE(registry.Has(0x0200007F, 4672));
+	ASSERT_TRUE(registry.Has(0x0100007F, 4672));
+}
+
+TEST(UtpContext, ForgettingAnUnknownPeerIsHarmless)
+{
+	// DESTROYING can arrive for a socket that never got registered, because
+	// admission rejected it.
+	CUtpPeerRegistry registry;
+	registry.Remove(0x0100007F, 4672);
+	ASSERT_EQUALS(0u, (unsigned)registry.Size());
+}
+
+TEST(UtpContext, TheAcceptorSurvivesTheContextBeingRebuilt)
+{
+	// CClientUDPSocket::Close() destroys the context and Open() lets it come
+	// back lazily, which is what a Kad reconnect does without rebuilding the
+	// object. An acceptor installed once at construction would be gone for the
+	// session, and every inbound SYN refused with no line anywhere.
+	State state;
+	Sink sink;
+	CUtpContext context(std::make_unique<FakeLibrary>(state), sink);
+	CFakeAcceptor acceptor;
+	context.SetAcceptor(&acceptor);
+	ASSERT_TRUE(context.Configure());
+	ASSERT_TRUE(state.acceptor == &acceptor);
+
+	context.Destroy();
+	state.acceptor = nullptr;
+
+	ASSERT_TRUE(context.Configure());
+	ASSERT_TRUE(state.acceptor == &acceptor);
 }
 
 // File_checked_for_headers

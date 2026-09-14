@@ -51,6 +51,16 @@ public:
 	//! Default bound on unsent bytes. One eD2k block plus headroom.
 	static constexpr size_t kDefaultWriteBound = 256 * 1024;
 
+	//! One datagram's worth: how far short of the bound a stalled stream sits.
+	static constexpr size_t kWindowSlackBytes = 2048;
+
+	//! A datagram's worth, or a proportion when the bound is smaller than one.
+	size_t WindowSlack() const
+	{
+		const size_t proportional = m_readBound / 8;
+		return proportional < kWindowSlackBytes ? proportional : kWindowSlackBytes;
+	}
+
 	//! PeekQueuedBytes() default: no cap, the whole queue.
 	static constexpr size_t kNoPeekLimit = static_cast<size_t>(-1);
 
@@ -111,11 +121,14 @@ public:
 			static_cast<uint8_t *>(buffer));
 		m_readBuffer.erase(m_readBuffer.begin(), m_readBuffer.begin() + consumed);
 		m_blocksRead = false;
-		if (m_readBuffer.empty()) {
-			// libutp stops delivering while the application is behind, and resumes on
-			// utp_read_drained(). Owed exactly once per drain: sending it again with an
-			// already-empty buffer is a wakeup for nothing, and never sending it stalls
-			// the peer permanently.
+		// On the crossing, not on an empty buffer: a packet reader keeps a
+		// backlog forever and would never signal. Measured a packet short of
+		// the bound because occupancy never reaches it -- libutp advertises
+		// opt_rcvbuf minus occupancy and stops once that cannot hold another
+		// packet, stalling at 64954 of 65536. Comparing against the bound never
+		// fires, and the transfer hangs on a zero-window probe.
+		const size_t highWater = ReadBound() - WindowSlack();
+		if (!IsTerminal() && available >= highWater && m_readBuffer.size() < highWater) {
 			m_readDrainedDue = true;
 		}
 		return static_cast<uint32_t>(taken);
@@ -127,13 +140,13 @@ public:
 	/**
 	 * The value the acceptor passes to utp_setsockopt(UTP_RCVBUF). libutp applies the bound
 	 * itself: get_rcv_window() advertises opt_rcvbuf minus what ReadBufferSize() reports, so a
-	 * reader that falls behind shrinks the window to zero and the peer stops. Nothing here
-	 * compares the two, because a predicate over them would only be useful for refusing a
-	 * payload, and refusing one drops bytes the peer already paid to send.
+	 * reader that falls behind shrinks the window to zero and the peer stops. Read() reports
+	 * the crossing back below this bound so the transport can advertise the reopened window.
+	 * This never refuses payloads, which would drop bytes the peer already paid to send.
 	 */
 	size_t ReadBound() const { return m_readBound; }
 
-	//! True once per drain, for the caller that owns the libutp notification.
+	//! True once per pending crossing below ReadBound(), for the libutp notification owner.
 	bool ConsumeReadDrainedEdge()
 	{
 		const bool due = m_readDrainedDue;

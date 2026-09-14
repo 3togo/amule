@@ -31,6 +31,7 @@
 
 #ifdef AMULE_UTP_TRANSPORT
 #include "UtpContext.h"
+#include "UtpStreamAcceptor.h"
 #endif
 
 class CClientUDPSocket : public CMuleUDPSocket
@@ -51,8 +52,14 @@ protected:
 
 private:
 #ifdef AMULE_UTP_TRANSPORT
-	void SendUtpDatagram(const uint8_t *payload, size_t length, uint32_t ip, uint16_t port) override;
+	void SendUtpDatagram(const uint8_t *payload,
+		size_t length,
+		uint32_t ip,
+		uint16_t port,
+		bool encrypt,
+		const uint8_t *userHash) override;
 	CUtpContext m_utp;
+	CUtpStreamAcceptor m_utpAcceptor;
 #endif
 	void OnPacketReceived(uint32 ip, uint16 port, uint8_t *buffer, size_t length) override;
 	void ProcessPacket(uint8_t *packet, int16 size, int8 opcode, uint32 host, uint16 port);
@@ -78,6 +85,10 @@ private:
 	CFrameLogThrottle m_unknownFrameLog{ 60 * 1000 };
 	CFrameLogThrottle m_unservedFrameLog{ 60 * 1000 };
 	CFrameLogThrottle m_utpUnmatchedFrameLog{ 60 * 1000 };
+	// Separate from the unmatched one: a frame nobody can parse and a frame from
+	// a peer we have no socket for are different problems, and sharing a
+	// throttle would let a flood of one hide the other entirely.
+	CFrameLogThrottle m_utpMalformedFrameLog{ 60 * 1000 };
 };
 
 #endif // CLIENTUDPSOCKET_H

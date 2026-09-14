@@ -22,7 +22,11 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
-#include "ClientTCPSocket.h" // Interface declarations.
+#include "ClientTCPSocket.h"
+
+#ifdef AMULE_UTP_TRANSPORT
+#include "UtpSocketTransport.h" // per-stream crypt parameters
+#endif                          // Interface declarations.
 
 #include "BrowseManager.h"
 
@@ -91,6 +95,22 @@ CClientTCPSocket::~CClientTCPSocket()
 		theApp->listensocket->RemoveSocket(this);
 	}
 }
+
+#ifdef AMULE_UTP_TRANSPORT
+void CClientTCPSocket::ApplyUtpCryptParameters()
+{
+	if (!HasTransport() || m_client == nullptr) {
+		return;
+	}
+	// The same pair every other UDP send site passes together: whether this
+	// peer wants obfuscated datagrams, and the hash they are keyed on. Copied
+	// by the transport, because the client can be replaced while the stream
+	// outlives it.
+	static_cast<CUtpSocketTransport *>(GetTransport())
+		->SetCryptParameters(
+			m_client->ShouldReceiveCryptUDPPackets(), m_client->GetUserHash().GetHash());
+}
+#endif
 
 bool CClientTCPSocket::InitNetworkData()
 {
@@ -317,6 +337,12 @@ bool CClientTCPSocket::ProcessPacket(const uint8_t *buffer, uint32 size, uint8 o
 			theApp->clientlist->AddClient(m_client);
 			m_client->SetCommentDirty();
 		}
+#ifdef AMULE_UTP_TRANSPORT
+		// After the attach above, which may have replaced the client this keys
+		// on. Every uTP stream is inbound, so this case is the only one an
+		// accepted socket reaches.
+		ApplyUtpCryptParameters();
+#endif
 		Notify_SharedCtrlRefreshClient(m_client->ECID(), AVAILABLE_SOURCE);
 		if ((m_client->GetHashType() == SO_EMULE) && !bIsMuleHello) {
 			m_client->SendMuleInfoPacket(false);

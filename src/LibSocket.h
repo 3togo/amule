@@ -26,6 +26,7 @@
 #ifndef LIBSOCKET_H
 #define LIBSOCKET_H
 
+#include "StreamTransport.h" // IStreamTransport and its event sink
 #include "Types.h"
 #include <memory> // shared_ptr for CAsioUDPSocketImpl ownership
 class amuleIPV4Address;
@@ -59,7 +60,7 @@ enum
 // Abstraction class for a library TCP socket: either a wxSocket or an ASIO socket.
 
 // Client TCP socket
-class CLibSocket
+class CLibSocket : public IStreamTransportEvents
 {
 	friend class CAsioSocketImpl;
 	friend class CAsioSocketServerImpl;
@@ -145,9 +146,42 @@ public:
 	virtual void OnLost(int) {}
 	virtual void OnProxyEvent(int) {}
 
+	/**
+	 * Hands this socket's stream over to a transport that is not asio.
+	 *
+	 * Every stream accessor below then answers from it. That has to be all of
+	 * them: none are virtual here, in CEncryptedStreamSocket or in CEMSocket,
+	 * so one left unrouted resolves statically to the asio socket and reports
+	 * on a stream nobody is using -- which is how CEMSocket::Send()'s !IsOk()
+	 * arm would stay dead after wiring.
+	 */
+	void AttachTransport(std::unique_ptr<IStreamTransport> transport);
+
+	//! True while a transport owns this socket's stream.
+	bool HasTransport() const { return m_transport != nullptr; }
+
+	//! Turns stream events into the socket events aMule already raises.
+	//! Offers an attached transport's queue. Main thread only.
+	void FlushTransport();
+
+	//! The attached transport, or null. For owners that must configure it.
+	IStreamTransport *GetTransport() const { return m_transport.get(); }
+
+	void OnStreamReadable() override;
+	void OnStreamWritable() override;
+	void OnStreamLost() override;
+	void OnFlushRequested() override;
+
 private:
 	// Replace the internal socket. Takes ownership of the passed shared_ptr.
 	void LinkSocketImpl(std::shared_ptr<class CAsioSocketImpl>);
+
+	// Owned: outlives nothing and is closed by Destroy() before the asio
+	// wrapper goes, so a libutp callback cannot arrive after teardown.
+	std::unique_ptr<IStreamTransport> m_transport;
+	// GetIP() hands back a borrowed pointer, so the text has to outlive the
+	// call. Written once at attach; never from a const accessor.
+	wxString m_peerText;
 
 	// shared_ptr so the asio impl can outlive this wrapper for as long as any in-flight async
 	// callback still holds a shared_from_this() ref. Required to fix the wake-from-sleep use-

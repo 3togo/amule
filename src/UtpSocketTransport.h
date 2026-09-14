@@ -46,8 +46,9 @@
  *   correct from there. From UTP_ON_ACCEPT it achieves nothing, since the
  *   socket is still CS_SYN_RECV, and from UTP_ON_READ it re-enters
  *   utp_process_incoming. Both of those request a flush instead.
- * - NotifyReadDrained() assumes the reader is not reading synchronously from
- *   inside UTP_ON_READ; every CoreNotify_* delivery queues, so it does not.
+ * - NotifyReadDrained() is safe from anywhere, including inside UTP_ON_READ:
+ *   utp_read_drained() only recomputes the receive window and sends or
+ *   schedules an ACK, and never re-enters the incoming path.
  * - SetReceiveBuffer() is configuration, made once by the acceptor.
  *
  * Naming them here keeps the transport testable without the library.
@@ -74,40 +75,6 @@ public:
 
 	//! Sets the receive-buffer size libutp advertises window against.
 	virtual void SetReceiveBuffer(Handle socket, size_t bytes) = 0;
-};
-
-/**
- * What the layer above a stream is told, in the order it is told.
- *
- * Deliberately not the CoreNotify_LibSocket* macros: those take a CLibSocket*,
- * which does not exist until something accepts a connection, and a transport
- * that reaches for theApp is a transport that cannot be tested. The acceptor
- * implements this by forwarding to those macros.
- */
-class IStreamTransportEvents
-{
-public:
-	virtual ~IStreamTransportEvents() = default;
-
-	//! Bytes are readable.
-	virtual void OnStreamReadable() = 0;
-
-	//! The send window opened; a blocked writer may continue.
-	virtual void OnStreamWritable() = 0;
-
-	//! The stream ended, cleanly or otherwise. Ask the transport which.
-	virtual void OnStreamLost() = 0;
-
-	/**
-	 * Asks for Flush() to be called on the main thread.
-	 *
-	 * Raised from the upload bandwidth thread, so the implementation must
-	 * marshal -- MuleNotify::DoNotify clones a functor and delivers it to
-	 * wxTheApp, which is how the asio layer already crosses the same boundary.
-	 * Only the first queue-up since the last flush raises it, so the cost is
-	 * one event per idle-to-busy transition rather than one per write.
-	 */
-	virtual void OnFlushRequested() = 0;
 };
 
 /**
@@ -175,6 +142,11 @@ public:
 	// These are read from the upload bandwidth thread inside CEMSocket's send
 	// loop while the main thread's callbacks write them, so they take the lock
 	// like everything else that touches the stream.
+	/**
+	 * True once accepted, which is not libutp being ready to send: the acceptor
+	 * marks it at CS_SYN_RECV, and CS_CONNECTED arrives silently on the peer's
+	 * first ST_DATA. Answers "is there a stream", not "will a write leave now".
+	 */
 	bool IsConnected() const override
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
@@ -287,7 +259,7 @@ public:
 	 * the accepted count is what may be dropped from the queue -- never the
 	 * whole of it.
 	 */
-	void Flush()
+	void Flush() override
 	{
 		IUtpSocketOperations::Handle socket = nullptr;
 		std::vector<uint8_t> pending;
@@ -437,11 +409,44 @@ public:
 		return m_socket;
 	}
 
+	//! After construction: the receiving socket does not exist until admission
+	//! has decided, and admission needs the transport first.
+	void SetEvents(IStreamTransportEvents *events)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		m_events = events;
+	}
+
 	//! How the stream ended, for a caller that needs more than IsOk().
 	EUtpTransportFailure Failure() const
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		return m_stream.Failure();
+	}
+
+	/**
+	 * Per socket, not looked up from the destination: one address can host
+	 * several clients, and the wrong hash leaves the recipient unable to
+	 * decrypt. Copied because AttachToAlreadyKnown() can replace the client.
+	 */
+	void SetCryptParameters(bool encrypt, const uint8_t *userHash)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		m_encrypt = encrypt && userHash != nullptr;
+		if (m_encrypt) {
+			std::copy(userHash, userHash + kUserHashBytes, m_userHash);
+		}
+	}
+
+	//! True when SendUtpDatagram() should obfuscate, with the hash to key on.
+	bool CryptParameters(const uint8_t **userHash) const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		if (!m_encrypt) {
+			return false;
+		}
+		*userHash = m_userHash;
+		return true;
 	}
 
 	//! Current buffered bytes, pulled synchronously by UTP_GET_READ_BUFFER_SIZE.
@@ -539,6 +544,9 @@ private:
 	//! One window's worth, so an offer costs a packet or two, not the backlog.
 	static constexpr size_t kFlushChunk = 64 * 1024;
 
+	//! An ed2k user hash. Copied, so the owning client may be replaced.
+	static constexpr size_t kUserHashBytes = 16;
+
 	IUtpSocketOperations &m_operations;
 	mutable std::mutex m_mutex;
 	IUtpSocketOperations::Handle m_socket;
@@ -553,6 +561,8 @@ private:
 	bool m_flushPending = false;
 	bool m_flushInProgress = false;
 	bool m_flushAgain = false;
+	bool m_encrypt = false;
+	uint8_t m_userHash[kUserHashBytes] = { 0 };
 };
 
 #endif // UTPSOCKETTRANSPORT_H
