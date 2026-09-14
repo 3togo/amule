@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-14 11:03+0200\n"
-"PO-Revision-Date: 2026-09-11 13:14+0000\n"
+"PO-Revision-Date: 2026-09-14 12:29+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
 "Language: zh_CN\n"
@@ -4025,7 +4025,7 @@ msgstr ".met 文件"
 
 #: src/muuli_wdr.cpp
 msgid "Hash"
-msgstr "eD2k 文件哈希"
+msgstr "哈希值"
 
 #: src/muuli_wdr.cpp
 msgid "Filesize"

@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-14 11:03+0200\n"
-"PO-Revision-Date: 2026-09-12 15:14+0000\n"
+"PO-Revision-Date: 2026-09-14 11:05+0000\n"
 "Last-Translator: David Watzke <david@watzke.cz>\n"
 "Language-Team: cs <cs@li.org>\n"
 "Language: cs\n"
@@ -3126,7 +3126,7 @@ msgstr "Neplatný port pro zavedení sítě"
 
 #: src/KadDlg.cpp
 msgid "Please fill all fields required"
-msgstr "Prosím vyplňte všechna potřebná pole"
+msgstr "Prosím vyplňte všechna vyžadovaná pole"
 
 #: src/KadDlg.cpp src/PartFile.cpp src/PrefsUnifiedDlg.cpp
 msgid "Message"
@@ -4250,7 +4250,7 @@ msgstr "Neznámá velikost"
 
 #: src/muuli_wdr.cpp
 msgid "Required Information"
-msgstr "Nezbytné informace"
+msgstr "Vyžadovaná informace"
 
 #: src/muuli_wdr.cpp src/ServerListCtrl.cpp
 msgid "Port"
@@ -8146,6 +8146,11 @@ msgid ""
 "\n"
 "Example: 'statistics 5' will show only the top 5 versions for each client type.\n"
 msgstr ""
+"Volitelně lze tomuto příkazu předat jako argument číslo v rozsahu 0-255, které\n"
+"určuje, kolik položek podstromů verzí klientů se má zobrazit. Zadání 0 nebo\n"
+"vynechání argumentu znamená 'neomezeno'.\n"
+"\n"
+"Příklad: 'statistics 5' zobrazí pouze 5 nejlepších verzí pro každý typ klienta.\n"
 
 #: src/TextClient.cpp
 msgid "Shut down aMule."
@@ -8157,6 +8162,9 @@ msgid ""
 "This will also shut down the text client, since it is unusable without a\n"
 "running core.\n"
 msgstr ""
+"Vypnout vzdáleně běžící jádro (amule/amuled).\n"
+"Tím se také vypne textový klient, protože je bez běžícího jádra\n"
+"nepoužitelný.\n"
 
 #: src/TextClient.cpp
 msgid "Reload the given object."
@@ -8176,11 +8184,11 @@ msgstr ""
 
 #: src/TextClient.cpp
 msgid "Update IP filtering table from URL."
-msgstr ""
+msgstr "Aktualizovat tabulku filtrování IP z URL."
 
 #: src/TextClient.cpp
 msgid "If URL is omitted the URL from the preferences is used."
-msgstr ""
+msgstr "Pokud je URL vynechána, použije se URL z nastavení."
 
 #: src/TextClient.cpp
 msgid "Connect to the network."
@@ -8193,6 +8201,10 @@ msgid ""
 "that server only. The IP must be a dotted decimal IPv4 address,\n"
 "or a resolvable DNS name."
 msgstr ""
+"Tímto se připojíte ke všem sítím povoleným v nastavení.\n"
+"Volitelně můžete zadat adresu serveru ve tvaru IP:Port a připojit se pouze\n"
+"k tomuto serveru. IP adresa musí být ve formátu tečkované desítkové IPv4\n"
+"adresy nebo v podobě rozpoznatelného DNS názvu."
 
 #: src/TextClient.cpp
 msgid "Connect to eD2k only."
@@ -8208,7 +8220,7 @@ msgstr "Odpojit se od sítě."
 
 #: src/TextClient.cpp
 msgid "This will disconnect from all networks that are currently connected.\n"
-msgstr ""
+msgstr "Tímto se odpojíte od všech sítí, ke kterým jste aktuálně připojeni.\n"
 
 #: src/TextClient.cpp
 msgid "Disconnect from eD2k only."
@@ -8232,6 +8244,13 @@ msgid ""
 "\n"
 "The magnet link must contain the eD2k hash and file length.\n"
 msgstr ""
+"Přidávaný eD2k odkaz může být:\n"
+"*) odkaz na soubor (ed2k://|file|...), bude přidán do fronty stahování,\n"
+"*) odkaz na server (ed2k://|server|...), bude přidán do seznamu serverů,\n"
+"*) nebo odkaz na seznam serverů, v takovém případě budou všechny servery ze\n"
+"   seznamu přidány do seznamu serverů.\n"
+"\n"
+"Magnet odkaz musí obsahovat eD2k hash a délku souboru.\n"
 
 #: src/TextClient.cpp
 msgid "Set a preference value."
@@ -8282,6 +8301,8 @@ msgid ""
 "Valid filtering levels are in the range 0-255, and it's default (initial)\n"
 "value is 127.\n"
 msgstr ""
+"Platné úrovně filtrování jsou v rozsahu 0-255 a výchozí (počáteční)\n"
+"hodnota je 127.\n"
 
 #: src/TextClient.cpp
 msgid "Set bandwidth limits."
@@ -8289,7 +8310,7 @@ msgstr "Nastavit limity šířky pásma."
 
 #: src/TextClient.cpp
 msgid "The value given to these commands has to be in kilobytes/sec.\n"
-msgstr ""
+msgstr "Hodnota zadaná těmto příkazům musí být v kilobajtech za sekundu.\n"
 
 #: src/TextClient.cpp
 msgid "Set upload bandwidth limit."
@@ -8297,7 +8318,7 @@ msgstr "Nastavit limit šířky pásma pro odesílání."
 
 #: src/TextClient.cpp
 msgid "The given value must be in kilobytes/sec.\n"
-msgstr ""
+msgstr "Zadaná hodnota musí být v kilobajtech za sekundu.\n"
 
 #: src/TextClient.cpp
 msgid "Set download bandwidth limit."
@@ -8309,7 +8330,7 @@ msgstr "Povolí/zakáže rotaci zdroje koncovky"
 
 #: src/TextClient.cpp
 msgid "The given value must be 1/ON (enable) or 0/OFF (disable).\n"
-msgstr ""
+msgstr "Zadaná hodnota musí být 1/ON (povolit) nebo 0/OFF (zakázat).\n"
 
 #: src/TextClient.cpp
 msgid "Get and display a preference value."
@@ -8317,7 +8338,7 @@ msgstr ""
 
 #: src/TextClient.cpp
 msgid "Get IP filtering preferences."
-msgstr ""
+msgstr "Získat nastavení filtrování IP."
 
 #: src/TextClient.cpp
 msgid "Get IP filtering state for both clients and servers."
@@ -8365,6 +8386,20 @@ msgid ""
 "Example: 'search global linux iso --type Iso --min-size 100M' returns\n"
 "results for \"linux iso\" of file-type Iso at least 100 MiB.\n"
 msgstr ""
+"Je nutné zadat typ hledání uvedením typu:\n"
+"    GLOBAL\n"
+"    LOCAL\n"
+"    KAD\n"
+"Příklad: 'search kad file' provede kad hledání výrazu \"file\".\n"
+"\n"
+"Před, za nebo mezi klíčová slova hledání lze přidat volitelné filtry:\n"
+"    --type <Audio|Video|Image|Doc|Pro|Arc|Iso>\n"
+"    --extension <ext>      (alias: --ext)\n"
+"    --avail <N>            minimální počet zdrojů\n"
+"    --min-size <N[KMG]>    nejmenší velikost souboru; K=1024, M=K*1024, G=M*1024\n"
+"    --max-size <N[KMG]>    největší velikost souboru; stejné přípony\n"
+"Příklad: 'search global linux iso --type Iso --min-size 100M' vrátí\n"
+"výsledky pro \"linux iso\" typu souboru Iso o velikosti alespoň 100 MiB.\n"
 
 #: src/TextClient.cpp
 msgid "Execute a global search."
@@ -8379,15 +8414,16 @@ msgid "Execute a kad search"
 msgstr "Spustí vyhledávání v síti Kad"
 
 #: src/TextClient.cpp
-#, fuzzy
 msgid "Show the results of a search."
-msgstr "Zobrazí výsledky posledního vyhledávání."
+msgstr "Zobrazit výsledky vyhledávání."
 
 #: src/TextClient.cpp
 msgid ""
 "Return the results of a search.\n"
 "Optionally takes a search id (from 'search ...'); with no id, returns the results of the most recently started search.\n"
 msgstr ""
+"Vrátit výsledky hledání.\n"
+"Volitelně přijímá ID hledání (z 'search ...'); bez ID vrátí výsledky naposledy zahájeného hledání.\n"
 
 #: src/TextClient.cpp
 msgid "Show the progress of a search."
@@ -8398,6 +8434,8 @@ msgid ""
 "Show the progress of a search.\n"
 "Optionally takes a search id; with no id, shows the progress of the most recently started search.\n"
 msgstr ""
+"Zobrazit průběh hledání.\n"
+"Volitelně přijímá ID hledání; bez ID zobrazí průběh naposledy zahájeného hledání.\n"
 
 #: src/TextClient.cpp
 msgid "Start downloading a file"
@@ -8408,6 +8446,8 @@ msgid ""
 "The number of a file from the last search has to be given.\n"
 "Example: 'download 12' will start to download the file with the number 12 of the previous search.\n"
 msgstr ""
+"Musí být zadáno číslo souboru z posledního hledání.\n"
+"Příklad: 'download 12' zahájí stahování souboru s číslem 12 z předchozího hledání.\n"
 
 #: src/TextClient.cpp
 msgid "Pause download."
@@ -8470,9 +8510,8 @@ msgid "Show servers list."
 msgstr "Zobrazit seznam serverů."
 
 #: src/TextClient.cpp
-#, fuzzy
 msgid "Show shared files list."
-msgstr "Znovu načte seznam sdílených souborů."
+msgstr "Zobrazit seznam sdílených souborů."
 
 #: src/TextClient.cpp
 msgid "Reset log."
@@ -8481,7 +8520,7 @@ msgstr "Resetovat log."
 #: src/TextClient.cpp
 #, c-format
 msgid "Deprecated command, use '%s' instead."
-msgstr ""
+msgstr "Zastaralý příkaz, místo něj použijte '%s'."
 
 #: src/TextClient.cpp
 #, c-format
@@ -8519,12 +8558,12 @@ msgstr "Převádí se staré AICH hashsety v '%s' do 64b v '%s'."
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data (%s): Result OK for %s"
-msgstr ""
+msgstr "Ověření místních dat (%s): Výsledek OK pro %s"
 
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data (%s): ERRORS FOUND! %s Failed blocks: MD4: %s. %s %s"
-msgstr ""
+msgstr "Ověření místních dat (%s): NALEZENY CHYBY! %s Chybné bloky: MD4: %s. %s %s"
 
 #: src/ThreadTasks.cpp
 #, c-format
@@ -8546,12 +8585,11 @@ msgstr "Potvrzení je nutné"
 
 #: src/TransferWnd.cpp
 msgid "Only 99 categories are supported."
-msgstr ""
+msgstr "Je podporováno pouze 99 kategorií."
 
 #: src/TransferWnd.cpp
-#, fuzzy
 msgid "Too many categories!"
-msgstr "Příliš mnoho připojení"
+msgstr "Příliš mnoho kategorií!"
 
 #: src/TransferWnd.cpp
 msgid "All others"
@@ -8576,7 +8614,7 @@ msgstr "Odstranit kategorii"
 #: src/UploadClient.cpp
 #, c-format
 msgid "Hashset requested for unknown file: %s"
-msgstr ""
+msgstr "Vyžádána hashová sada pro neznámý soubor: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
@@ -8620,7 +8658,7 @@ msgstr "Velikost souboru v bytech."
 
 #: src/UserEvents.h
 msgid "Cumulative download activity time."
-msgstr ""
+msgstr "Celkový čas aktivity stahování."
 
 #: src/UserEvents.h
 msgid "New chat session started"
@@ -8652,9 +8690,9 @@ msgid "You have asked for part hashes (Only used for files > 9.5 MB)"
 msgstr "Vyžádal jste si částečné hashe (používá se pouze pro soubory > 9,5 MB)"
 
 #: src/utils/aLinkCreator/src/alcc.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "%s ---> Non existent file !\n"
-msgstr "%s ---> Neexistující soubor !\n"
+msgstr "%s ---> Neexistující soubor!\n"
 
 #: src/utils/aLinkCreator/src/alc.cpp
 msgid "aLinkCreator, the aMule eD2k link creator"
@@ -8682,7 +8720,7 @@ msgstr "Sem zadejte soubor pro který chcete vypočítat eD2k odkaz"
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Enter here the URL you want to add to the eD2k link: Add / at the end to let aLinkCreator append the current file name"
-msgstr ""
+msgstr "Zadejte zde URL, kterou chcete přidat k eD2k odkazu: Přidejte na konec /, aby aLinkCreator mohl připojit název aktuálního souboru"
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Create link with part-hashes"
@@ -8824,7 +8862,7 @@ msgstr "Nelze otevřít %s"
 
 #: src/utils/aLinkCreator/src/ed2khash.cpp
 msgid "Out of memory while calculating ed2k hash!"
-msgstr ""
+msgstr "Nedostatek paměti při výpočtu ed2k hash!"
 
 #: src/utils/wxCas/src/linuxmon.cpp
 #, c-format
@@ -9039,7 +9077,7 @@ msgstr ", Odesláno:"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Session Download: "
-msgstr ""
+msgstr "Stažení za relaci: "
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Download: "
@@ -9094,9 +9132,8 @@ msgid "Enter here the directory where you want to generate the statistic image"
 msgstr "Zadejte adresář, do kterého si přejete vygenerovat obrázek statistik"
 
 #: src/utils/wxCas/src/wxcasprefs.cpp
-#, fuzzy
 msgid "Upload periodically your stat image to FTP server"
-msgstr "Pravidelně nahrávat obrázek statistik na FTP server"
+msgstr "Pravidelně odesílat obrázek statistik na server FTP"
 
 #: src/utils/wxCas/src/wxcasprefs.cpp
 msgid "FTP Url"
@@ -9180,7 +9217,7 @@ msgstr "Zakázat přístup hostům"
 
 #: src/webserver/src/WebInterface.cpp
 msgid "Load/save web server settings from/to remote aMule"
-msgstr ""
+msgstr "Načíst/uložit nastavení webového serveru ze/do vzdáleného aMule"
 
 #: src/webserver/src/WebInterface.cpp
 msgid "aMule config file path. DO NOT USE DIRECTLY!"
@@ -9200,7 +9237,7 @@ msgstr "Webový server aMule"
 
 #: src/webserver/src/WebServer.cpp
 msgid "web client connection accepted\n"
-msgstr ""
+msgstr "připojení webového klienta přijato\n"
 
 #: src/webserver/src/WebServer.cpp
 msgid "ERROR: cannot accept web client connection\n"
@@ -9241,7 +9278,7 @@ msgstr "Zpracování požadavku [původní]: "
 
 #: src/webserver/src/WebServer.cpp
 msgid "Refusing to read `pass` from URL query string\n"
-msgstr ""
+msgstr "Odmítám číst `pass` z řetězce dotazu URL\n"
 
 #: src/webserver/src/WebServer.cpp
 msgid "No password specified, login will not be allowed."
@@ -9277,7 +9314,7 @@ msgstr "Zpracování požadavku [přesměrovaný]:"
 
 #: packaging/windows/installer_strings.c
 msgid "aMule (required)"
-msgstr ""
+msgstr "aMule (vyžadováno)"
 
 #: packaging/windows/installer_strings.c
 msgid "Desktop shortcut"
@@ -9285,7 +9322,7 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid "Start aMule when I log in"
-msgstr ""
+msgstr "Spustit aMule po přihlášení"
 
 #: packaging/windows/installer_strings.c
 msgid "Associate .emulecollection files"
@@ -9297,24 +9334,23 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid "Remove user data (config, ED2K servers, Kad nodes, partfiles)"
-msgstr ""
+msgstr "Odebrat uživatelská data (konfigurace, ED2K servery, Kad uzly, částečné soubory partfiles)"
 
 #: packaging/windows/installer_strings.c
-#, fuzzy
 msgid "aMule application files (required)."
-msgstr "Připojení selhalo "
+msgstr "Soubory aplikace aMule (vyžadováno)."
 
 #: packaging/windows/installer_strings.c
 msgid "Place an aMule shortcut on the desktop."
-msgstr ""
+msgstr "Umístit zástupce aMule na plochu."
 
 #: packaging/windows/installer_strings.c
 msgid "Launch aMule automatically when the current user logs in (per-user setting)."
-msgstr ""
+msgstr "Automaticky spustit aMule po přihlášení aktuálního uživatele (každý uživatel si může nastavit jinak)."
 
 #: packaging/windows/installer_strings.c
 msgid "Adds aMule to the \"Open with\" list for .emulecollection files, and makes it the default if no other program has claimed them. Opening a collection queues every eD2k link it contains."
-msgstr ""
+msgstr "Přidá aMule do seznamu „Otevřít pomocí“ pro soubory .emulecollection a nastaví jej jako výchozí, pokud není nastaven jiný program. Otevřením kolekce se do fronty zařadí každý eD2k odkaz, který kolekce obsahuje."
 
 #: packaging/windows/installer_strings.c
 msgid "Remove aMule application files, Start Menu / desktop shortcuts, autostart Run-key entry, URL scheme registrations, and Add/Remove Programs entry (required)."

@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-14 11:03+0200\n"
-"PO-Revision-Date: 2026-09-10 11:06+0000\n"
+"PO-Revision-Date: 2026-09-14 11:26+0000\n"
 "Last-Translator: Diego Heras <ngosang@hotmail.es>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/amule/amule-application/es/>\n"
 "Language: es\n"
@@ -221,6 +221,11 @@ msgid ""
 "\n"
 "That is not a running copy of aMule, so there is nothing to bring to the front. Close the other program, or delete the lock file while aMule is not running."
 msgstr ""
+"Otro programa tiene abierto el archivo de bloqueo de aMule:\"\n"
+"\n"
+"%s\n"
+"\n"
+"No se trata de una instancia de aMule en ejecución, por lo que no hay nada que traer al frente. Cierre el otro programa o elimine el archivo de bloqueo cuando aMule no esté en ejecución."
 
 #: src/amuleAppCommon.cpp
 #, c-format
@@ -229,11 +234,13 @@ msgid ""
 "\n"
 "It has no window to bring to the front. Connect to it with amuleGUI, or stop the daemon before starting aMule."
 msgstr ""
+"El demonio de aMule (amuled) ya se está ejecutando como proceso %d y está utilizando esta configuración.\n"
+"\n"
+"No tiene ninguna ventana que traer al primer plano. Conéctese a él mediante amuleGUI o detenga el demonio antes de iniciar aMule."
 
 #: src/amuleAppCommon.cpp
-#, fuzzy
 msgid "aMule cannot start"
-msgstr "aMule instalado"
+msgstr "aMule no puede iniciarse"
 
 #: src/amuleAppCommon.cpp
 #, c-format
@@ -3974,7 +3981,7 @@ msgstr "Pide a los pares Kad que ya han respondido que amplíen la búsqueda. Ca
 
 #: src/muuli_wdr.cpp
 msgid "Stop"
-msgstr "Parar"
+msgstr "Detener"
 
 #: src/muuli_wdr.cpp src/SearchListCtrl.cpp
 msgid "Download"
@@ -4026,7 +4033,7 @@ msgstr "Hash"
 
 #: src/muuli_wdr.cpp
 msgid "Filesize"
-msgstr "Tamaño"
+msgstr "Tamaño de archivo"
 
 #: src/muuli_wdr.cpp src/Statistics.cpp
 msgid "Transfer"
@@ -4034,7 +4041,7 @@ msgstr "Transferencia"
 
 #: src/muuli_wdr.cpp
 msgid "Partfilestatus"
-msgstr "Estado del archivo de partes"
+msgstr "Estado del archivo temporal"
 
 #: src/muuli_wdr.cpp
 msgid "Last seen complete"
@@ -4046,15 +4053,15 @@ msgstr "Fuentes encontradas"
 
 #: src/muuli_wdr.cpp
 msgid "Transferring Sources"
-msgstr "Fuentes transfiriendo"
+msgstr "Fuentes en transferencia"
 
 #: src/muuli_wdr.cpp
 msgid "Filepart-Count"
-msgstr "Número de partes"
+msgstr "Número de partes del archivo"
 
 #: src/muuli_wdr.cpp
 msgid "Available"
-msgstr "Disponibles"
+msgstr "Disponible"
 
 #: src/muuli_wdr.cpp
 msgid "Datarate"
@@ -4297,9 +4304,8 @@ msgid "Obfuscation"
 msgstr "Ofuscación"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Protocol extensions"
-msgstr "Ofuscación de protocolo"
+msgstr "Extensiones del protocolo"
 
 #: src/muuli_wdr.cpp
 msgid "Transfers to client"
@@ -4339,7 +4345,7 @@ msgstr "Resultados"
 
 #: src/muuli_wdr.cpp
 msgid "DL/UP modifier"
-msgstr "Modificador de DE/SU"
+msgstr "Modificador desc./sub."
 
 #: src/muuli_wdr.cpp
 msgid "Secure ident"
@@ -4347,7 +4353,7 @@ msgstr "Identificación segura"
 
 #: src/muuli_wdr.cpp
 msgid "Queue rank"
-msgstr "Rango de cola"
+msgstr "Puesto en cola"
 
 #: src/muuli_wdr.cpp
 msgid "Queue score"
@@ -5135,7 +5141,7 @@ msgstr "Cancelar los cambios hechos en las preferencias."
 
 #: src/muuli_wdr.cpp
 msgid "Incoming Dir"
-msgstr "Directorio entrante"
+msgstr "Directorio de archivos recibidos"
 
 #: src/muuli_wdr.cpp
 msgid "Change priority for new assigned files"
@@ -5714,7 +5720,7 @@ msgstr "días"
 #: src/OtherFunctions.cpp
 #, c-format
 msgid "%s:"
-msgstr ""
+msgstr "%s:"
 
 #: src/OtherFunctions.cpp
 msgid "all"
@@ -6072,25 +6078,24 @@ msgid "ERROR: Failed to open partfile '%s'"
 msgstr "ERROR: no se ha podido abrir el archivo de partes '%s'"
 
 #: src/PeerCapabilities.h
-#, fuzzy
 msgid "Extended source exchange"
-msgstr "Intercambio de fuentes"
+msgstr "Intercambio de fuentes extendido"
 
 #: src/PeerCapabilities.h
 msgid "NAT traversal (uTP)"
-msgstr ""
+msgstr "Superación de NAT (uTP)"
 
 #: src/PeerCapabilities.h
 msgid "IPv6"
-msgstr ""
+msgstr "IPv6"
 
 #: src/PeerCapabilities.h
 msgid "Buddy info pull"
-msgstr ""
+msgstr "Solicitud de información del compañero"
 
 #: src/PeerCapabilities.h
 msgid "NAT traversal (QUIC)"
-msgstr ""
+msgstr "Superación de NAT (QUIC)"
 
 #: src/Preferences.cpp
 msgid "no options available"
@@ -7772,7 +7777,7 @@ msgstr "Bloqueados: %s"
 #: src/Statistics.cpp
 #, c-format
 msgid "Kad banned addresses: %s"
-msgstr ""
+msgstr "Direcciones bloqueadas de Kad: %s"
 
 #: src/Statistics.cpp
 #, c-format
