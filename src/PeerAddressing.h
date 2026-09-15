@@ -269,6 +269,28 @@ inline bool IsDirectlyReachable(const CNetworkAddress &address) noexcept
 	return address.IsGloballyRoutableIPv6();
 }
 
+/**
+ * Whether an address arriving in a wire tag may be kept as a peer's identity.
+ *
+ * A tag carries sixteen bytes and no scope id; the same peer seen from a socket carries one. So a
+ * link-local peer is fe80::1 here and fe80::1%3 there -- two identities for one peer, with nothing
+ * at this edge able to reconcile them. Dropping the scope from IndexKey() is not the alternative:
+ * fe80::1%3 and fe80::1%9 are different peers on different interfaces, and merging them would be
+ * worse than splitting one.
+ *
+ * Global routability answers it: loopback, NAT64 and the unspecified address cannot name a peer
+ * across hosts either. Unique-local is the one excluded on the other ground -- a ULA is globally
+ * unique by construction and names a peer fine, but nothing here can dial one, and whether the
+ * dual-stack change serves site-local peers is a decision for it. Absence is honest until then.
+ *
+ * Same body as IsDirectlyReachable() above by choice rather than coincidence: this adopts the
+ * stricter of the two rules. Loosening one is not a reason to loosen the other.
+ */
+inline bool IsUsableTagIdentity(const CNetworkAddress &address) noexcept
+{
+	return address.IsGloballyRoutableIPv6();
+}
+
 } // namespace PeerAddressing
 
 #endif // PEERADDRESSING_H
