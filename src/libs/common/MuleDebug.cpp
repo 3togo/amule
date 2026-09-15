@@ -50,6 +50,7 @@
 #ifdef HAVE_EXECINFO
 #include <execinfo.h>
 #include <poll.h>     // Needed for the writability probe in the SIGABRT handler
+#include <pthread.h>  // Needed for pthread_sigmask in the handler's final raise
 #include <sys/stat.h> // Needed for fstat in the SIGABRT handler
 #include <unistd.h>   // Needed for write()/STDERR_FILENO in the SIGABRT handler
 #include <wx/utils.h> // Needed for wxArrayString
@@ -915,14 +916,31 @@ int ReserveCrashFd(int reserved, std::FILE *fp)
 // the length is known at compile time anyway.
 #define WRITE_LITERAL(fd, lit) WriteAll((fd), (lit), sizeof(lit) - 1)
 
-static void WriteAbortReport(int fd, void *const *frames, int count)
+static void WriteAbortReport(int fd, int sig, void *const *frames, int count)
 {
-	WRITE_LITERAL(fd,
-		"\n-------------------------=| ABORT BACKTRACE FOLLOWS |=-------------------------\n"
-		"aMule was aborted (SIGABRT). If this followed a glibc allocator message such as\n"
-		"'double free or corruption', the frames below are where the damage was NOTICED,\n"
-		"not where it was caused. Please report them at\n"
-		"    https://github.com/amule-org/amule/issues\n\n");
+	WRITE_LITERAL(
+		fd, "\n-------------------------=| ABORT BACKTRACE FOLLOWS |=-------------------------\n");
+	// Fixed literals rather than a formatted name: nothing here may allocate or call snprintf.
+	if (sig == SIGTRAP || sig == SIGILL) {
+		// Same construct, different encoding: __builtin_trap() is brk on arm64 and ud2 on
+		// x86_64, so the very same corruption check arrives as a different signal per target.
+		if (sig == SIGILL) {
+			WRITE_LITERAL(fd, "aMule was killed by an illegal instruction (SIGILL).\n");
+		} else {
+			WRITE_LITERAL(fd, "aMule was killed by a trap (SIGTRAP).\n");
+		}
+		WRITE_LITERAL(fd,
+			"An allocator or a hardened library check found state it would not continue\n"
+			"past. The frames below are where the damage was NOTICED, not where it was\n"
+			"caused. Please report them at\n"
+			"    https://github.com/amule-org/amule/issues\n\n");
+	} else {
+		WRITE_LITERAL(fd,
+			"aMule was aborted (SIGABRT). If this followed a glibc allocator message such as\n"
+			"'double free or corruption', the frames below are where the damage was NOTICED,\n"
+			"not where it was caused. Please report them at\n"
+			"    https://github.com/amule-org/amule/issues\n\n");
+	}
 	// Which build produced this. Pasted reports are useless without it, and a handler cannot
 	// format one, so it was written into a fixed buffer before the crash.
 	if (s_versionLineLen > 0) {
@@ -937,7 +955,7 @@ static void WriteAbortReport(int fd, void *const *frames, int count)
 		fd, "-------------------------------------------------------------------------------\n");
 }
 
-extern "C" void MuleFatalAbortHandler(int /*sig*/)
+extern "C" void MuleFatalAbortHandler(int sig)
 {
 	// Bound the handler before doing anything that can block. backtrace() unwinds through
 	// dl_iterate_phdr(), which takes the loader's load lock, so an abort that interrupted
@@ -970,20 +988,31 @@ extern "C" void MuleFatalAbortHandler(int /*sig*/)
 		const bool consoleFirst = FdCanTakeAWrite(console);
 
 		if (consoleFirst) {
-			WriteAbortReport(console, frames, count);
+			WriteAbortReport(console, sig, frames, count);
 		}
 		if (haveDurable) {
-			WriteAbortReport(redirect, frames, count);
+			WriteAbortReport(redirect, sig, frames, count);
 		}
 		if (!consoleFirst && !haveDurable) {
-			WriteAbortReport(console, frames, count);
+			WriteAbortReport(console, sig, frames, count);
 		}
 	}
 
-	// SA_RESETHAND has already put SIG_DFL back, so this terminates. Raising rather than
-	// returning covers the delivery paths that are not abort(): a plain `kill -ABRT` would
-	// otherwise be swallowed and the process would carry on.
-	raise(SIGABRT);
+	// Die of the signal that arrived, rather than returning. Returning would swallow a plain
+	// `kill -ABRT`, and for SIGTRAP it is not survivable at all: the trap instruction is still
+	// the resume address, so it re-executes and traps again forever.
+	//
+	// SA_RESETHAND is not enough to make that raise terminate. Measured on macOS arm64: a
+	// SIGTRAP from a trap instruction arrives through the Mach exception path, the reset does
+	// not take, and the handler is re-entered on every re-execution. Restore the default
+	// explicitly, and unblock, because the signal is masked inside its own handler -- otherwise
+	// the raise only marks it pending for a return that never comes.
+	signal(sig, SIG_DFL);
+	sigset_t unblock;
+	sigemptyset(&unblock);
+	sigaddset(&unblock, sig);
+	pthread_sigmask(SIG_UNBLOCK, &unblock, nullptr);
+	raise(sig);
 }
 
 void InstallFatalAbortHandler()
@@ -1006,6 +1035,18 @@ void InstallFatalAbortHandler()
 	// SA_RESETHAND so a fault inside the handler cannot loop back into it.
 	sa.sa_flags = SA_RESETHAND;
 	sigaction(SIGABRT, &sa, nullptr);
+	// macOS libmalloc reports some heap corruption with a trap instruction instead of abort(),
+	// and hardened libc++ and __builtin_trap() do the same. Without these the backtrace this
+	// file exists for is missing for exactly those deaths.
+	//
+	// Both signals, because the encoding is per-target: __builtin_trap() is brk on arm64, which
+	// raises SIGTRAP, and ud2 on x86_64, which raises SIGILL. Installing only one covers only
+	// half the machines we ship to.
+	//
+	// Debuggers are unaffected: lldb and gdb take these through Mach exception ports and
+	// ptrace, ahead of signal delivery.
+	sigaction(SIGTRAP, &sa, nullptr);
+	sigaction(SIGILL, &sa, nullptr);
 }
 
 #else /* !HAVE_EXECINFO */
