@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-14 11:03+0200\n"
-"PO-Revision-Date: 2026-09-14 12:27+0000\n"
+"PO-Revision-Date: 2026-09-15 13:14+0000\n"
 "Last-Translator: \n"
 "Language-Team: Turkish <li@li.org>\n"
 "Language: tr\n"
@@ -2601,7 +2601,7 @@ msgstr "Dosya ön izlemesi"
 #: src/FileLaunch.cpp
 #, c-format
 msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "Hata: Ortam oynatıcısını çalıştırma başarısız! Komut : '%s'"
+msgstr "HATA: harici ortam oynatıcısını çalıştırma başarısız! Komut: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -8556,7 +8556,7 @@ msgstr "Şu dosya için gönderimler bekletiliyor: %s"
 #: src/UserEvents.cpp
 #, c-format
 msgid "Failed to execute command '%s' on '%s' event."
-msgstr "%s komutunun %s olayında çalıştırılması başarısız oldu."
+msgstr "'%s' komutunun '%s' olayında çalıştırılması başarısız oldu."
 
 #: src/UserEvents.h
 msgid "Download completed"

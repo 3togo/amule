@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-14 11:03+0200\n"
-"PO-Revision-Date: 2026-09-14 12:19+0000\n"
+"PO-Revision-Date: 2026-09-15 13:14+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
 "Language: ru\n"
@@ -4246,7 +4246,7 @@ msgstr "Хороший"
 
 #: src/muuli_wdr.cpp src/OtherFunctions.cpp
 msgid "Excellent"
-msgstr "Великолепный"
+msgstr "Отличный"
 
 #: src/muuli_wdr.cpp
 msgid "Choose the file rating or advice users if the file is invalid ..."
@@ -5182,15 +5182,15 @@ msgstr "Каталог загрузок"
 
 #: src/muuli_wdr.cpp
 msgid "Change priority for new assigned files"
-msgstr "Установить приоритет для новых файлов"
+msgstr "Менять приоритет для новых присвоенных файлов"
 
 #: src/muuli_wdr.cpp
 msgid "Don't change"
-msgstr "Не изменять"
+msgstr "Не менять"
 
 #: src/muuli_wdr.cpp
 msgid "Select color for this Category (currently selected)"
-msgstr "Выбрать цвет для этой категории"
+msgstr "Выбор цвета для этой категории (сейчас выбран)"
 
 #: src/muuli_wdr.cpp
 msgid "Click this button to reset the log."

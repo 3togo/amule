@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-14 11:03+0200\n"
-"PO-Revision-Date: 2026-09-14 11:05+0000\n"
+"PO-Revision-Date: 2026-09-15 13:14+0000\n"
 "Last-Translator: David Watzke <david@watzke.cz>\n"
 "Language-Team: cs <cs@li.org>\n"
 "Language: cs\n"
@@ -1218,7 +1218,7 @@ msgstr "Nemohu vytvořit příchozí adresář pro kategorii. Zadejte prosím pl
 #: src/ChatSelector.cpp
 #, c-format
 msgid "Chat-Session Started: %s (%s:%u) - %s %s"
-msgstr "Zahájena relace chatu: %s (%s:%u) - %s %s"
+msgstr "Zahájeno sezení chatu: %s (%s:%u) - %s %s"
 
 #: src/ChatSelector.cpp
 msgid "*** Connected to Client ***"
@@ -2556,11 +2556,11 @@ msgstr "Načíst konfiguraci ze souboru."
 
 #: src/ExternalConnector.cpp
 msgid "Do not print any output to stdout."
-msgstr "Nevypisovat nic na stdout."
+msgstr "Nevypisovat nic na standardní výstup."
 
 #: src/ExternalConnector.cpp
 msgid "Be verbose - show also debug messages."
-msgstr "Buď upovídaný - ukaž také debugovací hlášky"
+msgstr "Vypisovat podrobnosti - včetně zpráv ladění."
 
 #: src/ExternalConnector.cpp
 msgid "Sets program locale (language)."
@@ -2615,7 +2615,7 @@ msgstr "Náhled souboru"
 #: src/FileLaunch.cpp
 #, c-format
 msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "CHYBA: Nezdařilo se spustit externí přehrávač! Příkaz: '%s'"
+msgstr "CHYBA: Selhalo spuštění externího přehrávače médií! Příkaz: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -4037,11 +4037,11 @@ msgstr "Hlavní"
 
 #: src/muuli_wdr.cpp
 msgid "Full Name"
-msgstr "Celá název"
+msgstr "Celý název"
 
 #: src/muuli_wdr.cpp
 msgid "met-File"
-msgstr "Soubor .met"
+msgstr "soubor .met"
 
 #: src/muuli_wdr.cpp
 msgid "Hash"
@@ -4049,7 +4049,7 @@ msgstr "Hash"
 
 #: src/muuli_wdr.cpp
 msgid "Filesize"
-msgstr "Velikost"
+msgstr "Velikost souboru"
 
 #: src/muuli_wdr.cpp src/Statistics.cpp
 msgid "Transfer"
@@ -4057,11 +4057,11 @@ msgstr "Přenos"
 
 #: src/muuli_wdr.cpp
 msgid "Partfilestatus"
-msgstr "Stav souboru part"
+msgstr "Stav částečného souboru"
 
 #: src/muuli_wdr.cpp
 msgid "Last seen complete"
-msgstr "Naposledy spatřen kompletní"
+msgstr "Naposledy viděno jako kompletní"
 
 #: src/muuli_wdr.cpp
 msgid "Found Sources"
@@ -4077,7 +4077,7 @@ msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Available"
-msgstr "Dostupný"
+msgstr "Dostupné"
 
 #: src/muuli_wdr.cpp
 #, fuzzy
@@ -4086,11 +4086,11 @@ msgstr "Nehodnocené"
 
 #: src/muuli_wdr.cpp
 msgid "Download Active Time"
-msgstr "Doba stahování"
+msgstr "Doba aktivního stahování"
 
 #: src/muuli_wdr.cpp
 msgid "Completed Size"
-msgstr "Dokončeno"
+msgstr "Dokončená velikost"
 
 #: src/muuli_wdr.cpp
 msgid "Intelligent Corruption Handling"
@@ -4336,7 +4336,7 @@ msgstr "Bylo vyžádáno odhlášení\n"
 
 #: src/muuli_wdr.cpp
 msgid "Average upload rate"
-msgstr "Průmerná rychlost odesílání"
+msgstr "Průměrná rychlost odesílání"
 
 #: src/muuli_wdr.cpp
 msgid "Average download rate"
@@ -4364,7 +4364,7 @@ msgstr "Skóre"
 
 #: src/muuli_wdr.cpp
 msgid "DL/UP modifier"
-msgstr "DL/UP poměr"
+msgstr "DL/UP modifikátor"
 
 #: src/muuli_wdr.cpp
 #, fuzzy
@@ -4876,7 +4876,7 @@ msgstr "Klouzavý průměr stahování"
 
 #: src/muuli_wdr.cpp
 msgid "Download session average"
-msgstr "Průměr stahování za relaci"
+msgstr "Průměr stahování za sezení"
 
 #: src/muuli_wdr.cpp
 msgid "Upload current"
@@ -4888,7 +4888,7 @@ msgstr "Klouzavý průměr odesílání"
 
 #: src/muuli_wdr.cpp
 msgid "Upload session average"
-msgstr "Průměr odesílání za relaci"
+msgstr "Průměr odesílání za sezení"
 
 #: src/muuli_wdr.cpp src/StatisticsDlg.cpp
 msgid "Active connections"
@@ -4908,7 +4908,7 @@ msgstr "Uzly Kad v provozu"
 
 #: src/muuli_wdr.cpp
 msgid "Kad-nodes session"
-msgstr "Uzly Kad za relaci"
+msgstr "Uzly Kad za sezení"
 
 #: src/muuli_wdr.cpp
 msgid "Select"
@@ -5092,7 +5092,7 @@ msgstr "Povolit přístup pro hosty"
 
 #: src/muuli_wdr.cpp
 msgid "Guest sessions may read status and listings but cannot change anything. Turning this off clears the stored guest password."
-msgstr "Relace hostů mohou číst stav a seznamy, ale nemohou nic měnit. Vypnutím této volby se vymaže uložené heslo hosta."
+msgstr "Sezení hostů mohou číst stav a seznamy, ale nemohou nic měnit. Vypnutím této volby se vymaže uložené heslo hosta."
 
 #: src/muuli_wdr.cpp
 msgid "Guest password"
@@ -5173,7 +5173,7 @@ msgstr "Neměnit"
 
 #: src/muuli_wdr.cpp
 msgid "Select color for this Category (currently selected)"
-msgstr "Barva pro tuto kategorii"
+msgstr "Vyberte barvu pro tuto kategorii (nyní vybranou)"
 
 #: src/muuli_wdr.cpp
 msgid "Click this button to reset the log."
@@ -5619,7 +5619,7 @@ msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Statistics and queued clients for selected file(s) : Session / All time"
-msgstr "Statistiky a klienti ve frontě pro vybrané soubory: relace / celkem"
+msgstr "Statistiky a klienti ve frontě pro vybrané soubory: sezení / celkem"
 
 #: src/muuli_wdr.cpp
 msgid "Active Uploads"
@@ -7739,12 +7739,12 @@ msgstr "Čekající odesílání: %s"
 #: src/Statistics.cpp
 #, c-format
 msgid "Total successful upload sessions: %s"
-msgstr "Celkem úspěšných relací odesílání: %s"
+msgstr "Celkem úspěšných sezení odesílání: %s"
 
 #: src/Statistics.cpp
 #, c-format
 msgid "Total failed upload sessions: %s"
-msgstr "Celkem neúspěšných relací odesílání: %s"
+msgstr "Celkem neúspěšných sezení odesílání: %s"
 
 #: src/Statistics.cpp
 #, c-format
@@ -9354,41 +9354,47 @@ msgstr "Přidá aMule do seznamu „Otevřít pomocí“ pro soubory .emulecolle
 
 #: packaging/windows/installer_strings.c
 msgid "Remove aMule application files, Start Menu / desktop shortcuts, autostart Run-key entry, URL scheme registrations, and Add/Remove Programs entry (required)."
-msgstr ""
+msgstr "Odstranit soubory aplikace aMule, zástupce v nabídce Start / na ploše, položku Run-key pro automatické spuštění, registrace schémat URL a položku v Přidat nebo odebrat programy (vyžadováno)."
 
 #: packaging/windows/installer_strings.c
 msgid "Permanently delete %APPDATA%\\aMule for the current user (aMule.conf, ED2K server list, Kad nodes, partfiles, IP filters, friends list). Leave unchecked to keep your settings."
-msgstr ""
+msgstr "Trvale smazat %APPDATA%\\aMule pro aktuálního uživatele (aMule.conf, seznam ED2K serverů, Kad uzly, částečné soubory, IP filtry, seznam přátel). Nezaškrtávejte, chcete-li zachovat svá nastavení."
 
 #: packaging/windows/installer_strings.c
 msgid ""
 "aMule appears to be running from $INSTDIR.\r\n"
 "Please close aMule (and aMuleD / aMuleGUI) and try again."
 msgstr ""
+"Zdá se, že aMule je spuštěn z $INSTDIR.\r\n"
+"Zavřete prosím aMule (a aMuleD / aMuleGUI) a zkuste to znovu."
 
 #: packaging/windows/installer_strings.c
 msgid ""
 "aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\n"
 "Please stop it and try again."
 msgstr ""
+"Zdá se, že daemon aMule (amuled.exe) je spuštěn z $INSTDIR.\n"
+"Zastavte jej prosím a zkuste to znovu."
 
 #: packaging/windows/installer_strings.c
 msgid "Removing previous aMule installation at $0..."
-msgstr ""
+msgstr "Odstraňuji předchozí instalaci aMule na $0..."
 
 #: packaging/windows/installer_strings.c
 msgid ""
 "Could not remove the previous aMule installation at $0.\r\n"
 "Please close any running aMule processes and try again, or uninstall the previous version manually first."
 msgstr ""
+"Nepodařilo se odstranit předchozí instalaci aMule na $0.\r\n"
+"Zavřete prosím všechny běžící procesy aMule a zkuste to znovu, nebo nejprve ručně odinstalujte předchozí verzi."
 
 #: packaging/windows/installer_strings.c
 msgid "aMule appears to be running. Please close it and re-run the uninstaller."
-msgstr ""
+msgstr "Zdá se, že aMule je spuštěn. Zavřete jej prosím a spusťte odinstalační program znovu."
 
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
-msgstr ""
+msgstr "Odstraňuji uživatelská data z $APPDATA\\aMule..."
 
 #~ msgid "Change Language"
 #~ msgstr "Změnit jazyk"
