@@ -317,7 +317,8 @@ void CamuleRemoteGuiApp::OnAssertFailure(
 	// of IsRunning(), and its window is either up or the assert came from a thread that
 	// cannot show a dialog anyway.
 	if (ReportAssertFailure(file, line, func, cond, msg, wxThread::IsMain())) {
-		wxApp::OnAssertFailure(file, line, func, cond, msg);
+		// See CamuleApp::OnAssertFailure for why this goes through the helper.
+		RunWxAssertHandler([&] { wxApp::OnAssertFailure(file, line, func, cond, msg); });
 	}
 }
 
