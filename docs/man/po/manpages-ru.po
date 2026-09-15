@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: manpages-ru\n"
 "POT-Creation-Date: 2026-08-24 19:02+0200\n"
-"PO-Revision-Date: 2026-09-14 12:31+0000\n"
+"PO-Revision-Date: 2026-09-15 15:57+0000\n"
 "Last-Translator: Sebastiano Pistore <SebastianoPistore.info@protonmail.ch>\n"
 "Language-Team: Russian <LL@li.org>\n"
 "Language: ru\n"
@@ -517,7 +517,7 @@ msgstr "Начать скачивание файла."
 #. type: Plain text
 #: amulecmd.1.in
 msgid "The I<E<lt>numberE<gt>> of a file from the last search has to be given.  Example: 'download 12' will start to download the file with the number 12 of the previous search."
-msgstr "Должен быть указан I<E<lt>номерE<gt>> файла в последнем поиске.  Пример: 'download 12' начнёт скачивание файла, который был под номером 12 в последнем поиске."
+msgstr "Необходимо указать I<E<lt>номерE<gt>> файла из последнего поиска.  Пример: 'download 12' начнёт скачивание файла под номером 12 из предыдущего поиска."
 
 #. type: Plain text
 #: amulecmd.1.in
@@ -627,7 +627,7 @@ msgstr "Возобновляет скачивание, указанное в I<E
 #. type: Plain text
 #: amulecmd.1.in
 msgid "Makes a search for the given I<E<lt>keywordE<gt>>. A search type and a keyword to search is mandatory to do this.  Example: 'search kad amule' performs a kad search for 'amule'.  Prints a search id; pass it to B<results> or B<progress> to address this search. Several searches can run at once, each with its own id."
-msgstr "Выполняет поиск по указанному I<E<lt>ключевому словуE<gt>>. Для этого обязательно указание типа поиска и ключевого слова. Пример: 'search kad amule' выполняет поиск Kad по запросу 'amule'. Выводит идентификатор поиска; передайте его командам B<results> или B<progress> для обращения к этому поиску. Одновременно может выполняться несколько поисков, каждый со своим идентификатором."
+msgstr "Выполняет поиск по указанному I<E<lt>ключевому словуE<gt>>. Для этого обязательно указать тип поиска и ключевое слово.  Пример: 'search kad amule' выполняет поиск Kad по запросу 'amule'.  Выводит идентификатор поиска; передайте его командам B<results> или B<progress>, чтобы обратиться к этому поиску. Одновременно может выполняться несколько поисков, каждый со своим идентификатором."
 
 #. type: Plain text
 #: amulecmd.1.in
@@ -682,7 +682,7 @@ msgstr "Наибольший размер файла для возврата. Т
 #. type: Plain text
 #: amulecmd.1.in
 msgid "Example: 'search global linux iso --type Iso --min-size 100M' returns results for 'linux iso' of file-type Iso at least 100 MiB."
-msgstr "Пример: 'search global linux iso --type Iso --min-size 100M' возвращает результаты для 'linux iso' типа файла Iso размером не менее 100 МиБ."
+msgstr "Пример: 'search global linux iso --type Iso --min-size 100M' возвращает результаты для 'linux iso' типа Iso размером не менее 100 МиБ."
 
 #. type: Plain text
 #: amulecmd.1.in
@@ -742,12 +742,12 @@ msgstr "Выводит дерево статистики."
 #. type: Plain text
 #: amulecmd.1.in
 msgid "The optional I<E<lt>numberE<gt>> in the range of 0-255 can be passed as argument to this command, which tells how many entries of the client version subtree should be shown. Passing 0, or omitting it means 'unlimited'."
-msgstr "Параметр I<E<lt>числоE<gt>> может быть в промежутке 0-255, и будет показывать сколько элементов показывать в под-дереве 'версия клиента'. Указание 0 или пропуск означает 'неограниченно'."
+msgstr "В качестве аргумента этой команды можно передать необязательное I<E<lt>числоE<gt>> в диапазоне 0–255, которое указывает, сколько элементов поддерева версий клиентов следует показать. Передача 0 или пропуск аргумента означает «без ограничений»."
 
 #. type: Plain text
 #: amulecmd.1.in
 msgid "Example: 'statistics 5' will show only the top 5 versions for each client type."
-msgstr "Пример: 'statistics 5' покажет только 5 наиболее популярных версий для каждого типа клиента."
+msgstr "Пример: 'statistics 5' покажет только 5 самых популярных версий для каждого типа клиента."
 
 #. type: Plain text
 #: amulecmd.1.in
