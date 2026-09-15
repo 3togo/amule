@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "POT-Creation-Date: 2026-08-24 19:02+0200\n"
-"PO-Revision-Date: 2026-09-14 12:30+0000\n"
+"PO-Revision-Date: 2026-09-15 13:14+0000\n"
 "Last-Translator: Dylan Aïssi <bob.dybian@gmail.com>\n"
 "Language-Team: Français\n"
 "Language: fr\n"
@@ -629,7 +629,7 @@ msgstr "Reprend le téléchargement spécifié par le I<E<lt>hachageE<gt>> ou le
 #. type: Plain text
 #: amulecmd.1.in
 msgid "Makes a search for the given I<E<lt>keywordE<gt>>. A search type and a keyword to search is mandatory to do this.  Example: 'search kad amule' performs a kad search for 'amule'.  Prints a search id; pass it to B<results> or B<progress> to address this search. Several searches can run at once, each with its own id."
-msgstr "Fait une recherche du I<E<lt>mot-clefE<gt>> donné. Un type de recherche et d'un mot-clef de recherche sont obligatoires pour le faire. Exemple : 'search kad amule' effectue une recherche kad pour 'amule'.  Affiche un identifiant de recherche ; passez-le à B<results> ou B<progress> pour cibler cette recherche. Plusieurs recherches peuvent être exécutées simultanément, chacune ayant son identifiant."
+msgstr "Effectue une recherche sur I<E<lt>mot-clefE<gt>> donné. Un type de recherche et un mot-clef de recherche sont obligatoires pour le faire.  Exemple : 'search kad amule' effectue une recherche kad pour 'amule'.   Affiche un identifiant de recherche ; transmettez-le à B<results> ou bien à B<progress> pour cibler cette recherche. Plusieurs recherches peuvent être exécutées simultanément, chacune ayant son identifiant."
 
 #. type: Plain text
 #: amulecmd.1.in
@@ -744,7 +744,7 @@ msgstr "Afficher l'arbre des statistiques."
 #. type: Plain text
 #: amulecmd.1.in
 msgid "The optional I<E<lt>numberE<gt>> in the range of 0-255 can be passed as argument to this command, which tells how many entries of the client version subtree should be shown. Passing 0, or omitting it means 'unlimited'."
-msgstr "Le I<E<lt>chiffreE<gt>> optionnel dans l'intervalle 0-255 peut être passé comme argument à cette commande, ce qui indique le nombre d'entrées de la sous-arborescence de la version du client qui doit être affiché. Indiquer 0 ou bien l'omettre signifie 'illimité'."
+msgstr "Le I<E<lt>chiffreE<gt>> optionnel dans l'intervalle 0-255 peut être transmis comme argument à cette commande, ce qui indique le nombre d'entrées de la sous-arborescence de la version du client qui doit être affiché. Indiquer 0 ou bien l'omettre signifie « illimité »."
 
 #. type: Plain text
 #: amulecmd.1.in

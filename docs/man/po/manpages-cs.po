@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2026-06-10 16:45+0200\n"
-"PO-Revision-Date: 2026-09-14 12:36+0000\n"
+"PO-Revision-Date: 2026-09-15 13:15+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
 "Language: cs\n"
@@ -400,12 +400,12 @@ msgstr ""
 #. type: Plain text
 #: amulecmd.1.in:46 amuleweb.1.in:63
 msgid "Do not print any output to stdout."
-msgstr ""
+msgstr "Nevypisovat nic na standardní výstup."
 
 #. type: Plain text
 #: amulecmd.1.in:50 amuleweb.1.in:67
 msgid "Be verbose - show also debug messages."
-msgstr ""
+msgstr "Vypisovat podrobnosti - včetně zpráv ladění."
 
 #. type: TP
 #: amulecmd.1.in:50 amuleweb.1.in:67
@@ -484,7 +484,7 @@ msgstr ""
 #. type: Plain text
 #: amulecmd.1.in:93
 msgid "Connect to the network."
-msgstr ""
+msgstr "Připojit se k síti."
 
 #. type: Plain text
 #: amulecmd.1.in:95
@@ -684,7 +684,7 @@ msgstr ""
 #. type: Plain text
 #: amulecmd.1.in:200
 msgid "Set bandwidth limits."
-msgstr ""
+msgstr "Nastavit limity šířky pásma."
 
 #. type: Plain text
 #: amulecmd.1.in:202
@@ -699,17 +699,17 @@ msgstr ""
 #. type: Plain text
 #: amulecmd.1.in:210
 msgid "Show download queue."
-msgstr ""
+msgstr "Zobrazit frontu stahování."
 
 #. type: Plain text
 #: amulecmd.1.in:212
 msgid "Show log."
-msgstr ""
+msgstr "Zobrazit log."
 
 #. type: Plain text
 #: amulecmd.1.in:214
 msgid "Show servers list."
-msgstr ""
+msgstr "Zobrazit seznam serverů."
 
 #. type: Plain text
 #: amulecmd.1.in:216
@@ -719,7 +719,7 @@ msgstr "Zobrazit seznam sdílených souborů."
 #. type: Plain text
 #: amulecmd.1.in:218
 msgid "Show upload queue."
-msgstr ""
+msgstr "Zobrazit frontu odesílání."
 
 #. type: Plain text
 #: amulecmd.1.in:222

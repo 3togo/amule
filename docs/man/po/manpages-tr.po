@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "POT-Creation-Date: 2026-08-24 19:02+0200\n"
-"PO-Revision-Date: 2026-09-14 12:31+0000\n"
+"PO-Revision-Date: 2026-09-15 13:15+0000\n"
 "Last-Translator: Sebastiano Pistore <SebastianoPistore.info@protonmail.ch>\n"
 "Language-Team: \n"
 "Language: tr\n"
@@ -514,7 +514,7 @@ msgstr "Bir dosyayı indirmeye başlar."
 #. type: Plain text
 #: amulecmd.1.in
 msgid "The I<E<lt>numberE<gt>> of a file from the last search has to be given.  Example: 'download 12' will start to download the file with the number 12 of the previous search."
-msgstr "Bir dosyanın son aramadan I<E<lt>sayıE<gt>> değeri girilmesi gerekir. Örneğin 'download 12' son aramadaki 12 numaralı dosyayı indirmeye başlar."
+msgstr "Bir dosyanın son aramadan I<E<lt>sayıE<gt>> değerinin girilmesi gerekir.  Mesela 'download 12' son aramadaki 12 numaralı dosyayı indirmeye başlar."
 
 #. type: Plain text
 #: amulecmd.1.in
@@ -624,7 +624,7 @@ msgstr "I<E<lt>hashE<gt>> ya da I<E<lt>sayıE<gt>> ile belirtilen indirmeye kald
 #. type: Plain text
 #: amulecmd.1.in
 msgid "Makes a search for the given I<E<lt>keywordE<gt>>. A search type and a keyword to search is mandatory to do this.  Example: 'search kad amule' performs a kad search for 'amule'.  Prints a search id; pass it to B<results> or B<progress> to address this search. Several searches can run at once, each with its own id."
-msgstr "Girilen I<E<lt>anahtarkelimeE<gt>> için bir arama yapar. Bir arama türü ve bir anahtar kelime kullanmanız mecburidir. Örneğin 'search kad amule' kad ağında 'amule' sözcüğü ile arama yapar.  Bir arama kimliği görüntüler; bu aramayı hedef almak için onu B<results> veya B<progress> ile kullanın. Birden fazla arama aynı anda çalışabilir, her biri kendi kimliğine sahip olur."
+msgstr "Girilen I<E<lt>anahtarkelimeE<gt>> için bir arama yapar. Bir arama türü ve bir anahtar kelime kullanmanız mecburidir.  Mesela 'search kad amule' kad ağında 'amule' sözcüğü ile arama yapar.  Bir arama kimliği görüntüler; bu aramayı hedef almak için onu B<results> veya B<progress> ile kullanın. Birden fazla arama aynı anda çalışabilir, her biri kendi kimliğine sahip olur."
 
 #. type: Plain text
 #: amulecmd.1.in
