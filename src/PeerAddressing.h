@@ -85,6 +85,49 @@ inline CNetworkAddress IndexKey(const CNetworkAddress &address)
 	return address.Unmapped();
 }
 
+/** A security key must identify a host; mapped IPv4 zero is unspecified too. */
+inline bool IsSecurityKey(const CNetworkAddress &address) noexcept
+{
+	const auto key = IndexKey(address);
+	return key.IsPresent() && !key.IsUnspecified();
+}
+
+/**
+ * Programmatic filter-prefix matching, independent of the IPv4 filter-file parser.
+ * Width is in the canonical family, or IPv6 width for a mapped prefix. Host bits in the
+ * prefix are ignored. Prefixes are interface-independent, including at /128.
+ * An unspecified network base is valid (e.g. ::/0), but never a matching host.
+ */
+inline bool MatchesFilterPrefix(
+	const CNetworkAddress &address, const CNetworkAddress &prefix, unsigned bits) noexcept
+{
+	// ::ffff:10.0.0.0/104 is written in IPv6 width; 96 of those bits are the mapping itself.
+	if (prefix.IsIPv4Mapped() && bits >= 96) {
+		bits -= 96;
+	}
+	const auto key = IndexKey(address);
+	const auto network = IndexKey(prefix);
+	if (!IsSecurityKey(key) || network.IsAbsent() || key.IsIPv4() != network.IsIPv4() ||
+		bits > (key.IsIPv4() ? 32u : 128u)) {
+		return false;
+	}
+	return key.TruncatedToPrefix(bits) == network.TruncatedToPrefix(bits);
+}
+
+/** Inclusive, interface-independent filter range; reversed/mixed-family ranges fail. */
+inline bool MatchesFilterRange(
+	const CNetworkAddress &address, const CNetworkAddress &first, const CNetworkAddress &last) noexcept
+{
+	const auto key = IndexKey(address).WithoutScope();
+	const auto lower = IndexKey(first).WithoutScope();
+	const auto upper = IndexKey(last).WithoutScope();
+	if (!IsSecurityKey(key) || lower.IsAbsent() || upper.IsAbsent() || key.IsIPv4() != lower.IsIPv4() ||
+		key.IsIPv4() != upper.IsIPv4()) {
+		return false;
+	}
+	return lower <= key && key <= upper;
+}
+
 /**
  * Whether this peer can be named in an ed2k wire field or an on-disk record that holds a 32-bit
  * address.

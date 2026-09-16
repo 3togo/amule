@@ -27,6 +27,9 @@
 #define IPFILTER_H
 
 #include <wx/event.h> // Needed for wxEvent
+#include <wx/thread.h>
+#include <string>
+#include <vector>
 
 #include "Types.h" // Needed for uint8, uint16 and uint32
 
