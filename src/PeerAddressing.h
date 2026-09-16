@@ -32,9 +32,8 @@
 /**
  * What identifies a peer, once a peer can be IPv6.
  *
- * These value policies prepare peer-address widening without changing production call sites.
- * Socket-ingress normalization belongs to the later call-sites PR; local unmapping here
- * defensively handles both native and mapped IPv4.
+ * These value policies support peer-address widening at production call sites.
+ * Socket ingress already canonicalizes mapped IPv4; local unmapping here stays defensive.
  *
  * Three separate questions live here, and they deliberately give different answers for the same
  * address:
@@ -226,6 +225,9 @@ inline bool MatchesUdpSource(const UdpEndpoint &advertised, const UdpEndpoint &s
  */
 constexpr unsigned kIPv6RateLimitPrefixBits = 64;
 
+//! How long one callback request from a scope throttles the next; also the list's eviction age.
+constexpr std::uint64_t kCallbackRequestThrottleMs = 3 * 60 * 1000;
+
 /**
  * The address a per-peer rate limit is counted against.
  *
@@ -248,6 +250,31 @@ inline CNetworkAddress RateLimitScope(const CNetworkAddress &address)
 		return unmapped;
 	}
 	return unmapped.TruncatedToPrefix(kIPv6RateLimitPrefixBits);
+}
+
+/**
+ * Contact admission while IP filtering and ban lookup remain IPv4-only.
+ * Absence retains legacy LowID/server-ID handling; it is not fabricated IPv4 zero.
+ * Native IPv6 must fail closed even when globally routable or already connected.
+ * Direct IPv6 reachability below remains dormant until these security controls widen.
+ */
+inline bool CanCheckContactAddress(const CNetworkAddress &address) noexcept
+{
+	return address.IsAbsent() || address.IsIPv4() || address.IsIPv4Mapped();
+}
+
+/** Callback admission requires an address supported by the contact security controls. */
+inline bool CanRequestCallback(const CNetworkAddress &address) noexcept
+{
+	return address.IsPresent() && CanCheckContactAddress(address);
+}
+
+/** Production callback throttle seam; the exact three-minute boundary remains allowed. */
+inline bool IsCallbackRequestThrottled(
+	const CNetworkAddress &address, const CNetworkAddress &previous, std::uint64_t elapsed) noexcept
+{
+	return address.IsPresent() && previous.IsPresent() &&
+	       RateLimitScope(address) == RateLimitScope(previous) && elapsed < kCallbackRequestThrottleMs;
 }
 
 /**
