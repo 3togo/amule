@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-15 16:22+0200\n"
-"PO-Revision-Date: 2026-09-15 15:19+0000\n"
+"PO-Revision-Date: 2026-09-16 17:12+0000\n"
 "Last-Translator: David Watzke <david@watzke.cz>\n"
 "Language-Team: cs <cs@li.org>\n"
 "Language: cs\n"
@@ -214,6 +214,11 @@ msgid ""
 "\n"
 "That is not a running copy of aMule, so there is nothing to bring to the front. Close the other program, or delete the lock file while aMule is not running."
 msgstr ""
+"Další program drží aMule lock soubor:\n"
+"\n"
+"%s\n"
+"\n"
+"To není běžící kopie aMule, takže není nic, co by šlo přenést do popředí. Zavřete jiný program, nebo odstraňte lock soubor, zatímco aMule nebude spuštěn."
 
 #: src/amuleAppCommon.cpp
 #, c-format
@@ -222,11 +227,13 @@ msgid ""
 "\n"
 "It has no window to bring to the front. Connect to it with amuleGUI, or stop the daemon before starting aMule."
 msgstr ""
+"aMule daemon (amuled) je již spuštěn jako proces %d a používá tuto konfiguraci.\n"
+"\n"
+"Nemá žádné okno, které by šlo přenést do popředí. Připojte se k němu pomocí amuleGUI, nebo zastavte daemon před spuštěním aMule."
 
 #: src/amuleAppCommon.cpp
-#, fuzzy
 msgid "aMule cannot start"
-msgstr "aMule nainstalován"
+msgstr "aMule nejde spustit"
 
 #: src/amuleAppCommon.cpp
 #, c-format
@@ -515,7 +522,7 @@ msgstr "Jméno hostitele serveru oznámeno"
 #: src/amule.cpp
 #, c-format
 msgid "Media metadata: probed file is no longer known, result discarded (%s)"
-msgstr ""
+msgstr "Mediální metadata: sondovaný soubor již není znám, výsledek byl zahozen (%s)"
 
 #: src/amule.cpp
 #, c-format
@@ -784,7 +791,7 @@ msgstr "Kad: vypnut"
 
 #: src/amuleDlg.cpp
 msgid "Core"
-msgstr ""
+msgstr "Jádro"
 
 #: src/amuleDlg.cpp src/ClientHistoryListCtrl.cpp src/ClientsListCtrl.cpp
 #: src/ServerListCtrl.cpp src/SharedFilePeersListCtrl.cpp
@@ -794,25 +801,23 @@ msgstr "Verze"
 
 #: src/amuleDlg.cpp
 msgid "The core and aMuleGUI are different versions."
-msgstr ""
+msgstr "Jádro a aMuleGUI jsou různé verze."
 
 #: src/amuleDlg.cpp
 msgid "The core and aMuleGUI are the same version."
-msgstr ""
+msgstr "Jádro a aMuleGUI jsou stejné verze."
 
 #: src/amuleDlg.cpp src/ServerListCtrl.cpp
 msgid "Address"
 msgstr "Adresa"
 
 #: src/amuleDlg.cpp
-#, fuzzy
 msgid "Encryption"
-msgstr "Popis"
+msgstr "Šifrování"
 
 #: src/amuleDlg.cpp
-#, fuzzy
 msgid "aMuleGUI"
-msgstr "Log aMule"
+msgstr "aMuleGUI"
 
 #: src/amuleDlg.cpp
 #, c-format
@@ -825,7 +830,7 @@ msgstr " MiB/s"
 
 #: src/amuleDlg.cpp src/MuleTrayIcon.cpp src/utils/wxCas/src/wxcasframe.cpp
 msgid " KiB/s"
-msgstr ""
+msgstr " KiB/s"
 
 #: src/amuleDlg.cpp
 #, c-format
@@ -1070,12 +1075,12 @@ msgstr "Neplatný odkaz, nebo je již v seznamu."
 
 #: src/amule-remote-gui.cpp
 msgid "The daemon refused the request."
-msgstr ""
+msgstr "Daemon odmítl požadavek."
 
 #: src/amule-remote-gui.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not delete the category: %s"
-msgstr "Nepodařilo se uložit heslo amuleapi: %s"
+msgstr "Nešlo smazat kategorii: %s"
 
 #: src/amule-remote-gui.cpp
 #, c-format
