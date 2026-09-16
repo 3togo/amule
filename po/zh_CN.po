@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-15 16:22+0200\n"
-"PO-Revision-Date: 2026-09-15 15:55+0000\n"
+"PO-Revision-Date: 2026-09-16 17:12+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
 "Language: zh_CN\n"
@@ -3816,9 +3816,8 @@ msgid "Click here to add the eD2k link in the text control to your download queu
 msgstr "点击此处将添加文本框中的 eD2k 链接至下载队列。"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Events are displayed here. For a complete list of events, refer to the log in the Networks tab."
-msgstr "此处显示系统事件。如需完整事件列表，请到服务器分页。"
+msgstr "此处显示事件。如需完整事件列表，请查看网络分页中的“登录”。"
 
 #: src/muuli_wdr.cpp
 msgid "Loading ..."
@@ -3897,9 +3896,8 @@ msgid "Audio"
 msgstr "音频"
 
 #: src/muuli_wdr.cpp src/OtherFunctions.cpp src/TransferWnd.cpp
-#, fuzzy
 msgid "Disc images"
-msgstr "CD 映像"
+msgstr "磁盘映像"
 
 #: src/muuli_wdr.cpp src/OtherFunctions.cpp src/TransferWnd.cpp
 msgid "Pictures"
