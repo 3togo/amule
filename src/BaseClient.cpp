@@ -855,7 +855,7 @@ bool CUpDownClient::SendHelloPacket()
 	wxCHECK(m_socket != NULL, true);
 
 	// if IP is filtered, don't greet him but disconnect...
-	if (theApp->ipfilter->IsFiltered(m_socket->GetPeerInt())) {
+	if (theApp->ipfilter->IsFiltered(m_socket->GetPeerAddress())) {
 		if (Disconnected("IPFilter")) {
 			Safe_Delete();
 			return false;
@@ -1565,7 +1565,7 @@ EContactResult CUpDownClient::CheckContactPreconditions()
 		return EContactResult::Declined;
 	}
 
-	// Do not narrow native IPv6 to zero and then skip the IPv4-only security checks
+	// Do not narrow native IPv6 to zero and then skip the contact security checks
 	// or fall back to a server ID. This also protects already-connected browse requests.
 	if (!PeerAddressing::CanCheckContactAddress(GetUserAddress())) {
 		if (Disconnected("IPv6 contact security checks unavailable")) {
@@ -1575,20 +1575,17 @@ EContactResult CUpDownClient::CheckContactPreconditions()
 		return EContactResult::Declined;
 	}
 
-	uint32 uClientIP = GetIP();
-	if (uClientIP == 0 && !HasLowID()) {
-		uClientIP = wxUINT32_SWAP_ALWAYS(m_nUserIDHybrid);
-	}
-	if (!uClientIP) {
+	const CNetworkAddress contactAddress = PeerAddressing::ContactCheckAddress(
+		GetUserAddress(), HasLowID(), wxUINT32_SWAP_ALWAYS(m_nUserIDHybrid));
+	if (contactAddress.IsAbsent()) {
 		return EContactResult::Contacting;
 	}
 	// Although all received IPs (server sources, source exchange) and all incoming connection
 	// attempts are filtered, outgoing connection attempts have to be filtered here too, because
 	// the ip filter list may have been updated since.
-	if (theApp->ipfilter->IsFiltered(uClientIP)) {
-		AddDebugLogLineN(logIPFilter,
-			CFormat("Filtered ip %u (%s) on TryToConnect\n") % uClientIP %
-				Uint32toStringIP(uClientIP));
+	if (theApp->ipfilter->IsFiltered(contactAddress)) {
+		AddDebugLogLineN(
+			logIPFilter, "Filtered ip " + contactAddress.ToWxString() + " on TryToConnect");
 		if (Disconnected("IPFilter")) {
 			Safe_Delete();
 			return EContactResult::ClientDeleted;
@@ -1597,9 +1594,9 @@ EContactResult CUpDownClient::CheckContactPreconditions()
 	}
 
 	// for safety: check again whether that IP is banned
-	if (theApp->clientlist->IsBannedClient(uClientIP)) {
+	if (theApp->clientlist->IsBannedClient(contactAddress)) {
 		AddDebugLogLineN(
-			logClient, "Refused to connect to banned client " + Uint32toStringIP(uClientIP));
+			logClient, "Refused to connect to banned client " + contactAddress.ToWxString());
 		if (Disconnected("Banned IP")) {
 			Safe_Delete();
 			return EContactResult::ClientDeleted;
