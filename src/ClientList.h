@@ -30,13 +30,13 @@
 #include "BanRecord.h" // Needed for CBanRecord // Needed for CDeadSourceList
 #include "ClientRef.h"
 #include "CanonicalPeerIndex.h"
+#include "TrackedClientRecord.h"
 
 #include <deque>
 #include <set>
 
 class CUpDownClient;
 class CClientTCPSocket;
-class CDeletedClient;
 class CMD4Hash;
 namespace Kademlia
 {
@@ -159,7 +159,7 @@ public:
 	/**
 	 * Checks if a client has changed its user-hash.
 	 */
-	bool ComparePriorUserhash(uint32 dwIP, uint16 nPort, void *pNewHash);
+	bool ComparePriorUserhash(const CNetworkAddress &address, uint16 nPort, void *pNewHash);
 
 	/**
 	 * Bans an IP address for 2 hours.
@@ -318,7 +318,7 @@ private:
 	uint64 m_dwLastBannCleanUp;
 
 	//! This is the map of tracked clients.
-	std::map<uint32, CDeletedClient *> m_trackedClientsList;
+	CTrackedClientRecord m_trackedClientsList;
 	//! This keeps track of the last time the tracked-list was pruned.
 	uint64 m_dwLastTrackedCleanUp;
 

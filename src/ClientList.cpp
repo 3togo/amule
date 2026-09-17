@@ -54,31 +54,6 @@
 #include "kademlia/net/KademliaUDPListener.h"
 #include "kademlia/routing/Contact.h"
 
-/**
- * CDeletedClient: keeps a deleted peer's IP, port and user hash for 2 hours, after the
- * CUpDownClient object itself is gone. A bit overkill, but currently needed to close an exploit.
- */
-class CDeletedClient
-{
-public:
-	CDeletedClient(CUpDownClient *pClient)
-	{
-		m_dwInserted = ::GetTickCount64();
-		PortAndHash porthash = { pClient->GetUserPort(), pClient->GetCreditsHash() };
-		m_ItemsList.push_back(porthash);
-	}
-
-	struct PortAndHash
-	{
-		uint16 nPort;
-		void *pHash;
-	};
-
-	typedef std::list<PortAndHash> PaHList;
-	PaHList m_ItemsList;
-	uint64 m_dwInserted;
-};
-
 CClientList::CClientList()
 : m_deadSources(true)
 {
@@ -90,8 +65,6 @@ CClientList::CClientList()
 
 CClientList::~CClientList()
 {
-	DeleteContents(m_trackedClientsList);
-
 	wxASSERT(m_clientList.empty());
 }
 
@@ -498,49 +471,15 @@ bool CClientList::IsIPAlreadyKnown(uint32_t ip)
 	return FindClientByIP(ip) != nullptr;
 }
 
-bool CClientList::ComparePriorUserhash(uint32 dwIP, uint16 nPort, void *pNewHash)
+bool CClientList::ComparePriorUserhash(const CNetworkAddress &address, uint16 nPort, void *pNewHash)
 {
-	std::map<uint32, CDeletedClient *>::iterator it = m_trackedClientsList.find(dwIP);
-
-	if (it != m_trackedClientsList.end()) {
-		CDeletedClient *pResult = it->second;
-
-		CDeletedClient::PaHList::iterator it2 = pResult->m_ItemsList.begin();
-		for (; it2 != pResult->m_ItemsList.end(); ++it2) {
-			if (it2->nPort == nPort) {
-				if (it2->pHash != pNewHash) {
-					return false;
-				} else {
-					break;
-				}
-			}
-		}
-	}
-	return true;
+	return m_trackedClientsList.Compare(address, nPort, pNewHash);
 }
 
 void CClientList::AddTrackClient(CUpDownClient *toadd)
 {
-	std::map<uint32, CDeletedClient *>::iterator it = m_trackedClientsList.find(toadd->GetIP());
-
-	if (it != m_trackedClientsList.end()) {
-		CDeletedClient *pResult = it->second;
-
-		pResult->m_dwInserted = ::GetTickCount64();
-
-		CDeletedClient::PaHList::iterator it2 = pResult->m_ItemsList.begin();
-		for (; it2 != pResult->m_ItemsList.end(); ++it2) {
-			if (it2->nPort == toadd->GetUserPort()) {
-				it2->pHash = toadd->GetCreditsHash();
-				return;
-			}
-		}
-
-		CDeletedClient::PortAndHash porthash = { toadd->GetUserPort(), toadd->GetCreditsHash() };
-		pResult->m_ItemsList.push_back(porthash);
-	} else {
-		m_trackedClientsList[toadd->GetIP()] = new CDeletedClient(toadd);
-	}
+	m_trackedClientsList.Add(
+		toadd->GetUserAddress(), toadd->GetUserPort(), toadd->GetCreditsHash(), ::GetTickCount64());
 }
 
 void CClientList::Process()
@@ -561,15 +500,7 @@ void CClientList::Process()
 	if (m_dwLastTrackedCleanUp + TRACKED_CLEANUP_TIME < cur_tick) {
 		m_dwLastTrackedCleanUp = cur_tick;
 
-		std::map<uint32, CDeletedClient *>::iterator it = m_trackedClientsList.begin();
-		while (it != m_trackedClientsList.end()) {
-			std::map<uint32, CDeletedClient *>::iterator cur_src = it++;
-
-			if (cur_src->second->m_dwInserted + KEEPTRACK_TIME < cur_tick) {
-				delete cur_src->second;
-				m_trackedClientsList.erase(cur_src);
-			}
-		}
+		m_trackedClientsList.DropLapsed(cur_tick, KEEPTRACK_TIME);
 	}
 
 	// Try to connect to the clients in m_KadList. If connected, remove them from the list and
