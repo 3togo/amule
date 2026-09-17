@@ -28,6 +28,8 @@
 #include "Types.h"            // Needed for uint16 and uint32
 #include "ThrottledSocket.h"  // Needed for ThrottledControlSocket
 #include "amuleIPV4Address.h" // Needed for amuleIPV4Address
+#include "NetworkAddress.h"   // Needed for typed packet source addresses
+#include "Logger.h"           // Needed for DebugType
 
 #include <wx/thread.h> // Needed for wxMutex
 
@@ -122,10 +124,16 @@ protected:
 	 * @param buffer The data received.
 	 * @param length The length of the data buffer.
 	 */
-	virtual void OnPacketReceived(uint32 ip, uint16 port, uint8_t *buffer, size_t length) = 0;
+	virtual void OnPacketReceived(
+		const CNetworkAddress &address, uint16 port, uint8_t *buffer, size_t length) = 0;
 
 	/** See ThrottledControlSocket::SendControlData */
 	SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 minFragSize);
+
+	bool GetIPv4PacketAddress(const CNetworkAddress &address,
+		uint32_t &ip,
+		DebugType logType,
+		const wxString &packetKind) const;
 
 private:
 	/**

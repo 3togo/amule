@@ -119,38 +119,49 @@ TEST(PeerAddressing, FilterMatchingRejectsUnknownAndUnspecifiedHosts)
 	ASSERT_FALSE(MatchesFilterRange(host, host, absent));
 }
 
-// Production contact/callback admission seams. Native IPv6 is deliberately dormant.
-TEST(PeerAddressing, ContactSecurityChecksFailClosedForNativeIPv6)
+// Contact security checks support native IPv6, while callbacks remain IPv4-only and unspecified
+// addresses fail closed.
+TEST(PeerAddressing, ContactSecurityChecksAllowNativeIPv6)
 {
-	for (const char *text : { "2001:4860::1", "2001:db8::1", "fe80::1", "fd00::1", "::1", "::" }) {
+	for (const char *text : { "2001:4860::1", "2001:db8::1", "fe80::1", "fd00::1", "::1" }) {
 		const auto address = CNetworkAddress::FromString(text);
-		ASSERT_FALSE(CanCheckContactAddress(address));
+		ASSERT_TRUE(CanCheckContactAddress(address));
 		ASSERT_FALSE(CanRequestCallback(address));
 	}
+	ASSERT_FALSE(CanCheckContactAddress(CNetworkAddress::AnyIPv6()));
+	ASSERT_FALSE(CanCheckContactAddress(CNetworkAddress::FromString("::")));
 	// Unknown clients still use the existing LowID/server-ID path, not a made-up address.
 	ASSERT_TRUE(CanCheckContactAddress(CNetworkAddress::Absent()));
 	ASSERT_FALSE(CanRequestCallback(CNetworkAddress::Absent()));
-	for (const char *text : { "192.0.2.1", "::ffff:192.0.2.1", "0.0.0.0", "::ffff:0.0.0.0" }) {
+	for (const char *text : { "192.0.2.1", "::ffff:192.0.2.1" }) {
 		const auto address = CNetworkAddress::FromString(text);
 		ASSERT_TRUE(CanCheckContactAddress(address));
 		ASSERT_TRUE(CanRequestCallback(address));
+	}
+	for (const char *text : { "0.0.0.0", "::ffff:0.0.0.0" }) {
+		const auto address = CNetworkAddress::FromString(text);
+		ASSERT_FALSE(CanCheckContactAddress(address));
+		ASSERT_FALSE(CanRequestCallback(address));
 	}
 }
 
 TEST(PeerAddressing, ContactCheckAddressKeepsLowIDUnchecked)
 {
+	const auto absent = CNetworkAddress::Absent();
 	const auto user = CNetworkAddress::FromString("192.0.2.1");
-	ASSERT_TRUE(ContactCheckAddress(user, false, 0x02000000u) == user);
-	ASSERT_TRUE(ContactCheckAddress(user, true, 0) == user);
+	ASSERT_TRUE(ContactCheckAddress(user, absent, false, 0x02000000u) == user);
+	ASSERT_TRUE(ContactCheckAddress(user, absent, true, 0) == user);
 	// A HighID source built from its user ID has no user address until its hello.
-	ASSERT_TRUE(ContactCheckAddress(CNetworkAddress::Absent(), false, 0x010200C0u) ==
+	ASSERT_TRUE(ContactCheckAddress(absent, absent, false, 0x010200C0u) ==
 		    CNetworkAddress::FromString("192.0.2.1"));
-	// LowID and zero IDs stay absent: filtering one would disconnect every callback contact.
-	ASSERT_TRUE(ContactCheckAddress(CNetworkAddress::Absent(), true, 0x010200C0u).IsAbsent());
-	ASSERT_TRUE(ContactCheckAddress(CNetworkAddress::Absent(), false, 0).IsAbsent());
-	// Native IPv6 is returned for checking, not narrowed to "no address".
+	// A HighID source with a native connect address uses it until its hello.
 	const auto native = CNetworkAddress::FromString("2001:4860::1");
-	ASSERT_TRUE(ContactCheckAddress(native, false, 0) == native);
+	ASSERT_TRUE(ContactCheckAddress(absent, native, false, 0) == native);
+	ASSERT_FALSE(CanOpenConnection(native, false));
+	ASSERT_TRUE(CanOpenConnection(native, true));
+	// LowID and zero IDs stay absent: filtering one would disconnect every callback contact.
+	ASSERT_TRUE(ContactCheckAddress(absent, native, true, 0x010200C0u).IsAbsent());
+	ASSERT_TRUE(ContactCheckAddress(absent, absent, false, 0).IsAbsent());
 }
 
 TEST(PeerAddressing, CallbackThrottlePreservesIPv4AndExpiryBoundary)
@@ -174,9 +185,9 @@ TEST(PeerAddressing, DormantIPv6CallbackScopeRemainsPerSubscriber)
 	const auto address = CNetworkAddress::FromString("2001:4860:1:2::1");
 	ASSERT_TRUE(IsCallbackRequestThrottled(address, CNetworkAddress::FromString("2001:4860:1:2::2"), 0));
 	ASSERT_FALSE(IsCallbackRequestThrottled(address, CNetworkAddress::FromString("2001:4860:1:3::1"), 0));
-	// Accounting support is not permission to skip the contact guard.
+	// Accounting support is independent from callback permission.
 	ASSERT_FALSE(CanRequestCallback(address));
-	ASSERT_FALSE(CanCheckContactAddress(address));
+	ASSERT_TRUE(CanCheckContactAddress(address));
 }
 
 // Indexability

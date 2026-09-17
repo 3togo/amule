@@ -148,7 +148,8 @@ void CMuleUDPSocket::OnReceive(int errorCode)
 		error = lastError != 0;
 	}
 
-	// The encrypted/Kad packet handlers still require the legacy IPv4 representation.
+	// The encrypted/Kad packet handlers still require the legacy IPv4 representation; retain it
+	// only at those explicit protocol boundaries. The socket callback carries the full address.
 	const uint32 ip = addr.ToIPv4NetworkOrderOrZero();
 	const wxString source(addr.ToString());
 	if (error) {
@@ -156,24 +157,36 @@ void CMuleUDPSocket::OnReceive(int errorCode)
 	} else if (length < 2) {
 		// 2 bytes (protocol and opcode) is the smallets possible packet.
 		AddDebugLogLineN(logMuleUDP, m_name + ": Invalid Packet received");
-	} else if (!ip) {
+	} else if (addr.IsAbsent() || addr.IsUnspecified()) {
 		// wxFAIL;
 		AddDebugLogLineN(logMuleUDP, "Unknown ip receiving a UDP packet! Ignoring: '" + source + "'");
 	} else if (!port) {
 		// wxFAIL;
 		AddDebugLogLineN(logMuleUDP, "Unknown port receiving a UDP packet! Ignoring");
-	} else if (theApp->clientlist->IsBannedClient(ip)) {
+	} else if (theApp->clientlist->IsBannedClient(addr)) {
 		AddDebugLogLineN(logMuleUDP, m_name + ": Dropped packet from banned IP " + source);
 	} else {
 		AddDebugLogLineN(logMuleUDP,
 			(m_name + ": Packet received (") << source << ":" << port << "): " << length << "b");
-		OnPacketReceived(ip, port, (uint8_t *)buffer, length);
+		OnPacketReceived(addr, port, (uint8_t *)buffer, length);
 	}
 }
 
 void CMuleUDPSocket::OnReceiveError(int DEBUG_ONLY(errorCode), uint32 WXUNUSED(ip), uint16 WXUNUSED(port))
 {
 	AddDebugLogLineN(logMuleUDP, (m_name + ": Error while reading: ") << errorCode);
+}
+
+bool CMuleUDPSocket::GetIPv4PacketAddress(
+	const CNetworkAddress &address, uint32_t &ip, DebugType logType, const wxString &packetKind) const
+{
+	ip = address.ToIPv4NetworkOrderOrZero();
+	if (ip) {
+		return true;
+	}
+	AddDebugLogLineN(
+		logType, "Ignoring " + packetKind + " UDP packet from " + wxString(address.ToString()));
+	return false;
 }
 
 void CMuleUDPSocket::OnDisconnected(int WXUNUSED(errorCode))

@@ -296,34 +296,43 @@ inline CNetworkAddress RateLimitScope(const CNetworkAddress &address)
 }
 
 /**
- * Contact admission while IPv6 contacts stay disabled.
- * Absence retains legacy LowID/server-ID handling; it is not fabricated IPv4 zero.
- * Native IPv6 must fail closed even when globally routable or already connected.
- * Direct IPv6 reachability below remains dormant until activation lifts this guard.
+ * Contact admission supports every present, non-unspecified address family. Absence retains legacy
+ * LowID/server-ID handling; it is not fabricated IPv4 zero.
  */
 inline bool CanCheckContactAddress(const CNetworkAddress &address) noexcept
 {
-	return address.IsAbsent() || address.IsIPv4() || address.IsIPv4Mapped();
+	return address.IsAbsent() || (address.IsPresent() && !IndexKey(address).IsUnspecified());
 }
 
 /**
  * The address an outbound contact is filtered and ban-checked at, from the canonical user
- * address. A HighID peer not yet greeted is reached at its user ID. Absent means no check can
- * run yet (LowID, reached by callback), and the contact must not be treated as filtered.
+ * address. A HighID peer not yet greeted is reached at its connect address. Absent means no check
+ * can run yet (LowID, reached by callback), and the contact must not be treated as filtered.
  */
-inline CNetworkAddress ContactCheckAddress(
-	const CNetworkAddress &userAddress, bool hasLowID, std::uint32_t userIDNetworkOrder) noexcept
+inline CNetworkAddress ContactCheckAddress(const CNetworkAddress &userAddress,
+	const CNetworkAddress &connectAddress,
+	bool hasLowID,
+	std::uint32_t userIDNetworkOrder) noexcept
 {
 	if (userAddress.IsPresent() || hasLowID) {
 		return userAddress;
 	}
+	if (connectAddress.IsPresent()) {
+		return connectAddress;
+	}
 	return CNetworkAddress::FromIPv4NetworkOrderOrAbsent(userIDNetworkOrder);
 }
 
-/** Callback admission requires an address supported by the contact security controls. */
+/** Callback wire formats remain IPv4-only, independently of contact security support. */
 inline bool CanRequestCallback(const CNetworkAddress &address) noexcept
 {
-	return address.IsPresent() && CanCheckContactAddress(address);
+	return (address.IsIPv4() || address.IsIPv4Mapped()) && !IndexKey(address).IsUnspecified();
+}
+
+/** An unconnected socket can only be opened when the contact has a legacy IPv4 form. */
+inline bool CanOpenConnection(const CNetworkAddress &address, bool socketConnected) noexcept
+{
+	return socketConnected || address.IsIPv4() || address.IsIPv4Mapped();
 }
 
 /** Production callback throttle seam; the exact three-minute boundary remains allowed. */

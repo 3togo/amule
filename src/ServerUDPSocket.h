@@ -39,10 +39,11 @@ public:
 
 	void SendPacket(CPacket *packet, CServer *host, bool delPacket, bool rawpacket, uint16 port_offset);
 	void OnHostnameResolved(uint32 ip);
-	virtual void OnReceiveError(int errorCode, uint32 ip, uint16 port);
+	void OnReceiveError(int errorCode, uint32 ip, uint16 port) override;
 
 private:
-	void OnPacketReceived(uint32 ip, uint16 port, uint8_t *buffer, size_t length);
+	void OnPacketReceived(
+		const CNetworkAddress &address, uint16 port, uint8_t *buffer, size_t length) override;
 	void ProcessPacket(CMemFile &packet, uint8 opcode, uint32 ip, uint16 port);
 	void SendQueue();
 

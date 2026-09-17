@@ -130,9 +130,16 @@ void CClientUDPSocket::OnReceive(int errorCode)
 	}
 }
 
-void CClientUDPSocket::OnPacketReceived(uint32 ip, uint16 port, uint8_t *buffer, size_t length)
+void CClientUDPSocket::OnPacketReceived(
+	const CNetworkAddress &address, uint16 port, uint8_t *buffer, size_t length)
 {
 	wxCHECK_RET(length >= 2, "Invalid packet.");
+
+	// Legacy encrypted/Kad packet handlers remain IPv4-only; keep the family boundary explicit.
+	uint32 ip;
+	if (!GetIPv4PacketAddress(address, ip, logClientUDP, "client")) {
+		return;
+	}
 
 	uint8_t *decryptedBuffer;
 	uint32_t receiverVerifyKey;
