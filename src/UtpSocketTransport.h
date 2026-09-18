@@ -152,6 +152,12 @@ public:
 		std::lock_guard<std::mutex> lock(m_mutex);
 		return m_connected && m_stream.IsOk();
 	}
+
+	bool ObfuscatesStream() const override
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		return m_encrypt;
+	}
 	bool IsOk() const override
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
@@ -357,6 +363,7 @@ public:
 		// socket is still CS_SYN_RECV, so utp_writev would refuse every byte
 		// at its state guard and the peek would be copied for nothing.
 		RaiseFlushRequest(flushEvents);
+		NotifyEvents(&IStreamTransportEvents::OnStreamConnected);
 		NotifyEvents(&IStreamTransportEvents::OnStreamWritable);
 	}
 
@@ -411,7 +418,7 @@ public:
 
 	//! After construction: the receiving socket does not exist until admission
 	//! has decided, and admission needs the transport first.
-	void SetEvents(IStreamTransportEvents *events)
+	void SetEvents(IStreamTransportEvents *events) override
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		m_events = events;

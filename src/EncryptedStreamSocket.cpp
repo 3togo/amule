@@ -72,6 +72,7 @@
  * sizeof(a) and sizeof(b) = 128 bits, g = 2, p = dh768_p (see below), sizeof p, s etc. = 768 bits.
  */
 #include "EncryptedStreamSocket.h"
+#include "StreamTransport.h"
 #include "amule.h"
 #include "Logger.h"
 #include "Preferences.h"
@@ -215,6 +216,12 @@ CEncryptedStreamSocket::~CEncryptedStreamSocket() {}
 
 /* External interface */
 
+bool CEncryptedStreamSocket::TransportObfuscates() const
+{
+	const IStreamTransport *transport = GetTransport();
+	return transport != nullptr && transport->ObfuscatesStream();
+}
+
 void CEncryptedStreamSocket::SetConnectionEncryption(
 	bool bEnabled, const uint8_t *pTargetClientHash, bool bServerConnection)
 {
@@ -222,6 +229,13 @@ void CEncryptedStreamSocket::SetConnectionEncryption(
 		if (bEnabled) {
 			wxFAIL;
 		}
+		return;
+	}
+
+	if (bEnabled && TransportObfuscates()) {
+		// A second handshake inside frames the transport already obfuscates
+		// would encrypt the stream twice, and eMuleAI skips it on uTP too.
+		m_StreamCryptState = ECS_NONE;
 		return;
 	}
 
@@ -389,6 +403,11 @@ void CEncryptedStreamSocket::OnSend(int)
 {
 	// if the socket just connected and this is outgoing, we might want to start the handshake here
 	if (m_StreamCryptState == ECS_PENDING || m_StreamCryptState == ECS_PENDING_SERVER) {
+		if (TransportObfuscates()) {
+			// Attached after the state was set, so the refusal above was missed.
+			m_StreamCryptState = ECS_NONE;
+			return;
+		}
 		StartNegotiation(true);
 		return;
 	}

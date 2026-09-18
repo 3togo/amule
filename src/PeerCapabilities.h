@@ -216,13 +216,19 @@ private:
 /**
  * The CT_MOD_MISCOPTIONS word aMule puts in its own handshake.
  *
- * Zero, and deliberately so: none of the five features exists in this tree yet. Recognising a
- * capability and implementing it are separate changes, and advertising one aMule does not have is
- * worse than advertising nothing -- the peer opens a handshake that cannot complete and neither
- * side logs a reason. Each bit turns on in the change that ships its transport.
+ * Zero, so no tag is emitted, because sending it costs more than it buys today.
  *
- * Because the word is zero, no CT_MOD_MISCOPTIONS tag is emitted at all: an absent tag and an all-
- * zero one mean the same thing to eMuleAI, and the absent one costs no bytes.
+ * The cost: eMuleAI marks any sender of this tag as an unofficial-opcode client and bans one that
+ * carries no readable ET_MOD_VERSION string. aMule emits that string only under __GIT__, which a
+ * tagged release suppresses.
+ *
+ * What it buys: the tag reaches only peers already connected over TCP, where uTP adds no
+ * reachability. It does gate what eMuleAI tells us about other sources -- it sets bit 0x80 of the
+ * source-exchange connect-options byte only for a recipient that advertised here -- but aMule does
+ * not read that bit yet, so nothing is lost until it does.
+ *
+ * Turning a bit on means emitting the tag and counting it, which the hello already does, and
+ * settling the ET_MOD_VERSION question first.
  */
 constexpr uint32_t LocalAdvertisedModMiscOptions()
 {

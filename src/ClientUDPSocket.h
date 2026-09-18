@@ -46,6 +46,7 @@ public:
 	~CClientUDPSocket() override;
 	void Close() override;
 	void TickUtp();
+	IUtpContext *GetUtpContext() { return &m_utp; }
 #endif
 
 protected:
