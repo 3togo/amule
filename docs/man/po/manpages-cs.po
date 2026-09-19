@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2026-06-10 16:45+0200\n"
-"PO-Revision-Date: 2026-09-17 09:24+0000\n"
+"PO-Revision-Date: 2026-09-19 14:45+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
 "Language: cs\n"
@@ -41,7 +41,7 @@ msgstr ""
 #: amule.1.in:1
 #, no-wrap
 msgid "aMule"
-msgstr ""
+msgstr "aMule"
 
 #. type: SH
 #: amule.1.in:4 amulecmd.1.in:5 amuled.1.in:4 amulegui.1.in:4 amuleweb.1.in:4
@@ -519,7 +519,7 @@ msgstr ""
 #. type: Plain text
 #: amulecmd.1.in:112
 msgid "Get and display a preference value."
-msgstr ""
+msgstr "Získat a zobrazit hodnotu předvolby."
 
 #. type: Plain text
 #: amulecmd.1.in:114 amulecmd.1.in:148 amulecmd.1.in:197 amulecmd.1.in:207
@@ -529,7 +529,7 @@ msgstr ""
 #. type: Plain text
 #: amulecmd.1.in:117
 msgid "Get bandwidth limits."
-msgstr ""
+msgstr "Získejte limity šířky pásma."
 
 #. type: Plain text
 #: amulecmd.1.in:119
@@ -594,7 +594,7 @@ msgstr ""
 #. type: Plain text
 #: amulecmd.1.in:151
 msgid "Reload shared files list."
-msgstr ""
+msgstr "Opětovně načte seznam sdílených souborů."
 
 #. type: Plain text
 #: amulecmd.1.in:153
@@ -1071,7 +1071,7 @@ msgstr ""
 #. type: Plain text
 #: amuleweb.1.in:114
 msgid "Disable PHP interpreter (deprecated)"
-msgstr ""
+msgstr "Zakázat PHP interpreter (zastaralé)"
 
 #. type: Plain text
 #: amuleweb.1.in:117
@@ -1139,7 +1139,7 @@ msgstr ""
 #: ed2k.1.in:1
 #, no-wrap
 msgid "ED2K"
-msgstr ""
+msgstr "ED2K"
 
 #. type: TH
 #: ed2k.1.in:1

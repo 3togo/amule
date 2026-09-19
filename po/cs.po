@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-18 22:25+0100\n"
-"PO-Revision-Date: 2026-09-18 11:20+0000\n"
+"PO-Revision-Date: 2026-09-19 14:33+0000\n"
 "Last-Translator: David Watzke <david@watzke.cz>\n"
 "Language-Team: cs <cs@li.org>\n"
 "Language: cs\n"
@@ -27,7 +27,7 @@ msgstr "O aMule"
 
 #: src/AboutDialog.cpp
 msgid "aMule remote control "
-msgstr "Vzdálené ovládání aMule"
+msgstr "Vzdálené ovládání aMule "
 
 #: src/AboutDialog.cpp
 msgid "Snapshot:"
@@ -280,12 +280,12 @@ msgstr "Ukončuji hlavní aplikaci..."
 #: src/amule.cpp
 #, c-format
 msgid "Terminating amuleweb instance with pid '%d' ... "
-msgstr "Ukončuji instanci amuleweb s PID '%d' ... "
+msgstr "Ukončuji instanci amuleweb s pid '%d' ... "
 
 #: src/amule.cpp
 #, c-format
 msgid "Killing amuleweb instance with pid '%d' ... "
-msgstr "Zabíjím instanci amuleweb s PID '%d' ... "
+msgstr "Zabíjím instanci amuleweb s pid '%d' ... "
 
 #: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
 msgid "Failed"
@@ -411,7 +411,7 @@ msgstr "Kad zaváděcí servery (nodes.dat)"
 #: src/amule.cpp
 #, c-format
 msgid "web server running on pid %d"
-msgstr "webserver běží s PID %d"
+msgstr "webserver běží s pid %d"
 
 #: src/amule.cpp
 msgid "You requested to run web server on startup, but the amuleweb binary cannot be run. Please install the package containing aMule web server, or build aMule from source with -DBUILD_WEBSERVER=YES and install it."
@@ -574,7 +574,7 @@ msgstr "Vaše verze aMule je %i.%i.%i a poslední verze je %li.%li.%li"
 
 #: src/amule.cpp
 msgid "The latest version can always be found at https://github.com/amule-org/amule/releases/latest"
-msgstr "Poslední verze jsou vždy k nalezení na https://github.com/amule-org/amule/releases/latest "
+msgstr "Poslední verze jsou vždy k nalezení na https://github.com/amule-org/amule/releases/latest"
 
 #: src/amule.cpp
 #, c-format
@@ -667,7 +667,7 @@ msgstr "amuled: OnInit - spouštění časovače"
 
 #: src/amuled.cpp
 msgid "Cannot Create Pid File"
-msgstr "Nelze vytvořit soubor s PID"
+msgstr "Nelze vytvořit soubor Pid"
 
 #: src/amuled.cpp
 #, c-format
@@ -686,7 +686,7 @@ msgstr "Běží na %s"
 
 #: src/amuleDlg.cpp
 msgid "Visit https://github.com/amule-org/amule/releases/latest to check if a new version is available."
-msgstr "Navštivte https://github.com/amule-org/amule/releases/latest  pro kontrolu, jestli není dostupná nová verze."
+msgstr "Navštivte https://github.com/amule-org/amule/releases/latest pro kontrolu, jestli není dostupná nová verze."
 
 #: src/amuleDlg.cpp
 msgid "FATAL ERROR: Failed to create Timer"
@@ -952,7 +952,7 @@ msgstr "Připojit se ke vzdálené amuli"
 
 #: src/amule-remote-gui.cpp src/ServerConnect.cpp
 msgid "Connection lost"
-msgstr "Připojení ztraceno."
+msgstr "Připojení ztraceno"
 
 #: src/amule-remote-gui.cpp
 msgid "Abort and exit"
@@ -1717,7 +1717,7 @@ msgstr "Příliš Kad připojení"
 
 #: src/DataToText.cpp
 msgid "Banned"
-msgstr "Zabanován"
+msgstr "Zablokován"
 
 #: src/DataToText.cpp
 msgid "Connection Error"
@@ -2009,7 +2009,7 @@ msgstr "Všechny soubory PartFile uloženy."
 #: src/DownloadQueue.cpp
 #, c-format
 msgid "Loading temp files from %s."
-msgstr "Načítám dočasné soubory z %s"
+msgstr "Načítám dočasné soubory z %s."
 
 #: src/DownloadQueue.cpp
 #, c-format
@@ -2138,7 +2138,7 @@ msgstr "Neplatná verze protokolu."
 
 #: src/ExternalConn.cpp
 msgid "Missing protocol version tag."
-msgstr "Chybí štítek verze protokolu"
+msgstr "Chybí štítek verze protokolu."
 
 #: src/ExternalConn.cpp
 #, c-format
@@ -2518,7 +2518,7 @@ msgid ""
 "Ok, exiting %s...\n"
 msgstr ""
 "\n"
-"OK, opouštím %s...\n"
+"Ok, ukončuji %s...\n"
 
 #: src/ExternalConnector.cpp
 msgid ""
@@ -2731,11 +2731,11 @@ msgstr "Kademlia"
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Standard TCP Port "
-msgstr "Standardní TCP port"
+msgstr "Běžný TCP port "
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Extended UDP port (Kad / global search) "
-msgstr "Rozšířený UDP port (Kad / globální vyhledávání)"
+msgstr "Rozšířený UDP port (Kad / globální vyhledávání) "
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Enable UPnP for router port forwarding"
@@ -2795,7 +2795,7 @@ msgstr "Zaregistrovat aMule pro odkazy ed2k://"
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 #: packaging/windows/installer_strings.c
 msgid "Register aMule for magnet: links"
-msgstr "Zaregistrovat aMule pro odkazy magnet:"
+msgstr "Zaregistrovat aMule pro odkazy magnet"
 
 #: src/FirstRunWizard.cpp
 msgid "Only eD2k-compatible magnets. Leave off if you use a BitTorrent client."
@@ -3485,7 +3485,7 @@ msgstr "Externí spojení: daemonu se nepodařilo dokázat, že zná heslo. Spoj
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 msgid "Succeeded! Connection established to aMule "
-msgstr "Připojení k aMule uspělo"
+msgstr "Úspěch! Navázáno připojení k aMule "
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 msgid "Succeeded! Connection established."
@@ -3515,7 +3515,7 @@ msgstr "Naslouchací socket: Ok."
 
 #: src/ListenSocket.cpp
 msgid "ERROR: Could not listen to TCP port."
-msgstr "CHYBA: Nemohu naslouchat na TCP portu"
+msgstr "CHYBA: Nemohu naslouchat na TCP portu."
 
 #: src/Logger.cpp
 msgid "ERROR: "
@@ -3790,7 +3790,7 @@ msgstr "Online podpis: Zakázán"
 #: src/MuleTrayIcon.cpp src/Statistics.cpp
 #, c-format
 msgid "Uptime: %s"
-msgstr "Uptime: %s"
+msgstr "Dostupnost: %s"
 
 #: src/MuleTrayIcon.cpp
 #, c-format
@@ -4304,7 +4304,7 @@ msgstr "Verze klienta"
 
 #: src/muuli_wdr.cpp
 msgid "User ID"
-msgstr "ID uživ."
+msgstr "ID uživatele"
 
 #: src/muuli_wdr.cpp
 msgid "Server IP"
@@ -4392,7 +4392,7 @@ msgstr "Prodleva před zobrazením tooltipů."
 
 #: src/muuli_wdr.cpp
 msgid "This specifies the language used on controls."
-msgstr "Jazyk ovládání programu"
+msgstr "Toto stanovuje jazyk ovládání."
 
 #: src/muuli_wdr.cpp
 msgid "Periodically check for a new version"
@@ -4424,7 +4424,7 @@ msgstr "Minimalizace po spuštění"
 
 #: src/muuli_wdr.cpp
 msgid "Enabling this makes aMule minimize itself upon start."
-msgstr "aMule se po spuštění minimalizuje"
+msgstr "Zapnutí způsobí minimalizaci aMule po spuštění."
 
 #: src/muuli_wdr.cpp
 msgid "Prompt on exit"
@@ -5216,7 +5216,7 @@ msgstr "ED2K Info"
 
 #: src/muuli_wdr.cpp
 msgid "Kad Info"
-msgstr "Kad Info"
+msgstr "Kad info."
 
 #: src/muuli_wdr.cpp
 msgid "Click on this button to update the nodes list from URL ..."
@@ -5716,7 +5716,7 @@ msgstr "min."
 
 #: src/OtherFunctions.cpp
 msgid "hours"
-msgstr "hod."
+msgstr "hodin"
 
 #: src/OtherFunctions.cpp
 msgid "days"
@@ -6068,7 +6068,7 @@ msgstr "VAROVÁNÍ: Nedostatek volného místa na disku! Pozastavuji soubor: %s"
 #: src/PartFile.cpp
 #, c-format
 msgid "Downloaded part %i is corrupt in file: %s"
-msgstr "Stažená část %i souboru '%s' je poškozená."
+msgstr "Stažená část %i souboru '%s' je poškozená"
 
 #: src/PartFile.cpp
 #, c-format
@@ -6707,13 +6707,12 @@ msgid "Only saving the first %u of %u results for search \"%s\"."
 msgstr "Ukládání jen prvních %u z %u výsledků vyhledávání \"%s\"."
 
 #: src/SearchList.cpp
-#, fuzzy
 msgid "WARNING: Stored search list corrupted, contains invalid header."
-msgstr "VAROVÁNÍ: Soubor je porušen, obsahuje neplatnou hlavičku."
+msgstr "VAROVÁNÍ: Uchovávaný seznam vyhledávání je poškozený, obsahuje neplatné záhlaví."
 
 #: src/SearchList.cpp
 msgid "Invalid entry in stored search list, file may be corrupt"
-msgstr ""
+msgstr "Neplatný vstup v uchovávaném seznamu vyhledávání, soubor může být poškozen"
 
 #: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
@@ -6729,7 +6728,7 @@ msgstr "Neočekávaná chyba během vyhledávání v síti Kad: "
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
-msgstr ""
+msgstr "Vypršela platnost vyhledávání: server neodpověděl."
 
 #: src/SearchList.cpp
 msgid "Kad search: requested wider results from one more peer."
@@ -6740,9 +6739,9 @@ msgid "Kad search: no peer left to reask for more results (cap reached or no res
 msgstr "Kad hledání: nezůstal žádný peer, kterého by bylo možné znovu požádat o další výsledky (dosažen limit nebo zatím žádné odpovědi)."
 
 #: src/SearchList.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Error %u: %s\n"
-msgstr "Selhala aktualizace GeoIP.dat"
+msgstr "Chyba %u: %s\n"
 
 #: src/SearchListCtrl.cpp
 msgid "FileID"
@@ -6750,12 +6749,11 @@ msgstr "ID souboru"
 
 #: src/SearchListCtrl.cpp
 msgid "Expand all"
-msgstr ""
+msgstr "Rozbalit vše"
 
 #: src/SearchListCtrl.cpp
-#, fuzzy
 msgid "Collapse all"
-msgstr "Zavřít všechny taby"
+msgstr "Sbalit vše"
 
 #: src/SearchListCtrl.cpp
 msgid "Search related files (eD2k, local server)"
@@ -6782,28 +6780,26 @@ msgid "New"
 msgstr "Nový"
 
 #: src/SearchProgressReport.cpp
-#, fuzzy
 msgid "running"
-msgstr "Běží"
+msgstr "běží"
 
 #: src/SearchProgressReport.cpp
-#, fuzzy
 msgid "finished"
-msgstr "Finština"
+msgstr "dokončené"
 
 #: src/SearchProgressReport.cpp
 msgid "idle"
-msgstr ""
+msgstr "nečinné"
 
 #: src/SearchProgressReport.cpp
 #, c-format
 msgid "Search %u: %s, %u %% (%u results)\n"
-msgstr ""
+msgstr "Vyhledávání %u: %s, %u %% (%u výsledků)\n"
 
 #: src/SearchProgressReport.cpp
 #, c-format
 msgid "Search %u \"%s\": %s, %u %% (%u results)\n"
-msgstr ""
+msgstr "Vyhledávání %u \"%s\": %s, %u %% (%u výsledků)\n"
 
 #: src/SearchProgressReport.cpp src/TextClient.cpp
 msgid "Search expired or unknown ID. Start a new search.\n"
@@ -6820,7 +6816,7 @@ msgstr "Průběh hledání není k dispozici"
 
 #: src/SearchProgressReport.cpp
 msgid "No search to report on.\n"
-msgstr ""
+msgstr "Žádné vyhledávání k nahlášení.\n"
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
@@ -6835,9 +6831,8 @@ msgid "Failed to connect to all static servers listed."
 msgstr "Selhalo připojení ke všem stálým serverům na seznamu."
 
 #: src/ServerConnect.cpp
-#, fuzzy
 msgid "Failed to connect to all servers listed."
-msgstr "Selhalo připojení ke všem serverům na seznamu. Zkouším znovu."
+msgstr "Selhalo připojení ke všem serverům na seznamu."
 
 #: src/ServerConnect.cpp
 #, c-format
@@ -6929,17 +6924,17 @@ msgstr "Soubor server.met je porušený, nalezena neplatná verze: 0x%x, velikos
 #, c-format
 msgid "%i server in server.met found"
 msgid_plural "%i servers in server.met found"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%i server byl nalezen v souboru server.met"
+msgstr[1] "%i servery byly nalezeny v souboru server.met"
+msgstr[2] "%i serverů bylo nalezeno v souboru server.met"
 
 #: src/ServerList.cpp
 #, c-format
 msgid "%d server added"
 msgid_plural "%d servers added"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%d server přidán"
+msgstr[1] "%d servery přidány"
+msgstr[2] "%d serverů přidáno"
 
 #: src/ServerList.cpp
 msgid "Error: the file 'server.met' is corrupted: "
@@ -6983,9 +6978,9 @@ msgid "Failed to save server.met!"
 msgstr "Ukládání server.met selhalo!"
 
 #: src/ServerList.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "IO failure while writing 'server.met': %s"
-msgstr "I/O chyba při čtení souboru known.met: %s"
+msgstr "Selhání I/O při zápisu 'server.met': %s"
 
 #: src/ServerList.cpp
 msgid "Invalid URL"
@@ -7040,31 +7035,28 @@ msgid "Users"
 msgstr "Uživatelé"
 
 #: src/ServerListCtrl.cpp
-#, fuzzy
 msgid "Max Users"
-msgstr "Uživatelé"
+msgstr "Max. uživatelů"
 
 #: src/ServerListCtrl.cpp
 msgid "Static"
 msgstr "Stálý"
 
 #: src/ServerListCtrl.cpp
-#, fuzzy
 msgid "Soft Files"
-msgstr "Soubory"
+msgstr "Měkké soubory"
 
 #: src/ServerListCtrl.cpp
-#, fuzzy
 msgid "Hard Files"
-msgstr "Sdílené soubory"
+msgstr "Tvrdé soubory"
 
 #: src/ServerListCtrl.cpp
 msgid "TCP Flags"
-msgstr ""
+msgstr "TCP příznaky"
 
 #: src/ServerListCtrl.cpp
 msgid "UDP Flags"
-msgstr ""
+msgstr "UDP příznaky"
 
 #: src/ServerListCtrl.cpp
 msgid "You are connected to a server you are trying to delete. Please disconnect first. The server was NOT deleted."
@@ -7077,12 +7069,11 @@ msgstr "(neznámý název)"
 #: src/ServerListCtrl.cpp
 #, c-format
 msgid "Are you sure you want to delete the static server %s"
-msgstr "Opravdu si přejete smazat stálý server %s?"
+msgstr "Opravdu si přejete smazat stálý server %s"
 
 #: src/ServerListCtrl.cpp
-#, fuzzy
 msgid "ms"
-msgstr "min."
+msgstr "ms"
 
 #: src/ServerListCtrl.cpp
 #, c-format
@@ -7144,12 +7135,12 @@ msgstr "Opravdu chcete smazat vybrané servery?"
 #: src/ServerSocket.cpp
 #, c-format
 msgid "ERROR: %s (%s) - %s"
-msgstr ""
+msgstr "CHYBA: %s (%s) - %s"
 
 #: src/ServerSocket.cpp
 #, c-format
 msgid "WARNING: %s (%s) - %s"
-msgstr ""
+msgstr "VAROVÁNÍ: %s (%s) - %s"
 
 #: src/ServerSocket.cpp
 #, c-format
@@ -7159,7 +7150,7 @@ msgstr "Server %s (%s) odmítl naše přihlášení (nebylo přiděleno ID klien
 #: src/ServerSocket.cpp
 #, c-format
 msgid "New clientid is %u"
-msgstr "Nové ID klienta je %u"
+msgstr "Nové clientid je %u"
 
 #: src/ServerSocket.cpp
 msgid "WARNING: You have received Low-ID!"
@@ -7181,9 +7172,9 @@ msgstr "Přijaty neznámé informace o serveru! - příliš krátké"
 #, c-format
 msgid "Received %d new server"
 msgid_plural "Received %d new servers"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Přijat %d nový server"
+msgstr[1] "Přijaty %d nové servery"
+msgstr[2] "Přijato %d nových serverů"
 
 #: src/ServerSocket.cpp
 msgid "Saving of server-list completed."
@@ -7332,7 +7323,7 @@ msgstr "Indexovaná klíčová slova:"
 
 #: src/ServerWnd.cpp
 msgid "Indexed notes:"
-msgstr ""
+msgstr "Indexované poznámky:"
 
 #: src/ServerWnd.cpp
 msgid "Indexed load:"
@@ -7340,11 +7331,11 @@ msgstr "Indexovaná zátěž:"
 
 #: src/ServerWnd.cpp
 msgid "Average Users:"
-msgstr ""
+msgstr "Průměr uživatelů:"
 
 #: src/ServerWnd.cpp
 msgid "Average Files:"
-msgstr ""
+msgstr "Průměr souborů:"
 
 #: src/ServerWnd.cpp src/TextClient.cpp
 msgid "Not running"
@@ -7353,19 +7344,19 @@ msgstr "Neběží"
 #: src/SharedDirWatcher.cpp
 #, c-format
 msgid "Shared-dir watcher: backend overflow/error (%s); falling back to full reload"
-msgstr ""
+msgstr "Sledovač sdílené složky: chyba přetečení na backendu (%s); přepínám na celkové opětovné načtení"
 
 #: src/SharedDirWatcher.cpp
 #, c-format
 msgid "Shared-dir watcher: %u new subdirectory found since last run, rescanning shares"
 msgid_plural "Shared-dir watcher: %u new subdirectories found since last run, rescanning shares"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Sledovač sdílené složky: %u nová podsložka nalezena od posledního procházení, znovu prohledávám sdílení"
+msgstr[1] "Sledovač sdílené složky: %u nové podsložky nalezeny od posledního procházení, znovu prohledávám sdílení"
+msgstr[2] "Sledovač sdílené složky: %u nových podsložek nalezeno od posledního procházení, znovu prohledávám sdílení"
 
 #: src/SharedDirWatcher.cpp
 msgid "Shared-dir watcher: events dropped by backend, forcing a full shared-files reload to resync"
-msgstr ""
+msgstr "Sledovač sdílené složky: události zahozeny backendem, vynucuji celkové opětovné načtení sdílených souborů kvůli synchronizaci"
 
 #: src/SharedFileList.cpp
 #, c-format
@@ -7376,9 +7367,9 @@ msgstr "Přidávám soubor %s do sdílených"
 #, c-format
 msgid "Found %i known shared file"
 msgid_plural "Found %i known shared files"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Nalezen %i známý sdílený soubor"
+msgstr[1] "Nalezeny %i známé sdílené soubory"
+msgstr[2] "Nalezeno %i známých sdílených souborů"
 
 #: src/SharedFileList.cpp
 #, c-format
@@ -7399,56 +7390,55 @@ msgid "Shared directory not found, skipping: %s"
 msgstr "Sdílený adresář nenalezen, přeskakuji: %s"
 
 #: src/SharedFileList.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Shared directory not readable, skipping: %s"
-msgstr "Sdílený adresář nenalezen, přeskakuji: %s"
+msgstr "Sdílený adresář nelze číst, přeskakuji: %s"
 
 #: src/SharedFileList.cpp
-#, fuzzy
 msgid "Media metadata extraction is disabled in preferences, so there is nothing to re-extract."
-msgstr "Extrakce metadat médií"
+msgstr "Extrakce mediálních metadat je zakázána v nastavení, není tedy co znovu extrahovat."
 
 #: src/SharedFileList.cpp
 #, c-format
 msgid "Re-extracting media metadata for %u shared file"
 msgid_plural "Re-extracting media metadata for %u shared files"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Opětovná extrakce mediálních metadat %u sdíleného souboru"
+msgstr[1] "Opětovná extrakce mediálních metadat %u sdílených souborů"
+msgstr[2] "Opětovná extrakce mediálních metadat %u sdílených souborů"
 
 #: src/SharedFileList.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Now sharing file: %s"
-msgstr "Chyba při ukládání souboru %s: %s"
+msgstr "Nyní sdílím soubor: %s"
 
 #: src/SharedFileList.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Stopped sharing removed file: %s"
-msgstr "Načítám soubor server.met: %s"
+msgstr "Zastaveno sdílení odebraného souboru: %s"
 
 #: src/SharedFileList.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Stopped sharing %u file under removed directory: %s"
 msgid_plural "Stopped sharing %u files under removed directory: %s"
-msgstr[0] "Načítám soubor server.met: %s"
-msgstr[1] "Načítám soubor server.met: %s"
-msgstr[2] "Načítám soubor server.met: %s"
+msgstr[0] "Zastaveno sdílení %u souboru v odebraném adresáři: %s"
+msgstr[1] "Zastaveno sdílení %u souborů v odebraném adresáři: %s"
+msgstr[2] "Zastaveno sdílení %u souborů v odebraném adresáři: %s"
 
 #: src/SharedFileList.cpp
 #, c-format
 msgid "Now sharing %u file found in a new shared directory"
 msgid_plural "Now sharing %u files found in new shared directories"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Nyní sdílím %u soubor nalezený v novém sdíleném adresáři"
+msgstr[1] "Nyní sdílím %u soubory nalezené v nových sdílených adresářích"
+msgstr[2] "Nyní sdílím %u souborů nalezených v nových sdílených adresářích"
 
 #: src/SharedFileList.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Discovered %u new shared file"
 msgid_plural "Discovered %u new shared files"
-msgstr[0] "Znovu načíst vaše sdílené soubory"
-msgstr[1] "Znovu načíst vaše sdílené soubory"
-msgstr[2] "Znovu načíst vaše sdílené soubory"
+msgstr[0] "Nalezen %u nový sdílený soubor"
+msgstr[1] "Nalezeny %u nové sdílené soubory"
+msgstr[2] "Nalezeno %u nových sdílených souborů"
 
 #: src/SharedFilePeersListCtrl.cpp src/SourceListCtrl.cpp
 msgid "User Name"
@@ -7456,10 +7446,9 @@ msgstr "Uživatelské jméno"
 
 #: src/SharedFilePeersListCtrl.cpp
 msgid "Parts on Peer"
-msgstr ""
+msgstr "Částí na peera"
 
 #: src/SharedFilePeersListCtrl.cpp
-#, fuzzy
 msgid "Upload Status"
 msgstr "Stav odesílání"
 
@@ -7476,9 +7465,8 @@ msgid "Shares File List"
 msgstr "Seznam sdílených souborů"
 
 #: src/SharedFilesCtrl.cpp
-#, fuzzy
 msgid "Source Availability"
-msgstr "Dostupnost"
+msgstr "Dostupnost zdroje"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Directory Path"
@@ -7502,11 +7490,11 @@ msgstr "Přejmenovat"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Verify Local Data"
-msgstr ""
+msgstr "Ověřit místní data"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Re-extract &media metadata"
-msgstr ""
+msgstr "Re-extrahovat &mediální metadata"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Add files in collection to transfer list"
@@ -7542,7 +7530,7 @@ msgstr "Kopírovat eD2k odkaz do schránky (&info AICH + zdroj)"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Export selected files to an emulecollection"
-msgstr ""
+msgstr "Export vybraných souborů do emulecollection"
 
 #: src/SharedFilesCtrl.cpp
 #, c-format
@@ -7553,89 +7541,88 @@ msgstr "Ověření místních dat u částečného souboru PartFile momentálně
 #, c-format
 msgid "Media metadata: skipping %u incomplete download"
 msgid_plural "Media metadata: skipping %u incomplete downloads"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Mediální metadata: vynechávám %u neúplné stahování"
+msgstr[1] "Mediální metadata: vynechávám %u neúplná stahování"
+msgstr[2] "Mediální metadata: vynechávám %u neúplných stahování"
 
 #: src/SharedFilesCtrl.cpp
 #, c-format
 msgid "Media metadata: skipping %u file that is not audio or video"
 msgid_plural "Media metadata: skipping %u files that are not audio or video"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Mediální metadata: vynechávám %u soubor, který není zvuk nebo video"
+msgstr[1] "Mediální metadata: vynechávám %u soubory, které nejsou zvuk nebo video"
+msgstr[2] "Mediální metadata: vynechávám %u souborů, které nejsou zvuk nebo video"
 
 #: src/SharedFilesCtrl.cpp
 #, c-format
 msgid "Re-extract media metadata for %u file?"
 msgid_plural "Re-extract media metadata for %u files?"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Re-extrahovat mediální metadata %u souboru?"
+msgstr[1] "Re-extrahovat mediální metadata %u souborů?"
+msgstr[2] "Re-extrahovat mediální metadata %u souborů?"
 
 #: src/SharedFilesCtrl.cpp
 #, c-format
 msgid "%u incomplete download will be skipped."
 msgid_plural "%u incomplete downloads will be skipped."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%u neúplné stahování bude vynecháno."
+msgstr[1] "%u neúplná stahování budou vynechána."
+msgstr[2] "%u neúplných stahování bude vynecháno."
 
 #: src/SharedFilesCtrl.cpp
 #, c-format
 msgid "%u file is not audio or video and will be skipped."
 msgid_plural "%u files are not audio or video and will be skipped."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%u soubor není zvuk nebo video a bude vynechán."
+msgstr[1] "%u soubory nejsou zvuk nebo video a budou vynechány."
+msgstr[2] "%u souborů není zvuk nebo video a bude vynecháno."
 
 #: src/SharedFilesCtrl.cpp
 msgid "This runs in the background. Progress is reported in the log."
-msgstr ""
+msgstr "Toto běží na pozadí. Postup je hlášen do logu."
 
 #: src/SharedFilesCtrl.cpp
 msgid "Re-extract media metadata"
-msgstr ""
+msgstr "Re-extrahovat mediální metadata"
 
 #: src/SharedFilesCtrl.cpp
 msgid "You need a HighID to create a valid sourcelink"
 msgstr "K vytvoření platného odkazu potřebujete HighID"
 
 #: src/SharedFilesCtrl.cpp
-#, fuzzy
 msgid "Export to emulecollection"
-msgstr "Chyba při dokončení"
+msgstr "Exportovat do emulecollection"
 
 #: src/SharedFilesCtrl.cpp
 msgid "No files are selected to export."
-msgstr ""
+msgstr "Nejsou vybrány žádné soubory k exportování."
 
 #: src/SharedFilesCtrl.cpp
 msgid "eMule collections (*.emulecollection)"
-msgstr ""
+msgstr "eMule sbírky (*.emulecollection)"
 
 #: src/SharedFilesCtrl.cpp
 #, c-format
 msgid "'%s' already exists. Overwrite it?"
-msgstr ""
+msgstr "'%s' již existuje. Přepsat?"
 
 #: src/SharedFilesCtrl.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to write the collection file '%s'."
-msgstr "Nelze získat seznam sdílených souborů od uživatele '%s'"
+msgstr "Selhal zápis souboru kolekce '%s'."
 
 #: src/SharedFilesCtrl.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Exported %u shared file to '%s'."
 msgid_plural "Exported %u shared files to '%s'."
-msgstr[0] "Znovu načíst vaše sdílené soubory"
-msgstr[1] "Znovu načíst vaše sdílené soubory"
-msgstr[2] "Znovu načíst vaše sdílené soubory"
+msgstr[0] "Exportován %u sdílený soubor do '%s'."
+msgstr[1] "Exportovány %u sdílené soubory do '%s'."
+msgstr[2] "Exportováno %u sdílených souborů do '%s'."
 
 #: src/SharedFilesCtrl.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Total size of Shared Files: %s (%s completed)"
-msgstr "Celková velikost sdílených souborů: %s"
+msgstr "Celková velikost sdílených souborů: %s (%s dokončeno)"
 
 #: src/SharedFilesCtrl.cpp src/SharedFilesWnd.cpp src/Statistics.cpp
 #, c-format
@@ -7643,12 +7630,12 @@ msgid "Total size of Shared Files: %s"
 msgstr "Celková velikost sdílených souborů: %s"
 
 #: src/SharedFilesCtrl.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Shared Files (%i, hashing %u more)"
 msgid_plural "Shared Files (%i, hashing %u more)"
-msgstr[0] "Sdílené soubory (%i)"
-msgstr[1] "Sdílené soubory (%i)"
-msgstr[2] "Sdílené soubory (%i)"
+msgstr[0] "Sdílené soubory (%i, hashuji %u další)"
+msgstr[1] "Sdílené soubory (%i, hashuji %u další)"
+msgstr[2] "Sdílené soubory (%i, hashuji %u dalších)"
 
 #: src/SharedFilesCtrl.cpp
 #, c-format
@@ -7661,9 +7648,8 @@ msgid "Reloading shared files: %u files scanned"
 msgstr "Znovu se načítají sdílené soubory: prohledáno %u souborů"
 
 #: src/SourceListCtrl.cpp
-#, fuzzy
 msgid "Part Status"
-msgstr "Stav"
+msgstr "Stav části"
 
 #: src/SourceListCtrl.cpp
 msgid "Remote File Name"
@@ -7691,7 +7677,7 @@ msgstr "Přebytek požadavků na soubor (pakety): %s"
 #: src/Statistics.cpp
 #, c-format
 msgid "Source Exchange Overhead (Packets): %s"
-msgstr ""
+msgstr "Režie při výměně zdrojů (pakety): %s"
 
 #: src/Statistics.cpp
 #, c-format
@@ -7706,7 +7692,7 @@ msgstr "Režie Kadu (pakety): %s"
 #: src/Statistics.cpp
 #, c-format
 msgid "Crypt overhead (UDP): %s"
-msgstr ""
+msgstr "Režie šifrování (UDP): %s"
 
 #: src/Statistics.cpp
 #, c-format
@@ -7821,12 +7807,12 @@ msgstr "Filtrován: %s"
 #: src/Statistics.cpp
 #, c-format
 msgid "Banned: %s"
-msgstr "Zabanován: %s"
+msgstr "Zablokováno: %s"
 
 #: src/Statistics.cpp
 #, c-format
 msgid "Kad banned addresses: %s"
-msgstr ""
+msgstr "Zablokované adresy Kad: %s"
 
 #: src/Statistics.cpp
 #, c-format
@@ -7925,7 +7911,7 @@ msgstr "Spustí <str> a ukončí se."
 
 #: src/TextClient.cpp
 msgid "Separate list fields with spaces, as before, instead of tabs."
-msgstr ""
+msgstr "Oddělit pole seznamu mezerami, jako dříve, místo tabulátorů."
 
 #: src/TextClient.cpp
 msgid "Invalid IP format. Use xxx.xxx.xxx.xxx:xxxx\n"
@@ -7933,7 +7919,7 @@ msgstr "Neplatný formát IP adresy. Použijte xxx.xxx.xxx.xxx:xxxx\n"
 
 #: src/TextClient.cpp
 msgid "This command requires an argument. Valid arguments: 'all', filename, or a number.\n"
-msgstr ""
+msgstr "Tento příkaz vyžaduje argument. Platné argumenty: 'all', název souboru, nebo číslo.\n"
 
 #: src/TextClient.cpp
 msgid "Processing by hash: "
@@ -7945,7 +7931,7 @@ msgstr "Zpracovávám podle názvu souboru: "
 
 #: src/TextClient.cpp
 msgid "This command requires an argument. Valid arguments: a file hash.\n"
-msgstr ""
+msgstr "Tento příkaz vyžaduje argument. Platné argumenty: hash souboru.\n"
 
 #: src/TextClient.cpp
 msgid "Not a valid number\n"
@@ -8001,7 +7987,7 @@ msgstr "Operace byla úspěšná."
 #: src/TextClient.cpp
 #, c-format
 msgid "Request failed with the following error: %s"
-msgstr ""
+msgstr "Požadavek selhal s chybou: %s"
 
 #: src/TextClient.cpp
 #, c-format
@@ -8029,7 +8015,7 @@ msgstr "Aktuální úroveň IP filtru je %d.\n"
 #: src/TextClient.cpp
 #, c-format
 msgid "Bandwidth limits: Up: %u KiB/s, Down: %u KiB/s.\n"
-msgstr ""
+msgstr "Limity šířky pásma: Odes.: %u KiB/s, Stah.: %u KiB/s.\n"
 
 #: src/TextClient.cpp
 #, c-format
@@ -8136,7 +8122,7 @@ msgstr ""
 
 #: src/TextClient.cpp
 msgid "Shut down aMule."
-msgstr "Ukončit aMuli"
+msgstr "Ukončit aMule."
 
 #: src/TextClient.cpp
 msgid ""
@@ -8150,19 +8136,19 @@ msgstr ""
 
 #: src/TextClient.cpp
 msgid "Reload the given object."
-msgstr ""
+msgstr "Znovu načíst daný objekt."
 
 #: src/TextClient.cpp
 msgid "Reload shared files list."
-msgstr "Znovu načte seznam sdílených souborů."
+msgstr "Opětovně načte seznam sdílených souborů."
 
 #: src/TextClient.cpp
 msgid "Reload IP filtering table."
-msgstr ""
+msgstr "Znovu načíst tabulku filtrování IP."
 
 #: src/TextClient.cpp
 msgid "Reload current IP filtering table."
-msgstr ""
+msgstr "Znovu načíst současnou tabulku filtrování IP."
 
 #: src/TextClient.cpp
 msgid "Update IP filtering table from URL."
@@ -8308,7 +8294,7 @@ msgstr "Nastavit limit šířky pásma pro stahování."
 
 #: src/TextClient.cpp
 msgid "Enable or disable endgame source rotation."
-msgstr "Povolí/zakáže rotaci zdroje koncovky"
+msgstr "Povolí/zakáže rotaci zdroje koncovky."
 
 #: src/TextClient.cpp
 msgid "The given value must be 1/ON (enable) or 0/OFF (disable).\n"
@@ -8316,7 +8302,7 @@ msgstr "Zadaná hodnota musí být 1/ON (povolit) nebo 0/OFF (zakázat).\n"
 
 #: src/TextClient.cpp
 msgid "Get and display a preference value."
-msgstr ""
+msgstr "Získat a zobrazit hodnotu předvolby."
 
 #: src/TextClient.cpp
 msgid "Get IP filtering preferences."
@@ -8324,23 +8310,23 @@ msgstr "Získat nastavení filtrování IP."
 
 #: src/TextClient.cpp
 msgid "Get IP filtering state for both clients and servers."
-msgstr ""
+msgstr "Získejte stav filtrování IP pro klienty i servery."
 
 #: src/TextClient.cpp
 msgid "Get IP filtering state for clients only."
-msgstr ""
+msgstr "Získejte stav filtrování IP jen pro klienty."
 
 #: src/TextClient.cpp
 msgid "Get IP filtering state for servers only."
-msgstr ""
+msgstr "Získejte stav filtrování IP jen pro servery."
 
 #: src/TextClient.cpp
 msgid "Get IP filtering level."
-msgstr ""
+msgstr "Získejte úroveň filtrování IP."
 
 #: src/TextClient.cpp
 msgid "Get bandwidth limits."
-msgstr ""
+msgstr "Získejte limity šířky pásma."
 
 #: src/TextClient.cpp
 msgid "Get endgame source rotation state."
@@ -8348,7 +8334,7 @@ msgstr "Získat stav rotace zdrojů koncovky."
 
 #: src/TextClient.cpp
 msgid "Execute a search."
-msgstr "Spustí vyhledávání v síti Kad"
+msgstr "Spustí vyhledávání."
 
 #: src/TextClient.cpp
 msgid ""
@@ -8385,7 +8371,7 @@ msgstr ""
 
 #: src/TextClient.cpp
 msgid "Execute a global search."
-msgstr "Spustí globální vyhledávání"
+msgstr "Spustí globální vyhledávání."
 
 #: src/TextClient.cpp
 msgid "Execute a local search"
@@ -8421,7 +8407,7 @@ msgstr ""
 
 #: src/TextClient.cpp
 msgid "Start downloading a file"
-msgstr ""
+msgstr "Začít stahovat soubor"
 
 #: src/TextClient.cpp
 msgid ""
@@ -8473,7 +8459,7 @@ msgstr "Zobrazit fronty/seznamy."
 
 #: src/TextClient.cpp
 msgid "Show upload/download queue, server list or shared files list.\n"
-msgstr ""
+msgstr "Zobrazit frontu odesílání/stahování, seznam serverů nebo seznam sdílených souborů.\n"
 
 #: src/TextClient.cpp
 msgid "Show upload queue."
@@ -8518,19 +8504,19 @@ msgid "aMule text client"
 msgstr "Textový klient aMule"
 
 #: src/ThreadTasks.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Hashing downloaded file: %s"
-msgstr "Mazání souboru: %s"
+msgstr "Hashování staženého soubor: %s"
 
 #: src/ThreadTasks.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Hashing file: %s"
-msgstr "Mazání souboru: %s"
+msgstr "Hashování souboru: %s"
 
 #: src/ThreadTasks.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Rebuilding AICH hashset for file: %s"
-msgstr "Obnovuji odesílání souboru %s"
+msgstr "Opětovné sestavování sady hashů AICH pro soubor: %s"
 
 #: src/ThreadTasks.cpp
 #, c-format
@@ -8579,7 +8565,7 @@ msgstr "Vše ostatní"
 
 #: src/TransferWnd.cpp
 msgid "Select view filter"
-msgstr ""
+msgstr "Vybrat filtr zobrazení"
 
 #: src/TransferWnd.cpp
 msgid "Add category"
@@ -8599,9 +8585,9 @@ msgid "Hashset requested for unknown file: %s"
 msgstr "Vyžádána hashová sada pro neznámý soubor: %s"
 
 #: src/UploadDiskIOThread.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
-msgstr "Nemohu načíst ipfilter.dat (%s), soubor nelze otevřít."
+msgstr "Selhalo otevření souboru (%s), odebírám ho ze seznamu sdílených souborů."
 
 #: src/UploadQueue.cpp
 #, c-format
@@ -8616,7 +8602,7 @@ msgstr "Zastavuji odesílání souboru %s"
 #: src/UserEvents.cpp
 #, c-format
 msgid "Failed to execute command '%s' on '%s' event."
-msgstr ""
+msgstr "Selhalo vykonání příkazu '%s' události '%s'."
 
 #: src/UserEvents.h
 msgid "Download completed"
@@ -8628,11 +8614,11 @@ msgstr "Celá cesta k souboru."
 
 #: src/UserEvents.h
 msgid "The name of the file without path component."
-msgstr ""
+msgstr "Název souboru bez cesty."
 
 #: src/UserEvents.h
 msgid "The eD2k hash of the file."
-msgstr "ED2k hash souboru."
+msgstr "eD2k hash souboru."
 
 #: src/UserEvents.h
 msgid "The size of the file in bytes."
@@ -8774,7 +8760,7 @@ msgstr "Zvolte soubor s vaším vytvořeným eD2k odkazem"
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Unable to open "
-msgstr "Nelze otevřít"
+msgstr "Nelze otevřít "
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Please, enter a non empty file name"
@@ -8879,22 +8865,22 @@ msgstr "%.0f B"
 #: src/utils/wxCas/src/onlinesig.cpp
 #, c-format
 msgid "%.2f KiB"
-msgstr ""
+msgstr "%.2f KiB"
 
 #: src/utils/wxCas/src/onlinesig.cpp
 #, c-format
 msgid "%.2f MiB"
-msgstr ""
+msgstr "%.2f MiB"
 
 #: src/utils/wxCas/src/onlinesig.cpp
 #, c-format
 msgid "%.2f GiB"
-msgstr ""
+msgstr "%.2f GiB"
 
 #: src/utils/wxCas/src/onlinesig.cpp
 #, c-format
 msgid "%.2f TiB"
-msgstr ""
+msgstr "%.2f TiB"
 
 #: src/utils/wxCas/src/wxcas.cpp
 msgid "wxCas, aMule Online Statistics"
@@ -8962,7 +8948,7 @@ msgid ""
 "Perhaps your current printer is not set correctly?"
 msgstr ""
 "Nastal problém při tisku.\n"
-"Možná vaše tiskárna není správně nastavena."
+"Je vaše tiskárna správně nastavena?"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Printing"
@@ -8978,12 +8964,13 @@ msgid ""
 "\n"
 "Distributed under GPL"
 msgstr ""
-"wxCas, aMule online statistiky\n"
+"wxCas, aMule OnLine Signature Statistics\n"
+"\n"
 "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
 "\n"
-"Založený na CAS od Pedro de Oliveira <falso@rdk.homeip.net>\n"
+"Založeno na CAS od Pedra de Oliveiry <falso@rdk.homeip.net>\n"
 "\n"
-"Distribuovaný pod GPL licencí"
+"Šířeno pod GPL"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Oh Oh, aMule is not running..."
@@ -9007,7 +8994,7 @@ msgstr "Stav aMule je neznámý..."
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "aMule "
-msgstr "aMule"
+msgstr "aMule "
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid " has been running for "
@@ -9043,19 +9030,19 @@ msgstr "vypnuto"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid " is on "
-msgstr "běží"
+msgstr " je na "
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid " with "
-msgstr " s"
+msgstr " s "
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Total Download: "
-msgstr "Celkem staženo:"
+msgstr "Celkem staženo: "
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid ", Upload: "
-msgstr ", Odesláno:"
+msgstr ", Odesláno: "
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Session Download: "
@@ -9067,11 +9054,11 @@ msgstr "Stahování: "
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid " KiB/s, Upload: "
-msgstr ""
+msgstr " KiB/s, Odesílání: "
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Sharing: "
-msgstr "Sdílení:"
+msgstr "Sdílení: "
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid " file(s), Clients on queue: "
@@ -9079,7 +9066,7 @@ msgstr " soubor(ů), klientů ve frontě: "
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Time: "
-msgstr "Čas:"
+msgstr "Čas: "
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid " on "
@@ -9292,7 +9279,7 @@ msgstr "Bylo vyžádáno odhlášení\n"
 
 #: src/webserver/src/WebServer.cpp
 msgid "Processing request [redirected]: "
-msgstr "Zpracování požadavku [přesměrovaný]:"
+msgstr "Zpracování požadavku [přesměrovaný]: "
 
 #: packaging/windows/installer_strings.c
 msgid "aMule (required)"
@@ -9300,7 +9287,7 @@ msgstr "aMule (vyžadováno)"
 
 #: packaging/windows/installer_strings.c
 msgid "Desktop shortcut"
-msgstr ""
+msgstr "Zkratka plochy"
 
 #: packaging/windows/installer_strings.c
 msgid "Start aMule when I log in"
@@ -9308,11 +9295,11 @@ msgstr "Spustit aMule po přihlášení"
 
 #: packaging/windows/installer_strings.c
 msgid "Associate .emulecollection files"
-msgstr ""
+msgstr "Přidružit soubory .emulecollection"
 
 #: packaging/windows/installer_strings.c
 msgid "Uninstall"
-msgstr ""
+msgstr "Odinstalace"
 
 #: packaging/windows/installer_strings.c
 msgid "Remove user data (config, ED2K servers, Kad nodes, partfiles)"
