@@ -337,6 +337,18 @@ inline bool CanOpenConnection(const CNetworkAddress &address, bool socketConnect
 	return socketConnected || HasEd2kWireForm(address);
 }
 
+/** TCP admission and security keying answer the same question. */
+inline bool CanAdmitTcpPeer(const CNetworkAddress &address) noexcept
+{
+	return IsSecurityKey(address);
+}
+
+/** The current uTP framing remains IPv4-only until its IPv6 wire format is implemented. */
+inline bool CanAdmitUtpPeer(const CNetworkAddress &address) noexcept
+{
+	return HasEd2kWireForm(address);
+}
+
 /** Production callback throttle seam; the exact three-minute boundary remains allowed. */
 inline bool IsCallbackRequestThrottled(
 	const CNetworkAddress &address, const CNetworkAddress &previous, std::uint64_t elapsed) noexcept

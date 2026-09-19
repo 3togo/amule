@@ -125,6 +125,17 @@ TEST(PeerAddressing, FilterMatchingRejectsUnknownAndUnspecifiedHosts)
 	ASSERT_FALSE(MatchesFilterPrefix(host, CNetworkAddress::FromString("0.0.0.0"), 0));
 }
 
+TEST(PeerAddressing, TcpAdmissionAllowsNativeIPv6ButUtpRemainsIpv4Only)
+{
+	ASSERT_TRUE(CanAdmitTcpPeer(CNetworkAddress::FromString("2001:db8::1")));
+	ASSERT_FALSE(CanAdmitUtpPeer(CNetworkAddress::FromString("2001:db8::1")));
+	ASSERT_TRUE(CanAdmitTcpPeer(CNetworkAddress::FromString("192.0.2.1")));
+	ASSERT_TRUE(CanAdmitUtpPeer(CNetworkAddress::FromString("192.0.2.1")));
+	ASSERT_FALSE(CanAdmitTcpPeer(CNetworkAddress::Absent()));
+	ASSERT_FALSE(CanAdmitTcpPeer(CNetworkAddress::AnyIPv6()));
+	ASSERT_FALSE(CanAdmitUtpPeer(CNetworkAddress::FromString("0.0.0.0")));
+}
+
 // Contact security checks support native IPv6, while callbacks remain IPv4-only and unspecified
 // addresses fail closed.
 TEST(PeerAddressing, ContactSecurityChecksAllowNativeIPv6)
