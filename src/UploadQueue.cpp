@@ -24,6 +24,7 @@
 //
 
 #include "UploadQueue.h" // Interface declarations
+#include "UploadQueueAddressPolicy.h"
 
 #include <protocol/Protocols.h>
 #include <protocol/ed2k/Client2Client/TCP.h>
@@ -348,7 +349,7 @@ bool CUploadQueue::IsDownloading(const CUpDownClient *client) const
 }
 
 CUpDownClient *CUploadQueue::GetWaitingClientByIP_UDP(
-	uint32 dwIP, uint16 nUDPPort, bool bIgnorePortOnUniqueIP, bool *pbMultipleIPs)
+	const CNetworkAddress &address, uint16 nUDPPort, bool bIgnorePortOnUniqueIP, bool *pbMultipleIPs)
 {
 	CUpDownClient *pMatchingIPClient = NULL;
 
@@ -357,10 +358,12 @@ CUpDownClient *CUploadQueue::GetWaitingClientByIP_UDP(
 	CClientRefList::iterator it = m_waitinglist.begin();
 	for (; it != m_waitinglist.end(); ++it) {
 		CUpDownClient *cur_client = it->GetClient();
+		const bool sameAddress =
+			UploadQueueAddressPolicy::Matches(address, cur_client->GetUserAddress());
 
-		if ((dwIP == cur_client->GetIP()) && (nUDPPort == cur_client->GetUDPPort())) {
+		if (sameAddress && nUDPPort == cur_client->GetUDPPort()) {
 			return cur_client;
-		} else if ((dwIP == cur_client->GetIP()) && bIgnorePortOnUniqueIP) {
+		} else if (sameAddress && bIgnorePortOnUniqueIP) {
 			pMatchingIPClient = cur_client;
 			cMatches++;
 		}
@@ -459,21 +462,26 @@ void CUploadQueue::AddClientToQueue(CUpDownClient *client)
 		}
 	}
 
-	// Count the number of clients with the same IP-address
-	found = theApp->clientlist->GetClientsByIP(client->GetIP());
-
-	int ipCount = 0;
-	for (it = found.begin(); it != found.end(); ++it) {
-		if ((it->GetClient() == client) || IsOnUploadQueue(it->GetClient())) {
-			ipCount++;
+	// Count clients in the same address-accounting scope. Identity remains keyed by the exact
+	// canonical address, while IPv6 rate limiting aggregates a delegated /64. A client without
+	// an address has no host identity and is intentionally outside this cap.
+	const CNetworkAddress clientAddress = client->GetUserAddress();
+	int ipCount = PeerAddressing::IsIndexable(clientAddress) ? 1 : 0;
+	if (ipCount != 0) {
+		for (const auto &entry : m_waitinglist) {
+			CUpDownClient *cur_client = entry.GetClient();
+			if (cur_client != client && UploadQueueAddressPolicy::MatchesRateLimitScope(
+							    clientAddress, cur_client->GetUserAddress())) {
+				ipCount++;
+			}
 		}
 	}
 
-	// No more than 3 clients from the same IP may be on the upload queue. Only clients actually
-	// queued are counted: an earlier check also counted the tracked "deleted clients" list, so
-	// a client behind a shared or NAT IP that simply cancelled a few downloads was locked out
-	// for up to two hours, cleared only by a restart. Flood protection is the
-	// aggressiveness/ban path's job.
+	// No more than 3 clients from the same address-accounting scope may be on the upload queue.
+	// Only clients actually queued are counted: an earlier check also counted the tracked
+	// "deleted clients" list, so a client behind a shared or NAT IP that simply cancelled a few
+	// downloads was locked out for up to two hours, cleared only by a restart. Flood protection is
+	// the aggressiveness/ban path's job.
 	if (ipCount > 3) {
 		AddDebugLogLineN(logLocalClient,
 			CFormat("Rejected upload request from %s: too many clients (%d) from the same IP "
