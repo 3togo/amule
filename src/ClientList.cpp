@@ -45,6 +45,7 @@
 #include "Logger.h"
 #include "GuiEvents.h" // Needed for Notify_*
 #include "Packet.h"
+#include "UtpDialPolicy.h" // Needed for simultaneous uTP tie-breaking
 
 #include <common/Format.h>
 
@@ -368,7 +369,8 @@ void CClientList::DeleteAll()
 	}
 }
 
-bool CClientList::AttachToAlreadyKnown(CUpDownClient **client, CClientTCPSocket *sender)
+bool CClientList::AttachToAlreadyKnown(
+	CUpDownClient **client, CClientTCPSocket *sender, bool *senderDiscarded)
 {
 	CUpDownClient *tocheck = (*client);
 
@@ -405,7 +407,30 @@ bool CClientList::AttachToAlreadyKnown(CUpDownClient **client, CClientTCPSocket 
 							found_client->GetFullIP() + ")");
 					return false;
 				}
-				found_client->GetSocket()->Safe_Delete();
+				CClientTCPSocket *foundSocket = found_client->GetSocket();
+#ifdef AMULE_UTP_TRANSPORT
+				if (foundSocket->HasTransport() && sender->HasTransport() &&
+					foundSocket->IsUtpInbound() != sender->IsUtpInbound() &&
+					found_client->HasValidHash() && tocheck->HasValidHash()) {
+					const bool keepFound = ShouldKeepFoundUtp(foundSocket->IsUtpInbound(),
+						thePrefs::GetUserHash().GetHash(),
+						tocheck->GetUserHash().GetHash());
+					if (keepFound) {
+						// `client` aliases sender->m_client, so the survivor
+						// must not be written back: ~CClientTCPSocket() would
+						// then strip found_client of the socket just kept.
+						// Safe_Delete() leaves that member null, and the
+						// caller is told to stop touching the socket.
+						sender->Safe_Delete();
+						tocheck->Safe_Delete();
+						if (senderDiscarded != nullptr) {
+							*senderDiscarded = true;
+						}
+						return true;
+					}
+				}
+#endif
+				foundSocket->Safe_Delete();
 			}
 			found_client->SetSocket(sender);
 			tocheck->SetSocket(NULL);

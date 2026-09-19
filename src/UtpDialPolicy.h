@@ -26,6 +26,7 @@
 #define UTP_DIAL_POLICY_H
 
 #include <cstdint>
+#include <cstring>
 
 // Preserve the TCP/callback/buddy/refusal path unless direct uTP is eligible.
 // This policy does not replace security checks or authorize NAT rendezvous.
@@ -53,6 +54,12 @@ inline EUtpDialDecision DecideUtpDial(const SUtpDialFacts &facts)
 			       !facts.proxyEnabled && facts.routableEndpoint && facts.obfuscationSatisfied
 		       ? EUtpDialDecision::TryUtp
 		       : EUtpDialDecision::PreserveLegacy;
+}
+
+/** Whether this side keeps the already-found transport in a simultaneous dial. */
+inline bool ShouldKeepFoundUtp(bool foundInbound, const uint8_t *localHash, const uint8_t *peerHash)
+{
+	return foundInbound == (std::memcmp(localHash, peerHash, 16) > 0);
 }
 
 #endif // UTP_DIAL_POLICY_H

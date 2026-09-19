@@ -24,6 +24,8 @@
 
 #include "ClientTCPSocket.h"
 
+#include <algorithm>
+
 #ifdef AMULE_UTP_TRANSPORT
 #include "UtpSocketTransport.h" // per-stream crypt parameters
 #endif                          // Interface declarations.
@@ -111,6 +113,11 @@ void CClientTCPSocket::ApplyUtpCryptParameters()
 		->SetCryptParameters(m_client->ShouldReceiveCryptUDPPackets(),
 			m_client->HasValidHash() ? m_client->GetUserHash().GetHash() : nullptr);
 }
+
+bool CClientTCPSocket::IsUtpInbound() const
+{
+	return HasTransport() && GetTransport()->IsInbound();
+}
 #endif
 
 bool CClientTCPSocket::InitNetworkData()
@@ -165,6 +172,13 @@ void CClientTCPSocket::ResetTimeOutTimer()
 bool CClientTCPSocket::CheckTimeOut()
 {
 	uint64 uTimeout = GetTimeOut();
+#ifdef AMULE_UTP_TRANSPORT
+	if (HasTransport() && !GetTransport()->IsConnected()) {
+		// Give uTP a shorter handshake window than the normal TCP timeout, then use
+		// the same socket wrapper for the one-shot TCP fallback.
+		uTimeout = std::min<uint64>(uTimeout, CONNECTION_TIMEOUT / 2);
+	}
+#endif
 	if (m_client) {
 
 		if (m_client->GetKadState() == KS_CONNECTED_BUDDY) {
@@ -187,6 +201,11 @@ bool CClientTCPSocket::CheckTimeOut()
 	uint64 now = ::GetTickCount64();
 	if (now - timeout_timer > uTimeout) {
 		timeout_timer = now;
+#ifdef AMULE_UTP_TRANSPORT
+		if (TryUtpTcpFallback()) {
+			return true;
+		}
+#endif
 		Disconnect("Timeout");
 		return true;
 	}
@@ -202,10 +221,45 @@ void CClientTCPSocket::SetClient(CUpDownClient *pClient)
 	}
 }
 
+#ifdef AMULE_UTP_TRANSPORT
+bool CClientTCPSocket::TryUtpTcpFallback()
+{
+	if (m_client == nullptr || !HasTransport()) {
+		return false;
+	}
+	if (m_client->GetDownloadState() != DS_CONNECTING && m_client->GetUploadState() != US_CONNECTING) {
+		return false;
+	}
+	// Connect() is otherwise reached only through TryToContact(), which filters,
+	// re-checks bans and sends a LowID peer down its callback path instead. An
+	// inbound stream reaches this too, so neither check is hypothetical.
+	if (m_client->HasLowID() || !m_client->IsContactAddressAllowed()) {
+		return false;
+	}
+	if (m_utpFallbackAttempted) {
+		return false;
+	}
+	m_utpFallbackAttempted = true;
+	// Destroy only the failed uTP stream; keep the client and socket wrapper so
+	// the normal TCP Connect() path can reuse its identity and timeout state.
+	DetachTransport().reset();
+	// The OnClose() route has already marked this socket disconnected, and that
+	// state is terminal: the hello would be dropped by SendPacket() and nothing
+	// would ever set it back, leaving a connected socket that never speaks.
+	ReopenForConnect();
+	return m_client->Connect();
+}
+#endif
+
 void CClientTCPSocket::OnClose(int nErrorCode)
 {
 	wxASSERT(theApp->listensocket->IsValidSocket(this));
 	CEMSocket::OnClose(nErrorCode);
+#ifdef AMULE_UTP_TRANSPORT
+	if (TryUtpTcpFallback()) {
+		return;
+	}
+#endif
 	if (nErrorCode) {
 		Disconnect(CFormat("Closed: %u") % nErrorCode);
 	} else {
@@ -348,7 +402,13 @@ bool CClientTCPSocket::ProcessPacket(const uint8_t *buffer, uint32 size, uint8 o
 		// If we already know this client the socket is attached to the known one, the new
 		// client is deleted and m_client points at the known one; otherwise the freshly
 		// constructed one is kept.
-		if (theApp->clientlist->AttachToAlreadyKnown(&m_client, this)) {
+		bool senderDiscarded = false;
+		if (theApp->clientlist->AttachToAlreadyKnown(&m_client, this, &senderDiscarded)) {
+			if (senderDiscarded) {
+				// Simultaneous uTP dials, and the tie-break kept the other
+				// socket. This one is detached and on its way out.
+				return false;
+			}
 			bIsMuleHello = m_client->ProcessHelloPacket(buffer, size);
 		} else {
 			theApp->clientlist->AddClient(m_client);
