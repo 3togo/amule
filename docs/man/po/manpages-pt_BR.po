@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule man pages\n"
 "POT-Creation-Date: 2026-08-24 19:02+0200\n"
-"PO-Revision-Date: 2026-09-19 14:45+0000\n"
+"PO-Revision-Date: 2026-09-20 17:45+0000\n"
 "Last-Translator: \n"
 "Language-Team: Marcelo Roberto Jimenez <mroberto@users.sourceforge.net>\n"
 "Language: pt_BR\n"
@@ -681,7 +681,7 @@ msgstr "Maior tamanho de arquivo a ser retornado. Mesmos sufixos que B<--min-siz
 #. type: Plain text
 #: amulecmd.1.in
 msgid "Example: 'search global linux iso --type Iso --min-size 100M' returns results for 'linux iso' of file-type Iso at least 100 MiB."
-msgstr "Exemplo: 'earch global linux iso --type Iso --min-size 100M' retorna resultados para 'linux iso' do tipo de arquivo Iso com no mínimo 100 MiB."
+msgstr "Exemplo: 'search global linux iso --type Iso --min-size 100M' retorna resultados para 'linux iso' do tipo de arquivo Iso com no mínimo 100 MiB."
 
 #. type: Plain text
 #: amulecmd.1.in
@@ -741,7 +741,7 @@ msgstr "Mostra a árvore de estatísticas."
 #. type: Plain text
 #: amulecmd.1.in
 msgid "The optional I<E<lt>numberE<gt>> in the range of 0-255 can be passed as argument to this command, which tells how many entries of the client version subtree should be shown. Passing 0, or omitting it means 'unlimited'."
-msgstr "O I<E<lt>numeroE<gt>> opcional na faixa de 0-255 pode ser passado como argumento para este comando, que diz quantas entradas da sub-árvore de versão do cliente deve ser mostrada. Passar 0 ou omitir significa 'ilimitado'."
+msgstr "O I<E<lt>numeroE<gt>> opcional na faixa de 0-255 pode ser passado como argumento para este comando, que diz quantas entradas da sub-árvore de versão do cliente devem ser mostradas. Passar 0 ou omitir significa 'ilimitado'."
 
 #. type: Plain text
 #: amulecmd.1.in
