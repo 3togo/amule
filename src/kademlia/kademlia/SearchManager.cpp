@@ -508,8 +508,10 @@ void CSearchManager::ProcessResponse(const CUInt128& target, uint32_t fromIP, ui
 	delete results;
 }
 
-void CSearchManager::ProcessResult(const CUInt128& target, const CUInt128& answer, TagPtrList *info)
+void CSearchManager::ProcessResult(const CUInt128& target, const CUInt128& answer, TagPtrList *info, uint32_t fromIP, uint16_t fromPort)
 {
+	(void)fromIP;
+	(void)fromPort;
 	// We have results for a request for info.
 	CSearch *s = NULL;
 	{

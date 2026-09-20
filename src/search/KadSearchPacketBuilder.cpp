@@ -1,4 +1,3 @@
-
 //
 // This file is part of the aMule Project.
 //
@@ -38,80 +37,71 @@ namespace search {
 bool KadSearchPacketBuilder::CreateSearchPacket(const SearchParams& params,
 						uint8_t*& packetData, uint32_t& packetSize)
 {
-    if (!theApp || !theApp->searchlist) {
+	if (!theApp || !theApp->searchlist) {
 	AddDebugLogLineC(logSearch, wxT("KadSearchPacketBuilder: theApp or searchlist is NULL"));
 	return false;
-    }
+	}
 
-    // Check if strKeyword is set (required for Kad searches)
-    if (params.strKeyword.IsEmpty()) {
+	// Check if strKeyword is set (required for Kad searches)
+	if (params.strKeyword.IsEmpty()) {
 	AddDebugLogLineC(logSearch, CFormat(wxT("KadSearchPacketBuilder: strKeyword is empty, searchString='%s'"))
-	    % params.searchString);
+		% params.searchString);
 	return false;
-    }
+	}
 
-    AddDebugLogLineC(logSearch, CFormat(wxT("KadSearchPacketBuilder: Creating packet for keyword='%s', searchString='%s'"))
+	AddDebugLogLineC(logSearch, CFormat(wxT("KadSearchPacketBuilder: Creating packet for keyword='%s', searchString='%s'"))
 	% params.strKeyword % params.searchString);
 
-    // For Kad searches, we need to build the packet directly
-    // The legacy parser doesn't work well for Kad searches because it expects
-    // the search string to be parsed, but Kad uses the extracted keyword directly
-    // We'll use the CreateSearchData method but with the keyword as the search string
+	// For Kad searches, we need to build the packet directly
+	// The legacy parser doesn't work well for Kad searches because it expects
+	// the search string to be parsed, but Kad uses the extracted keyword directly
+	// We'll use the CreateSearchData method but with the keyword as the search string
 
-    // Create a mutable copy with keyword as search string for Kad
-    SearchParams mutableParams = params;
-    mutableParams.searchString = params.strKeyword;  // Use keyword as search string for Kad
+	// Create a mutable copy with keyword as search string for Kad
+	SearchParams mutableParams = params;
+	mutableParams.searchString = params.strKeyword;  // Use keyword as search string for Kad
 
-    AddDebugLogLineC(logSearch, CFormat(wxT("KadSearchPacketBuilder: Using keyword as search string: '%s'"))
+	AddDebugLogLineC(logSearch, CFormat(wxT("KadSearchPacketBuilder: Using keyword as search string: '%s'"))
 	% mutableParams.searchString);
 
-    // Use SearchList's CreateSearchData method with search::SearchParams
-    bool packetUsing64bit = false;
-    CSearchList::CMemFilePtr data = theApp->searchlist->CreateSearchData(
+	// Use SearchList's CreateSearchData method with search::SearchParams
+	bool packetUsing64bit = false;
+	CSearchList::CMemFilePtr data = theApp->searchlist->CreateSearchData(
 	mutableParams, ::KadSearch, true, packetUsing64bit, mutableParams.strKeyword);
 
-    if (data.get() == NULL) {
+	if (data.get() == NULL) {
 	AddDebugLogLineC(logSearch, CFormat(wxT("KadSearchPacketBuilder: CreateSearchData returned NULL for keyword='%s'"))
-	    % mutableParams.strKeyword);
+		% mutableParams.strKeyword);
 	return false;
-    }
+	}
 
-    // Store packet data
-    packetSize = data->GetLength();
+	// Store packet data
+	packetSize = data->GetLength();
 
-    // Validate packet size before allocating memory
-    if (packetSize == 0) {
+	// Validate packet size before allocating memory
+	if (packetSize == 0) {
 	AddDebugLogLineC(logSearch, CFormat(wxT("KadSearchPacketBuilder: Packet size is 0 for keyword='%s'"))
-	    % mutableParams.strKeyword);
+		% mutableParams.strKeyword);
 	packetData = NULL;
 	return false;
-    }
+	}
 
-    wxASSERT(packetSize > 0);
+	wxASSERT(packetSize > 0);
 
-    packetData = new uint8_t[packetSize];
-    memcpy(packetData, data->GetRawBuffer(), packetSize);
+	packetData = new uint8_t[packetSize];
+	memcpy(packetData, data->GetRawBuffer(), packetSize);
 
-    AddDebugLogLineC(logSearch, CFormat(wxT("KadSearchPacketBuilder: Successfully created packet of size %u for keyword='%s'"))
+	AddDebugLogLineC(logSearch, CFormat(wxT("KadSearchPacketBuilder: Successfully created packet of size %u for keyword='%s'"))
 	% packetSize % mutableParams.strKeyword);
 
-    return true;
+	return true;
 }
 
 void KadSearchPacketBuilder::FreeSearchPacket(uint8_t* packetData)
 {
-    if (packetData) {
+	if (packetData) {
 	delete[] packetData;
-    }
-}
-
-bool KadSearchPacketBuilder::EncodeSearchParams(const SearchParams& params,
-					       uint8_t*& packetData, uint32_t& packetSize)
-{
-    // For now, we use SearchList's CreateSearchData method
-    // This is temporary during migration
-    // We'll implement proper packet encoding in Phase 3
-    return false;
+	}
 }
 
 } // namespace search

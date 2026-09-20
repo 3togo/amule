@@ -38,7 +38,7 @@ class KadSearchController;
 
 class SearchControllerFactory {
 public:
-    static std::unique_ptr<SearchController> createController(ModernSearchType type);
+	static std::unique_ptr<SearchController> createController(ModernSearchType type);
 };
 
 } // namespace search

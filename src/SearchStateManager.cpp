@@ -400,7 +400,13 @@ void SearchStateManager::UpdateState(uint32_t searchId, SearchState newState)
 
 void SearchStateManager::NotifyObservers(uint32_t searchId, SearchState state, int retryCount)
 {
-	for (ObserverSet::iterator it = m_observers.begin(); it != m_observers.end(); ++it) {
+	ObserverSet observersCopy;
+	{
+		wxMutexLocker lock(m_mutex);
+		observersCopy = m_observers;
+	}
+
+	for (ObserverSet::iterator it = observersCopy.begin(); it != observersCopy.end(); ++it) {
 		(*it)->OnSearchStateChanged(searchId, state, retryCount);
 	}
 }

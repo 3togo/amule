@@ -1415,6 +1415,58 @@ target_link_libraries (BrowseLifecycleTest
 	mulecommon
 )
 
+# --- Search-feature unit tests (unified-search redesign) ---
+# SearchIdGenerator: thread-safe search-ID generator (singleton). Depends only
+# on logging + Format; compiled standalone without the application.
+add_executable (SearchIdGeneratorTest
+	SearchIdGeneratorTest.cpp
+	${CMAKE_SOURCE_DIR}/src/search/SearchIdGenerator.cpp
+	${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+)
+add_test (NAME SearchIdGeneratorTest COMMAND SearchIdGeneratorTest)
+target_include_directories (SearchIdGeneratorTest PRIVATE
+	${CMAKE_BINARY_DIR}
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_SOURCE_DIR}/src/include
+	${CMAKE_SOURCE_DIR}/src/libs
+)
+target_link_libraries (SearchIdGeneratorTest muleunit mulecommon)
+
+# SearchTimeoutManager: per-search timeout/heartbeat manager (singleton). The
+# harness initialises wx (wxAppConsole), so the constructor's wxTimer::Start is
+# safe; the heartbeat timer never fires without a running loop, so timeouts are
+# exercised explicitly via checkTimeouts().
+add_executable (SearchTimeoutManagerTest
+	SearchTimeoutManagerTest.cpp
+	${CMAKE_SOURCE_DIR}/src/SearchTimeoutManager.cpp
+	${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+)
+add_test (NAME SearchTimeoutManagerTest COMMAND SearchTimeoutManagerTest)
+target_include_directories (SearchTimeoutManagerTest PRIVATE
+	${CMAKE_BINARY_DIR}
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_SOURCE_DIR}/src/include
+	${CMAKE_SOURCE_DIR}/src/libs
+)
+target_link_libraries (SearchTimeoutManagerTest muleunit mulecommon)
+
+# SearchParams: the search-parameter model (header-only, defined entirely in
+# SearchModel.h). Exercises validity + equality without pulling in CSearchFile.
+add_executable (SearchParamsTest
+	SearchParamsTest.cpp
+)
+add_test (NAME SearchParamsTest COMMAND SearchParamsTest)
+target_include_directories (SearchParamsTest PRIVATE
+	${CMAKE_BINARY_DIR}
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_SOURCE_DIR}/src/include
+)
+target_link_libraries (SearchParamsTest muleunit mulecommon)
+
 # The rules about browses -- one per peer, a terminal record outliving its
 # client, a disconnect after success not being a failure. They used to live on
 # CBrowseManager next to the notify and the log line, which put them out of a

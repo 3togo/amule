@@ -62,20 +62,11 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		search/KadSearchPacketBuilder.cpp
 		search/PerSearchState.cpp
 		search/SearchIdGenerator.cpp
-		search/ED2KSearchHelper.cpp
-		search/KadSearchHelper.cpp
-		search/SearchAutoRetry.cpp
 		search/SearchPackageException.cpp
 		search/SearchPackageValidator.cpp
-		search/NetworkPacketHandler.cpp
+ 		search/NetworkPacketHandler.cpp
 		search/SearchController.cpp
 		search/SearchLogging.cpp
-		search/unified/engines/global/GlobalSearchEngine.cpp
-		search/unified/engines/kad/KadSearchEngine.cpp
-		search/unified/engines/local/LocalSearchEngine.cpp
-		search/unified/FeatureFlags.cpp
-		search/unified/manager/SearchCacheManager.cpp
-		search/unified/manager/UnifiedSearchEngineManager.cpp
 		common/NetworkSummaryUtil.cpp
 	)
 
@@ -154,10 +145,9 @@ if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 		StatisticsDlg.cpp
 		TransferWnd.cpp
 		# --- unified search architecture (carved from obsolete WIP) ---
-		search/SearchModel.cpp
+ 		search/SearchModel.cpp
 		search/UnifiedSearchManager.cpp
 		SimpleSearchCache.cpp
-		search/unified/manager/SearchUIAdapter.cpp
 	)
 
 	if (APPLE)

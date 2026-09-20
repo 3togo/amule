@@ -88,7 +88,7 @@ EVT_CUSTOM(wxEVT_COMMAND_CHOICE_SELECTED, wxID_ANY, CSearchDlg::OnFieldChanged)
 EVT_TEXT_ENTER(ID_FILTER_TEXT, CSearchDlg::OnFilteringChange)
 EVT_CHECKBOX(ID_FILTER_INVERT, CSearchDlg::OnFilteringChange)
 EVT_CHECKBOX(ID_FILTER_KNOWN, CSearchDlg::OnFilteringChange)
-EVT_BUTTON(ID_FILTER, CSearchDlg::OnFilteringChange)
+EVT_BUTTON(ID_FILTER_RESET, CSearchDlg::OnFilteringChange)
 
 // Timer event for timeout checking
 EVT_TIMER(wxID_ANY, CSearchDlg::OnTimeoutCheck)
@@ -155,8 +155,8 @@ CSearchDlg::CSearchDlg(wxWindow *pParent) : wxPanel(pParent, -1) {
   CastChild(IDC_SEARCHMAXSIZE, wxChoice)->SetSelection(2);
 
   // Not there initially.
-  s_searchsizer->Show(s_extendedsizer, false);
-  s_searchsizer->Show(s_filtersizer, false);
+  s_search_sizer->Show(s_extended_sizer, false);
+  s_search_sizer->Show(s_filter_sizer, false);
 
   Layout();
 }
@@ -254,13 +254,13 @@ void CSearchDlg::OnListItemSelected(wxListEvent &event) {
 }
 
 void CSearchDlg::OnExtendedSearchChange(wxCommandEvent &event) {
-  s_searchsizer->Show(s_extendedsizer, event.IsChecked());
+  s_search_sizer->Show(s_extended_sizer, event.IsChecked());
 
   Layout();
 }
 
 void CSearchDlg::OnFilterCheckChange(wxCommandEvent &event) {
-  s_searchsizer->Show(s_filtersizer, event.IsChecked());
+  s_search_sizer->Show(s_filter_sizer, event.IsChecked());
   Layout();
 
   int nPages = m_notebook->GetPageCount();
@@ -422,12 +422,12 @@ void CSearchDlg::OnBnClickedStart(wxCommandEvent &WXUNUSED(evt)) {
   }
 
   // We mustn't search more often than once every 2 secs
-  if ((GetTickCount() - m_last_search_time) >= 2000) {
-    m_last_search_time = GetTickCount();
+  if ((GetTickCount64() - m_last_search_time) >= 2000) {
+    m_last_search_time = GetTickCount64();
     StartNewSearch();
   } else {
     // Provide feedback to the user that they need to wait
-    uint32_t remainingTime = 2000 - (GetTickCount() - m_last_search_time);
+    uint32_t remainingTime = 2000 - (GetTickCount64() - m_last_search_time);
     AddDebugLogLineN(logSearch, CFormat(wxT("Please wait %u ms before starting another search"))
         % remainingTime);
   }
@@ -518,7 +518,7 @@ void CSearchDlg::OnFieldChanged(wxEvent &WXUNUSED(evt)) {
 
   // These are the IDs of the search-fields
   int spinfields[] = {IDC_SPINSEARCHMIN, IDC_SPINSEARCHMAX,
-                      IDC_SPINSEARCHAVAIBILITY};
+                      IDC_SPINSEARCHAVAILABILITY};
   for (uint16 i = 0; i < itemsof(spinfields); i++) {
     enable |= (CastChild(spinfields[i], wxSpinCtrl)->GetValue() > 0);
   }
@@ -599,7 +599,7 @@ void CSearchDlg::CreateNewTab(const wxString &searchString,
   
   CSearchListCtrl *list =
       new CSearchListCtrl(m_notebook, ID_SEARCHLISTCTRL, wxDefaultPosition,
-                          wxDefaultSize, wxLC_REPORT | wxNO_BORDER);
+                          wxDefaultSize);
   m_notebook->AddPage(list, searchString, true, 0);
 
   // Parse search type from search string (e.g., "[Local] ", "[Global] ", "[Kad]
@@ -811,7 +811,7 @@ void CSearchDlg::OnBnClickedClear(wxCommandEvent &WXUNUSED(event)) {
   if (m_notebook->GetPageCount() > 0) {
     CSearchListCtrl *list = static_cast<CSearchListCtrl *>(
         m_notebook->GetPage(m_notebook->GetSelection()));
-    list->DeleteAllItems();
+    list->ShowResults(0);
     UpdateHitCount(list);
   }
 }
@@ -1049,7 +1049,7 @@ void CSearchDlg::StartNewSearch() {
 
     // Parameter Availability
     params.availability =
-        CastChild(IDC_SPINSEARCHAVAIBILITY, wxSpinCtrl)->GetValue();
+        CastChild(IDC_SPINSEARCHAVAILABILITY, wxSpinCtrl)->GetValue();
 
     switch (CastChild(IDC_TypeSearch, wxChoice)->GetSelection()) {
     case 0:
@@ -1522,7 +1522,7 @@ void CSearchDlg::OnBnClickedReset(wxCommandEvent &WXUNUSED(evt)) {
   CastChild(IDC_SEARCHMINSIZE, wxChoice)->SetSelection(2);
   CastChild(IDC_SPINSEARCHMAX, wxSpinCtrl)->SetValue(0);
   CastChild(IDC_SEARCHMAXSIZE, wxChoice)->SetSelection(2);
-  CastChild(IDC_SPINSEARCHAVAIBILITY, wxSpinCtrl)->SetValue(0);
+  CastChild(IDC_SPINSEARCHAVAILABILITY, wxSpinCtrl)->SetValue(0);
   CastChild(IDC_TypeSearch, wxChoice)->SetSelection(0);
   CastChild(ID_AUTOCATASSIGN, wxChoice)->SetSelection(0);
 
@@ -1657,5 +1657,127 @@ void CSearchDlg::OnSearchTypeChanged(wxCommandEvent &evt) {
   UpdateStartButtonState();
   evt.Skip();
 }
+
+
+// ===== Upstream-compatible dialog API (search-feature) =====
+// Pragmatic wrappers so the EC daemon / remote-GUI paths compile and run on this
+// branch's parallel CSearchDlg rewrite. Browse-tab concepts are approximated.
+
+void CSearchDlg::OnSearchAdded(wxUIntPtr searchID, const wxString &name, uint32 WXUNUSED(kind))
+{
+	// Avoid a duplicate tab: the local user's own search already opened one in
+	// OnBnClickedStart / CreateNewTab.
+	for (int i = 0; i < m_notebook->GetPageCount(); ++i) {
+		CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+		if (page && static_cast<wxUIntPtr>(page->GetSearchId()) == searchID) {
+			return;
+		}
+	}
+	CreateNewTab(name, searchID);
+}
+
+
+void CSearchDlg::CloseSearchTab(wxUIntPtr searchID)
+{
+	for (int i = 0; i < m_notebook->GetPageCount(); ++i) {
+		CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+		if (page && static_cast<wxUIntPtr>(page->GetSearchId()) == searchID) {
+			m_notebook->DeletePage(i);
+			return;
+		}
+	}
+}
+
+
+void CSearchDlg::EnsureBrowseTab(uint32 WXUNUSED(peerEcid), const wxString &userName,
+                                 wxUIntPtr searchID, bool WXUNUSED(reveal))
+{
+	// This branch has no dedicated browse-tab concept; approximate by opening a
+	// normal results tab keyed by the browse search id.
+	CreateNewTab(userName, searchID);
+}
+
+
+bool CSearchDlg::ActivateBrowseTabIfOpen(uint32 WXUNUSED(peerEcid))
+{
+	// No browse-tab tracking on this branch.
+	return false;
+}
+
+
+void CSearchDlg::SetBrowseStatus(wxUIntPtr WXUNUSED(searchID), uint32 WXUNUSED(status))
+{
+	// No browse-status marker on this branch.
+}
+
+
+void CSearchDlg::UpdateSearchProgress(uint32 WXUNUSED(searchID), uint32 status)
+{
+	// Drive the single bottom bar (approximation for multi-search).
+	UpdateProgress(status);
+}
+
+
+void CSearchDlg::RefreshVisibleTabProgress()
+{
+	// No per-tab progress cache on this branch; nothing to reconcile.
+}
+
+
+void CSearchDlg::ApplySearchHistoryPref()
+{
+	// Search-history preference handling is not wired on this branch.
+}
+
+
+bool CSearchDlg::MoreAllowed(uint32_t searchID) const
+{
+	return m_moreButtonSearches.find(searchID) == m_moreButtonSearches.end();
+}
+
+
+void CSearchDlg::MarkMoreExhausted(uint32_t searchID)
+{
+	m_moreButtonSearches.erase(searchID);
+}
+
+
+CSearchListCtrl *CSearchDlg::GetBrowseList(uint32 WXUNUSED(ecid), int *WXUNUSED(outPage))
+{
+	return nullptr;
+}
+
+
+wxUIntPtr CSearchDlg::AllocateOptimisticId()
+{
+	static wxUIntPtr s_next = 0x40000000;
+	return s_next++;
+}
+
+
+bool CSearchDlg::HasRunningEd2kSearch() const
+{
+	return false;
+}
+
+
+wxUIntPtr CSearchDlg::GetVisibleSearchId()
+{
+	int sel = m_notebook->GetSelection();
+	if (sel >= 0) {
+		CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(sel));
+		if (page) {
+			return static_cast<wxUIntPtr>(page->GetSearchId());
+		}
+	}
+	return 0;
+}
+
+
+void CSearchDlg::OnStartRejected(wxUIntPtr searchID, const wxString &WXUNUSED(error))
+{
+	CloseSearchTab(searchID);
+}
+
 
 // File_checked_for_headers

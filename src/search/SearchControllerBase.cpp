@@ -34,188 +34,188 @@
 namespace search {
 
 SearchControllerBase::SearchControllerBase()
-    : m_model(std::make_unique<SearchModel>())
-    , m_retryCount(DEFAULT_RETRY_COUNT)
-    , m_currentRetry(0)
+	: m_model(std::make_unique<SearchModel>())
+	, m_retryCount(DEFAULT_RETRY_COUNT)
+	, m_currentRetry(0)
 {
 }
 
 SearchControllerBase::~SearchControllerBase()
 {
-    // Don't clear results here - the legacy system (CSearchList) manages the lifetime
-    // of CSearchFile objects. Clearing them here would cause a double-free.
+	// Don't clear results here - the legacy system (CSearchList) manages the lifetime
+	// of CSearchFile objects. Clearing them here would cause a double-free.
 }
 
 void SearchControllerBase::handleSearchError(uint32_t searchId, const wxString& error)
 {
-    m_model->setSearchState(SearchState::Error);
-    notifyError(searchId, error);
+	m_model->setSearchState(SearchState::Error);
+	notifyError(searchId, error);
 }
 
 void SearchControllerBase::resetSearchState()
 {
-    // Reset retry counter - derived classes can override to reset additional state
-    m_currentRetry = 0;
+	// Reset retry counter - derived classes can override to reset additional state
+	m_currentRetry = 0;
 }
 
 void SearchControllerBase::stopSearchBase()
 {
-    // Update state
-    m_model->setSearchState(SearchState::Idle);
-    resetSearchState();
+	// Update state
+	m_model->setSearchState(SearchState::Idle);
+	resetSearchState();
 
-    // Notify completion
-    uint32_t searchId = m_model->getSearchId();
-    notifySearchCompleted(searchId);
+	// Notify completion
+	uint32_t searchId = m_model->getSearchId();
+	notifySearchCompleted(searchId);
 }
 
 bool SearchControllerBase::validatePrerequisites()
 {
-    // Always return true - no external dependencies
-    return true;
+	// Always return true - no external dependencies
+	return true;
 }
 
 bool SearchControllerBase::validateSearchParams(const SearchParams& params)
 {
-    // Combine validation checks for efficiency
-    if (!params.isValid() || params.searchString.IsEmpty()) {
+	// Combine validation checks for efficiency
+	if (!params.isValid() || params.searchString.IsEmpty()) {
 	uint32_t searchId = m_model->getSearchId();
 	handleSearchError(searchId, params.searchString.IsEmpty() 
-	    ? _("Search string cannot be empty")
-	    : _("Invalid search parameters"));
+		? _("Search string cannot be empty")
+		: _("Invalid search parameters"));
 	return false;
-    }
+	}
 
-    return true;
+	return true;
 }
 
 bool SearchControllerBase::validateRetryLimit(wxString& error) const
 {
-    if (m_currentRetry >= m_retryCount) {
+	if (m_currentRetry >= m_retryCount) {
 	error = _("Maximum retry limit reached");
 	return false;
-    }
-    return true;
+	}
+	return true;
 }
 
 void SearchControllerBase::updateSearchState(const SearchParams& params, uint32_t searchId, SearchState state)
 {
-    m_model->setSearchParams(params);
-    m_model->setSearchId(searchId);
-    m_model->setSearchState(state);
+	m_model->setSearchParams(params);
+	m_model->setSearchId(searchId);
+	m_model->setSearchState(state);
 }
 
 SearchState SearchControllerBase::getState() const
 {
-    return m_model->getSearchState();
+	return m_model->getSearchState();
 }
 
 SearchParams SearchControllerBase::getSearchParams() const
 {
-    return m_model->getSearchParams();
+	return m_model->getSearchParams();
 }
 
 long SearchControllerBase::getSearchId() const
 {
-    return m_model->getSearchId();
+	return m_model->getSearchId();
 }
 
 std::vector<CSearchFile*> SearchControllerBase::getResults() const
 {
-    return m_model->getResults();
+	return m_model->getResults();
 }
 
 size_t SearchControllerBase::getResultCount() const
 {
-    return m_model->getResultCount();
+	return m_model->getResultCount();
 }
 
 uint32_t SearchControllerBase::getProgress() const
 {
-    // Default implementation - derived classes can override for more accurate progress
-    // Return progress from CSearchList if available
-    if (theApp && theApp->searchlist) {
-        return UnifiedSearchManager::Instance().getSearchProgress(m_model->getSearchId());
-    }
-    return 0;
+	// Default implementation - derived classes can override for more accurate progress
+	// Return progress from CSearchList if available
+	if (theApp && theApp->searchlist) {
+		return UnifiedSearchManager::Instance().getSearchProgress(m_model->getSearchId());
+	}
+	return 0;
 }
 
 void SearchControllerBase::handleResult(uint32_t searchId, CSearchFile* result)
 {
-    // Only handle results for our search
-    if (searchId != static_cast<uint32_t>(m_model->getSearchId())) {
+	// Only handle results for our search
+	if (searchId != static_cast<uint32_t>(m_model->getSearchId())) {
 	return;
-    }
+	}
 
-    // Add result to model (handles duplicates internally)
-    m_model->addResult(result);
+	// Add result to model (handles duplicates internally)
+	m_model->addResult(result);
 
-    // Also add result to legacy SearchList for UI display
-    // The SearchListCtrl::ShowResults() method retrieves results from SearchList
-    CSearchFile* resultForUI = result;
-    if (theApp && theApp->searchlist) {
+	// Also add result to legacy SearchList for UI display
+	// The SearchListCtrl::ShowResults() method retrieves results from SearchList
+	CSearchFile* resultForUI = result;
+	if (theApp && theApp->searchlist) {
 	// Create a copy for SearchList (SearchModel owns the original)
 	CSearchFile* resultCopy = new CSearchFile(*result);
 	resultCopy->SetSearchID(searchId);
 	UnifiedSearchManager::Instance().addToList(resultCopy, false);
 	// Use the copy for UI notification to ensure consistency
 	resultForUI = resultCopy;
-    }
+	}
 
-    // Notify about new result
-    std::vector<CSearchFile*> results;
-    results.push_back(resultForUI);
-    notifyResultsReceived(searchId, results);
+	// Notify about new result
+	std::vector<CSearchFile*> results;
+	results.push_back(resultForUI);
+	notifyResultsReceived(searchId, results);
 }
 
 void SearchControllerBase::handleResults(uint32_t searchId, const std::vector<CSearchFile*>& results)
 {
-    // Only handle results for our search
-    if (searchId != static_cast<uint32_t>(m_model->getSearchId())) {
+	// Only handle results for our search
+	if (searchId != static_cast<uint32_t>(m_model->getSearchId())) {
 	return;
-    }
-
-    // Add all results to model (handles duplicates internally)
-    m_model->addResults(results);
-
-    // Also add results to legacy SearchList for UI display
-    // The SearchListCtrl::ShowResults() method retrieves results from SearchList
-    std::vector<CSearchFile*> resultsForUI;
-    if (theApp && theApp->searchlist) {
-	for (CSearchFile* result : results) {
-	    // Create a copy for SearchList (SearchModel owns the original)
-	    CSearchFile* resultCopy = new CSearchFile(*result);
-	    resultCopy->SetSearchID(searchId);
-	    UnifiedSearchManager::Instance().addToList(resultCopy, false);
-	    // Use the copy for UI notification to ensure consistency
-	    resultsForUI.push_back(resultCopy);
 	}
-    } else {
+
+	// Add all results to model (handles duplicates internally)
+	m_model->addResults(results);
+
+	// Also add results to legacy SearchList for UI display
+	// The SearchListCtrl::ShowResults() method retrieves results from SearchList
+	std::vector<CSearchFile*> resultsForUI;
+	if (theApp && theApp->searchlist) {
+	for (CSearchFile* result : results) {
+		// Create a copy for SearchList (SearchModel owns the original)
+		CSearchFile* resultCopy = new CSearchFile(*result);
+		resultCopy->SetSearchID(searchId);
+		UnifiedSearchManager::Instance().addToList(resultCopy, false);
+		// Use the copy for UI notification to ensure consistency
+		resultsForUI.push_back(resultCopy);
+	}
+	} else {
 	// If SearchList is not available, use the original results
 	resultsForUI = results;
-    }
+	}
 
-    // Notify about new results
-    notifyResultsReceived(searchId, resultsForUI);
+	// Notify about new results
+	notifyResultsReceived(searchId, resultsForUI);
 }
 
 bool SearchControllerBase::handlesSearch(uint32_t searchId) const
 {
-    return searchId == static_cast<uint32_t>(m_model->getSearchId());
+	return searchId == static_cast<uint32_t>(m_model->getSearchId());
 }
 
 void SearchControllerBase::updateSearchId(uint32_t newSearchId)
 {
-    m_model->setSearchId(newSearchId);
-    SEARCH_DEBUG(wxString::Format(wxT("Updated controller search ID to %u"), newSearchId));
+	m_model->setSearchId(newSearchId);
+	SEARCH_DEBUG(wxString::Format(wxT("Updated controller search ID to %u"), newSearchId));
 }
 
 bool SearchControllerBase::validateConfiguration() const
 {
-    if (m_retryCount < 0) {
+	if (m_retryCount < 0) {
 	return false;
-    }
-    return true;
+	}
+	return true;
 }
 
 } // namespace search

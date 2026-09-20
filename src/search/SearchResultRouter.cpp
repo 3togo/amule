@@ -41,95 +41,103 @@ SearchResultRouter::SearchResultRouter()
 
 SearchResultRouter& SearchResultRouter::Instance()
 {
-    static SearchResultRouter instance;
-    return instance;
+	static SearchResultRouter instance;
+	return instance;
 }
 
 void SearchResultRouter::RegisterController(uint32_t searchId, SearchController* controller)
 {
-    m_controllers[searchId] = controller;
-    SEARCH_DEBUG( 
-        CFormat(wxT("Registered controller for search ID %u")) % searchId);
+	wxMutexLocker lock(m_controllersMutex);
+	m_controllers[searchId] = controller;
+	SEARCH_DEBUG( 
+		CFormat(wxT("Registered controller for search ID %u")) % searchId);
 }
 
 void SearchResultRouter::UnregisterController(uint32_t searchId)
 {
-    ControllerMap::iterator it = m_controllers.find(searchId);
-    if (it != m_controllers.end()) {
-        m_controllers.erase(it);
-        SEARCH_DEBUG( 
-            CFormat(wxT("Unregistered controller for search ID %u")) % searchId);
-    }
+	wxMutexLocker lock(m_controllersMutex);
+	ControllerMap::iterator it = m_controllers.find(searchId);
+	if (it != m_controllers.end()) {
+		m_controllers.erase(it);
+		SEARCH_DEBUG( 
+			CFormat(wxT("Unregistered controller for search ID %u")) % searchId);
+	}
 }
 
 bool SearchResultRouter::RouteResult(uint32_t searchId, CSearchFile* result)
 {
-    ControllerMap::iterator it = m_controllers.find(searchId);
-    if (it != m_controllers.end() && it->second) {
-        // Get the controller as SearchResultHandler
-        SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(it->second);
-        if (handler) {
-            // Route result to controller's handler
-            handler->handleResult(searchId, result);
+	SearchController* controller = nullptr;
+	{
+		wxMutexLocker lock(m_controllersMutex);
+		ControllerMap::iterator it = m_controllers.find(searchId);
+		if (it != m_controllers.end()) {
+			controller = it->second;
+		}
+	}
 
-            SEARCH_DEBUG( 
-                CFormat(wxT("Routed result for search ID %u")) % searchId);
-            return true;
-        }
-    }
+	if (controller) {
+		SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(controller);
+		if (handler) {
+			handler->handleResult(searchId, result);
 
-    // No controller registered for this search
-    SEARCH_DEBUG( 
-        CFormat(wxT("No controller registered for search ID %u, adding to SearchList")) % searchId);
+			SEARCH_DEBUG( 
+				CFormat(wxT("Routed result for search ID %u")) % searchId);
+			return true;
+		}
+	}
 
-    // Add result to SearchList for display
-    if (theApp && theApp->searchlist) {
-        result->SetSearchID(searchId);
-        UnifiedSearchManager::Instance().addToList(result, false);
-        return true;
-    }
-    // Clean up the result since no one will handle it
-    delete result;
-    return false;
+	SEARCH_DEBUG( 
+		CFormat(wxT("No controller registered for search ID %u, adding to SearchList")) % searchId);
+
+	if (theApp && theApp->searchlist) {
+		result->SetSearchID(searchId);
+		UnifiedSearchManager::Instance().addToList(result, false);
+		return true;
+	}
+	delete result;
+	return false;
 }
 
 size_t SearchResultRouter::RouteResults(uint32_t searchId, const std::vector<CSearchFile*>& results)
 {
-    ControllerMap::iterator it = m_controllers.find(searchId);
-    if (it != m_controllers.end() && it->second) {
-        // Get the controller as SearchResultHandler
-        SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(it->second);
-        if (handler) {
-            // Route all results to controller's handler
-            handler->handleResults(searchId, results);
+	SearchController* controller = nullptr;
+	{
+		wxMutexLocker lock(m_controllersMutex);
+		ControllerMap::iterator it = m_controllers.find(searchId);
+		if (it != m_controllers.end()) {
+			controller = it->second;
+		}
+	}
 
-            SEARCH_DEBUG( 
-                CFormat(wxT("Routing %zu results for search ID %u")) % results.size() % searchId);
+	if (controller) {
+		SearchResultHandler* handler = dynamic_cast<SearchResultHandler*>(controller);
+		if (handler) {
+			handler->handleResults(searchId, results);
 
-            return results.size();
-        }
-    }
+			SEARCH_DEBUG( 
+				CFormat(wxT("Routing %zu results for search ID %u")) % results.size() % searchId);
 
-    // No controller registered for this search
-    SEARCH_DEBUG( 
-        CFormat(wxT("No controller registered for search ID %u, adding %zu results to SearchList")) 
-        % searchId % results.size());
+			return results.size();
+		}
+	}
 
-    // Add results to SearchList for display
-    if (theApp && theApp->searchlist) {
-        for (CSearchFile* result : results) {
-            result->SetSearchID(searchId);
-            UnifiedSearchManager::Instance().addToList(result, false);
-        }
-        return results.size();
-    }
+	SEARCH_DEBUG( 
+		CFormat(wxT("No controller registered for search ID %u, adding %zu results to SearchList")) 
+		% searchId % results.size());
 
-    // Clean up all results since no one will handle them
-    for (CSearchFile* result : results) {
-        delete result;
-    }
+	if (theApp && theApp->searchlist) {
+		for (CSearchFile* result : results) {
+			result->SetSearchID(searchId);
+			UnifiedSearchManager::Instance().addToList(result, false);
+		}
+		return results.size();
+	}
 
-    return 0;
+	for (CSearchFile* result : results) {
+		delete result;
+	}
+
+	return 0;
 }
 
 } // namespace search

@@ -38,12 +38,11 @@
 class PerSearchState;
 
 namespace search {
-	class SearchAutoRetry;
 	class SearchPackageValidator;
 	class ED2KSearchPacketBuilder;
 	class KadSearchPacketBuilder;
 	class SearchResultHandler;
-	struct SearchParams;  // Forward declaration for new overload
+	struct SearchParams;
 }
 
 
@@ -61,7 +60,9 @@ namespace Kademlia {
 enum SearchType {
 	LocalSearch = 0,
 	GlobalSearch,
-	KadSearch
+	KadSearch,
+	//! A "View Files" browse of one peer's share.
+	BrowseSearch = 4
 };
 
 
@@ -71,6 +72,17 @@ typedef std::vector<CSearchFile*> CSearchResultList;
 class CSearchList : public wxEvtHandler
 {
 public:
+	/**
+	 * Lifecycle state of a search, reported over EC and used by the GUI progress bar.
+	 * Mirrors the upstream enum so the EC tags line up.
+	 */
+	enum SearchLifecycleState
+	{
+		SEARCH_LIFECYCLE_IDLE = 0,      // no search started this session
+		SEARCH_LIFECYCLE_RUNNING = 1,   // active search in flight
+		SEARCH_LIFECYCLE_FINISHED = 2   // last search completed; results retained
+	};
+
 	//! Structure used to pass search-parameters.
 	struct CSearchParams
 	{
@@ -118,7 +130,7 @@ public:
 	void StopSearch(long searchID, bool globalOnly = false);
 
 	/** Returns the completion percentage of a specific search. */
-	uint32 GetSearchProgress(long searchId = -1) const;
+	uint32 GetSearchProgress(long searchId) const;
 
 	/**
 	 * Requests more results for a specific search ID.
@@ -211,6 +223,80 @@ public:
 
 	/** Mark current KAD search as finished */
 	void SetKadSearchFinished();
+
+	// ===== Upstream-compatible search API (search-feature: backed by existing
+	//       PerSearchState / m_results / SearchIdGenerator state) =====
+
+	/** Stops network activity for one specific search by ID, keeping its results. */
+	void StopSearchById(wxUIntPtr searchID);
+
+	/** Finalizes any in-flight ed2k (local/global) search, keeping its results. */
+	void StopInFlightEd2kSearch();
+
+	/** Allocates a fresh ed2k search ID. */
+	uint32 AllocateEd2kId();
+
+	/** Reserves an ed2k search id so it will not be reissued. */
+	void ReserveEd2kId(uint32_t id);
+
+	/** True if the given searchID corresponds to a Kad search (active or finished). */
+	bool IsKadSearch(uint32_t searchID) const;
+
+	/** True if the given searchID is a Kad search, active or finished. */
+	bool IsOrWasKadSearch(uint32_t searchID) const;
+
+	/** Returns the query string a search was started with, or empty if unknown. */
+	wxString GetSearchStringById(uint32_t searchID) const;
+
+	/** True if the core currently routes results/progress for searchID. */
+	bool IsKnownSearchId(uint32_t searchID) const;
+
+	/** Every search id the core currently knows a name for. */
+	const std::map<uint32_t, wxString> &GetKnownSearchIds() const { return m_searchStrings; }
+
+	/** Ask the Kad search identified by searchID to widen its frontier (More). */
+	bool RequestMoreResults(uint32_t searchID);
+
+	/** Returns the completion percentage of the current search. */
+	uint32 GetSearchProgress() const;
+
+	/** Unambiguous lifecycle accessors used by the EC layer. */
+	SearchLifecycleState GetSearchLifecycleState() const;
+	SearchLifecycleState GetSearchLifecycleStateById(wxUIntPtr searchID) const;
+	uint8 GetSearchLifecyclePercentById(wxUIntPtr searchID) const;
+	uint32 GetSearchBarStatusById(wxUIntPtr searchID) const;
+	SearchType GetSearchLifecycleKind() const { return m_searchLifecycleKind; }
+	SearchType GetSearchLifecycleKindById(wxUIntPtr searchID) const;
+
+	/** Records a browse so it appears in the search list like any other entry. */
+	void RegisterBrowseSearch(uint32 searchID, const wxString &peerName, uint32 peerEcid);
+
+	/** ECID of the peer a browse id is listing, 0 if not a browse. */
+	uint32 GetBrowsePeerEcid(uint32 searchID) const;
+
+	/** Result count for the current search; 0 if idle. */
+	std::size_t GetCurrentSearchResultCount() const;
+
+	/** Unified 0..100 completion for the current search. */
+	uint8 GetSearchLifecyclePercent() const;
+
+	/** Persists currently-held searches (no-op on this branch). */
+	void StoreSearches() const;
+
+	/** Reloads persisted searches; returns empty on this branch. */
+	std::vector<uint32_t> LoadSearches();
+
+	/** Returns the first search result matching the given file hash, or NULL. */
+	CSearchFile *GetSearchFileByID(const CMD4Hash &hash) const;
+
+	/** Collects every search result matching the given file hash. */
+	void GetAllSearchFilesByID(const CMD4Hash &hash, std::vector<CSearchFile *> &out) const;
+
+	/** Start downloading the result identified by its EC ECID. */
+	void AddFileToDownloadByEcid(uint32 ecid, uint8 category = 0);
+
+	/** Mark a specific Kad search (by ID) as finished. */
+	void SetKadSearchFinished(uint32_t searchID);
 
 	/** Get the next unique search ID */
 	uint32 GetNextSearchID();
@@ -333,6 +419,15 @@ private:
 	//! to the original search ID used by SearchResultRouter
 	typedef std::map<uint32_t, long> KadSearchIdMap;
 	KadSearchIdMap	m_kadSearchIdMap;
+
+	// Lifecycle / known-search bookkeeping backing the upstream-compatible API.
+	// Maintained in StartNewSearch / RemoveResults / RegisterBrowseSearch /
+	// SetKadSearchFinished and consulted by the lifecycle accessors.
+	SearchType m_searchLifecycleKind = LocalSearch;
+	std::map<uint32_t, time_t> m_searchStartTimes;
+	std::map<uint32_t, SearchType> m_searchKinds;
+	std::map<uint32_t, uint32> m_browsePeers;
+	std::map<uint32_t, wxString> m_searchStrings;
 
 // Result handlers now managed by SearchResultRouter
 // Package validators now used by controllers directly

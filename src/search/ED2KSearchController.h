@@ -1,4 +1,3 @@
-
 //
 // This file is part of the aMule Project.
 //
@@ -50,62 +49,57 @@ namespace search {
  */
 class ED2KSearchController : public SearchControllerBase {
 public:
-    explicit ED2KSearchController();
-    virtual ~ED2KSearchController();
+	ED2KSearchController();
+	virtual ~ED2KSearchController();
 
-    // Delete copy constructor and copy assignment operator
-    ED2KSearchController(const ED2KSearchController&) = delete;
-    ED2KSearchController& operator=(const ED2KSearchController&) = delete;
+	// Delete copy constructor and copy assignment operator
+	ED2KSearchController(const ED2KSearchController&) = delete;
+	ED2KSearchController& operator=(const ED2KSearchController&) = delete;
 
-    // SearchController implementation
-    void startSearch(const SearchParams& params) override;
-    void stopSearch() override;
-    void requestMoreResults() override;
+	// SearchController implementation
+	void startSearch(const SearchParams& params) override;
+	void stopSearch() override;
+	void requestMoreResults() override;
 
-    // ED2K-specific methods
-    void setMaxServersToQuery(int maxServers);
-    int getMaxServersToQuery() const;
+	// ED2K-specific methods
+	void setMaxServersToQuery(int maxServers);
+	int getMaxServersToQuery() const;
 
-    void setRetryCount(int retryCount);
-    int getRetryCount() const;
+	void setRetryCount(int retryCount);
+	int getRetryCount() const;
 
-    // Configuration validation
-    bool validateConfiguration() const;
+	// Configuration validation
+	bool validateConfiguration() const override;
 
 private:
-    // ED2K-specific settings
-    int m_maxServersToQuery;
+	// ED2K-specific settings
+	int m_maxServersToQuery;
 
-    // Progress tracking
-    int m_serversContacted;
-    int m_resultsSinceLastUpdate;
-    static constexpr int DEFAULT_MAX_SERVERS = 100;
-    static constexpr int PROGRESS_UPDATE_INTERVAL = 5;
+	static constexpr int DEFAULT_MAX_SERVERS = 100;
 
-    // Async requestMoreResults state
-    bool m_moreResultsInProgress = false;
-    uint32_t m_moreResultsSearchId = 0;
-    int m_moreResultsTimeout = 30; // 30 seconds timeout
+	// Async requestMoreResults state
+	bool m_moreResultsInProgress = false;
+	uint32_t m_moreResultsSearchId = 0;
 
-    // Search completion tracking handled by SearchResultRouter
+	// Search completion tracking handled by SearchResultRouter
 
-    // Helper methods
-    void updateProgress();
-    void initializeProgress();
-    bool isValidServerList() const;
+	// Helper methods
+	void updateProgress();
+	void initializeProgress();
+	bool isValidServerList() const;
 
-    // Validation methods
-    bool validatePrerequisites();
-    bool validateSearchStateForMoreResults(wxString& error) const;
+	// Validation methods
+	bool validatePrerequisites() override;
+	bool validateSearchStateForMoreResults(wxString& error) const;
 
-    // Helper methods
-    void handleSearchError(uint32_t searchId, const wxString& error);
+	// Helper methods
+	void handleSearchError(uint32_t searchId, const wxString& error) override;
 
-    // Override handleResults for async completion notification
-    void handleResults(uint32_t searchId, const std::vector<CSearchFile*>& results) override;
+	// Override handleResults for async completion notification
+	void handleResults(uint32_t searchId, const std::vector<CSearchFile*>& results) override;
 
-    // Execution methods
-    std::pair<uint32_t, wxString> executeSearch(const SearchParams& params);
+	// Execution methods
+	std::pair<uint32_t, wxString> executeSearch(const SearchParams& params);
 };
 
 } // namespace search

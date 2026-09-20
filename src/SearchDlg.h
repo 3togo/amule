@@ -194,6 +194,38 @@ public:
 	 */
 	void	UpdateProgress(uint32 new_value);
 
+	// ===== Upstream-compatible dialog API (search-feature) =====
+	//! Called when the core reports a new search (Search_Added): open its tab.
+	void OnSearchAdded(wxUIntPtr searchID, const wxString &name, uint32 kind);
+	//! Close the tab for a search whose results are gone.
+	void CloseSearchTab(wxUIntPtr searchID);
+	//! Find or create the "View Files" tab for a peer; approximates a normal tab here.
+	void EnsureBrowseTab(uint32 peerEcid, const wxString &userName, wxUIntPtr searchID, bool reveal = true);
+	//! Bring an open browse tab forward if present (none on this branch).
+	bool ActivateBrowseTabIfOpen(uint32 peerEcid);
+	//! Update a browse tab's lifecycle marker (no browse marker on this branch).
+	void SetBrowseStatus(wxUIntPtr searchID, uint32 status);
+	//! Drive the bottom progress bar for a (visible) search.
+	void UpdateSearchProgress(uint32 searchID, uint32 status);
+	//! Reconcile the bottom bar with the visible tab (no per-tab cache here).
+	void RefreshVisibleTabProgress();
+	//! Apply the "remember search history" preference.
+	void ApplySearchHistoryPref();
+	//! Whether a "More" reask is still allowed for this search.
+	bool MoreAllowed(uint32_t searchID) const;
+	//! Mark a search's "More" reask as exhausted.
+	void MarkMoreExhausted(uint32_t searchID);
+	//! Return the browse list control (none on this branch).
+	CSearchListCtrl *GetBrowseList(uint32 ecid, int *outPage = nullptr);
+	//! Allocate a fresh optimistic placeholder tab id (remote GUI).
+	wxUIntPtr AllocateOptimisticId();
+	//! Whether an ed2k search is still running (false on this branch).
+	bool HasRunningEd2kSearch() const;
+	//! Search id of the currently visible tab (0 if none).
+	wxUIntPtr GetVisibleSearchId();
+	//! The core rejected a search this dialog optimistically opened.
+	void OnStartRejected(wxUIntPtr searchID, const wxString &error);
+
 	void	StartNewSearch();
 
 	void FixSearchTypes();

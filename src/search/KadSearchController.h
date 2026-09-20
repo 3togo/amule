@@ -31,7 +31,7 @@
 
 // Forward declarations
 namespace Kademlia {
-    class CSearch;
+	class CSearch;
 }
 #include <memory>
 
@@ -51,51 +51,48 @@ namespace search {
  */
 class KadSearchController : public SearchControllerBase {
 public:
-    explicit KadSearchController();
-    virtual ~KadSearchController();
+	KadSearchController();
+	virtual ~KadSearchController();
 
-    // Delete copy constructor and copy assignment operator
-    KadSearchController(const KadSearchController&) = delete;
-    KadSearchController& operator=(const KadSearchController&) = delete;
+	// Delete copy constructor and copy assignment operator
+	KadSearchController(const KadSearchController&) = delete;
+	KadSearchController& operator=(const KadSearchController&) = delete;
 
-    // SearchController implementation
-    void startSearch(const SearchParams& params) override;
-    void stopSearch() override;
-    void requestMoreResults() override;
+	// SearchController implementation
+	void startSearch(const SearchParams& params) override;
+	void stopSearch() override;
+	void requestMoreResults() override;
 
-    // Kad-specific methods
-    void setMaxNodesToQuery(int maxNodes);
-    int getMaxNodesToQuery() const;
+	// Kad-specific methods
+	void setMaxNodesToQuery(int maxNodes);
+	int getMaxNodesToQuery() const;
 
-    void setRetryCount(int retryCount);
-    int getRetryCount() const;
+	void setRetryCount(int retryCount);
+	int getRetryCount() const;
 
-    // Configuration validation
-    bool validateConfiguration() const;
+	// Configuration validation
+	bool validateConfiguration() const override;
 
 private:
-    // Kad-specific settings
-    int m_maxNodesToQuery;
+	// Kad-specific settings
+	int m_maxNodesToQuery;
 
-    // Progress tracking
-    int m_nodesContacted;
-    static constexpr int DEFAULT_MAX_NODES = 500;
-    static constexpr int PROGRESS_UPDATE_INTERVAL = 10;
-    
-    // Kademlia search object
-    Kademlia::CSearch* m_kadSearch;
+	static constexpr int DEFAULT_MAX_NODES = 500;
+	
+	// Kademlia search object
+	Kademlia::CSearch* m_kadSearch;
 
-    // Helper methods
-    void updateProgress();
-    void initializeProgress();
-    bool isValidKadNetwork() const;
+	// Helper methods
+	void updateProgress();
+	void initializeProgress();
+	bool isValidKadNetwork() const;
 
-    // Validation methods
-    bool validatePrerequisites();
+	// Validation methods
+	bool validatePrerequisites() override;
 
-    // Kad search completion handling
-    void onKadSearchComplete(uint32_t kadSearchId, bool hasResults);
-    void checkKadSearchState();
+	// Kad search completion handling
+	void onKadSearchComplete(uint32_t kadSearchId, bool hasResults);
+	void checkKadSearchState();
 };
 
 } // namespace search

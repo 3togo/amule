@@ -35,336 +35,341 @@ static const int DEFAULT_KAD_SEARCH_TIMEOUT = 180000;        // 3 minutes
 static const int DEFAULT_HEARTBEAT_INTERVAL = 10000;         // 10 seconds
 
 BEGIN_EVENT_TABLE(SearchTimeoutManager, wxEvtHandler)
-    EVT_TIMER(wxID_ANY, SearchTimeoutManager::OnHeartbeatTimer)
+	EVT_TIMER(wxID_ANY, SearchTimeoutManager::OnHeartbeatTimer)
 END_EVENT_TABLE()
 
 SearchTimeoutManager::SearchTimeoutManager()
-    : m_localSearchTimeout(DEFAULT_LOCAL_SEARCH_TIMEOUT)
-    , m_globalSearchTimeout(DEFAULT_GLOBAL_SEARCH_TIMEOUT)
-    , m_kadSearchTimeout(DEFAULT_KAD_SEARCH_TIMEOUT)
-    , m_heartbeatInterval(DEFAULT_HEARTBEAT_INTERVAL)
-    , m_heartbeatTimer(this)
-    , m_totalTimeouts(0)
+	: m_localSearchTimeout(DEFAULT_LOCAL_SEARCH_TIMEOUT)
+	, m_globalSearchTimeout(DEFAULT_GLOBAL_SEARCH_TIMEOUT)
+	, m_kadSearchTimeout(DEFAULT_KAD_SEARCH_TIMEOUT)
+	, m_heartbeatInterval(DEFAULT_HEARTBEAT_INTERVAL)
+	, m_heartbeatTimer(this)
+	, m_totalTimeouts(0)
 {
-    // Start heartbeat timer
-    m_heartbeatTimer.Start(m_heartbeatInterval);
-    AddDebugLogLineC(logSearch, wxT("SearchTimeoutManager initialized"));
+	// Start heartbeat timer
+	m_heartbeatTimer.Start(m_heartbeatInterval);
+	AddDebugLogLineC(logSearch, wxT("SearchTimeoutManager initialized"));
 }
 
 SearchTimeoutManager& SearchTimeoutManager::Instance()
 {
-    static SearchTimeoutManager instance;
-    return instance;
+	static SearchTimeoutManager instance;
+	return instance;
 }
 
 SearchTimeoutManager::~SearchTimeoutManager()
 {
-    // Stop heartbeat timer
-    m_heartbeatTimer.Stop();
+	// Stop heartbeat timer
+	m_heartbeatTimer.Stop();
 
-    // Clear all search states
-    m_searchStates.clear();
+	// Clear all search states
+	m_searchStates.clear();
 
-    AddDebugLogLineC(logSearch, wxT("SearchTimeoutManager destroyed"));
+	AddDebugLogLineC(logSearch, wxT("SearchTimeoutManager destroyed"));
 }
 
 void SearchTimeoutManager::setLocalSearchTimeout(int timeoutMs)
 {
-    wxCHECK_RET(timeoutMs > 0, wxT("Local search timeout must be positive"));
-    m_localSearchTimeout = timeoutMs;
+	wxCHECK_RET(timeoutMs > 0, wxT("Local search timeout must be positive"));
+	m_localSearchTimeout = timeoutMs;
 }
 
 int SearchTimeoutManager::getLocalSearchTimeout() const
 {
-    return m_localSearchTimeout;
+	return m_localSearchTimeout;
 }
 
 void SearchTimeoutManager::setGlobalSearchTimeout(int timeoutMs)
 {
-    wxCHECK_RET(timeoutMs > 0, wxT("Global search timeout must be positive"));
-    m_globalSearchTimeout = timeoutMs;
+	wxCHECK_RET(timeoutMs > 0, wxT("Global search timeout must be positive"));
+	m_globalSearchTimeout = timeoutMs;
 }
 
 int SearchTimeoutManager::getGlobalSearchTimeout() const
 {
-    return m_globalSearchTimeout;
+	return m_globalSearchTimeout;
 }
 
 void SearchTimeoutManager::setKadSearchTimeout(int timeoutMs)
 {
-    wxCHECK_RET(timeoutMs > 0, wxT("Kad search timeout must be positive"));
-    m_kadSearchTimeout = timeoutMs;
+	wxCHECK_RET(timeoutMs > 0, wxT("Kad search timeout must be positive"));
+	m_kadSearchTimeout = timeoutMs;
 }
 
 int SearchTimeoutManager::getKadSearchTimeout() const
 {
-    return m_kadSearchTimeout;
+	return m_kadSearchTimeout;
 }
 
 void SearchTimeoutManager::setHeartbeatInterval(int intervalMs)
 {
-    wxCHECK_RET(intervalMs > 0, wxT("Heartbeat interval must be positive"));
-    m_heartbeatInterval = intervalMs;
+	wxCHECK_RET(intervalMs > 0, wxT("Heartbeat interval must be positive"));
+	m_heartbeatInterval = intervalMs;
 
-    // Restart timer with new interval
-    if (m_heartbeatTimer.IsRunning()) {
-        m_heartbeatTimer.Stop();
-        m_heartbeatTimer.Start(m_heartbeatInterval);
-    }
+	// Restart timer with new interval
+	if (m_heartbeatTimer.IsRunning()) {
+		m_heartbeatTimer.Stop();
+		m_heartbeatTimer.Start(m_heartbeatInterval);
+	}
 }
 
 int SearchTimeoutManager::getHeartbeatInterval() const
 {
-    return m_heartbeatInterval;
+	return m_heartbeatInterval;
 }
 
 bool SearchTimeoutManager::registerSearch(uint32_t searchId, SearchType type)
 {
-    if (searchId == 0) {
-        AddDebugLogLineC(logSearch, wxT("SearchTimeoutManager: Invalid search ID (0)"));
-        return false;
-    }
+	if (searchId == 0) {
+		AddDebugLogLineC(logSearch, wxT("SearchTimeoutManager: Invalid search ID (0)"));
+		return false;
+	}
 
-    // Check if search is already registered
-    if (m_searchStates.find(searchId) != m_searchStates.end()) {
-        AddDebugLogLineC(logSearch,
-            CFormat(wxT("SearchTimeoutManager: Search %u already registered, updating type"))
-            % searchId);
-        // Update the type and reset times
-        SearchState& state = m_searchStates[searchId];
-        state.type = type;
-        state.startTime = wxDateTime::Now();
-        state.lastHeartbeat = wxDateTime::Now();
-        state.isActive = true;
-        return true;
-    }
+	wxMutexLocker lock(m_mutex);
 
-    // Create new search state
-    SearchState state;
-    state.searchId = searchId;
-    state.type = type;
-    state.startTime = wxDateTime::Now();
-    state.lastHeartbeat = wxDateTime::Now();
-    state.isActive = true;
+	if (m_searchStates.find(searchId) != m_searchStates.end()) {
+		AddDebugLogLineC(logSearch,
+			CFormat(wxT("SearchTimeoutManager: Search %u already registered, updating type"))
+			% searchId);
+		SearchState& state = m_searchStates[searchId];
+		state.type = type;
+		state.startTime = wxDateTime::Now();
+		state.lastHeartbeat = wxDateTime::Now();
+		state.isActive = true;
+		return true;
+	}
 
-    m_searchStates[searchId] = state;
+	SearchState state;
+	state.searchId = searchId;
+	state.type = type;
+	state.startTime = wxDateTime::Now();
+	state.lastHeartbeat = wxDateTime::Now();
+	state.isActive = true;
 
-    wxString typeStr;
-    switch (type) {
-        case LocalSearch: typeStr = wxT("Local"); break;
-        case GlobalSearch: typeStr = wxT("Global"); break;
-        case KadSearch: typeStr = wxT("Kad"); break;
-    }
+	m_searchStates[searchId] = state;
 
-    AddDebugLogLineC(logSearch,
-        CFormat(wxT("SearchTimeoutManager: Registered search %u (type=%s, timeout=%dms)"))
-        % searchId % typeStr % getTimeoutForType(type));
+	wxString typeStr;
+	switch (type) {
+		case LocalSearch: typeStr = wxT("Local"); break;
+		case GlobalSearch: typeStr = wxT("Global"); break;
+		case KadSearch: typeStr = wxT("Kad"); break;
+	}
 
-    return true;
+	AddDebugLogLineC(logSearch,
+		CFormat(wxT("SearchTimeoutManager: Registered search %u (type=%s, timeout=%dms)"))
+		% searchId % typeStr % getTimeoutForType(type));
+
+	return true;
 }
 
 void SearchTimeoutManager::unregisterSearch(uint32_t searchId)
 {
-    auto it = m_searchStates.find(searchId);
-    if (it != m_searchStates.end()) {
-        AddDebugLogLineC(logSearch,
-            CFormat(wxT("SearchTimeoutManager: Unregistered search %u"))
-            % searchId);
-        m_searchStates.erase(it);
-    }
+	wxMutexLocker lock(m_mutex);
+	auto it = m_searchStates.find(searchId);
+	if (it != m_searchStates.end()) {
+		AddDebugLogLineC(logSearch,
+			CFormat(wxT("SearchTimeoutManager: Unregistered search %u"))
+			% searchId);
+		m_searchStates.erase(it);
+	}
 }
 
 bool SearchTimeoutManager::updateHeartbeat(uint32_t searchId)
 {
-    auto it = m_searchStates.find(searchId);
-    if (it == m_searchStates.end()) {
-        AddDebugLogLineC(logSearch,
-            CFormat(wxT("SearchTimeoutManager: Cannot update heartbeat for unknown search %u"))
-            % searchId);
-        return false;
-    }
+	wxMutexLocker lock(m_mutex);
+	auto it = m_searchStates.find(searchId);
+	if (it == m_searchStates.end()) {
+		AddDebugLogLineC(logSearch,
+			CFormat(wxT("SearchTimeoutManager: Cannot update heartbeat for unknown search %u"))
+			% searchId);
+		return false;
+	}
 
-    it->second.lastHeartbeat = wxDateTime::Now();
+	it->second.lastHeartbeat = wxDateTime::Now();
 
-    AddDebugLogLineC(logSearch,
-        CFormat(wxT("SearchTimeoutManager: Updated heartbeat for search %u"))
-        % searchId);
+	AddDebugLogLineC(logSearch,
+		CFormat(wxT("SearchTimeoutManager: Updated heartbeat for search %u"))
+		% searchId);
 
-    return true;
+	return true;
 }
 
 bool SearchTimeoutManager::isSearchRegistered(uint32_t searchId) const
 {
-    return m_searchStates.find(searchId) != m_searchStates.end();
+	wxMutexLocker lock(m_mutex);
+	return m_searchStates.find(searchId) != m_searchStates.end();
 }
 
 SearchTimeoutManager::SearchType SearchTimeoutManager::getSearchType(uint32_t searchId) const
 {
-    auto it = m_searchStates.find(searchId);
-    if (it != m_searchStates.end()) {
-        return it->second.type;
-    }
-    return static_cast<SearchType>(-1);
+	wxMutexLocker lock(m_mutex);
+	auto it = m_searchStates.find(searchId);
+	if (it != m_searchStates.end()) {
+		return it->second.type;
+	}
+	return static_cast<SearchType>(-1);
 }
 
 int64_t SearchTimeoutManager::getElapsedTime(uint32_t searchId) const
 {
-    auto it = m_searchStates.find(searchId);
-    if (it == m_searchStates.end()) {
-        return -1;
-    }
+	wxMutexLocker lock(m_mutex);
+	auto it = m_searchStates.find(searchId);
+	if (it == m_searchStates.end()) {
+		return -1;
+	}
 
-    wxTimeSpan elapsed = wxDateTime::Now() - it->second.startTime;
-    return elapsed.GetMilliseconds().ToLong();
+	wxTimeSpan elapsed = wxDateTime::Now() - it->second.startTime;
+	return elapsed.GetMilliseconds().ToLong();
 }
 
 int64_t SearchTimeoutManager::getRemainingTime(uint32_t searchId) const
 {
-    auto it = m_searchStates.find(searchId);
-    if (it == m_searchStates.end()) {
-        return -1;
-    }
+	wxMutexLocker lock(m_mutex);
+	auto it = m_searchStates.find(searchId);
+	if (it == m_searchStates.end()) {
+		return -1;
+	}
 
-    int timeout = getTimeoutForType(it->second.type);
-    int64_t elapsed = getElapsedTime(searchId);
+	int timeout = getTimeoutForType(it->second.type);
+	wxTimeSpan elapsed = wxDateTime::Now() - it->second.startTime;
+	int64_t elapsedMs = elapsed.GetMilliseconds().ToLong();
 
-    if (elapsed < 0) {
-        return -1;
-    }
+	if (elapsedMs < 0) {
+		return -1;
+	}
 
-    return timeout - elapsed;
+	return timeout - elapsedMs;
 }
 
 void SearchTimeoutManager::setTimeoutCallback(TimeoutCallback callback)
 {
-    m_timeoutCallback = callback;
+	m_timeoutCallback = callback;
 }
 
 void SearchTimeoutManager::checkTimeouts()
 {
-    wxDateTime now = wxDateTime::Now();
+	wxMutexLocker lock(m_mutex);
+	wxDateTime now = wxDateTime::Now();
 
-    // Check all registered searches for timeout
-    std::vector<std::pair<uint32_t, SearchType>> timedOutSearchesWithType;
-    
-    for (auto it = m_searchStates.begin(); it != m_searchStates.end(); ) {
-        const SearchState& state = it->second;
+	std::vector<std::pair<uint32_t, SearchType>> timedOutSearchesWithType;
+	
+	for (auto it = m_searchStates.begin(); it != m_searchStates.end(); ) {
+		const SearchState& state = it->second;
 
-        if (!state.isActive) {
-            // Skip inactive searches, but remove them from tracking
-            AddDebugLogLineC(logSearch,
-                CFormat(wxT("SearchTimeoutManager: Removing inactive search %u"))
-                % state.searchId);
-            it = m_searchStates.erase(it);
-            continue;
-        }
+		if (!state.isActive) {
+			AddDebugLogLineC(logSearch,
+				CFormat(wxT("SearchTimeoutManager: Removing inactive search %u"))
+				% state.searchId);
+			it = m_searchStates.erase(it);
+			continue;
+		}
 
-        if (isSearchTimedOut(state.searchId)) {
-            // Search has timed out - save type before erasing
-            timedOutSearchesWithType.push_back({state.searchId, state.type});
-            m_totalTimeouts++;
+		if (isSearchTimedOut(state.searchId)) {
+			timedOutSearchesWithType.push_back({state.searchId, state.type});
+			m_totalTimeouts++;
 
-            wxString typeStr;
-            switch (state.type) {
-                case LocalSearch: typeStr = wxT("Local"); break;
-                case GlobalSearch: typeStr = wxT("Global"); break;
-                case KadSearch: typeStr = wxT("Kad"); break;
-            }
+			wxString typeStr;
+			switch (state.type) {
+				case LocalSearch: typeStr = wxT("Local"); break;
+				case GlobalSearch: typeStr = wxT("Global"); break;
+				case KadSearch: typeStr = wxT("Kad"); break;
+			}
 
-            wxTimeSpan elapsed = now - state.startTime;
-            AddDebugLogLineC(logSearch,
-                CFormat(wxT("SearchTimeoutManager: Search %u (%s) timed out after %ld ms (timeout=%dms)"))
-                % state.searchId % typeStr % elapsed.GetMilliseconds().ToLong() % getTimeoutForType(state.type));
+			wxTimeSpan elapsed = now - state.startTime;
+			AddDebugLogLineC(logSearch,
+				CFormat(wxT("SearchTimeoutManager: Search %u (%s) timed out after %ld ms (timeout=%dms)"))
+				% state.searchId % typeStr % elapsed.GetMilliseconds().ToLong() % getTimeoutForType(state.type));
 
-            // Mark as inactive and remove from tracking
-            it->second.isActive = false;
-            it = m_searchStates.erase(it);
-        } else {
-            ++it;
-        }
-    }
+			it->second.isActive = false;
+			it = m_searchStates.erase(it);
+		} else {
+			++it;
+		}
+	}
 
-    // Trigger timeout callbacks for all timed out searches
-    for (const auto& [searchId, type] : timedOutSearchesWithType) {
-        if (m_timeoutCallback) {
-            wxString reason;
-            switch (type) {
-                case LocalSearch:
-                    reason = wxT("Local search timed out - no response from server");
-                    break;
-                case GlobalSearch:
-                    reason = wxT("Global search timed out - no results from servers");
-                    break;
-                case KadSearch:
-                    reason = wxT("Kad search timed out - no results from Kad network");
-                    break;
-                default:
-                    reason = wxT("Search timed out");
-                    break;
-            }
+	for (const auto& [searchId, type] : timedOutSearchesWithType) {
+		if (m_timeoutCallback) {
+			wxString reason;
+			switch (type) {
+				case LocalSearch:
+					reason = wxT("Local search timed out - no response from server");
+					break;
+				case GlobalSearch:
+					reason = wxT("Global search timed out - no results from servers");
+					break;
+				case KadSearch:
+					reason = wxT("Kad search timed out - no results from Kad network");
+					break;
+				default:
+					reason = wxT("Search timed out");
+					break;
+			}
 
-            m_timeoutCallback(searchId, type, reason);
-        }
-    }
+			m_timeoutCallback(searchId, type, reason);
+		}
+	}
 }
 
 size_t SearchTimeoutManager::getRegisteredSearchCount() const
 {
-    return m_searchStates.size();
+	wxMutexLocker lock(m_mutex);
+	return m_searchStates.size();
 }
 
 size_t SearchTimeoutManager::getTotalTimeouts() const
 {
-    return m_totalTimeouts;
+	wxMutexLocker lock(m_mutex);
+	return m_totalTimeouts;
 }
 
 void SearchTimeoutManager::resetStatistics()
 {
-    m_totalTimeouts = 0;
-    AddDebugLogLineC(logSearch, wxT("SearchTimeoutManager: Statistics reset"));
+	wxMutexLocker lock(m_mutex);
+	m_totalTimeouts = 0;
+	AddDebugLogLineC(logSearch, wxT("SearchTimeoutManager: Statistics reset"));
 }
 
 void SearchTimeoutManager::OnHeartbeatTimer(wxTimerEvent& event)
 {
-    // Check for timed out searches
-    checkTimeouts();
+	// Check for timed out searches
+	checkTimeouts();
 
-    // Log current status
-    if (!m_searchStates.empty()) {
-        AddDebugLogLineC(logSearch,
-            CFormat(wxT("SearchTimeoutManager: Heartbeat - %zu active searches, %zu total timeouts"))
-            % m_searchStates.size() % m_totalTimeouts);
-    }
+	// Log current status
+	if (!m_searchStates.empty()) {
+		AddDebugLogLineC(logSearch,
+			CFormat(wxT("SearchTimeoutManager: Heartbeat - %zu active searches, %zu total timeouts"))
+			% m_searchStates.size() % m_totalTimeouts);
+	}
 }
 
 bool SearchTimeoutManager::isSearchTimedOut(uint32_t searchId) const
 {
-    auto it = m_searchStates.find(searchId);
-    if (it == m_searchStates.end()) {
-        return false;
-    }
+	auto it = m_searchStates.find(searchId);
+	if (it == m_searchStates.end()) {
+		return false;
+	}
 
-    const SearchState& state = it->second;
-    if (!state.isActive) {
-        return false;
-    }
+	const SearchState& state = it->second;
+	if (!state.isActive) {
+		return false;
+	}
 
-    int timeout = getTimeoutForType(state.type);
-    wxTimeSpan elapsed = wxDateTime::Now() - state.startTime;
+	int timeout = getTimeoutForType(state.type);
+	wxTimeSpan elapsed = wxDateTime::Now() - state.startTime;
 
-    return elapsed.GetMilliseconds().ToLong() >= timeout;
+	return elapsed.GetMilliseconds().ToLong() >= timeout;
 }
 
 int SearchTimeoutManager::getTimeoutForType(SearchType type) const
 {
-    switch (type) {
-        case LocalSearch:
-            return m_localSearchTimeout;
-        case GlobalSearch:
-            return m_globalSearchTimeout;
-        case KadSearch:
-            return m_kadSearchTimeout;
-        default:
-            return DEFAULT_LOCAL_SEARCH_TIMEOUT;
-    }
+	switch (type) {
+		case LocalSearch:
+			return m_localSearchTimeout;
+		case GlobalSearch:
+			return m_globalSearchTimeout;
+		case KadSearch:
+			return m_kadSearchTimeout;
+		default:
+			return DEFAULT_LOCAL_SEARCH_TIMEOUT;
+	}
 }

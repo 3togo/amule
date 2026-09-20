@@ -44,28 +44,23 @@ class SearchParams;
 class KadSearchPacketBuilder
 {
 public:
-    /**
-     * Creates a search packet for Kad search.
-     *
-     * @param params Search parameters
-     * @param[out] packetData The created packet data
-     * @param[out] packetSize Size of the packet
-     * @return true if packet was created successfully
-     */
-    static bool CreateSearchPacket(const SearchParams& params,
+	/**
+	 * Creates a search packet for Kad search.
+	 *
+	 * @param params Search parameters
+	 * @param[out] packetData The created packet data
+	 * @param[out] packetSize Size of the packet
+	 * @return true if packet was created successfully
+	 */
+	static bool CreateSearchPacket(const SearchParams& params,
 				 uint8_t*& packetData, uint32_t& packetSize);
 
-    /**
-     * Cleans up packet data created by CreateSearchPacket.
-     *
-     * @param packetData Packet data to free
-     */
-    static void FreeSearchPacket(uint8_t* packetData);
-
-private:
-    // Helper methods for packet construction
-    static bool EncodeSearchParams(const SearchParams& params,
-			       uint8_t*& packetData, uint32_t& packetSize);
+	/**
+	 * Cleans up packet data created by CreateSearchPacket.
+	 *
+	 * @param packetData Packet data to free
+	 */
+	static void FreeSearchPacket(uint8_t* packetData);
 };
 
 } // namespace search

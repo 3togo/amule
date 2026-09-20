@@ -23,16 +23,17 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
-#include "SearchList.h"		// Interface declarations.
-#include "search/SearchAutoRetry.h"	// Auto-retry manager
-#include "search/SearchPackageValidator.h"	// Package validator
-#include "search/SearchPackageException.h"	// Package exception
+#include "SearchList.h"
+#include "search/SearchPackageValidator.h"
+#include "search/SearchPackageException.h"
 #include "search/SearchResultHandler.h"	// Result handler interface
 #include "search/SearchResultRouter.h"	// Result router
 #include "search/PerSearchState.h"	// Per-search state management
 #include "search/SearchIdGenerator.h"	// Search ID generation
 #include "search/SearchModel.h"	// For search::SearchParams
 #include "SearchTimeoutManager.h"	// For timeout manager singleton
+
+#include <ctime>			// Needed for time()/difftime() in lifecycle ramp
 
 #include "include/common/MacrosProgramSpecific.h"	// Needed for NOT_ON_REMOTEGUI
 
@@ -317,6 +318,16 @@ void CSearchList::RemoveResults(long searchID)
 		}
 
 		m_results.erase( it );
+	}
+
+	// Prune lifecycle / known-search bookkeeping for the upstream-compatible API.
+	{
+		wxMutexLocker lock(m_searchMutex);
+		uint32_t sid = static_cast<uint32_t>(searchID);
+		m_searchStrings.erase(sid);
+		m_searchKinds.erase(sid);
+		m_searchStartTimes.erase(sid);
+		m_browsePeers.erase(sid);
 	}
 }
 
@@ -634,6 +645,15 @@ wxString CSearchList::StartNewSearch(uint32* searchID, SearchType type, CSearchP
 		}
 		// Note: For local searches, SendPacket with delpacket=true takes ownership of the packet
 		// For global searches, delpacket=false so we retain ownership and store it in searchState
+	}
+
+	// Maintain lifecycle / known-search bookkeeping for the upstream-compatible API.
+	{
+		wxMutexLocker lock(m_searchMutex);
+		m_searchStrings[static_cast<uint32_t>(*searchID)] = params.searchString;
+		m_searchKinds[static_cast<uint32_t>(*searchID)] = type;
+		m_searchStartTimes[static_cast<uint32_t>(*searchID)] = time(nullptr);
+		m_searchLifecycleKind = type;
 	}
 
 	// Log search start
@@ -1257,9 +1277,9 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 	}
 
 	// Drop results with mojibake (corrupted filenames)
-	// Check for the 啐 character which is a common sign of UTF-8 encoding corruption
+	// Check for the replacement character which is a common sign of UTF-8 encoding corruption
 	wxString fileName = toadd->GetFileName().GetPrintable();
-	if (fileName.Find(wxT("啐")) != wxNOT_FOUND || fileName.Find(wxT("")) != wxNOT_FOUND) {
+	if (fileName.Find(wxT("\xEF\xBF\xBD")) != wxNOT_FOUND) {
 		// Check if there's already a clean version of this file (same hash)
 		bool hasCleanVersion = false;
 		CSearchResultList& results = m_results[toadd->GetSearchID()];
@@ -1268,7 +1288,7 @@ bool CSearchList::AddToList(CSearchFile* toadd, bool clientResponse)
 			if (toadd->GetFileHash() == item->GetFileHash() && toadd->GetFileSize() == item->GetFileSize()) {
 				wxString existingName = item->GetFileName().GetPrintable();
 				// Check if the existing version doesn't have mojibake
-				if (existingName.Find(wxT("啐")) == wxNOT_FOUND && existingName.Find(wxT("")) == wxNOT_FOUND) {
+				if (existingName.Find(wxT("\xEF\xBF\xBD")) == wxNOT_FOUND) {
 					hasCleanVersion = true;
 					break;
 				}
@@ -2032,6 +2052,341 @@ void CSearchList::OnSearchRetry(long searchId, SearchType type, int retryNum)
 	AddDebugLogLineC(logSearch,
 		wxString::Format(wxT("Retry %d started for search %ld (new ID: %u)"),
 			retryNum, searchId, newSearchId));
+}
+
+
+// ===== Upstream-compatible search API (search-feature) =====
+// These wrappers expose the upstream CSearchList surface that the EC daemon and
+// remote-GUI paths call, backed by this branch's existing PerSearchState /
+// m_results / SearchIdGenerator state. They deliberately do not depend on the
+// experimental UnifiedSearchEngineManager.
+
+void CSearchList::StopSearchById(wxUIntPtr searchID)
+{
+	StopSearch(static_cast<long>(searchID), false);
+}
+
+
+void CSearchList::StopInFlightEd2kSearch()
+{
+	auto ids = getActiveSearchIds();
+	for (long id : ids) {
+		auto* st = getSearchState(id);
+		if (!st) {
+			continue;
+		}
+		uint8_t t = st->getSearchType();
+		if (t == LocalSearch || t == GlobalSearch) {
+			StopSearch(id, false);
+		}
+	}
+}
+
+
+uint32 CSearchList::AllocateEd2kId()
+{
+	return GetNextSearchID();
+}
+
+
+void CSearchList::ReserveEd2kId(uint32_t id)
+{
+	search::SearchIdGenerator::Instance().reserveId(id);
+}
+
+
+bool CSearchList::IsKadSearch(uint32_t searchID) const
+{
+	long id = (searchID & 0xffffff00) == 0xffffff00
+		? getOriginalSearchId(searchID) : static_cast<long>(searchID);
+	auto kit = m_searchKinds.find(static_cast<uint32_t>(id));
+	if (kit != m_searchKinds.end()) {
+		return kit->second == KadSearch;
+	}
+	auto* st = getSearchState(id);
+	if (st) {
+		return st->getSearchType() == static_cast<uint8_t>(KadSearch);
+	}
+	return false;
+}
+
+
+bool CSearchList::IsOrWasKadSearch(uint32_t searchID) const
+{
+	// m_searchKinds is pruned only in RemoveResults (tab close), so it still
+	// covers a finished-but-retained Kad search.
+	return IsKadSearch(searchID);
+}
+
+
+wxString CSearchList::GetSearchStringById(uint32_t searchID) const
+{
+	long id = (searchID & 0xffffff00) == 0xffffff00
+		? getOriginalSearchId(searchID) : static_cast<long>(searchID);
+	auto it = m_searchStrings.find(static_cast<uint32_t>(id));
+	return it != m_searchStrings.end() ? it->second : wxString();
+}
+
+
+bool CSearchList::IsKnownSearchId(uint32_t searchID) const
+{
+	long id = (searchID & 0xffffff00) == 0xffffff00
+		? getOriginalSearchId(searchID) : static_cast<long>(searchID);
+	if (m_searchStrings.find(static_cast<uint32_t>(id)) != m_searchStrings.end()) {
+		return true;
+	}
+	if (m_browsePeers.find(searchID) != m_browsePeers.end()) {
+		return true;
+	}
+	if (hasSearchState(id)) {
+		return true;
+	}
+	return false;
+}
+
+
+bool CSearchList::RequestMoreResults(uint32_t searchID)
+{
+	wxString err = RequestMoreResults(static_cast<long>(searchID));
+	return err.IsEmpty();
+}
+
+
+uint32 CSearchList::GetSearchProgress() const
+{
+	auto ids = getActiveSearchIds();
+	for (long id : ids) {
+		auto* st = getSearchState(id);
+		if (st && st->isSearchActive()) {
+			return GetSearchProgress(id);
+		}
+	}
+	return m_results.empty() ? 0 : 100;
+}
+
+
+CSearchList::SearchLifecycleState CSearchList::GetSearchLifecycleState() const
+{
+	auto ids = getActiveSearchIds();
+	for (long id : ids) {
+		auto* st = getSearchState(id);
+		if (st && st->isSearchActive()) {
+			return SEARCH_LIFECYCLE_RUNNING;
+		}
+	}
+	return m_results.empty() ? SEARCH_LIFECYCLE_IDLE : SEARCH_LIFECYCLE_FINISHED;
+}
+
+
+CSearchList::SearchLifecycleState CSearchList::GetSearchLifecycleStateById(wxUIntPtr searchID) const
+{
+	long id = (searchID & 0xffffff00) == 0xffffff00
+		? getOriginalSearchId(searchID) : static_cast<long>(searchID);
+	auto* st = getSearchState(id);
+	if (st && st->isSearchActive()) {
+		return SEARCH_LIFECYCLE_RUNNING;
+	}
+	uint32_t uid = static_cast<uint32_t>(id);
+	if (m_searchStrings.find(uid) != m_searchStrings.end()
+		|| m_browsePeers.find(searchID) != m_browsePeers.end()
+		|| m_results.find(id) != m_results.end()) {
+		return SEARCH_LIFECYCLE_FINISHED;
+	}
+	return SEARCH_LIFECYCLE_IDLE;
+}
+
+
+uint8 CSearchList::GetSearchLifecyclePercentById(wxUIntPtr searchID) const
+{
+	long id = (searchID & 0xffffff00) == 0xffffff00
+		? getOriginalSearchId(searchID) : static_cast<long>(searchID);
+	auto* st = getSearchState(id);
+	if (st && st->isSearchActive()) {
+		uint8_t t = st->getSearchType();
+		if (t == KadSearch) {
+			auto sit = m_searchStartTimes.find(static_cast<uint32_t>(id));
+			if (sit != m_searchStartTimes.end()) {
+				double elapsed = difftime(time(nullptr), sit->second);
+				int pct = static_cast<int>(elapsed / 60.0 * 100.0);
+				if (pct > 99) {
+					pct = 99;
+				}
+				return static_cast<uint8>(pct);
+			}
+			return 0;
+		}
+		if (t == GlobalSearch) {
+			return static_cast<uint8>(st->getProgress());
+		}
+		if (t == LocalSearch) {
+			return 100;
+		}
+	}
+	uint32_t uid = static_cast<uint32_t>(id);
+	if (m_searchStrings.find(uid) != m_searchStrings.end()
+		|| m_results.find(id) != m_results.end()
+		|| m_browsePeers.find(searchID) != m_browsePeers.end()) {
+		return 100;
+	}
+	return 0;
+}
+
+
+uint32 CSearchList::GetSearchBarStatusById(wxUIntPtr searchID) const
+{
+	long id = (searchID & 0xffffff00) == 0xffffff00
+		? getOriginalSearchId(searchID) : static_cast<long>(searchID);
+	auto* st = getSearchState(id);
+	if (st && st->isSearchActive()) {
+		uint8_t t = st->getSearchType();
+		if (t == KadSearch) {
+			auto sit = m_searchStartTimes.find(static_cast<uint32_t>(id));
+			if (sit != m_searchStartTimes.end()) {
+				double elapsed = difftime(time(nullptr), sit->second);
+				int pct = static_cast<int>(elapsed / 60.0 * 100.0);
+				if (pct > 99) {
+					pct = 99;
+				}
+				return static_cast<uint32>(pct);
+			}
+			return 0;
+		}
+		if (t == GlobalSearch) {
+			return static_cast<uint32>(st->getProgress());
+		}
+		if (t == LocalSearch) {
+			return 0xffff;
+		}
+		return 0;
+	}
+	// Not active: report the finished sentinel for its kind.
+	SearchType kind = GetSearchLifecycleKindById(searchID);
+	return (kind == KadSearch) ? 0xfffe : 0xffff;
+}
+
+
+SearchType CSearchList::GetSearchLifecycleKindById(wxUIntPtr searchID) const
+{
+	long id = (searchID & 0xffffff00) == 0xffffff00
+		? getOriginalSearchId(searchID) : static_cast<long>(searchID);
+	auto it = m_searchKinds.find(static_cast<uint32_t>(id));
+	if (it != m_searchKinds.end()) {
+		return it->second;
+	}
+	return m_searchLifecycleKind;
+}
+
+
+void CSearchList::RegisterBrowseSearch(uint32 searchID, const wxString &peerName, uint32 peerEcid)
+{
+	wxMutexLocker lock(m_searchMutex);
+	m_searchStrings[searchID] = peerName;
+	m_searchKinds[searchID] = BrowseSearch;
+	m_browsePeers[searchID] = peerEcid;
+}
+
+
+uint32 CSearchList::GetBrowsePeerEcid(uint32 searchID) const
+{
+	auto it = m_browsePeers.find(searchID);
+	return it != m_browsePeers.end() ? it->second : 0;
+}
+
+
+std::size_t CSearchList::GetCurrentSearchResultCount() const
+{
+	wxMutexLocker lock(m_searchMutex);
+	std::size_t total = 0;
+	for (const auto& kv : m_results) {
+		total += kv.second.size();
+	}
+	return total;
+}
+
+
+uint8 CSearchList::GetSearchLifecyclePercent() const
+{
+	auto ids = getActiveSearchIds();
+	for (long id : ids) {
+		auto* st = getSearchState(id);
+		if (st && st->isSearchActive()) {
+			return GetSearchLifecyclePercentById(static_cast<wxUIntPtr>(id));
+		}
+	}
+	return m_results.empty() ? 0 : 100;
+}
+
+
+void CSearchList::StoreSearches() const
+{
+	// Search-result persistence across restarts is not implemented on this branch.
+	// Intentionally a no-op so the API surface stays compatible with the EC daemon
+	// and amule.cpp's OnExit() path.
+	// TODO(search-feature): implement if result persistence is required.
+}
+
+
+std::vector<uint32_t> CSearchList::LoadSearches()
+{
+	// See StoreSearches(): persistence is not implemented on this branch.
+	return {};
+}
+
+
+CSearchFile *CSearchList::GetSearchFileByID(const CMD4Hash &hash) const
+{
+	wxMutexLocker lock(m_searchMutex);
+	for (const auto& kv : m_results) {
+		for (CSearchFile *f : kv.second) {
+			if (f && f->GetFileHash() == hash) {
+				return f;
+			}
+		}
+	}
+	return nullptr;
+}
+
+
+void CSearchList::GetAllSearchFilesByID(const CMD4Hash &hash, std::vector<CSearchFile *> &out) const
+{
+	wxMutexLocker lock(m_searchMutex);
+	for (const auto& kv : m_results) {
+		for (CSearchFile *f : kv.second) {
+			if (f && f->GetFileHash() == hash) {
+				out.push_back(f);
+			}
+		}
+	}
+}
+
+
+void CSearchList::AddFileToDownloadByEcid(uint32 ecid, uint8 category)
+{
+	wxMutexLocker lock(m_searchMutex);
+	for (auto& kv : m_results) {
+		for (CSearchFile *f : kv.second) {
+			if (f && f->ECID() == ecid) {
+				CoreNotify_Search_Add_Download(f, category);
+				return;
+			}
+		}
+	}
+}
+
+
+void CSearchList::SetKadSearchFinished(uint32_t searchID)
+{
+	long id = (searchID & 0xffffff00) == 0xffffff00
+		? getOriginalSearchId(searchID) : static_cast<long>(searchID);
+	auto* state = getSearchState(id);
+	if (!state) {
+		return;
+	}
+	state->setKadSearchFinished(true);
+	ResultMap::iterator it = m_results.find(id);
+	bool hasResults = (it != m_results.end()) && !it->second.empty();
+	state->setSearchActive(false);
+	OnSearchComplete(id, KadSearch, hasResults);
 }
 
 

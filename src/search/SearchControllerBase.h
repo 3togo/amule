@@ -47,60 +47,60 @@ namespace search {
  */
 class SearchControllerBase : public SearchController, public SearchResultHandler {
 public:
-    explicit SearchControllerBase();
-    virtual ~SearchControllerBase();
+	SearchControllerBase();
+	virtual ~SearchControllerBase();
 
-    // Delete copy constructor and copy assignment operator
-    SearchControllerBase(const SearchControllerBase&) = delete;
-    SearchControllerBase& operator=(const SearchControllerBase&) = delete;
+	// Delete copy constructor and copy assignment operator
+	SearchControllerBase(const SearchControllerBase&) = delete;
+	SearchControllerBase& operator=(const SearchControllerBase&) = delete;
 
-    // Common state accessors
-    SearchState getState() const override;
-    SearchParams getSearchParams() const override;
-    long getSearchId() const override;
+	// Common state accessors
+	SearchState getState() const override;
+	SearchParams getSearchParams() const override;
+	long getSearchId() const override;
 
-    // Result access - delegates to SearchModel (single source of truth)
-    std::vector<CSearchFile*> getResults() const override;
-    size_t getResultCount() const override;
+	// Result access - delegates to SearchModel (single source of truth)
+	std::vector<CSearchFile*> getResults() const override;
+	size_t getResultCount() const override;
 
-    // Progress access - default implementation returns 0
-    uint32_t getProgress() const override;
+	// Progress access - default implementation returns 0
+	uint32_t getProgress() const override;
 
-    // Model access for advanced operations
-    SearchModel* getModel() const { return m_model.get(); }
+	// Model access for advanced operations
+	SearchModel* getModel() const { return m_model.get(); }
 
-    // Configuration validation
-    bool validateConfiguration() const;
+	// Configuration validation
+	virtual bool validateConfiguration() const;
 
 protected:
-    // Common data members - SearchModel is the single source of truth for state and results
-    std::unique_ptr<SearchModel> m_model;
+	// Common data members - SearchModel is the single source of truth for state and results
+	std::unique_ptr<SearchModel> m_model;
 
-    // Retry settings
-    int m_retryCount;
-    int m_currentRetry;
-    static constexpr int DEFAULT_RETRY_COUNT = 3;
+	// Retry settings
+	int m_retryCount;
+	int m_currentRetry;
+	static constexpr int DEFAULT_RETRY_COUNT = 3;
 
-    // Helper methods
-    void handleSearchError(uint32_t searchId, const wxString& error);
-    virtual void resetSearchState();
-    void stopSearchBase();
+	// Helper methods
+	virtual void handleSearchError(uint32_t searchId, const wxString& error);
+	virtual void resetSearchState();
+	void stopSearchBase();
 
-    // Validation methods
-    bool validatePrerequisites();
-    bool validateSearchParams(const SearchParams& params);
-    bool validateRetryLimit(wxString& error) const;
+	// Validation methods
+	virtual bool validatePrerequisites();
+	bool validateSearchParams(const SearchParams& params);
+	bool validateRetryLimit(wxString& error) const;
 
-    // State update methods
-    void updateSearchState(const SearchParams& params, uint32_t searchId, SearchState state);
+	// State update methods
+	void updateSearchState(const SearchParams& params, uint32_t searchId, SearchState state);
 
-    // SearchResultHandler interface - results are stored in SearchModel
-    void handleResult(uint32_t searchId, CSearchFile* result) override;
-    void handleResults(uint32_t searchId, const std::vector<CSearchFile*>& results) override;
-    bool handlesSearch(uint32_t searchId) const override;
+	// SearchResultHandler interface - results are stored in SearchModel
+	void handleResult(uint32_t searchId, CSearchFile* result) override;
+	void handleResults(uint32_t searchId, const std::vector<CSearchFile*>& results) override;
+	bool handlesSearch(uint32_t searchId) const override;
 
-    // Search ID update (for retry)
-    void updateSearchId(uint32_t newSearchId) override;
+	// Search ID update (for retry)
+	void updateSearchId(uint32_t newSearchId) override;
 };
 
 } // namespace search

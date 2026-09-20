@@ -40,8 +40,8 @@ class CMD4Hash;
 class CTag;
 
 namespace Kademlia {
-    class CUInt128;
-    class Tag;
+	class CUInt128;
+	class Tag;
 }
 
 typedef std::list<CTag*> TagPtrList;
@@ -57,116 +57,101 @@ namespace search {
  */
 class NetworkPacketHandler {
 public:
-    /**
-     * Get the singleton instance
-     */
-    static NetworkPacketHandler& Instance();
+	/**
+	 * Get the singleton instance
+	 */
+	static NetworkPacketHandler& Instance();
 
-    /**
-     * Process ED2K TCP search result packet
-     *
-     * @param packet Raw packet data
-     * @param size Packet size
-     * @param optUTF8 Whether server supports UTF8
-     * @param serverIP Server IP address
-     * @param serverPort Server port
-     * @return Number of results processed
-     */
-    size_t ProcessED2KTCPSearchResult(
-        const uint8_t* packet,
-        uint32_t size,
-        bool optUTF8,
-        uint32_t serverIP,
-        uint16_t serverPort);
+	/**
+	 * Process ED2K TCP search result packet
+	 *
+	 * @param packet Raw packet data
+	 * @param size Packet size
+	 * @param optUTF8 Whether server supports UTF8
+	 * @param serverIP Server IP address
+	 * @param serverPort Server port
+	 * @return Number of results processed
+	 */
+	size_t ProcessED2KTCPSearchResult(
+		const uint8_t* packet,
+		uint32_t size,
+		bool optUTF8,
+		uint32_t serverIP,
+		uint16_t serverPort);
 
-    /**
-     * Process ED2K UDP search result packet
-     *
-     * @param packet Raw packet data
-     * @param optUTF8 Whether server supports UTF8
-     * @param serverIP Server IP address
-     * @param serverPort Server port
-     * @return Number of results processed
-     */
-    size_t ProcessED2KUDPSearchResult(
-        const uint8_t* packet,
-        bool optUTF8,
-        uint32_t serverIP,
-        uint16_t serverPort);
+	/**
+	 * Process ED2K UDP search result packet
+	 *
+	 * @param packet Raw packet data
+	 * @param optUTF8 Whether server supports UTF8
+	 * @param serverIP Server IP address
+	 * @param serverPort Server port
+	 * @return Number of results processed
+	 */
+	size_t ProcessED2KUDPSearchResult(
+		const uint8_t* packet,
+		bool optUTF8,
+		uint32_t serverIP,
+		uint16_t serverPort);
 
-    /**
-     * Process Kad search result packet
-     *
-     * @param searchID Kad search ID
-     * @param fileID File hash
-     * @param name File name
-     * @param size File size
-     * @param type File type
-     * @param kadPublishInfo Kad publish information
-     * @param tagList List of tags
-     * @return Number of results processed (0 or 1)
-     */
-    size_t ProcessKadSearchResult(
-        uint32_t searchID,
-        const Kademlia::CUInt128* fileID,
-        const wxString& name,
-        uint64_t size,
-        const wxString& type,
-        uint32_t kadPublishInfo,
-        const std::vector<Kademlia::Tag*>& tagList);
+	/**
+	 * Process Kad search result packet
+	 *
+	 * @param searchID Kad search ID
+	 * @param fileID File hash
+	 * @param name File name
+	 * @param size File size
+	 * @param type File type
+	 * @param kadPublishInfo Kad publish information
+	 * @param tagList List of tags
+	 * @return Number of results processed (0 or 1)
+	 */
+	size_t ProcessKadSearchResult(
+		uint32_t searchID,
+		const Kademlia::CUInt128* fileID,
+		const wxString& name,
+		uint64_t size,
+		const wxString& type,
+		uint32_t kadPublishInfo,
+		const std::vector<Kademlia::Tag*>& tagList);
 
-    /**
-     * Register a search ID for packet routing
-     *
-     * @param searchID The search ID to register
-     * @param isKadSearch Whether this is a Kad search
-     */
-    void RegisterSearchID(uint32_t searchID, bool isKadSearch = false);
+	/**
+	 * Register a search ID for packet routing
+	 *
+	 * @param searchID The search ID to register
+	 * @param isKadSearch Whether this is a Kad search
+	 */
+	void RegisterSearchID(uint32_t searchID, bool isKadSearch = false);
 
-    /**
-     * Unregister a search ID
-     *
-     * @param searchID The search ID to unregister
-     */
-    void UnregisterSearchID(uint32_t searchID);
+	/**
+	 * Unregister a search ID
+	 *
+	 * @param searchID The search ID to unregister
+	 */
+	void UnregisterSearchID(uint32_t searchID);
 
-    /**
-     * Check if a search ID is registered
-     *
-     * @param searchID The search ID to check
-     * @return true if registered
-     */
-    bool IsSearchIDRegistered(uint32_t searchID) const;
+	/**
+	 * Check if a search ID is registered
+	 *
+	 * @param searchID The search ID to check
+	 * @return true if registered
+	 */
+	bool IsSearchIDRegistered(uint32_t searchID) const;
 
 private:
-    // Private constructor for singleton
-    NetworkPacketHandler();
+	// Private constructor for singleton
+	NetworkPacketHandler();
 
-    // Delete copy constructor and copy assignment operator
-    NetworkPacketHandler(const NetworkPacketHandler&) = delete;
-    NetworkPacketHandler& operator=(const NetworkPacketHandler&) = delete;
+	// Delete copy constructor and copy assignment operator
+	NetworkPacketHandler(const NetworkPacketHandler&) = delete;
+	NetworkPacketHandler& operator=(const NetworkPacketHandler&) = delete;
 
-    // Helper methods
-    CSearchFile* CreateSearchFileFromED2KPacket(
-        const uint8_t* packet,
-        bool optUTF8,
-        uint32_t searchID);
+	// Map of registered search IDs
+	typedef std::map<uint32_t, bool> SearchIDMap;
+	SearchIDMap m_registeredSearchIDs;
 
-    CSearchFile* CreateSearchFileFromKadPacket(
-        uint32_t searchID,
-        const Kademlia::CUInt128* fileID,
-        const wxString& name,
-        uint64_t size,
-        const wxString& type,
-        uint32_t kadPublishInfo,
-        const std::vector<Kademlia::Tag*>& tagList);
-
-    // Map of registered search IDs
-    typedef std::map<uint32_t, bool> SearchIDMap;
-    SearchIDMap m_registeredSearchIDs;
-
-    // Mutex for thread-safe access
-    mutable wxMutex m_mutex;
+	// Mutex for thread-safe access
+	mutable wxMutex m_mutex;
 };
 
 } // namespace search

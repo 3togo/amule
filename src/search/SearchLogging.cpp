@@ -4,7 +4,7 @@
 // Copyright (c) 2003-2011 aMule Team ( admin@amule.org / http://www.amule.org )
 // Copyright (c) 2002-2011 Merkur ( devs@emule-project.net / http://www.emule-project.net )
 //
-// Any parts of this program derived from the xMule, lMule or lMule or eMule project,
+// Any parts of this program derived from the xMule, lMule or eMule project,
 // or contributed by third-party developers are copyrighted by their
 // respective authors.
 //
@@ -26,12 +26,12 @@
 #include "SearchLogging.h"
 
 namespace search {
-    // Initialize all log categories as disabled by default
-    bool g_searchLogEnabled[LOG_SEARCH_MAX] = {
-        false,  // LOG_SEARCH_GENERAL
-        false,  // LOG_SEARCH_LABEL
-        false,  // LOG_SEARCH_COUNT
-        false,  // LOG_SEARCH_ROUTING
-        false   // LOG_SEARCH_CONTROLLER
-    };
+	// Initialize all log categories as disabled by default
+	bool g_searchLogEnabled[LOG_SEARCH_MAX] = {
+		false,  // LOG_SEARCH_GENERAL
+		false,  // LOG_SEARCH_LABEL
+		false,  // LOG_SEARCH_COUNT
+		false,  // LOG_SEARCH_ROUTING
+		false   // LOG_SEARCH_CONTROLLER
+	};
 }

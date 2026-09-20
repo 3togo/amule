@@ -252,14 +252,14 @@ static bool HasMojibake(const CPath& filename)
 	wxString name = filename.GetPrintable();
 	
 	// Check for common mojibake patterns
-	// The 啐 character (U+5550) is a common sign of UTF-8 encoding corruption
-	if (name.Find(wxT("啐")) != wxNOT_FOUND) {
+	// The U+FFFD replacement character is a common sign of UTF-8 encoding corruption
+	if (name.Find(wxT("\xEF\xBF\xBD")) != wxNOT_FOUND) {
 		return true;
 	}
-	
+
 	// Check for other common corrupted characters
 	// These are replacement characters that appear when UTF-8 is incorrectly decoded
-	if (name.Find(wxT("")) != wxNOT_FOUND) {
+	if (name.Find(wxT("\xEF\xBF\xBD")) != wxNOT_FOUND) {
 		return true;
 	}
 	

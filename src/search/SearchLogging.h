@@ -36,53 +36,53 @@
 #endif
 
 namespace search {
-    // Log categories for fine-grained control
-    enum SearchLogCategory {
-        LOG_SEARCH_GENERAL = 0,      // General search operations
-        LOG_SEARCH_LABEL = 1,           // Tab label updates
-        LOG_SEARCH_COUNT = 2,           // Hit count updates
-        LOG_SEARCH_ROUTING = 3,         // Search result routing
-        LOG_SEARCH_CONTROLLER = 4,      // Search controller operations
-        LOG_SEARCH_MAX = 5              // Sentinel value
-    };
+	// Log categories for fine-grained control
+	enum SearchLogCategory {
+		LOG_SEARCH_GENERAL = 0,      // General search operations
+		LOG_SEARCH_LABEL = 1,           // Tab label updates
+		LOG_SEARCH_COUNT = 2,           // Hit count updates
+		LOG_SEARCH_ROUTING = 3,         // Search result routing
+		LOG_SEARCH_CONTROLLER = 4,      // Search controller operations
+		LOG_SEARCH_MAX = 5              // Sentinel value
+	};
 
-    // Global enable/disable flags for each category
-    extern bool g_searchLogEnabled[LOG_SEARCH_MAX];
+	// Global enable/disable flags for each category
+	extern bool g_searchLogEnabled[LOG_SEARCH_MAX];
 
-    // Helper function to enable/disable a specific log category
-    inline void SetSearchLogEnabled(SearchLogCategory category, bool enabled) {
-        if (category >= 0 && category < LOG_SEARCH_MAX) {
-            g_searchLogEnabled[category] = enabled;
-        }
-    }
+	// Helper function to enable/disable a specific log category
+	inline void SetSearchLogEnabled(SearchLogCategory category, bool enabled) {
+		if (category >= 0 && category < LOG_SEARCH_MAX) {
+			g_searchLogEnabled[category] = enabled;
+		}
+	}
 
-    // Helper function to check if a log category is enabled
-    inline bool IsSearchLogEnabled(SearchLogCategory category) {
-        return ENABLE_SEARCH_WINDOW_DEBUG && 
-               (category >= 0 && category < LOG_SEARCH_MAX) &&
-               g_searchLogEnabled[category];
-    }
+	// Helper function to check if a log category is enabled
+	inline bool IsSearchLogEnabled(SearchLogCategory category) {
+		return ENABLE_SEARCH_WINDOW_DEBUG && 
+			   (category >= 0 && category < LOG_SEARCH_MAX) &&
+			   g_searchLogEnabled[category];
+	}
 
-    // Convenience macro for search window logging with category
-    #define SEARCH_DEBUG_CAT(category, msg) \
-        do { \
-            if (search::IsSearchLogEnabled(category)) { \
-                theLogger.AddLogLine(wxT(__FILE__), __LINE__, false, logStandard, msg); \
-            } \
-        } while(0)
+	// Convenience macro for search window logging with category
+	#define SEARCH_DEBUG_CAT(category, msg) \
+		do { \
+			if (search::IsSearchLogEnabled(category)) { \
+				theLogger.AddLogLine(wxT(__FILE__), __LINE__, false, logStandard, msg); \
+			} \
+		} while(0)
 
-    // Convenience macros for each specific category
-    #define SEARCH_DEBUG(msg) SEARCH_DEBUG_CAT(search::LOG_SEARCH_GENERAL, msg)
-    #define SEARCH_DEBUG_LABEL(msg) SEARCH_DEBUG_CAT(search::LOG_SEARCH_LABEL, msg)
-    #define SEARCH_DEBUG_COUNT(msg) SEARCH_DEBUG_CAT(search::LOG_SEARCH_COUNT, msg)
-    #define SEARCH_DEBUG_ROUTING(msg) SEARCH_DEBUG_CAT(search::LOG_SEARCH_ROUTING, msg)
-    #define SEARCH_DEBUG_CONTROLLER(msg) SEARCH_DEBUG_CAT(search::LOG_SEARCH_CONTROLLER, msg)
+	// Convenience macros for each specific category
+	#define SEARCH_DEBUG(msg) SEARCH_DEBUG_CAT(search::LOG_SEARCH_GENERAL, msg)
+	#define SEARCH_DEBUG_LABEL(msg) SEARCH_DEBUG_CAT(search::LOG_SEARCH_LABEL, msg)
+	#define SEARCH_DEBUG_COUNT(msg) SEARCH_DEBUG_CAT(search::LOG_SEARCH_COUNT, msg)
+	#define SEARCH_DEBUG_ROUTING(msg) SEARCH_DEBUG_CAT(search::LOG_SEARCH_ROUTING, msg)
+	#define SEARCH_DEBUG_CONTROLLER(msg) SEARCH_DEBUG_CAT(search::LOG_SEARCH_CONTROLLER, msg)
 
-    // Convenience macro for critical search window messages (always enabled)
-    #define SEARCH_CRITICAL(msg) \
-        do { \
-            theLogger.AddLogLine(wxT(__FILE__), __LINE__, true, logSearch, msg); \
-        } while(0)
+	// Convenience macro for critical search window messages (always enabled)
+	#define SEARCH_CRITICAL(msg) \
+		do { \
+			theLogger.AddLogLine(wxT(__FILE__), __LINE__, true, logSearch, msg); \
+		} while(0)
 }
 
 #endif // SEARCH_LOGGING_H

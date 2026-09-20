@@ -962,10 +962,10 @@ void CSearch::ProcessResultNotes(const CUInt128& answer, TagPtrList *info)
 		} else if (!tag->GetName().Cmp(TAG_DESCRIPTION)) {
 			wxString strComment(tag->GetStr());
 			bFilterComment = thePrefs::IsMessageFiltered(strComment);
-			entry->AddTag(tag);
+			entry->AddTag(tag, 0);
 			*it = NULL;	// Prevent actual data being freed
 		} else if (!tag->GetName().Cmp(TAG_FILERATING)) {
-			entry->AddTag(tag);
+			entry->AddTag(tag, 0);
 			*it = NULL;	// Prevent actual data being freed
 		}
 	}

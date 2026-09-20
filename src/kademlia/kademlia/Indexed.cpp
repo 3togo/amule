@@ -134,7 +134,7 @@ void CIndexed::ReadFile()
 									toAdd->m_bSource = false;
 									toAdd->m_tLifeTime = k_file.ReadUInt32();
 									if (version >= 3) {
-										toAdd->ReadPublishTrackingDataFromFile(&k_file);
+										toAdd->ReadPublishTrackingDataFromFile(&k_file, version >= 4);
 									}
 									uint32_t tagList = k_file.ReadUInt8();
 									while (tagList) {
@@ -156,15 +156,15 @@ void CIndexed::ReadFile()
 												delete tag;
 											} else if (!tag->GetName().Cmp(TAG_SOURCEIP)) {
 												toAdd->m_uIP = tag->GetInt();
-												toAdd->AddTag(tag);
+												toAdd->AddTag(tag, 0);
 											} else if (!tag->GetName().Cmp(TAG_SOURCEPORT)) {
 												toAdd->m_uTCPport = tag->GetInt();
-												toAdd->AddTag(tag);
+												toAdd->AddTag(tag, 0);
 											} else if (!tag->GetName().Cmp(TAG_SOURCEUPORT)) {
 												toAdd->m_uUDPport = tag->GetInt();
-												toAdd->AddTag(tag);
+												toAdd->AddTag(tag, 0);
 											} else {
-												toAdd->AddTag(tag);
+												toAdd->AddTag(tag, 0);
 											}
 										}
 										tagList--;
@@ -210,15 +210,15 @@ void CIndexed::ReadFile()
 									if (tag) {
 										if (!tag->GetName().Cmp(TAG_SOURCEIP)) {
 											toAdd->m_uIP = tag->GetInt();
-											toAdd->AddTag(tag);
+											toAdd->AddTag(tag, 0);
 										} else if (!tag->GetName().Cmp(TAG_SOURCEPORT)) {
 											toAdd->m_uTCPport = tag->GetInt();
-											toAdd->AddTag(tag);
+											toAdd->AddTag(tag, 0);
 										} else if (!tag->GetName().Cmp(TAG_SOURCEUPORT)) {
 											toAdd->m_uUDPport = tag->GetInt();
-											toAdd->AddTag(tag);
+											toAdd->AddTag(tag, 0);
 										} else {
-											toAdd->AddTag(tag);
+											toAdd->AddTag(tag, 0);
 										}
 									}
 									tagList--;

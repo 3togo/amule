@@ -31,16 +31,16 @@ namespace search {
 
 std::unique_ptr<SearchController> SearchControllerFactory::createController(ModernSearchType type)
 {
-    switch (type) {
+	switch (type) {
 	case ModernSearchType::LocalSearch:
-	    return std::make_unique<ED2KSearchController>();
+		return std::make_unique<ED2KSearchController>();
 	case ModernSearchType::GlobalSearch:
-	    return std::make_unique<ED2KSearchController>();
+		return std::make_unique<ED2KSearchController>();
 	case ModernSearchType::KadSearch:
-	    return std::make_unique<KadSearchController>();
+		return std::make_unique<KadSearchController>();
 	default:
-	    return std::make_unique<ED2KSearchController>();
-    }
+		return std::make_unique<ED2KSearchController>();
+	}
 }
 
 } // namespace search

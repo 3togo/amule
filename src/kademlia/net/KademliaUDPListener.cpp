@@ -281,15 +281,15 @@ void CKademliaUDPListener::ProcessPacket(const uint8_t* data, uint32_t lenData, 
 			break;
 		case KADEMLIA_SEARCH_RES:
 			DebugRecv(KadSearchRes, ip, port);
-			ProcessSearchResponse(packetData, lenPacket);
+			ProcessSearchResponse(packetData, lenPacket, ip, port);
 			break;
 		case KADEMLIA_SEARCH_NOTES_RES:
 			DebugRecv(KadSearchNotesRes, ip, port);
-			ProcessSearchNotesResponse(packetData, lenPacket, ip);
+			ProcessSearchNotesResponse(packetData, lenPacket, ip, port);
 			break;
 		case KADEMLIA2_SEARCH_RES:
 			DebugRecv(Kad2SearchRes, ip, port);
-			Process2SearchResponse(packetData, lenPacket, senderKey);
+			Process2SearchResponse(packetData, lenPacket, ip, port, senderKey);
 			break;
 		case KADEMLIA2_PUBLISH_NOTES_REQ:
 			DebugRecv(Kad2PublishNotesReq, ip, port);
@@ -943,7 +943,7 @@ void CKademliaUDPListener::Process2SearchSourceRequest(const uint8_t *packetData
 	CKademlia::GetIndexed()->SendValidSourceResult(target, ip, port, startPosition, fileSize, senderKey);
 }
 
-void CKademliaUDPListener::ProcessSearchResponse(CMemFile& bio)
+void CKademliaUDPListener::ProcessSearchResponse(CMemFile& bio, uint32_t fromIP, uint16_t fromPort)
 {
 	// What search does this relate to
 	CUInt128 target = bio.ReadUInt128();
@@ -965,7 +965,7 @@ void CKademliaUDPListener::ProcessSearchResponse(CMemFile& bio)
 		// including ICU-based detection when available.
 		CScopedContainer<TagPtrList> tags;
 		bio.ReadTagPtrList(tags.get(), false/*bOptACP*/);
-		CSearchManager::ProcessResult(target, answer, tags.get());
+		CSearchManager::ProcessResult(target, answer, tags.get(), fromIP, fromPort);
 		count--;
 	}
 }
@@ -973,25 +973,27 @@ void CKademliaUDPListener::ProcessSearchResponse(CMemFile& bio)
 
 // KADEMLIA_SEARCH_RES
 // Used in Kad1.0 only
-void CKademliaUDPListener::ProcessSearchResponse(const uint8_t *packetData, uint32_t lenPacket)
+void CKademliaUDPListener::ProcessSearchResponse(
+	const uint8_t *packetData, uint32_t lenPacket, uint32_t fromIP, uint16_t fromPort)
 {
 	// Verify packet is expected size
 	CHECK_PACKET_MIN_SIZE(37);
 
 	CMemFile bio(packetData, lenPacket);
-	ProcessSearchResponse(bio);
+	ProcessSearchResponse(bio, fromIP, fromPort);
 }
 
 // KADEMLIA2_SEARCH_RES
 // Used in Kad2.0 only
-void CKademliaUDPListener::Process2SearchResponse(const uint8_t *packetData, uint32_t lenPacket, const CKadUDPKey& WXUNUSED(senderKey))
+void CKademliaUDPListener::Process2SearchResponse(const uint8_t *packetData,
+	uint32_t lenPacket, uint32_t ip, uint16_t port, const CKadUDPKey& WXUNUSED(senderKey))
 {
 	CMemFile bio(packetData, lenPacket);
 
 	// Who sent this packet.
 	bio.ReadUInt128();
 
-	ProcessSearchResponse(bio);
+	ProcessSearchResponse(bio, ip, port);
 }
 
 // KADEMLIA2_PUBLISH_KEY_REQ
@@ -1056,7 +1058,7 @@ void CKademliaUDPListener::Process2PublishKeyRequest(const uint8_t *packetData, 
 						delete tag; // tag is no longer stored, but membervar is used
 					} else {
 						//TODO: Filter tags
-						entry->AddTag(tag);
+						entry->AddTag(tag, 0);
 					}
 				}
 				tags--;
@@ -1134,8 +1136,8 @@ void CKademliaUDPListener::Process2PublishSourceRequest(const uint8_t *packetDat
 			if (tag) {
 				if (!tag->GetName().Cmp(TAG_SOURCETYPE)) {
 					if (entry->m_bSource == false) {
-						entry->AddTag(new CTagVarInt(TAG_SOURCEIP, entry->m_uIP));
-						entry->AddTag(tag);
+						entry->AddTag(new CTagVarInt(TAG_SOURCEIP, entry->m_uIP), 0);
+						entry->AddTag(tag, 0);
 						entry->m_bSource = true;
 					} else {
 						//More than one sourcetype tag found.
@@ -1154,7 +1156,7 @@ void CKademliaUDPListener::Process2PublishSourceRequest(const uint8_t *packetDat
 				} else if (!tag->GetName().Cmp(TAG_SOURCEPORT)) {
 					if (entry->m_uTCPport == 0) {
 						entry->m_uTCPport = (uint16_t)tag->GetInt();
-						entry->AddTag(tag);
+						entry->AddTag(tag, 0);
 					} else {
 						//More than one port tag found
 						delete tag;
@@ -1162,7 +1164,7 @@ void CKademliaUDPListener::Process2PublishSourceRequest(const uint8_t *packetDat
 				} else if (!tag->GetName().Cmp(TAG_SOURCEUPORT)) {
 					if (addUDPPortTag && tag->IsInt() && tag->GetInt() != 0) {
 						entry->m_uUDPport = (uint16_t)tag->GetInt();
-						entry->AddTag(tag);
+						entry->AddTag(tag, 0);
 						addUDPPortTag = false;
 					} else {
 						//More than one udp port tag found
@@ -1170,13 +1172,13 @@ void CKademliaUDPListener::Process2PublishSourceRequest(const uint8_t *packetDat
 					}
 				} else {
 					//TODO: Filter tags
-					entry->AddTag(tag);
+					entry->AddTag(tag, 0);
 				}
 			}
 			tags--;
 		}
 		if (addUDPPortTag) {
-			entry->AddTag(new CTagVarInt(TAG_SOURCEUPORT, entry->m_uUDPport));
+			entry->AddTag(new CTagVarInt(TAG_SOURCEUPORT, entry->m_uUDPport), 0);
 		}
 #ifdef __DEBUG__
 		if (!strInfo.IsEmpty()) {
@@ -1264,7 +1266,8 @@ void CKademliaUDPListener::Process2SearchNotesRequest(const uint8_t *packetData,
 
 // KADEMLIA_SEARCH_NOTES_RES
 // Used only by Kad1.0
-void CKademliaUDPListener::ProcessSearchNotesResponse(const uint8_t *packetData, uint32_t lenPacket, uint32_t ip)
+void CKademliaUDPListener::ProcessSearchNotesResponse(
+	const uint8_t *packetData, uint32_t lenPacket, uint32_t ip, uint16_t port)
 {
 	// Verify packet is expected size
 	CHECK_PACKET_MIN_SIZE(37);
@@ -1272,7 +1275,7 @@ void CKademliaUDPListener::ProcessSearchNotesResponse(const uint8_t *packetData,
 
 	// What search does this relate to
 	CMemFile bio(packetData, lenPacket);
-	ProcessSearchResponse(bio);
+	ProcessSearchResponse(bio, ip, port);
 }
 
 // KADEMLIA2_PUBLISH_NOTES_REQ
@@ -1320,7 +1323,7 @@ void CKademliaUDPListener::Process2PublishNotesRequest(const uint8_t *packetData
 					delete tag;
 				} else {
 					//TODO: Filter tags
-					entry->AddTag(tag);
+					entry->AddTag(tag, 0);
 				}
 			}
 			tags--;
@@ -1618,7 +1621,7 @@ bool CKademliaUDPListener::FindNodeIDByIP(CKadClientSearcher* requester, uint32_
 	AddDebugLogLineN(logClientKadUDP, wxT("FindNodeIDByIP: Requesting NodeID from ") + KadIPToString(ip) + wxT(" by sending Kad2HelloReq"));
 	DebugSend(Kad2HelloReq, ip, udpPort);
 	SendMyDetails(KADEMLIA2_HELLO_REQ, ip, udpPort, 1, 0, NULL, false); // todo: we send this unobfuscated, which is not perfect, see this can be avoided in the future
-	FetchNodeID_Struct sRequest = { ip, tcpPort, ::GetTickCount() + SEC2MS(60), requester };
+	FetchNodeID_Struct sRequest = { ip, tcpPort, ::GetTickCount64() + SEC2MS(60), requester };
 	m_fetchNodeIDRequests.push_back(sRequest);
 	return true;
 }
@@ -1626,7 +1629,7 @@ bool CKademliaUDPListener::FindNodeIDByIP(CKadClientSearcher* requester, uint32_
 
 void CKademliaUDPListener::ExpireClientSearch(CKadClientSearcher* expireImmediately)
 {
-	uint32_t now = ::GetTickCount();
+	uint32_t now = ::GetTickCount64();
 	for (FetchNodeIDList::iterator it = m_fetchNodeIDRequests.begin(); it != m_fetchNodeIDRequests.end();) {
 		FetchNodeIDList::iterator it2 = it++;
 		if (it2->requester == expireImmediately) {
