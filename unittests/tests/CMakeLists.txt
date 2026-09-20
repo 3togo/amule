@@ -1687,3 +1687,13 @@ target_link_libraries (ECClientCapabilitiesTest
 	ec
 	mulecommon
 )
+
+# Duplicate-search identity and lifecycle eligibility, without a GUI or network.
+add_executable (SearchRequestTest SearchRequestTest.cpp)
+add_test (NAME SearchRequestTest COMMAND SearchRequestTest)
+target_include_directories (SearchRequestTest PRIVATE
+	${CMAKE_BINARY_DIR}
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_SOURCE_DIR}/src/include
+)
+target_link_libraries (SearchRequestTest muleunit mulecommon)

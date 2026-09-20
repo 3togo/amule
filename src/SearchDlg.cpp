@@ -1006,38 +1006,11 @@ void CSearchDlg::OnBnClickedStart(wxCommandEvent &WXUNUSED(evt))
 		return;
 	}
 
-	// Starting a second ed2k search finalises the one in flight (see HasRunningEd2kSearch for
-	// why the protocol forces that), and until now it happened silently: the first tab's
-	// progress bar simply cleared, which reads exactly like a search that finished normally.
-	// Ask first, so stopping it is the user's decision. Only ed2k-over-ed2k: starting a Kad
-	// search alongside a running ed2k one is fine, and so is the reverse.
-	const int newType = GetSelectedSearchTypeCanonical();
-	if ((newType == LocalSearch || newType == GlobalSearch) && HasRunningEd2kSearch()) {
-		const int answer =
-			wxMessageBox(_("An eD2k search is still running. Starting a new one will stop it, "
-				       "because the eD2k protocol allows only one search at a time.\n\n"
-				       "Results already found are kept; only new ones stop arriving.\n\n"
-				       "Start the new search anyway?"),
-				_("Search in progress"),
-				wxYES_NO | wxCENTRE | wxICON_QUESTION,
-				this);
-		if (answer != wxYES) {
-			return;
-		}
-	}
-
 	// Debounce accidental double-clicks, but keep it short so multi-search
 	// users can fire several searches (e.g. global + Kad) back-to-back.
 	uint64 now = GetTickCount64();
 	if ((now - m_last_search_time) > 500) {
 		m_last_search_time = now;
-		// Stop previous ED2K search state only -- the server has a single in-flight search packet
-		// per session and m_searchPacket has to be reset. Do NOT stop a previous Kad search: the
-		// Kad data layer supports multiple concurrent searches keyed by target hash, and stopping
-		// the previous one immediately deletes its CSearch, which strips the "!" tab indicator
-		// and halts result delivery. An unconditional stop here is why starting a second Kad
-		// search appeared to cancel the first.
-		theApp->searchlist->StopSearch(/*globalOnly=*/true);
 		StartNewSearch();
 	}
 }
@@ -1393,10 +1366,6 @@ void CSearchDlg::OnBnClickedClear(wxCommandEvent &WXUNUSED(ev))
 
 void CSearchDlg::StartNewSearch()
 {
-	FindWindow(IDC_STARTS)->Disable();
-	FindWindow(IDC_SDOWNLOAD)->Disable();
-	FindWindow(IDC_CANCELS)->Enable();
-
 	CSearchList::CSearchParams params;
 
 	params.searchString = CastChild(IDC_SEARCHNAME, wxTextEntry)->GetValue();
@@ -1490,6 +1459,59 @@ void CSearchDlg::StartNewSearch()
 		break;
 	}
 
+	const CSearchRequest request(search_type, params);
+	for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
+		CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+		if (!page) {
+			continue;
+		}
+#ifdef CLIENT_GUI
+		const auto progress = m_searchProgress.find(page->GetSearchId());
+		if (progress == m_searchProgress.end()) {
+			continue; // No confirmed lifecycle yet, including restored tabs.
+		}
+		const uint32 status = progress->second;
+#else
+		if (theApp->searchlist->GetSearchLifecycleStateById(page->GetSearchId()) !=
+			CSearchList::SEARCH_LIFECYCLE_RUNNING) {
+			continue;
+		}
+		const uint32 status = theApp->searchlist->GetSearchBarStatusById(page->GetSearchId());
+#endif
+		if (page->CanReuseSearch(request, status)) {
+			m_notebook->SetSelection(i);
+			wxBookCtrlEvent pageChanged;
+			OnSearchPageChanged(pageChanged);
+			return;
+		}
+	}
+
+	// Starting a second ed2k search finalises the one in flight (see HasRunningEd2kSearch for
+	// why the protocol forces that), and until now it happened silently: the first tab's
+	// progress bar simply cleared, which reads exactly like a search that finished normally.
+	// Ask first, so stopping it is the user's decision. Only ed2k-over-ed2k: starting a Kad
+	// search alongside a running ed2k one is fine, and so is the reverse.
+	const int newType = GetSelectedSearchTypeCanonical();
+	if ((newType == LocalSearch || newType == GlobalSearch) && HasRunningEd2kSearch()) {
+		const int answer =
+			wxMessageBox(_("An eD2k search is still running. Starting a new one will stop it, "
+				       "because the eD2k protocol allows only one search at a time.\n\n"
+				       "Results already found are kept; only new ones stop arriving.\n\n"
+				       "Start the new search anyway?"),
+				_("Search in progress"),
+				wxYES_NO | wxCENTRE | wxICON_QUESTION,
+				this);
+		if (answer != wxYES) {
+			return;
+		}
+	}
+
+	// Only a genuinely new request may stop the previous eD2k search.
+	theApp->searchlist->StopSearch(/*globalOnly=*/true);
+	FindWindow(IDC_STARTS)->Disable();
+	FindWindow(IDC_SDOWNLOAD)->Disable();
+	FindWindow(IDC_CANCELS)->Enable();
+
 #ifdef CLIENT_GUI
 	// Remote GUI: real_id is an OPTIMISTIC placeholder tab id. The tab is created immediately
 	// (for instant feedback) and rekeyed to the daemon's real search id when the START reply
@@ -1526,6 +1548,9 @@ void CSearchDlg::StartNewSearch()
 		OnStartRejected(real_id, error);
 	} else {
 		CreateNewTab(((search_type == KadSearch) ? "!" : "") + params.searchString + " (0)", real_id);
+		if (CSearchListCtrl *page = GetSearchList(real_id)) {
+			page->SetSearchRequest(request);
+		}
 	}
 }
 
