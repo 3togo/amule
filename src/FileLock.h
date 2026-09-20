@@ -2,7 +2,7 @@
 // This file is part of the aMule Project.
 //
 // Copyright (c) 2006-2011 Mikkel Schubert ( xaignar@users.sourceforge.net )
-// Copyright (c) 2003-2026 aMule Team ( https://amule-org.github.io )
+// Copyright (c) 2006-2011 aMule Team ( admin@amule.org / http://www.amule.org )
 //
 // Any parts of this program derived from the xMule, lMule or eMule project,
 // or contributed by third-party developers are copyrighted by their
@@ -33,125 +33,145 @@
 #endif
 #include <string> // Do_not_auto_remove (g++-4.0.1 except win32)
 
+
 /**
- * An easy way to lock non-critical files used by several applications. The implementation relies on
- * fcntl, so it may not work on all filesystems (NFS) and locking is not certain.
+ * This class provides an easy way to lock non-critical
+ * files used by multiple applications. However, since
+ * the implementation relies on fcntl, it may not work
+ * on all filesystems (NFS) and thus locking is not
+ * certain.
  *
- * The lock is exclusive: all users are assumed to read and write the file.
+ * Currently, this lock holds an exclusive lock on the
+ * file in question. It is assumed that the file will
+ * be read/written by all users.
+ *
  */
 class CFileLock
 {
 public:
 	/**
-	 * Locks the lock-file for the specified file. The lock-file is named file + "_lock" and is
-	 * created if it does not exist. It is not removed afterwards.
+	 * Locks the lock-file for the specified file.
+	 *
+	 * The lock-file is a file named file + "_lock", and
+	 * will be created if it does not already exist. This
+	 * file is not removed afterwards.
 	 */
-	CFileLock(const std::string &file);
-
-	/** Releases the lock, if any is held. */
-	~CFileLock();
-
-private:
-	//! Not copyable.
-	CFileLock(const CFileLock &);
-	//! Not assignable.
-	CFileLock &operator=(const CFileLock &);
-
-	/** Locks or unlocks the lock-file, returning true on success. */
-	bool SetLock(bool doLock);
-
+	CFileLock(const std::string& file)
 #ifdef _WIN32
-	//! Descriptor of the file being locked.
-	HANDLE hd;
-#else
-	//! Descriptor of the file being locked.
-	int m_fd;
-#endif
-	//! Specifies if the file-lock was acquired.
-	bool m_ok;
-};
-
-inline CFileLock::CFileLock(const std::string &file)
-#ifdef _WIN32
-: m_ok(false)
-{
-	hd = CreateFileA((file + "_lock").c_str(),
-		GENERIC_READ | GENERIC_WRITE,
-		FILE_SHARE_READ | FILE_SHARE_WRITE, // share - shareable
-		NULL,                               // security - not inheritable
-		CREATE_ALWAYS,
-		FILE_ATTRIBUTE_ARCHIVE,
-		NULL);
-	if (hd != INVALID_HANDLE_VALUE) {
-		m_ok = SetLock(true);
-	}
-}
-#else
-: m_fd(-1)
-, m_ok(false)
-{
-	// File must be open with O_WRONLY to be able to set write-locks.
-	m_fd = ::open((file + "_lock").c_str(), O_CREAT | O_WRONLY, 0600);
-	if (m_fd != -1) {
-		m_ok = SetLock(true);
-	}
-}
-#endif
-
-inline CFileLock::~CFileLock()
-{
-	if (m_ok) {
-		SetLock(false);
-	}
-
-#ifdef _WIN32
-	if (hd != INVALID_HANDLE_VALUE) {
-		CloseHandle(hd);
-	}
-#else
-	if (m_fd != -1) {
-		close(m_fd);
-	}
-#endif
-}
-
-inline bool CFileLock::SetLock(bool doLock)
-{
-#ifdef _WIN32
-	// lock/unlock first byte in the file
-	OVERLAPPED ov;
-	ov.Offset = ov.OffsetHigh = 0;
-	BOOL ret;
-	if (doLock) {
-		// http://msdn.microsoft.com/en-us/library/ms891385.aspx
-		ret = LockFileEx(hd, LOCKFILE_EXCLUSIVE_LOCK, 0, 1, 0, &ov);
-	} else {
-		// http://msdn.microsoft.com/en-us/library/ms892364.aspx
-		ret = UnlockFileEx(hd, 0, 1, 0, &ov);
-	}
-	return ret != 0;
-#else
-	struct flock lock;
-	lock.l_type = (doLock ? F_WRLCK : F_UNLCK);
-
-	// Lock the entire file
-	lock.l_whence = SEEK_SET;
-	lock.l_start = 0;
-	lock.l_len = 0;
-
-	// Keep trying if interrupted by a signal.
-	while (true) {
-		if (fcntl(m_fd, F_SETLKW, &lock) == 0) {
-			return true;
-		} else if ((errno != EACCES) && (errno != EAGAIN) && (errno != EINTR)) {
-			// Not an error we can recover from.
-			break;
+		: m_ok(false)
+	{
+		hd = CreateFileA((file + "_lock").c_str(),
+			GENERIC_READ | GENERIC_WRITE,
+			FILE_SHARE_READ | FILE_SHARE_WRITE,		// share - shareable
+			NULL,									// security - not inheritable
+			CREATE_ALWAYS,
+			FILE_ATTRIBUTE_ARCHIVE,
+			NULL);
+		if (hd != INVALID_HANDLE_VALUE) {
+			m_ok = SetLock(true);
 		}
 	}
 
-	return false;
+	/** Releases the lock, if any is held. */
+	~CFileLock() {
+		if (m_ok) {
+			SetLock(false);
+		}
+
+		if (hd != INVALID_HANDLE_VALUE) {
+			CloseHandle(hd);
+		}
+	}
+
+private:
+	//! Not copyable.
+	CFileLock(const CFileLock&);
+	//! Not assignable.
+	CFileLock& operator=(const CFileLock&);
+
+	/** Locks or unlocks the lock-file, returning true on success. */
+	bool SetLock(bool doLock) {
+		// lock/unlock first byte in the file
+		OVERLAPPED ov;
+		ov.Offset = ov.OffsetHigh = 0;
+		BOOL ret;
+		if (doLock) {
+			// http://msdn.microsoft.com/en-us/library/ms891385.aspx
+			ret = LockFileEx(hd, LOCKFILE_EXCLUSIVE_LOCK, 0, 1, 0, &ov);
+		} else {
+			// http://msdn.microsoft.com/en-us/library/ms892364.aspx
+			ret = UnlockFileEx(hd, 0, 1, 0, &ov);
+		}
+		return ret != 0;
+	}
+
+
+	//! Descriptor of the file being locked.
+	HANDLE hd;
+
+	//! Specifies if the file-lock was acquired.
+	bool m_ok;
+#else
+		: m_fd(-1),
+		  m_ok(false)
+	{
+		// File must be open with O_WRONLY to be able to set write-locks.
+		m_fd = ::open((file + "_lock").c_str(), O_CREAT | O_WRONLY, 0600);
+		if (m_fd != -1) {
+			m_ok = SetLock(true);
+		}
+	}
+
+	/** Releases the lock, if any is held. */
+	~CFileLock() {
+		if (m_ok) {
+			SetLock(false);
+		}
+
+		if (m_fd != -1) {
+			close(m_fd);
+		}
+	}
+
+private:
+	//! Not copyable.
+	CFileLock(const CFileLock&);
+	//! Not assignable.
+	CFileLock& operator=(const CFileLock&);
+
+	/** Locks or unlocks the lock-file, returning true on success. */
+	bool SetLock(bool doLock) {
+		struct flock lock;
+		lock.l_type = (doLock ? F_WRLCK : F_UNLCK);
+
+		// Lock the entire file
+		lock.l_whence = SEEK_SET;
+		lock.l_start = 0;
+		lock.l_len = 0;
+
+		// Keep trying if interrupted by a signal.
+		while (true) {
+			if (fcntl(m_fd, F_SETLKW, &lock) == 0) {
+				return true;
+			} else if ((errno != EACCES) && (errno != EAGAIN) && (errno != EINTR)) {
+				// Not an error we can recover from.
+				break;
+			}
+		}
+
+		return false;
+	}
+
+
+	//! Desribtor of the file being locked.
+	int m_fd;
+
+	//! Specifies if the file-lock was acquired.
+	bool m_ok;
 #endif
-}
+public:
+	bool IsOk() const { return m_ok; }
+};
 
 #endif
 // File_checked_for_headers

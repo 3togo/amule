@@ -873,6 +873,8 @@ if (NEED_LIB_MULEAPPCORE)
 		kademlia/kademlia/Entry.cpp
 		kademlia/kademlia/Indexed.cpp
 		kademlia/kademlia/SearchManager.cpp
+		kademlia/kademlia/ParallelSearch.cpp
+		kademlia/kademlia/SearchCache.cpp
 		kademlia/routing/RoutingBin.cpp
 		kademlia/utils/UInt128.cpp
 		AsyncDNS.cpp

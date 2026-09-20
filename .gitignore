@@ -1,3 +1,81 @@
+# Files created by the auto* tools
+build*/
+
+# Files created by CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+
+# macOS app bundles
+aMule.app/
+aMuleGUI.app/
+
+# Build logs
+*.log
+
+# Test executables
+unittests/tests/CTagTest
+unittests/tests/CUInt128Test
+unittests/tests/FileDataIOTest
+unittests/tests/FormatTest
+unittests/tests/ModernLoggingTest
+unittests/tests/NetworkFunctionsTest
+unittests/tests/PathTest
+unittests/tests/RangeMapTest
+unittests/tests/StringFunctionsTest
+unittests/tests/TextFileTest
+
+ABOUT-NLS
+aclocal.m4
+autom4te.cache/
+compile
+config.guess
+config.h.in
+config.rpath
+config.sub
+configure
+depcomp
+install-sh
+intl/
+Makefile.in
+missing
+mkinstalldirs
+po/Makefile.in.in
+src/pixmaps/flags_xpm/CountryFlags.h
+src/pixmaps/flags_xpm/Makefile.am
+test-driver
+
+# Files created by building the project
+# in a directory other than where the sources live
+po/*.gmo
+
+# Files created by building the project
+# in the source directory
+*.a
+*.o
+*.swp
+.deps
+config.h
+config.log
+config.status
+Makefile
+po/POTFILES
+src/amule
+src/amulecmd
+src/amuled
+src/amulegui
+src/ed2k
+src/libs/ec/ECGeneratedFiles
+src/libs/ec/cpp/EC-timestamp
+src/libs/ec/cpp/ECVersion.h
+src/libs/ec/cpp/mkFileSum
+src/utils/cas/cas
+src/utils/scripts/denoiser.sed
+src/utils/wxCas/src/wxcas
+src/utils/xas/autostart-xas
+src/webserver/src/amuleweb
+stamp-h1
 # Files created by the Visual Studio build process
 platforms/Windows/**/Debug30ALC
 platforms/Windows/**/Debug
@@ -26,9 +104,7 @@ Makefile.user
 *.vcxproj.user
 .vscode
 
-# Build and packaging output. The trailing slash keeps these to directories,
-# so ad-hoc build trees (build-macos, build-release, build-audit, ...) are all
-# covered while the tracked packaging/*/build.sh scripts are not.
+# Build and packaging output.
 build*/
 dist/
 
@@ -49,7 +125,23 @@ packaging/windows/installer_strings_generated.nsh
 .aider*
 .archive/
 .cache/
+.codeartsdoer
 
 # Python bytecode, from running the icon embedder by hand
 __pycache__/
 *.pyc
+
+# CMake generated build artifacts (should never be committed)
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+CMakeCache.txt
+
+# Stray root-level build artifacts / scratch files (accidentally committed)
+/version.rc
+/final_test
+/performance_benchmark
+/localglobal_good.txt
+
+# C++20 build dir
+cpp20_build/

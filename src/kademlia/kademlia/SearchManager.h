@@ -42,6 +42,7 @@ there client on the eMule forum..
 #include "../utils/UInt128.h"
 #include "../routing/Maps.h"
 #include "../../Tag.h"
+#include <mutex>
 
 class CMemFile;
 
@@ -140,6 +141,7 @@ private:
 
 	static uint32_t m_nextID;
 	static SearchMap m_searches;
+	static std::mutex m_searchesMutex;  // Mutex for thread-safe access to m_searches
 };
 
 } // namespace Kademlia
