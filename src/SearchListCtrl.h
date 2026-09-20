@@ -34,6 +34,9 @@
 #include "MD4Hash.h"         // Needed for CMD4Hash (known-files filter set)
 #include "Types.h"           // Needed for uint32
 
+#include "SearchRequest.h" // Needed for the request associated with this tab
+#include <optional>
+
 #include <list>
 #include <set> // Needed for std::set (known-files filter set)
 #include <utility>
@@ -78,6 +81,14 @@ public:
 	void ShowResults(wxUIntPtr ResultsId);
 
 	wxUIntPtr GetSearchId() const { return m_nResultsID; }
+
+	// Stored on the page so closing it discards the request and rekeying a
+	// remote placeholder keeps it. Restored/discovered tabs have no request.
+	void SetSearchRequest(const CSearchRequest &request) { m_searchRequest = request; }
+	bool CanReuseSearch(const CSearchRequest &request, uint32_t progress) const
+	{
+		return !IsBrowse() && m_searchRequest && m_searchRequest->CanReuse(request, progress);
+	}
 
 	/// Re-key this control's search ID: the multi-search remote GUI remaps an optimistically-
 	/// created tab from its local ID to the daemon-allocated one once the START reply arrives.
@@ -209,6 +220,8 @@ protected:
 
 	//! This list contains pointers to all current instances of CSearchListCtrl.
 	static std::list<CSearchListCtrl *> s_lists;
+
+	std::optional<CSearchRequest> m_searchRequest;
 
 	//! The ID of the search-results which the list is displaying or zero if unset.
 	wxUIntPtr m_nResultsID;
