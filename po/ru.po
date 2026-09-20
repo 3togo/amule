@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-18 22:25+0100\n"
-"PO-Revision-Date: 2026-09-19 14:41+0000\n"
+"PO-Revision-Date: 2026-09-20 17:41+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
 "Language: ru\n"
@@ -2040,15 +2040,15 @@ msgstr "Все частичные файлы подгружены."
 
 #: src/DownloadQueue.cpp
 msgid "No part files found"
-msgstr "Частично загруженных файлов не найдено"
+msgstr "Частичные файлы не найдены"
 
 #: src/DownloadQueue.cpp
 #, c-format
 msgid "Found %u part file"
 msgid_plural "Found %u part files"
-msgstr[0] "Найден %u частично закаченный файл"
-msgstr[1] "Найдено %u частично закаченных файла"
-msgstr[2] "Найдено %u частично закаченных файлов"
+msgstr[0] "Найден %u частичный файл"
+msgstr[1] "Найдено %u частичный файл"
+msgstr[2] "Найдено %u частичный файлов"
 
 #: src/DownloadQueue.cpp
 msgid "Filesystem for Temp directory cannot handle large files."
@@ -4076,7 +4076,7 @@ msgstr "Передача"
 
 #: src/muuli_wdr.cpp
 msgid "Partfilestatus"
-msgstr "Статус"
+msgstr "Состояние частичных файлов"
 
 #: src/muuli_wdr.cpp
 msgid "Last seen complete"
@@ -4678,7 +4678,7 @@ msgstr "Создавать новые файлы как разреженные"
 
 #: src/muuli_wdr.cpp
 msgid "Sparse part files only occupy disk space for the parts already downloaded, so free space is used up gradually as the file fills in. Turn this off to use an ordinary file instead - useful where sparse files are unsupported or slow, or where backup/de-duplication tools handle them badly. Applies only when the core runs on Windows; on Linux and macOS part files are sparse anyway and this setting has no effect."
-msgstr "Разреженные part-файлы занимают место на диске только для уже загруженных частей, так что свободное место расходуется постепенно по мере заполнения файла. Отключите эту опцию, чтобы использовать обычный файл — полезно, если разреженные файлы не поддерживаются или работают медленно, либо если средства резервного копирования / дедупликации плохо с ними работают. Действует только когда ядро запущено в Windows; в Linux и macOS part-файлы и так разреженные, и этот параметр не влияет."
+msgstr "Разрежённые частичные файлы занимают место на диске только для уже загруженных частей, так что свободное место расходуется постепенно по мере заполнения файла. Отключите эту опцию, чтобы использовать обычный файл — полезно, если разрежённые файлы не поддерживаются или работают медленно, либо если средства резервного копирования / дедупликации плохо с ними работают. Действует только когда ядро запущено в Windows; в Linux и macOS part-файлы и так разрежённые, и этот параметр не влияет."
 
 #: src/muuli_wdr.cpp
 msgid "Stop downloads when free disk space reaches "
@@ -4963,7 +4963,7 @@ msgstr "Включить MMAP: доступ с отображением файл
 
 #: src/muuli_wdr.cpp
 msgid "Maps part files into memory instead of buffering them on the heap, lowering the process memory footprint. May reduce download speed on some disks; best for memory-constrained or upload-heavy hosts."
-msgstr "Отображает part-файлы в память вместо буферизации в куче, снижая потребление памяти процессом. На некоторых дисках может снижать скорость загрузки; лучше всего подходит для узлов с ограниченной памятью или высокой нагрузкой на отдачу."
+msgstr "Отображает частичные файлы в память вместо буферизации в куче, снижая потребление памяти процессом. На некоторых дисках может снижать скорость загрузки; лучше всего подходит для узлов с ограниченной памятью или высокой нагрузкой на отдачу."
 
 #: src/muuli_wdr.cpp
 msgid "Upload Queue Size: 5000 clients"
@@ -5903,7 +5903,7 @@ msgstr "Добавление загрузки и сохранение новог
 
 #: src/PartFileConvertDlg.cpp
 msgid "Import partfiles"
-msgstr "Импорт частично загруженных файлов"
+msgstr "Импорт частичных файлов"
 
 #: src/PartFileConvertDlg.cpp
 msgid "State"
@@ -8695,7 +8695,7 @@ msgstr "Обрабатывается файл под номером %u: %s"
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 msgid "You have asked for part hashes (Only used for files > 9.5 MB)"
-msgstr "Вы запросили частичные хеши (используется только для файлов > 9,5 MБ)"
+msgstr "Вы запросили хеши частичных файлов (используется только для файлов > 9,5 MБ)"
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9345,7 +9345,7 @@ msgstr "Удалить"
 
 #: packaging/windows/installer_strings.c
 msgid "Remove user data (config, ED2K servers, Kad nodes, partfiles)"
-msgstr "Удалить пользовательские данные (конфигурация, серверы ED2K, узлы Kad, part-файлы)"
+msgstr "Удалить данные пользователя (конфигурация, серверы ED2K, узлы Kad, частичные файлы)"
 
 #: packaging/windows/installer_strings.c
 msgid "aMule application files (required)."
@@ -9369,7 +9369,7 @@ msgstr "Удалить файлы приложения aMule, ярлыки в м
 
 #: packaging/windows/installer_strings.c
 msgid "Permanently delete %APPDATA%\\aMule for the current user (aMule.conf, ED2K server list, Kad nodes, partfiles, IP filters, friends list). Leave unchecked to keep your settings."
-msgstr "Безвозвратно удалить %APPDATA%\\aMule для текущего пользователя (aMule.conf, список серверов ED2K, узлы Kad, part-файлы, IP-фильтры, список друзей). Оставьте флажок снятым, чтобы сохранить настройки."
+msgstr "Безвозвратно удалить %APPDATA%\\aMule для текущего пользователя (aMule.conf, список серверов ED2K, узлы Kad, частичные файлы, IP-фильтры, список друзей). Оставьте флажок снятым, чтобы сохранить настройки."
 
 #: packaging/windows/installer_strings.c
 msgid ""

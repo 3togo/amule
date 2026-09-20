@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-18 22:25+0100\n"
-"PO-Revision-Date: 2026-09-19 14:35+0000\n"
+"PO-Revision-Date: 2026-09-20 17:26+0000\n"
 "Last-Translator: Diego Heras <ngosang@hotmail.es>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/amule/amule-application/es/>\n"
 "Language: es\n"
@@ -3820,9 +3820,8 @@ msgid "Click here to add the eD2k link in the text control to your download queu
 msgstr "Haga clic aquí para añadir el enlace eD2k del campo de texto a la cola de descargas."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Events are displayed here. For a complete list of events, refer to the log in the Networks tab."
-msgstr "Los eventos se muestran aquí. Para obtener una lista completa de eventos, vaya al registro de la pestaña de servidores."
+msgstr "Los eventos se muestran aquí. Para obtener una lista completa de eventos, vaya al registro de la pestaña de Redes."
 
 #: src/muuli_wdr.cpp
 msgid "Loading ..."
@@ -3901,9 +3900,8 @@ msgid "Audio"
 msgstr "Audio"
 
 #: src/muuli_wdr.cpp src/OtherFunctions.cpp src/TransferWnd.cpp
-#, fuzzy
 msgid "Disc images"
-msgstr "Imágenes de CD"
+msgstr "Imágenes de disco"
 
 #: src/muuli_wdr.cpp src/OtherFunctions.cpp src/TransferWnd.cpp
 msgid "Pictures"
@@ -7364,9 +7362,9 @@ msgid "Shared directory not found, skipping: %s"
 msgstr "Directorio compartido no encontrado, se omite: %s"
 
 #: src/SharedFileList.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Shared directory not readable, skipping: %s"
-msgstr "Directorio compartido no encontrado, se omite: %s"
+msgstr "Directorio compartido no legible, se omite: %s"
 
 #: src/SharedFileList.cpp
 msgid "Media metadata extraction is disabled in preferences, so there is nothing to re-extract."

@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-18 22:25+0100\n"
-"PO-Revision-Date: 2026-09-19 14:33+0000\n"
+"PO-Revision-Date: 2026-09-20 17:22+0000\n"
 "Last-Translator: minterior <minterior@gmail.com>\n"
 "Language-Team: Català\n"
 "Language: ca\n"
@@ -81,7 +81,7 @@ msgstr "Problemes:"
 
 #: src/AboutDialog.cpp
 msgid "Click to check for a newer version."
-msgstr "Comprova si hi ha noves versions a l'inici"
+msgstr "Feu clic per comprovar si hi ha una versió més nova."
 
 #: src/AboutDialog.cpp
 msgid "Check for updates"
@@ -2152,11 +2152,11 @@ msgstr "Ha fallat l'autenticació: el client no ha pogut confirmar la sessió xi
 
 #: src/ExternalConn.cpp
 msgid "Authentication failed: wrong password."
-msgstr "Ha fallat l'autenticació: contrasenya incorrecta"
+msgstr "Ha fallat l'autenticació: contrasenya incorrecta."
 
 #: src/ExternalConn.cpp
 msgid "Authentication failed: missing password."
-msgstr "Ha fallat l'autenticació: falta la contrasenya"
+msgstr "Ha fallat l'autenticació: falta la contrasenya."
 
 #: src/ExternalConn.cpp
 msgid "Invalid request, please authenticate first."
@@ -2720,7 +2720,7 @@ msgstr "Kademlia"
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Standard TCP Port "
-msgstr "Port TCP per defecte:"
+msgstr "Port TCP per defecte "
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Extended UDP port (Kad / global search) "
@@ -4012,7 +4012,7 @@ msgstr "Fonts del fitxer:"
 
 #: src/muuli_wdr.cpp src/PrefsUnifiedDlg.cpp
 msgid "General"
-msgstr "General "
+msgstr "General"
 
 #: src/muuli_wdr.cpp
 msgid "Full Name"
@@ -4032,7 +4032,7 @@ msgstr "Mida"
 
 #: src/muuli_wdr.cpp src/Statistics.cpp
 msgid "Transfer"
-msgstr "Transferència "
+msgstr "Transferència"
 
 #: src/muuli_wdr.cpp
 msgid "Partfilestatus"
@@ -4072,7 +4072,7 @@ msgstr "Completats"
 
 #: src/muuli_wdr.cpp
 msgid "Intelligent Corruption Handling"
-msgstr "Gestió intel·ligent de la corrupció "
+msgstr "Gestió intel·ligent de la corrupció"
 
 #: src/muuli_wdr.cpp
 msgid "Lost to corruption"
@@ -4148,7 +4148,7 @@ msgstr "Títol"
 
 #: src/muuli_wdr.cpp
 msgid "File Names"
-msgstr "Noms del fitxer "
+msgstr "Noms del fitxer"
 
 #: src/muuli_wdr.cpp
 msgid "Takeover"
@@ -4452,7 +4452,7 @@ msgstr "Manté una llista desplegable dels vostres termes de cerca anteriors al 
 
 #: src/muuli_wdr.cpp
 msgid "Tooltip delay time: "
-msgstr "Temps de retard de l'indicador de funció:"
+msgstr "Temps de retard de l'indicador de funció: "
 
 #: src/muuli_wdr.cpp
 msgid "seconds"
@@ -4480,7 +4480,7 @@ msgstr "Reproductor de vídeo"
 
 #: src/muuli_wdr.cpp
 msgid "Bandwidth limits"
-msgstr "Límits d'ample de banda "
+msgstr "Límits d'ample de banda"
 
 #: src/muuli_wdr.cpp
 msgid "Upload"
@@ -4492,7 +4492,7 @@ msgstr "Per posició (slot)"
 
 #: src/muuli_wdr.cpp
 msgid "Ports"
-msgstr "Ports "
+msgstr "Ports"
 
 #: src/muuli_wdr.cpp
 msgid "This is the standard eD2k port and cannot be disabled."
@@ -4996,7 +4996,7 @@ msgstr "Arrodonida"
 
 #: src/muuli_wdr.cpp
 msgid "External Connection Parameters"
-msgstr "Paràmetres de la connexió externa "
+msgstr "Paràmetres de la connexió externa"
 
 #: src/muuli_wdr.cpp
 msgid "Accept external connections"
@@ -5068,7 +5068,7 @@ msgstr "Contrasenya de convidat"
 
 #: src/muuli_wdr.cpp
 msgid "Web server parameters"
-msgstr "Paràmetres del servidor web "
+msgstr "Paràmetres del servidor web"
 
 #: src/muuli_wdr.cpp
 msgid "Run webserver on startup (deprecated)"
@@ -5148,7 +5148,7 @@ msgstr "Feu clic per a reiniciar el registre."
 
 #: src/muuli_wdr.cpp
 msgid "Click on this button to update the servers list from URL ..."
-msgstr "Feu clic en aquest botó per a actualitzar la llista de servidors des d'una URL ... "
+msgstr "Feu clic en aquest botó per a actualitzar la llista de servidors des d'una URL ..."
 
 #: src/muuli_wdr.cpp
 msgid "Server list"
