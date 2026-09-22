@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-18 22:25+0100\n"
+"POT-Creation-Date: 2026-09-22 10:09+0800\n"
 "PO-Revision-Date: 2026-09-19 14:36+0000\n"
 "Last-Translator: Tapio Rantala <tapio.rantala@iki.fi>\n"
 "Language-Team: aMule Team <https://github.com/amule-org/amule>\n"
@@ -61,8 +61,13 @@ msgid "Kademlia: Peer-to-peer routing based on the XOR metric.\n"
 msgstr "Kademliaan: Vertaisreititys perustuen XOR-metriikkaan.\n"
 
 #: src/AboutDialog.cpp
-msgid " Copyright (c) 2002-2011 Petar Maymounkov ( petar@maymounkov.org )\n"
+#, fuzzy
+msgid " Copyright (c) 2002-2011 Petar Maymounkov ( "
 msgstr " Tekijänoikeudet (c) 2002-2008 Petar Maymounkov ( petar@maymounkov.org )\n"
+
+#: src/AboutDialog.cpp
+msgid " )\n"
+msgstr ""
 
 #: src/AboutDialog.cpp
 msgid "Website:"
@@ -277,7 +282,7 @@ msgstr "Lopetetaan amulewebin instanssi prosessinumerolla '%d' ... "
 msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr "Tuhotaan amulewebin instanssi prosessinumerolla '%d' ... "
 
-#: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/ClientRef.cpp src/ServerListCtrl.cpp
 msgid "Failed"
 msgstr "Epäonnistunut"
 
@@ -412,7 +417,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Olet asettanut web-palvelimen ajettavaksi käynnistettäessä, mutta amuleweb-ohjelmaa ei voida ajaa. Ole hyvä ja asenna aMule web-palvelimen sisältävä paketti tai käännä aMule käyttäen parametria --enable-webserver ja suorita make install"
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/PrefsUnifiedDlg.cpp
 msgid "ERROR"
 msgstr "VIRHE"
 
@@ -495,11 +500,17 @@ msgid "More information, support and new releases can found at our homepage,\n"
 msgstr "Lisätietoa, tukea ja uudet julkaisut löytyvät kotisivuiltamme osoitteessa\n"
 
 #: src/amule.cpp
-msgid "at https://amule-org.github.io, or in our IRC channel #aMule at irc.libera.chat.\n"
+msgid "at "
+msgstr ""
+
+#: src/amule.cpp
+#, fuzzy
+msgid ", or in our IRC channel #aMule at irc.libera.chat.\n"
 msgstr "https://amule-org.github.io tai IRC-kanavaltamme #aMule palvelimella irc.libera.chat (englanniksi).\n"
 
 #: src/amule.cpp
-msgid "Feel free to report any bugs to https://github.com/amule-org/amule/issues"
+#, fuzzy
+msgid "Feel free to report any bugs to "
 msgstr "Voit vapaasti raportoida bugeista osoitteessa https://github.com/amule-org/amule/issues"
 
 #: src/amule.cpp
@@ -568,7 +579,8 @@ msgid "Your aMule version is %i.%i.%i and the latest version is %li.%li.%li"
 msgstr "Tämän aMulen versio on %i.%i.%i ja uusin versio on %li.%li.%li"
 
 #: src/amule.cpp
-msgid "The latest version can always be found at https://github.com/amule-org/amule/releases/latest"
+#, fuzzy
+msgid "The latest version can always be found at "
 msgstr "Uusin version löytyy aina osoitteesta https://github.com/amule-org/amule/releases/latest"
 
 #: src/amule.cpp
@@ -654,7 +666,7 @@ msgstr "VIRHE: aMule-taustaprosessia ei voida käyttää kun etäyhteydet ovat p
 
 #: src/amuled.cpp
 #, fuzzy
-msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
+msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at "
 msgstr "VIRHE: Kelvollinen salasana vaaditaan etäyhteyksien käyttämiseksi ja aMule-taustaprosessia ei voida käyttää ilman etäyhteyksiä. Käynnistääksesi aMule-taustaprosessin sinun pitää asettaa kenttään \"ECPassword\" tiedostossa ~/.aMule/amule.conf kelvollinen arvo. Käynnistä amuled parametrilla --ec-config asettaaksesi salasanan. Lisää tiedoa löytyy osoitteesta at https://amule-org.github.io/docs"
 
 #: src/amuled.cpp
@@ -681,8 +693,13 @@ msgid "Running on %s"
 msgstr "Käynnissä %s"
 
 #: src/amuleDlg.cpp
-msgid "Visit https://github.com/amule-org/amule/releases/latest to check if a new version is available."
-msgstr "Vieraile nettisivulla https://github.com/amule-org/amule/releases/latest tarkistaaksi uuden version saatavuuden."
+msgid "Visit "
+msgstr ""
+
+#: src/amuleDlg.cpp
+#, fuzzy
+msgid " to check if a new version is available."
+msgstr "Ei saatavissa"
 
 #: src/amuleDlg.cpp
 msgid "FATAL ERROR: Failed to create Timer"
@@ -1164,7 +1181,7 @@ msgstr "Käyttäjä %s (%u) kysyi listaa jaetuista tiedostoista olemattomassa ka
 msgid "Failed to retrieve shared files from user '%s'"
 msgstr "Jaettujen tiedostojen listaus käyttäjältä '%s' ei onnistunut"
 
-#: src/CanceledFileList.cpp src/KnownFileList.cpp src/SearchList.cpp
+#: src/CanceledFileList.cpp src/KnownFileList.cpp
 #, c-format
 msgid "WARNING: %s cannot be opened."
 msgstr "VAROITUS: Tiedostoa %s ei voida avata."
@@ -1173,7 +1190,7 @@ msgstr "VAROITUS: Tiedostoa %s ei voida avata."
 msgid "WARNING: Canceled file list corrupted, contains invalid header."
 msgstr "VAROITUS: Peruutettujen latausten lista on turmeltunut, sisältää epäkelvon otsakkeen."
 
-#: src/CanceledFileList.cpp src/KnownFileList.cpp src/SearchList.cpp
+#: src/CanceledFileList.cpp src/KnownFileList.cpp
 #, c-format
 msgid "IO error while reading %s file: %s"
 msgstr "IO-virhe luettaessa tiedostoa %s: %s"
@@ -2012,8 +2029,13 @@ msgid "Loading PartFile %u of %u"
 msgstr "Lataan osatiedostoa %u %u:sta"
 
 #: src/DownloadQueue.cpp
-msgid "ERROR: Failed to load backup file. Search https://github.com/amule-org/amule/discussions for .part.met recovery solutions."
-msgstr "VIRHE: Varmuuskopiotiedostoa ei saatu avattua.  Katso sivuilta https://github.com/amule-org/amule/discussions ratkaisuja .part.met -palautukseen."
+#, fuzzy
+msgid "ERROR: Failed to load backup file. Search "
+msgstr "VIRHE: Ei voida avata osatiedostoa '%s'"
+
+#: src/DownloadQueue.cpp
+msgid " for .part.met recovery solutions."
+msgstr ""
 
 #: src/DownloadQueue.cpp
 msgid "All PartFiles Loaded."
@@ -3595,7 +3617,7 @@ msgstr "Leikkaa"
 msgid "Copy"
 msgstr "Kopioi"
 
-#: src/MuleTextCtrl.cpp src/SearchDlg.cpp
+#: src/MuleTextCtrl.cpp
 msgid "Paste"
 msgstr "Liitä"
 
@@ -4382,7 +4404,8 @@ msgid "Nick"
 msgstr "Nimimerkki"
 
 #: src/muuli_wdr.cpp
-msgid "https://amule-org.github.io - the multi-platform Mule"
+#, fuzzy
+msgid " - the multi-platform Mule"
 msgstr "https://amule-org.github.io - monen alustan Mule"
 
 #: src/muuli_wdr.cpp
@@ -5446,8 +5469,13 @@ msgstr ""
 msgid ""
 "No configuration required.\n"
 "\n"
-"IP-to-Country data by DB-IP.com - https://db-ip.com\n"
-"License: Creative Commons BY 4.0 - https://creativecommons.org/licenses/by/4.0/"
+"IP-to-Country data by DB-IP.com - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
+"License: Creative Commons BY 4.0 - "
 msgstr ""
 
 #: src/muuli_wdr.cpp
@@ -5455,12 +5483,25 @@ msgid "License key:"
 msgstr ""
 
 #: src/muuli_wdr.cpp
+msgid "Sign up for a free MaxMind account, then generate a License Key:\n"
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid ""
-"Sign up for a free MaxMind account, then generate a License Key:\n"
-"https://www.maxmind.com/en/geolite2/signup\n"
 "\n"
-"This product includes GeoLite2 data created by MaxMind - https://www.maxmind.com\n"
-"License: MaxMind GeoLite2 EULA - https://www.maxmind.com/en/geolite2/eula\n"
+"\n"
+"This product includes GeoLite2 data created by MaxMind - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
+"License: MaxMind GeoLite2 EULA - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
 "Requires attribution and account registration; refresh at least every 30 days."
 msgstr ""
 
@@ -5472,7 +5513,12 @@ msgstr "Lataus: "
 #: src/muuli_wdr.cpp
 msgid ""
 "Must point to an .mmdb file or a .gz / .tar.gz containing one.\n"
-"URL may include credentials (https://user:pass@host/...).\n"
+"URL may include credentials ("
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+").\n"
 "License and attribution terms are set by the upstream URL - you are responsible."
 msgstr ""
 
@@ -6682,19 +6728,6 @@ msgid "Choose the local folder"
 msgstr "Valitse kansio kohteelle %s"
 
 #: src/SearchDlg.cpp
-#, fuzzy
-msgid "Clear Search History"
-msgstr "Muista nämä asetukset"
-
-#: src/SearchDlg.cpp
-msgid "Clear the saved search history? This cannot be undone."
-msgstr ""
-
-#: src/SearchDlg.cpp
-msgid "Search warning"
-msgstr "Hakuvaroitus"
-
-#: src/SearchDlg.cpp
 msgid "It's impossible to search when both eD2k and Kademlia are disabled."
 msgstr ""
 
@@ -6704,76 +6737,112 @@ msgid "Search error"
 msgstr "Haut"
 
 #: src/SearchDlg.cpp
-msgid ""
-"An eD2k search is still running. Starting a new one will stop it, because the eD2k protocol allows only one search at a time.\n"
-"\n"
-"Results already found are kept; only new ones stop arriving.\n"
-"\n"
-"Start the new search anyway?"
+msgid "Please select a search type."
+msgstr ""
+
+#: src/SearchDlg.cpp
+msgid "Local (eD2k)"
 msgstr ""
 
 #: src/SearchDlg.cpp
 #, fuzzy
-msgid "Search in progress"
-msgstr "Haun edistyminen: %u %% \n"
+msgid "Global (eD2k)"
+msgstr "Kaikkialta"
+
+#: src/SearchDlg.cpp
+msgid "The selected search type ("
+msgstr ""
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "No search tabs available."
+msgstr "Ei saatavissa"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Search Error"
+msgstr "Haut"
+
+#: src/SearchDlg.cpp
+msgid "Invalid search ID. The selected tab may not be a valid search."
+msgstr ""
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Search Error - No Parameters Available"
+msgstr "Haun edistyminen ei ole tiedossa"
+
+#: src/SearchDlg.cpp
+msgid "Search Error - Empty Search String"
+msgstr ""
 
 #: src/SearchDlg.cpp
 msgid "Min size must be smaller than max size. Max size ignored."
 msgstr "Vähimmäiskoon pitää olla pienempi kuin enimmäiskoon. Enimmäiskokoa ei huomioida."
+
+#: src/SearchDlg.cpp
+msgid "Search warning"
+msgstr "Hakuvaroitus"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "No networks are enabled."
+msgstr "Kaikki verkot ovat pois päältä."
+
+#: src/SearchDlg.cpp src/SearchList.cpp
+#, fuzzy
+msgid "No keyword for Kad search - aborting"
+msgstr "Avainsana hakuun: %s"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Failed to start search"
+msgstr "Server.met:n tallennus epäonnistui!"
 
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
 msgid "Main"
 msgstr "Kaikki"
 
 #: src/SearchList.cpp
-#, c-format
-msgid "Only saving the %u most recent of %u open searches to %s."
-msgstr ""
-
-#: src/SearchList.cpp
-#, c-format
-msgid "Only saving the first %u of %u results for search \"%s\"."
-msgstr ""
-
-#: src/SearchList.cpp
-#, fuzzy
-msgid "WARNING: Stored search list corrupted, contains invalid header."
-msgstr "VAROITUS: Tunnettujen tiedostojen lista on turmeltunut, sisältää epäkelvon otsakkeen."
-
-#: src/SearchList.cpp
-#, fuzzy
-msgid "Invalid entry in stored search list, file may be corrupt"
-msgstr "Epäkelpo merkintä tunnettujen tiedostojen lista -tiedostossa, tiedosto saattaa olla turmeltunut: "
-
-#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "eD2k-hakua ei voida tehdä mikäli eD2k ei ole yhdistettynä"
 
 #: src/SearchList.cpp
+msgid "Search ID is already in use"
+msgstr ""
+
+#: src/SearchList.cpp
 #, fuzzy
-msgid "No keyword for Kad search - aborting"
-msgstr "Avainsana hakuun: %s"
+msgid "Kademlia search ID mismatch"
+msgstr "Kademlia: hakusana on liian lyhyt"
+
+#: src/SearchList.cpp
+#, fuzzy
+msgid "Failed to create per-search state for Kad search"
+msgstr "Jaettujen tiedostojen listaus käyttäjältä '%s' ei onnistunut"
 
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Odottamaton virhe Kad-hakua tehtäessä: "
 
 #: src/SearchList.cpp
-msgid "Search timed out: the server did not answer."
+#, fuzzy
+msgid "Failed to create per-search state for ED2K search"
+msgstr "Jaettujen tiedostojen listaus käyttäjältä '%s' ei onnistunut"
+
+#: src/SearchList.cpp
+msgid "No search parameters available for this search"
 msgstr ""
 
 #: src/SearchList.cpp
-msgid "Kad search: requested wider results from one more peer."
-msgstr ""
+#, fuzzy
+msgid "Invalid server"
+msgstr "Virheellinen parametri."
 
 #: src/SearchList.cpp
-msgid "Kad search: no peer left to reask for more results (cap reached or no responses yet)."
-msgstr ""
-
-#: src/SearchList.cpp
-#, fuzzy, c-format
-msgid "Error %u: %s\n"
-msgstr "Virhe päivitettäessä GeoIP.dat-tiedostoa"
+#, fuzzy
+msgid "Failed to create search data"
+msgstr "VIRHE: Osatiedoston luominen epäonnistui"
 
 #: src/SearchListCtrl.cpp
 msgid "FileID"
@@ -7201,7 +7270,8 @@ msgid "\tMost likely this is because you're behind a firewall or router."
 msgstr "\tTodennäköisimmin tämä johtuu siitä että olet palomuurin tai reitittimen takana"
 
 #: src/ServerSocket.cpp
-msgid "\tFor more information, please refer to https://amule-org.github.io/docs"
+#, fuzzy
+msgid "\tFor more information, please refer to "
 msgstr "\tLisätietoa https://amule-org.github.io/docs"
 
 #: src/ServerSocket.cpp
@@ -8788,24 +8858,36 @@ msgid "Nothing to save for now !"
 msgstr "Toistaiseksi ei mitään tallennettavaa !"
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
+#, fuzzy
 msgid ""
 "aLinkCreator, the aMule eD2k link creator\n"
 "\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+"(c) 2004 ThePolish <"
+msgstr "\"aLinkCreator, aMule eD2k-linkkien tekijä"
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+">\n"
 "\n"
-"Pixmaps from http://www.everaldo.com and http://www.icomania.com\n"
-"and http://jimmac.musichall.cz/ikony.php3\n"
+"Pixmaps from "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid " and "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+"\n"
+"and "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+"\n"
 "\n"
 "Distributed under GPL"
 msgstr ""
-"aLinkCreator, aMule eD2k-linkkien tekijä\n"
-"\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
-"\n"
-"Bittikartat osoitteista http://www.everaldo.com, http://www.icomania.com\n"
-"ja http://jimmac.musichall.cz/ikony.php3\n"
-"\n"
-"Jaetaan GPL:n alaisena"
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Hashing..."
@@ -8972,22 +9054,26 @@ msgid "Printing"
 msgstr "Tulostus"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
+#, fuzzy
 msgid ""
 "wxCas, aMule OnLine Signature Statistics\n"
 "\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+"(c) 2004 ThePolish <"
+msgstr "wxCas, aMulen Online-Tilastotiedot"
+
+#: src/utils/wxCas/src/wxcasframe.cpp
+msgid ""
+">\n"
 "\n"
-"Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
+"Based on CAS by Pedro de Oliveira <"
+msgstr ""
+
+#: src/utils/wxCas/src/wxcasframe.cpp
+msgid ""
+">\n"
 "\n"
 "Distributed under GPL"
 msgstr ""
-"wxCas, aMulen OnLine Signeeraus-Tilastotiedot\n"
-"\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
-"\n"
-"Pohjautuu CAS:iin jonka on tehnyt Pedro de Oliveira <falso@rdk.homeip.net>\n"
-"\n"
-"Jaetaan GPL:n alaisena"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Oh Oh, aMule is not running..."
@@ -9350,13 +9436,13 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule appears to be running from $INSTDIR.\r\n"
+"aMule appears to be running from $INSTDIR.\n"
 "Please close aMule (and aMuleD / aMuleGUI) and try again."
 msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\n"
+"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\n"
 "Please stop it and try again."
 msgstr ""
 
@@ -9366,7 +9452,7 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"Could not remove the previous aMule installation at $0.\r\n"
+"Could not remove the previous aMule installation at $0.\n"
 "Please close any running aMule processes and try again, or uninstall the previous version manually first."
 msgstr ""
 
@@ -9377,6 +9463,68 @@ msgstr ""
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr ""
+
+#~ msgid "Visit https://github.com/amule-org/amule/releases/latest to check if a new version is available."
+#~ msgstr "Vieraile nettisivulla https://github.com/amule-org/amule/releases/latest tarkistaaksi uuden version saatavuuden."
+
+#~ msgid "ERROR: Failed to load backup file. Search https://github.com/amule-org/amule/discussions for .part.met recovery solutions."
+#~ msgstr "VIRHE: Varmuuskopiotiedostoa ei saatu avattua.  Katso sivuilta https://github.com/amule-org/amule/discussions ratkaisuja .part.met -palautukseen."
+
+#~ msgid ""
+#~ "aLinkCreator, the aMule eD2k link creator\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Pixmaps from http://www.everaldo.com and http://www.icomania.com\n"
+#~ "and http://jimmac.musichall.cz/ikony.php3\n"
+#~ "\n"
+#~ "Distributed under GPL"
+#~ msgstr ""
+#~ "aLinkCreator, aMule eD2k-linkkien tekijä\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Bittikartat osoitteista http://www.everaldo.com, http://www.icomania.com\n"
+#~ "ja http://jimmac.musichall.cz/ikony.php3\n"
+#~ "\n"
+#~ "Jaetaan GPL:n alaisena"
+
+#~ msgid ""
+#~ "wxCas, aMule OnLine Signature Statistics\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
+#~ "\n"
+#~ "Distributed under GPL"
+#~ msgstr ""
+#~ "wxCas, aMulen OnLine Signeeraus-Tilastotiedot\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Pohjautuu CAS:iin jonka on tehnyt Pedro de Oliveira <falso@rdk.homeip.net>\n"
+#~ "\n"
+#~ "Jaetaan GPL:n alaisena"
+
+#, fuzzy
+#~ msgid "Clear Search History"
+#~ msgstr "Muista nämä asetukset"
+
+#, fuzzy
+#~ msgid "Search in progress"
+#~ msgstr "Haun edistyminen: %u %% \n"
+
+#, fuzzy
+#~ msgid "WARNING: Stored search list corrupted, contains invalid header."
+#~ msgstr "VAROITUS: Tunnettujen tiedostojen lista on turmeltunut, sisältää epäkelvon otsakkeen."
+
+#, fuzzy
+#~ msgid "Invalid entry in stored search list, file may be corrupt"
+#~ msgstr "Epäkelpo merkintä tunnettujen tiedostojen lista -tiedostossa, tiedosto saattaa olla turmeltunut: "
+
+#, fuzzy, c-format
+#~ msgid "Error %u: %s\n"
+#~ msgstr "Virhe päivitettäessä GeoIP.dat-tiedostoa"
 
 #, fuzzy
 #~ msgid "Ratio"

@@ -1344,7 +1344,7 @@ wxSizer *PreferencesGeneralTab( wxWindow *parent, bool call_fit, bool set_sizer 
     wxStaticBox *item2 = new wxStaticBox( parent, -1, _("Nick") );
     wxStaticBoxSizer *item1 = new wxStaticBoxSizer( item2, wxVERTICAL );
 
-    CMuleTextCtrl *item3 = new CMuleTextCtrl( item2, IDC_NICK, _("https://amule-org.github.io - the multi-platform Mule"), wxDefaultPosition, wxSize(90,-1), 0 );
+    CMuleTextCtrl *item3 = new CMuleTextCtrl( item2, IDC_NICK, wxT("https://amule-org.github.io") + _(" - the multi-platform Mule"), wxDefaultPosition, wxSize(90,-1), 0 );
     item3->SetToolTip( _("This is the name that other users will see when connecting to you.") );
     item1->Add( item3, wxSizerFlags().Expand().CenterVertical() );
     item0->Add( item1, wxSizerFlags().Expand().CenterHorizontal() );
@@ -3022,8 +3022,8 @@ wxSizer *PreferencesIP2CountryTab( wxWindow *parent, bool call_fit, bool set_siz
     wxStaticText *dbipText = new wxStaticText( dbipPanel, wxID_ANY,
         _("No configuration required.\n"
           "\n"
-          "IP-to-Country data by DB-IP.com - https://db-ip.com\n"
-          "License: Creative Commons BY 4.0 - https://creativecommons.org/licenses/by/4.0/"),
+          "IP-to-Country data by DB-IP.com - ") + wxT("https://db-ip.com") + _("\n"
+          "License: Creative Commons BY 4.0 - ") + wxT("https://creativecommons.org/licenses/by/4.0/"),
         wxDefaultPosition, wxDefaultSize, 0 );
     dbipSizer->Add( dbipText, wxSizerFlags().Expand().Border(wxALL, 4) );
     dbipPanel->SetSizer( dbipSizer );
@@ -3039,11 +3039,11 @@ wxSizer *PreferencesIP2CountryTab( wxWindow *parent, bool call_fit, bool set_siz
     maxmindRow->Add( licField, wxSizerFlags(1).Expand() );
     maxmindSizer->Add( maxmindRow, wxSizerFlags().Expand().Border(wxALL, 4) );
     wxStaticText *maxmindText = new wxStaticText( maxmindPanel, wxID_ANY,
-        _("Sign up for a free MaxMind account, then generate a License Key:\n"
-          "https://www.maxmind.com/en/geolite2/signup\n"
+        _("Sign up for a free MaxMind account, then generate a License Key:\n") +
+          wxT("https://www.maxmind.com/en/geolite2/signup") + _("\n"
           "\n"
-          "This product includes GeoLite2 data created by MaxMind - https://www.maxmind.com\n"
-          "License: MaxMind GeoLite2 EULA - https://www.maxmind.com/en/geolite2/eula\n"
+          "This product includes GeoLite2 data created by MaxMind - ") + wxT("https://www.maxmind.com") + _("\n"
+          "License: MaxMind GeoLite2 EULA - ") + wxT("https://www.maxmind.com/en/geolite2/eula") + _("\n"
           "Requires attribution and account registration; refresh at least every 30 days."),
         wxDefaultPosition, wxDefaultSize, 0 );
     maxmindSizer->Add( maxmindText, wxSizerFlags().Expand().Border(wxALL, 4) );
@@ -3061,7 +3061,7 @@ wxSizer *PreferencesIP2CountryTab( wxWindow *parent, bool call_fit, bool set_siz
     customSizer->Add( customRow, wxSizerFlags().Expand().Border(wxALL, 4) );
     wxStaticText *customText = new wxStaticText( customPanel, wxID_ANY,
         _("Must point to an .mmdb file or a .gz / .tar.gz containing one.\n"
-          "URL may include credentials (https://user:pass@host/...).\n"
+          "URL may include credentials (") + wxT("https://user:pass@host/...") + _(").\n"
           "License and attribution terms are set by the upstream URL - you are responsible."),
         wxDefaultPosition, wxDefaultSize, 0 );
     customSizer->Add( customText, wxSizerFlags().Expand().Border(wxALL, 4) );

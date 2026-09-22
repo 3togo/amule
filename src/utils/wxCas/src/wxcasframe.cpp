@@ -358,9 +358,9 @@ void WxCasFrame::OnBarPrefs(wxCommandEvent &WXUNUSED(event))
 
 void WxCasFrame::OnBarAbout(wxCommandEvent &WXUNUSED(event))
 {
-	wxMessageBox(_("wxCas, aMule OnLine Signature Statistics\n\n(c) 2004 ThePolish "
-		       "<thepolish@vipmail.ru>\n\nBased on CAS by Pedro de Oliveira "
-		       "<falso@rdk.homeip.net>\n\nDistributed under GPL"),
+	wxMessageBox(_("wxCas, aMule OnLine Signature Statistics\n\n(c) 2004 ThePolish <") +
+		       wxT("thepolish@vipmail.ru") + _(">\n\nBased on CAS by Pedro de Oliveira <") +
+		       wxT("falso@rdk.homeip.net") + _(">\n\nDistributed under GPL"),
 		_("About wxCas"),
 		wxOK | wxCENTRE | wxICON_INFORMATION);
 }

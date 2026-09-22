@@ -53,13 +53,12 @@ static const char *const installer_strings[] = {
 	_("Permanently delete %APPDATA%\\aMule for the current user (aMule.conf, ED2K server list, Kad nodes, partfiles, IP filters, friends list). Leave unchecked to keep your settings."),
 
 	/* Runtime messages (MessageBox / DetailPrint).
-	 * \r\n here is the standard C escape for CR LF; the po-to-nsh
-	 * bridge converts each occurrence into NSIS's $\r$\n line-break
-	 * escape when emitting the LangString. */
-	_("aMule appears to be running from $INSTDIR.\r\nPlease close aMule (and aMuleD / aMuleGUI) and try again."),
-	_("aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\nPlease stop it and try again."),
+	 * Use \n for line breaks; the po-to-nsh bridge converts each \n
+	 * into NSIS's $\r$\n (CRLF) escape when emitting the LangString. */
+	_("aMule appears to be running from $INSTDIR.\nPlease close aMule (and aMuleD / aMuleGUI) and try again."),
+	_("aMule daemon (amuled.exe) appears to be running from $INSTDIR.\nPlease stop it and try again."),
 	_("Removing previous aMule installation at $0..."),
-	_("Could not remove the previous aMule installation at $0.\r\nPlease close any running aMule processes and try again, or uninstall the previous version manually first."),
+	_("Could not remove the previous aMule installation at $0.\nPlease close any running aMule processes and try again, or uninstall the previous version manually first."),
 	_("aMule appears to be running. Please close it and re-run the uninstaller."),
 	_("Removing user data at $APPDATA\\aMule..."),
 };

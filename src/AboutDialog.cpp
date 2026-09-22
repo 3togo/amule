@@ -85,7 +85,7 @@ CAboutDlg::CAboutDlg(wxWindow *parent)
 	wxString credits;
 	credits << _("Copyright (c) 2003-2026 aMule Team \n\n") << _("Part of aMule is based on \n")
 		<< _("Kademlia: Peer-to-peer routing based on the XOR metric.\n")
-		<< _(" Copyright (c) 2002-2011 Petar Maymounkov ( petar@maymounkov.org )\n");
+		<< _(" Copyright (c) 2002-2011 Petar Maymounkov ( ") << wxT("petar@maymounkov.org") << _(" )\n");
 	credits.Trim();
 
 	// aMule logo on the left, matching the previous wxMessageBox About. A bundle, so it renders

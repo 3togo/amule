@@ -327,8 +327,8 @@ CamuleDlg::CamuleDlg(wxWindow *pParent, const wxString &title, wxPoint where, wx
 		    wxString(CFormat(_("This is aMule %s based on eMule.")) % GetMuleVersion()));
 	AddLogLineN(wxString("   ") + wxString(CFormat(_("Running on %s")) % wxGetOsDescription()));
 #ifdef ENABLE_VERSION_CHECK
-	AddLogLineN(" - " + wxString(_("Visit https://github.com/amule-org/amule/releases/latest to check if "
-				       "a new version is available.")));
+	AddLogLineN(" - " + wxString(_("Visit ")) + wxT("https://github.com/amule-org/amule/releases/latest") +
+		    wxString(_(" to check if a new version is available.")));
 #endif
 	AddLogLineN("");
 

@@ -393,10 +393,11 @@ void AlcFrame::SaveEd2kLinkToFile()
 
 void AlcFrame::OnBarAbout(wxCommandEvent &WXUNUSED(event))
 {
-	wxMessageBox(_("aLinkCreator, the aMule eD2k link creator\n\n(c) 2004 ThePolish "
-		       "<thepolish@vipmail.ru>\n\nPixmaps from http://www.everaldo.com and "
-		       "http://www.icomania.com\nand http://jimmac.musichall.cz/ikony.php3\n\nDistributed "
-		       "under GPL"),
+	wxMessageBox(_("aLinkCreator, the aMule eD2k link creator\n\n(c) 2004 ThePolish <") +
+		       wxT("thepolish@vipmail.ru") + _(">\n\nPixmaps from ") +
+		       wxT("http://www.everaldo.com") + _(" and ") +
+		       wxT("http://www.icomania.com") + _("\nand ") +
+		       wxT("http://jimmac.musichall.cz/ikony.php3") + _("\n\nDistributed under GPL"),
 		_("About aLinkCreator"),
 		wxOK | wxCENTRE | wxICON_INFORMATION);
 }

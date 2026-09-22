@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-18 22:25+0100\n"
+"POT-Creation-Date: 2026-09-22 10:09+0800\n"
 "PO-Revision-Date: 2026-09-19 14:44+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
@@ -61,8 +61,13 @@ msgid "Kademlia: Peer-to-peer routing based on the XOR metric.\n"
 msgstr "Kademlia: 基于异或算法的点对点路由。\n"
 
 #: src/AboutDialog.cpp
-msgid " Copyright (c) 2002-2011 Petar Maymounkov ( petar@maymounkov.org )\n"
+#, fuzzy
+msgid " Copyright (c) 2002-2011 Petar Maymounkov ( "
 msgstr " 版权所有 (c) 2002-2011 Petar Maymounkov ( petar@maymounkov.org )\n"
+
+#: src/AboutDialog.cpp
+msgid " )\n"
+msgstr ""
 
 #: src/AboutDialog.cpp
 msgid "Website:"
@@ -289,7 +294,7 @@ msgstr "正在终止 pid 为“%d”的 amuleweb 实例 ... "
 msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr "正在终止 pid 为“%d”的 amuleweb 实例 ... "
 
-#: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/ClientRef.cpp src/ServerListCtrl.cpp
 msgid "Failed"
 msgstr "失败"
 
@@ -420,7 +425,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "您要求启动时运行 Web 服务器，但 amuleweb 程序无法运行， 请先安装包含 amule web 服务器的 aMule 包，或者使用 -DBUILD_WEBSERVER=YES 选项从源码构建 aMule 并安装它。"
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/PrefsUnifiedDlg.cpp
 msgid "ERROR"
 msgstr "错误"
 
@@ -502,11 +507,17 @@ msgid "More information, support and new releases can found at our homepage,\n"
 msgstr "如要获取使用信息、用户支持以及下载最新版本，请访问我们的首页\n"
 
 #: src/amule.cpp
-msgid "at https://amule-org.github.io, or in our IRC channel #aMule at irc.libera.chat.\n"
+msgid "at "
+msgstr ""
+
+#: src/amule.cpp
+#, fuzzy
+msgid ", or in our IRC channel #aMule at irc.libera.chat.\n"
 msgstr "https://amule-org.github.io，或进入我们在 irc.libera.chat 的 IRC 频道 #aMule。\n"
 
 #: src/amule.cpp
-msgid "Feel free to report any bugs to https://github.com/amule-org/amule/issues"
+#, fuzzy
+msgid "Feel free to report any bugs to "
 msgstr "欢迎您到 https://github.com/amule-org/amule/issues 去提交错误报告"
 
 #: src/amule.cpp
@@ -575,7 +586,8 @@ msgid "Your aMule version is %i.%i.%i and the latest version is %li.%li.%li"
 msgstr "您的 aMule 版本是 %i.%i.%i，最新版本是 %li.%li.%li"
 
 #: src/amule.cpp
-msgid "The latest version can always be found at https://github.com/amule-org/amule/releases/latest"
+#, fuzzy
+msgid "The latest version can always be found at "
 msgstr "最新版本可从这里下载：https://github.com/amule-org/amule/releases/latest"
 
 #: src/amule.cpp
@@ -660,7 +672,8 @@ msgid "ERROR: aMule daemon cannot be used when external connections are disabled
 msgstr "错误：当远程连接被禁用的时，aMule 服务程序无法使用。要启用远程连接，请使用普通的 aMule，或使用 --ec-config选项启动 amuled 或在文件 ~/aMule/amule.conf 中设置选项\"AcceptExternalConnections\"为1"
 
 #: src/amuled.cpp
-msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
+#, fuzzy
+msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at "
 msgstr "错误：如果需要使用外部连接，必须设置一个可用的密码，aMule daemon不能在没有启用外部连接的情况下使用。要运行aMule daemon，你必须设置~/.aMule/amule.conf文件中的\"ECPassword\"字段，使它有一个合适的值。执行amuled --ce-config来设置这个密码。更多信息请访问https://amule-org.github.io/docs"
 
 #: src/amuled.cpp
@@ -687,8 +700,13 @@ msgid "Running on %s"
 msgstr "运行于 %s"
 
 #: src/amuleDlg.cpp
-msgid "Visit https://github.com/amule-org/amule/releases/latest to check if a new version is available."
-msgstr "访问 https://github.com/amule-org/amule/releases/latest 来检查 是否有新版本。"
+msgid "Visit "
+msgstr ""
+
+#: src/amuleDlg.cpp
+#, fuzzy
+msgid " to check if a new version is available."
+msgstr "有新版本（%s）可用："
 
 #: src/amuleDlg.cpp
 msgid "FATAL ERROR: Failed to create Timer"
@@ -1172,7 +1190,7 @@ msgstr "用户 %s（%u）请求目录 %s 的共享文件列表 -> 已忽略"
 msgid "Failed to retrieve shared files from user '%s'"
 msgstr "无法获取用户 %s 的共享文件"
 
-#: src/CanceledFileList.cpp src/KnownFileList.cpp src/SearchList.cpp
+#: src/CanceledFileList.cpp src/KnownFileList.cpp
 #, c-format
 msgid "WARNING: %s cannot be opened."
 msgstr "警告：%s 文件无法打开。"
@@ -1181,7 +1199,7 @@ msgstr "警告：%s 文件无法打开。"
 msgid "WARNING: Canceled file list corrupted, contains invalid header."
 msgstr "警告：已取消文件列表损坏，包含有非法头部。"
 
-#: src/CanceledFileList.cpp src/KnownFileList.cpp src/SearchList.cpp
+#: src/CanceledFileList.cpp src/KnownFileList.cpp
 #, c-format
 msgid "IO error while reading %s file: %s"
 msgstr "读取 %s 文件时发生 IO 错误：%s"
@@ -2009,8 +2027,13 @@ msgid "Loading PartFile %u of %u"
 msgstr "载入 PartFile %u 之 %u"
 
 #: src/DownloadQueue.cpp
-msgid "ERROR: Failed to load backup file. Search https://github.com/amule-org/amule/discussions for .part.met recovery solutions."
-msgstr "错误：载入备份文件失败！请到 https://github.com/amule-org/amule/discussions 搜索 .part 和 .met 文件的恢复方法。"
+#, fuzzy
+msgid "ERROR: Failed to load backup file. Search "
+msgstr "错误：打开part文件'%s'失败"
+
+#: src/DownloadQueue.cpp
+msgid " for .part.met recovery solutions."
+msgstr ""
 
 #: src/DownloadQueue.cpp
 msgid "All PartFiles Loaded."
@@ -3590,7 +3613,7 @@ msgstr "剪切"
 msgid "Copy"
 msgstr "复制"
 
-#: src/MuleTextCtrl.cpp src/SearchDlg.cpp
+#: src/MuleTextCtrl.cpp
 msgid "Paste"
 msgstr "粘贴"
 
@@ -4356,7 +4379,8 @@ msgid "Nick"
 msgstr "昵称"
 
 #: src/muuli_wdr.cpp
-msgid "https://amule-org.github.io - the multi-platform Mule"
+#, fuzzy
+msgid " - the multi-platform Mule"
 msgstr "https://amule-org.github.io - 跨平台的电骡"
 
 #: src/muuli_wdr.cpp
@@ -5399,47 +5423,61 @@ msgstr "选择哪个提供商提供 GeoIP MMDB 数据库。DB-IP 是默认选项
 msgid ""
 "No configuration required.\n"
 "\n"
-"IP-to-Country data by DB-IP.com - https://db-ip.com\n"
-"License: Creative Commons BY 4.0 - https://creativecommons.org/licenses/by/4.0/"
+"IP-to-Country data by DB-IP.com - "
 msgstr ""
-"无需配置。\n"
+
+#: src/muuli_wdr.cpp
+msgid ""
 "\n"
-"IP-to-Country 数据由 DB-IP.com 提供 - https://db-ip.com\n"
-"许可证：知识共享署名 4.0 国际版 - https://creativecommons.org/licenses/by/4.0/"
+"License: Creative Commons BY 4.0 - "
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "License key:"
 msgstr "许可证密钥："
 
 #: src/muuli_wdr.cpp
+msgid "Sign up for a free MaxMind account, then generate a License Key:\n"
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid ""
-"Sign up for a free MaxMind account, then generate a License Key:\n"
-"https://www.maxmind.com/en/geolite2/signup\n"
 "\n"
-"This product includes GeoLite2 data created by MaxMind - https://www.maxmind.com\n"
-"License: MaxMind GeoLite2 EULA - https://www.maxmind.com/en/geolite2/eula\n"
+"\n"
+"This product includes GeoLite2 data created by MaxMind - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
+"License: MaxMind GeoLite2 EULA - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
 "Requires attribution and account registration; refresh at least every 30 days."
 msgstr ""
-"注册一个免费的 MaxMind 账户，然后生成一个许可证密钥：\n"
-"https://www.maxmind.com/en/geolite2/signup\n"
-"\n"
-"本产品包含由 MaxMind 创建的 GeoLite2 数据 - https://www.maxmind.com\n"
-"许可证：MaxMind GeoLite2 最终用户许可协议 - https://www.maxmind.com/en/geolite2/eula\n"
-"需要注明出处并注册账户；至少每 30 天刷新一次。"
 
 #: src/muuli_wdr.cpp
 msgid "Download URL:"
 msgstr "下载地址："
 
 #: src/muuli_wdr.cpp
+#, fuzzy
 msgid ""
 "Must point to an .mmdb file or a .gz / .tar.gz containing one.\n"
-"URL may include credentials (https://user:pass@host/...).\n"
-"License and attribution terms are set by the upstream URL - you are responsible."
+"URL may include credentials ("
 msgstr ""
 "必须指向一个 .mmdb 文件，或包含该文件的 .gz / .tar.gz 压缩包。\n"
 "URL 可包含凭据（例如 https://user:pass@host/...）。\n"
 "许可和署名条款由上游 URL 决定——你需自行负责。"
+
+#: src/muuli_wdr.cpp
+msgid ""
+").\n"
+"License and attribution terms are set by the upstream URL - you are responsible."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Download the GeoIP database from the selected source."
@@ -6622,18 +6660,6 @@ msgid "Choose the local folder"
 msgstr "选择本地文件夹"
 
 #: src/SearchDlg.cpp
-msgid "Clear Search History"
-msgstr "清除搜索历史"
-
-#: src/SearchDlg.cpp
-msgid "Clear the saved search history? This cannot be undone."
-msgstr "清除保存的搜索历史？这无法撤销。"
-
-#: src/SearchDlg.cpp
-msgid "Search warning"
-msgstr "搜索警告"
-
-#: src/SearchDlg.cpp
 msgid "It's impossible to search when both eD2k and Kademlia are disabled."
 msgstr "同时禁用 eD2k 和 Kademlia 时将无法搜索。"
 
@@ -6642,77 +6668,112 @@ msgid "Search error"
 msgstr "搜索错误"
 
 #: src/SearchDlg.cpp
-msgid ""
-"An eD2k search is still running. Starting a new one will stop it, because the eD2k protocol allows only one search at a time.\n"
-"\n"
-"Results already found are kept; only new ones stop arriving.\n"
-"\n"
-"Start the new search anyway?"
+msgid "Please select a search type."
 msgstr ""
-"还在运行一个 eD2k 搜索。启动一个新搜索会停止它，因为 eD2k 协议一次只允许一个搜索。\n"
-"\n"
-"已找到的结果将被保留；仅新结果会停止到来。\n"
-"\n"
-"仍要启动新搜索吗？"
 
 #: src/SearchDlg.cpp
-msgid "Search in progress"
-msgstr "搜索中"
+msgid "Local (eD2k)"
+msgstr ""
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Global (eD2k)"
+msgstr "全局"
+
+#: src/SearchDlg.cpp
+msgid "The selected search type ("
+msgstr ""
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "No search tabs available."
+msgstr "不可用"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Search Error"
+msgstr "搜索错误"
+
+#: src/SearchDlg.cpp
+msgid "Invalid search ID. The selected tab may not be a valid search."
+msgstr ""
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Search Error - No Parameters Available"
+msgstr "搜索进度不可用"
+
+#: src/SearchDlg.cpp
+msgid "Search Error - Empty Search String"
+msgstr ""
 
 #: src/SearchDlg.cpp
 msgid "Min size must be smaller than max size. Max size ignored."
 msgstr "最小值必须小于最大值，最大值已被忽略。"
+
+#: src/SearchDlg.cpp
+msgid "Search warning"
+msgstr "搜索警告"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "No networks are enabled."
+msgstr "全部网络都被禁用了。"
+
+#: src/SearchDlg.cpp src/SearchList.cpp
+msgid "No keyword for Kad search - aborting"
+msgstr "Kad 搜索没有关键字 - 中止"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Failed to start search"
+msgstr "无法启动 Kad 搜索"
 
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
 msgid "Main"
 msgstr "主要"
 
 #: src/SearchList.cpp
-#, c-format
-msgid "Only saving the %u most recent of %u open searches to %s."
-msgstr "仅保存最近的 %u 个打开的搜索 （共 %u 个）到 %s。"
-
-#: src/SearchList.cpp
-#, c-format
-msgid "Only saving the first %u of %u results for search \"%s\"."
-msgstr "仅保存搜索 “%3$s” 获得的前 %1$u 个结果，共 %2$u 个结果。"
-
-#: src/SearchList.cpp
-msgid "WARNING: Stored search list corrupted, contains invalid header."
-msgstr "警告: 存储的搜索列表已损坏，含无效头部。"
-
-#: src/SearchList.cpp
-msgid "Invalid entry in stored search list, file may be corrupt"
-msgstr "存储的搜索列表包含无效条目，文件可能损坏："
-
-#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "eD2k未连接时eD2k搜索无法进行"
 
 #: src/SearchList.cpp
-msgid "No keyword for Kad search - aborting"
-msgstr "Kad 搜索没有关键字 - 中止"
+#, fuzzy
+msgid "Search ID is already in use"
+msgstr "已启动搜索（id %u）。\n"
+
+#: src/SearchList.cpp
+#, fuzzy
+msgid "Kademlia search ID mismatch"
+msgstr "Kad：搜索关键词太短"
+
+#: src/SearchList.cpp
+#, fuzzy
+msgid "Failed to create per-search state for Kad search"
+msgstr "创建 %s 的 HTTP 请求失败"
 
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "尝试Kad搜索时出现未预料的错误： "
 
 #: src/SearchList.cpp
-msgid "Search timed out: the server did not answer."
-msgstr "搜索超时：服务器未回应。"
+#, fuzzy
+msgid "Failed to create per-search state for ED2K search"
+msgstr "创建 %s 的 HTTP 请求失败"
 
 #: src/SearchList.cpp
-msgid "Kad search: requested wider results from one more peer."
-msgstr "Kad 搜索：从又一个对等方请求了更广泛的结果。"
+msgid "No search parameters available for this search"
+msgstr ""
 
 #: src/SearchList.cpp
-msgid "Kad search: no peer left to reask for more results (cap reached or no responses yet)."
-msgstr "Kad 搜索：没有剩余对等方可重新请求更多结果（已达上限或尚无响应）。"
+#, fuzzy
+msgid "Invalid server"
+msgstr "无效参数。"
 
 #: src/SearchList.cpp
-#, c-format
-msgid "Error %u: %s\n"
-msgstr "错误 %u：%s\n"
+#, fuzzy
+msgid "Failed to create search data"
+msgstr "错误：无法创建 part 文件"
 
 #: src/SearchListCtrl.cpp
 msgid "FileID"
@@ -7129,7 +7190,8 @@ msgid "\tMost likely this is because you're behind a firewall or router."
 msgstr "\t大概这是因为您处在防火墙或路由器后面。"
 
 #: src/ServerSocket.cpp
-msgid "\tFor more information, please refer to https://amule-org.github.io/docs"
+#, fuzzy
+msgid "\tFor more information, please refer to "
 msgstr "\t如需了解更多相关信息，请访问 https://amule-org.github.io/docs"
 
 #: src/ServerSocket.cpp
@@ -8722,24 +8784,36 @@ msgid "Nothing to save for now !"
 msgstr "暂时没有东西可保存！"
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
+#, fuzzy
 msgid ""
 "aLinkCreator, the aMule eD2k link creator\n"
 "\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+"(c) 2004 ThePolish <"
+msgstr "aLinkCreator，aMule eD2k链接的创建程序"
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+">\n"
 "\n"
-"Pixmaps from http://www.everaldo.com and http://www.icomania.com\n"
-"and http://jimmac.musichall.cz/ikony.php3\n"
+"Pixmaps from "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid " and "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+"\n"
+"and "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+"\n"
 "\n"
 "Distributed under GPL"
 msgstr ""
-"aLinkCreator, aMule eD2k 链接生成工具\n"
-"\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
-"\n"
-"图片来自 http://www.everaldo.com 和 http://www.icomania.com\n"
-"以及 http://jimmac.musichall.cz/ikony.php3\n"
-"\n"
-"基于 GPL 协议发布"
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Hashing..."
@@ -8906,22 +8980,26 @@ msgid "Printing"
 msgstr "打印中"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
+#, fuzzy
 msgid ""
 "wxCas, aMule OnLine Signature Statistics\n"
 "\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+"(c) 2004 ThePolish <"
+msgstr "wxCas，aMule在线统计"
+
+#: src/utils/wxCas/src/wxcasframe.cpp
+msgid ""
+">\n"
 "\n"
-"Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
+"Based on CAS by Pedro de Oliveira <"
+msgstr ""
+
+#: src/utils/wxCas/src/wxcasframe.cpp
+msgid ""
+">\n"
 "\n"
 "Distributed under GPL"
 msgstr ""
-"wxCas, aMule在线统计\n"
-"\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
-"\n"
-"Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
-"\n"
-"基于 GPL 协议分发"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Oh Oh, aMule is not running..."
@@ -9281,16 +9359,18 @@ msgid "Permanently delete %APPDATA%\\aMule for the current user (aMule.conf, ED2
 msgstr "永久删除当前用户的 %APPDATA%\\aMule 目录（包含 aMule.conf 文件、ED2K 服务器列表、Kad 节点、part文件、IP 过滤器和好友列表）。取消选中此项可保留您的设置。"
 
 #: packaging/windows/installer_strings.c
+#, fuzzy
 msgid ""
-"aMule appears to be running from $INSTDIR.\r\n"
+"aMule appears to be running from $INSTDIR.\n"
 "Please close aMule (and aMuleD / aMuleGUI) and try again."
 msgstr ""
 "aMule 似乎正从 $INSTDIR 目录运行。\n"
 "请关闭 aMule（以及 aMuleD / aMuleGUI），然后重试。"
 
 #: packaging/windows/installer_strings.c
+#, fuzzy
 msgid ""
-"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\n"
+"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\n"
 "Please stop it and try again."
 msgstr ""
 "aMule守护进程（amuled.exe）似乎正从 $INSTDIR目录运行。\n"
@@ -9301,8 +9381,9 @@ msgid "Removing previous aMule installation at $0..."
 msgstr "正在删除之前 $0 位置的 aMule 安装…"
 
 #: packaging/windows/installer_strings.c
+#, fuzzy
 msgid ""
-"Could not remove the previous aMule installation at $0.\r\n"
+"Could not remove the previous aMule installation at $0.\n"
 "Please close any running aMule processes and try again, or uninstall the previous version manually first."
 msgstr ""
 "无法删除之前在 $0 处安装的 aMule。\n"
@@ -9315,6 +9396,123 @@ msgstr "aMule 似乎正在运行。请将其关闭并重新运行卸载程序。
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "正在删除 $APPDATA\\aMule 中的用户数据..."
+
+#~ msgid "Visit https://github.com/amule-org/amule/releases/latest to check if a new version is available."
+#~ msgstr "访问 https://github.com/amule-org/amule/releases/latest 来检查 是否有新版本。"
+
+#~ msgid "ERROR: Failed to load backup file. Search https://github.com/amule-org/amule/discussions for .part.met recovery solutions."
+#~ msgstr "错误：载入备份文件失败！请到 https://github.com/amule-org/amule/discussions 搜索 .part 和 .met 文件的恢复方法。"
+
+#~ msgid ""
+#~ "No configuration required.\n"
+#~ "\n"
+#~ "IP-to-Country data by DB-IP.com - https://db-ip.com\n"
+#~ "License: Creative Commons BY 4.0 - https://creativecommons.org/licenses/by/4.0/"
+#~ msgstr ""
+#~ "无需配置。\n"
+#~ "\n"
+#~ "IP-to-Country 数据由 DB-IP.com 提供 - https://db-ip.com\n"
+#~ "许可证：知识共享署名 4.0 国际版 - https://creativecommons.org/licenses/by/4.0/"
+
+#~ msgid ""
+#~ "Sign up for a free MaxMind account, then generate a License Key:\n"
+#~ "https://www.maxmind.com/en/geolite2/signup\n"
+#~ "\n"
+#~ "This product includes GeoLite2 data created by MaxMind - https://www.maxmind.com\n"
+#~ "License: MaxMind GeoLite2 EULA - https://www.maxmind.com/en/geolite2/eula\n"
+#~ "Requires attribution and account registration; refresh at least every 30 days."
+#~ msgstr ""
+#~ "注册一个免费的 MaxMind 账户，然后生成一个许可证密钥：\n"
+#~ "https://www.maxmind.com/en/geolite2/signup\n"
+#~ "\n"
+#~ "本产品包含由 MaxMind 创建的 GeoLite2 数据 - https://www.maxmind.com\n"
+#~ "许可证：MaxMind GeoLite2 最终用户许可协议 - https://www.maxmind.com/en/geolite2/eula\n"
+#~ "需要注明出处并注册账户；至少每 30 天刷新一次。"
+
+#~ msgid ""
+#~ "aLinkCreator, the aMule eD2k link creator\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Pixmaps from http://www.everaldo.com and http://www.icomania.com\n"
+#~ "and http://jimmac.musichall.cz/ikony.php3\n"
+#~ "\n"
+#~ "Distributed under GPL"
+#~ msgstr ""
+#~ "aLinkCreator, aMule eD2k 链接生成工具\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "图片来自 http://www.everaldo.com 和 http://www.icomania.com\n"
+#~ "以及 http://jimmac.musichall.cz/ikony.php3\n"
+#~ "\n"
+#~ "基于 GPL 协议发布"
+
+#~ msgid ""
+#~ "wxCas, aMule OnLine Signature Statistics\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
+#~ "\n"
+#~ "Distributed under GPL"
+#~ msgstr ""
+#~ "wxCas, aMule在线统计\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
+#~ "\n"
+#~ "基于 GPL 协议分发"
+
+#~ msgid "Clear Search History"
+#~ msgstr "清除搜索历史"
+
+#~ msgid "Clear the saved search history? This cannot be undone."
+#~ msgstr "清除保存的搜索历史？这无法撤销。"
+
+#~ msgid ""
+#~ "An eD2k search is still running. Starting a new one will stop it, because the eD2k protocol allows only one search at a time.\n"
+#~ "\n"
+#~ "Results already found are kept; only new ones stop arriving.\n"
+#~ "\n"
+#~ "Start the new search anyway?"
+#~ msgstr ""
+#~ "还在运行一个 eD2k 搜索。启动一个新搜索会停止它，因为 eD2k 协议一次只允许一个搜索。\n"
+#~ "\n"
+#~ "已找到的结果将被保留；仅新结果会停止到来。\n"
+#~ "\n"
+#~ "仍要启动新搜索吗？"
+
+#~ msgid "Search in progress"
+#~ msgstr "搜索中"
+
+#, c-format
+#~ msgid "Only saving the %u most recent of %u open searches to %s."
+#~ msgstr "仅保存最近的 %u 个打开的搜索 （共 %u 个）到 %s。"
+
+#, c-format
+#~ msgid "Only saving the first %u of %u results for search \"%s\"."
+#~ msgstr "仅保存搜索 “%3$s” 获得的前 %1$u 个结果，共 %2$u 个结果。"
+
+#~ msgid "WARNING: Stored search list corrupted, contains invalid header."
+#~ msgstr "警告: 存储的搜索列表已损坏，含无效头部。"
+
+#~ msgid "Invalid entry in stored search list, file may be corrupt"
+#~ msgstr "存储的搜索列表包含无效条目，文件可能损坏："
+
+#~ msgid "Search timed out: the server did not answer."
+#~ msgstr "搜索超时：服务器未回应。"
+
+#~ msgid "Kad search: requested wider results from one more peer."
+#~ msgstr "Kad 搜索：从又一个对等方请求了更广泛的结果。"
+
+#~ msgid "Kad search: no peer left to reask for more results (cap reached or no responses yet)."
+#~ msgstr "Kad 搜索：没有剩余对等方可重新请求更多结果（已达上限或尚无响应）。"
+
+#, c-format
+#~ msgid "Error %u: %s\n"
+#~ msgstr "错误 %u：%s\n"
 
 #~ msgid "Ratio"
 #~ msgstr "比例"

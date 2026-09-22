@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-18 22:25+0100\n"
+"POT-Creation-Date: 2026-09-22 10:09+0800\n"
 "PO-Revision-Date: 2026-09-19 14:42+0000\n"
 "Last-Translator: Jure Repinc <jlp@holodeck1.com>\n"
 "Language-Team: Slovenian\n"
@@ -61,8 +61,13 @@ msgid "Kademlia: Peer-to-peer routing based on the XOR metric.\n"
 msgstr "Kademlia: usmerjanje med enakovrednimi, ki temelji na metriki XOR.\n"
 
 #: src/AboutDialog.cpp
-msgid " Copyright (c) 2002-2011 Petar Maymounkov ( petar@maymounkov.org )\n"
+#, fuzzy
+msgid " Copyright (c) 2002-2011 Petar Maymounkov ( "
 msgstr " Avtorske pravice 2002–2011 Petar Maymounkov ( petar@maymounkov.org )\n"
+
+#: src/AboutDialog.cpp
+msgid " )\n"
+msgstr ""
 
 #: src/AboutDialog.cpp
 msgid "Website:"
@@ -279,7 +284,7 @@ msgstr "Končanje izvoda amuleweb s PID »%d« ... "
 msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr "Ubijanje izvoda amuleweb s PID »%d« ... "
 
-#: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/ClientRef.cpp src/ServerListCtrl.cpp
 msgid "Failed"
 msgstr "Neuspeh"
 
@@ -414,7 +419,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Zahtevali ste zagon spletnega strežnika ob zagonu programa, a programa amuleweb ni moč zagnati. Namestite paket, ki vsebuje spletni strežnik aMule, ali pa prevedite aMule z možnostjo »--enable-webserver« in ga znova namestite z »make install«."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/PrefsUnifiedDlg.cpp
 msgid "ERROR"
 msgstr "NAPAKA"
 
@@ -497,12 +502,17 @@ msgid "More information, support and new releases can found at our homepage,\n"
 msgstr "Več informacij, podporo in nove različice, lahko najdete na naši domači strani,\n"
 
 #: src/amule.cpp
-msgid "at https://amule-org.github.io, or in our IRC channel #aMule at irc.libera.chat.\n"
+msgid "at "
+msgstr ""
+
+#: src/amule.cpp
+#, fuzzy
+msgid ", or in our IRC channel #aMule at irc.libera.chat.\n"
 msgstr "na https://amule-org.github.io, ali na kanalu IRC #aMule, na strežniku irc.libera.chat.\n"
 
 #: src/amule.cpp
 #, fuzzy
-msgid "Feel free to report any bugs to https://github.com/amule-org/amule/issues"
+msgid "Feel free to report any bugs to "
 msgstr "Morebitne hrošče lahko sporočite na https://github.com/amule-org/amule/issues"
 
 #: src/amule.cpp
@@ -572,7 +582,7 @@ msgstr "Različica vaše aMule je %i.%i.%i, najnovejša različica pa je %li.%li
 
 #: src/amule.cpp
 #, fuzzy
-msgid "The latest version can always be found at https://github.com/amule-org/amule/releases/latest"
+msgid "The latest version can always be found at "
 msgstr "Najnovejšo različico lahko vedno najdete na https://github.com/amule-org/amule/releases/latest"
 
 #: src/amule.cpp
@@ -658,7 +668,7 @@ msgstr "NAPAKA: Ne morete uporabljati demona aMule, ko so zunanje povezave onemo
 
 #: src/amuled.cpp
 #, fuzzy
-msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
+msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at "
 msgstr "NAPAKA: Za uporabo zunanjih povezav je potrebno veljavno geslo, demona aMule pa brez zunanjih povezav ni mogoče uporabiti. Za zagon demona aMule morate ključ »ECPassword« v datoteki ~/.aMule/amule.conf nastaviti na ustrezno vrednost. Za nastavitev gesla zaženite amuled z možnostjo --ec-config. Več informacij lahko najdete na https://amule-org.github.io/docs"
 
 #: src/amuled.cpp
@@ -685,9 +695,13 @@ msgid "Running on %s"
 msgstr "Operacijski sistem: %s"
 
 #: src/amuleDlg.cpp
+msgid "Visit "
+msgstr ""
+
+#: src/amuleDlg.cpp
 #, fuzzy
-msgid "Visit https://github.com/amule-org/amule/releases/latest to check if a new version is available."
-msgstr "Obiščite https://github.com/amule-org/amule/releases/latest da preverite, če je na voljo nova različica."
+msgid " to check if a new version is available."
+msgstr "Ni na voljo"
 
 #: src/amuleDlg.cpp
 msgid "FATAL ERROR: Failed to create Timer"
@@ -1173,7 +1187,7 @@ msgstr "Uporabnik %s (%u) je zahteval seznam deljenih datotek za mapo »%s« →
 msgid "Failed to retrieve shared files from user '%s'"
 msgstr "Ni bilo mogoče dobiti deljenih datotek od uporabnika »%s«"
 
-#: src/CanceledFileList.cpp src/KnownFileList.cpp src/SearchList.cpp
+#: src/CanceledFileList.cpp src/KnownFileList.cpp
 #, c-format
 msgid "WARNING: %s cannot be opened."
 msgstr "OPOZORILO: %s ni moč odpreti."
@@ -1182,7 +1196,7 @@ msgstr "OPOZORILO: %s ni moč odpreti."
 msgid "WARNING: Canceled file list corrupted, contains invalid header."
 msgstr "OPOZORILO: Seznam preklicanih datotek je pokvarjen, vsebuje neveljavno glavo."
 
-#: src/CanceledFileList.cpp src/KnownFileList.cpp src/SearchList.cpp
+#: src/CanceledFileList.cpp src/KnownFileList.cpp
 #, c-format
 msgid "IO error while reading %s file: %s"
 msgstr "Vhodno/izhodna napaka med branjem datoteke %s: %s"
@@ -2038,8 +2052,12 @@ msgstr "Nalaganje delne datoteke %u od %u"
 
 #: src/DownloadQueue.cpp
 #, fuzzy
-msgid "ERROR: Failed to load backup file. Search https://github.com/amule-org/amule/discussions for .part.met recovery solutions."
-msgstr "NAPAKA: nalaganje varnostne kopije ni uspelo. Na https://github.com/amule-org/amule/discussions pošičite rešitve za obnavljanje datotek .part.met."
+msgid "ERROR: Failed to load backup file. Search "
+msgstr "NAPAKA: delne datoteke »%s« ni bilo moč odpreti"
+
+#: src/DownloadQueue.cpp
+msgid " for .part.met recovery solutions."
+msgstr ""
 
 #: src/DownloadQueue.cpp
 msgid "All PartFiles Loaded."
@@ -3643,7 +3661,7 @@ msgstr "Izreži"
 msgid "Copy"
 msgstr "Skopiraj"
 
-#: src/MuleTextCtrl.cpp src/SearchDlg.cpp
+#: src/MuleTextCtrl.cpp
 msgid "Paste"
 msgstr "Prilepi"
 
@@ -4431,7 +4449,7 @@ msgstr "Vzdevek"
 
 #: src/muuli_wdr.cpp
 #, fuzzy
-msgid "https://amule-org.github.io - the multi-platform Mule"
+msgid " - the multi-platform Mule"
 msgstr "https://amule-org.github.io – Mule za vse platforme"
 
 #: src/muuli_wdr.cpp
@@ -5497,8 +5515,13 @@ msgstr ""
 msgid ""
 "No configuration required.\n"
 "\n"
-"IP-to-Country data by DB-IP.com - https://db-ip.com\n"
-"License: Creative Commons BY 4.0 - https://creativecommons.org/licenses/by/4.0/"
+"IP-to-Country data by DB-IP.com - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
+"License: Creative Commons BY 4.0 - "
 msgstr ""
 
 #: src/muuli_wdr.cpp
@@ -5506,12 +5529,25 @@ msgid "License key:"
 msgstr ""
 
 #: src/muuli_wdr.cpp
+msgid "Sign up for a free MaxMind account, then generate a License Key:\n"
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid ""
-"Sign up for a free MaxMind account, then generate a License Key:\n"
-"https://www.maxmind.com/en/geolite2/signup\n"
 "\n"
-"This product includes GeoLite2 data created by MaxMind - https://www.maxmind.com\n"
-"License: MaxMind GeoLite2 EULA - https://www.maxmind.com/en/geolite2/eula\n"
+"\n"
+"This product includes GeoLite2 data created by MaxMind - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
+"License: MaxMind GeoLite2 EULA - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
 "Requires attribution and account registration; refresh at least every 30 days."
 msgstr ""
 
@@ -5523,7 +5559,12 @@ msgstr "Prejemanje: "
 #: src/muuli_wdr.cpp
 msgid ""
 "Must point to an .mmdb file or a .gz / .tar.gz containing one.\n"
-"URL may include credentials (https://user:pass@host/...).\n"
+"URL may include credentials ("
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+").\n"
 "License and attribution terms are set by the upstream URL - you are responsible."
 msgstr ""
 
@@ -6753,19 +6794,6 @@ msgid "Choose the local folder"
 msgstr "Izberite mapo za %s"
 
 #: src/SearchDlg.cpp
-#, fuzzy
-msgid "Clear Search History"
-msgstr "Zapomni si te nastavitve"
-
-#: src/SearchDlg.cpp
-msgid "Clear the saved search history? This cannot be undone."
-msgstr ""
-
-#: src/SearchDlg.cpp
-msgid "Search warning"
-msgstr "Opozorilo iskanja"
-
-#: src/SearchDlg.cpp
 msgid "It's impossible to search when both eD2k and Kademlia are disabled."
 msgstr "Iskanje ni mogoče, ko sta tako eD2k kot tudi Kademlia onemogočena."
 
@@ -6774,75 +6802,111 @@ msgid "Search error"
 msgstr "Napaka iskanja"
 
 #: src/SearchDlg.cpp
-msgid ""
-"An eD2k search is still running. Starting a new one will stop it, because the eD2k protocol allows only one search at a time.\n"
-"\n"
-"Results already found are kept; only new ones stop arriving.\n"
-"\n"
-"Start the new search anyway?"
+msgid "Please select a search type."
+msgstr ""
+
+#: src/SearchDlg.cpp
+msgid "Local (eD2k)"
 msgstr ""
 
 #: src/SearchDlg.cpp
 #, fuzzy
-msgid "Search in progress"
-msgstr "Napredek iskanja: %u %% \n"
+msgid "Global (eD2k)"
+msgstr "Globalno"
+
+#: src/SearchDlg.cpp
+msgid "The selected search type ("
+msgstr ""
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "No search tabs available."
+msgstr "Ni na voljo"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Search Error"
+msgstr "Napaka iskanja"
+
+#: src/SearchDlg.cpp
+msgid "Invalid search ID. The selected tab may not be a valid search."
+msgstr ""
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Search Error - No Parameters Available"
+msgstr "Napredek iskanja ni na voljo"
+
+#: src/SearchDlg.cpp
+msgid "Search Error - Empty Search String"
+msgstr ""
 
 #: src/SearchDlg.cpp
 msgid "Min size must be smaller than max size. Max size ignored."
 msgstr "Min. velikost mora biti manjša kot maks. velikost. Maks. velikost ni upoštevana."
+
+#: src/SearchDlg.cpp
+msgid "Search warning"
+msgstr "Opozorilo iskanja"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "No networks are enabled."
+msgstr "Vsa omrežja so onemogočena."
+
+#: src/SearchDlg.cpp src/SearchList.cpp
+msgid "No keyword for Kad search - aborting"
+msgstr "Brez ključne besede za iskanje – prekinjam"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Failed to start search"
+msgstr "Ni bilo mogoče shraniti server.met."
 
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
 msgid "Main"
 msgstr "Glavna"
 
 #: src/SearchList.cpp
-#, c-format
-msgid "Only saving the %u most recent of %u open searches to %s."
-msgstr ""
-
-#: src/SearchList.cpp
-#, c-format
-msgid "Only saving the first %u of %u results for search \"%s\"."
-msgstr ""
-
-#: src/SearchList.cpp
-#, fuzzy
-msgid "WARNING: Stored search list corrupted, contains invalid header."
-msgstr "OPOZORILO: seznam znanih datotek je pokvarjen, vsebuje neveljavno glavo."
-
-#: src/SearchList.cpp
-#, fuzzy
-msgid "Invalid entry in stored search list, file may be corrupt"
-msgstr "Neveljaven vnos na seznamu znanih datotek, datoteka je morda pokvarjena: "
-
-#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "Iskanje preko eD2k ni mogoče, če eD2k ni povezan"
 
 #: src/SearchList.cpp
-msgid "No keyword for Kad search - aborting"
-msgstr "Brez ključne besede za iskanje – prekinjam"
+msgid "Search ID is already in use"
+msgstr ""
+
+#: src/SearchList.cpp
+#, fuzzy
+msgid "Kademlia search ID mismatch"
+msgstr "Kademlia: iskalni niz je prekratek"
+
+#: src/SearchList.cpp
+#, fuzzy
+msgid "Failed to create per-search state for Kad search"
+msgstr "Ni bilo mogoče dobiti deljenih datotek od uporabnika »%s«"
 
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Nepričakovana napaka med iskanjem Kad: "
 
 #: src/SearchList.cpp
-msgid "Search timed out: the server did not answer."
+#, fuzzy
+msgid "Failed to create per-search state for ED2K search"
+msgstr "Ni bilo mogoče dobiti deljenih datotek od uporabnika »%s«"
+
+#: src/SearchList.cpp
+msgid "No search parameters available for this search"
 msgstr ""
 
 #: src/SearchList.cpp
-msgid "Kad search: requested wider results from one more peer."
-msgstr ""
+#, fuzzy
+msgid "Invalid server"
+msgstr "Neveljaven argument."
 
 #: src/SearchList.cpp
-msgid "Kad search: no peer left to reask for more results (cap reached or no responses yet)."
-msgstr ""
-
-#: src/SearchList.cpp
-#, fuzzy, c-format
-msgid "Error %u: %s\n"
-msgstr "Napaka pri posodabljanju GeoIP.dat"
+#, fuzzy
+msgid "Failed to create search data"
+msgstr "NAPAKA: delne datoteke ni bilo mogoče ustvariti"
 
 #: src/SearchListCtrl.cpp
 msgid "FileID"
@@ -7277,7 +7341,7 @@ msgstr "\tPo vsej verjetnosti ste za požarnim zidom ali usmerjevalnikom."
 
 #: src/ServerSocket.cpp
 #, fuzzy
-msgid "\tFor more information, please refer to https://amule-org.github.io/docs"
+msgid "\tFor more information, please refer to "
 msgstr "\tZa več informacij se obrnite na https://amule-org.github.io/docs"
 
 #: src/ServerSocket.cpp
@@ -8891,24 +8955,36 @@ msgid "Nothing to save for now !"
 msgstr "Zaenkrat ni ničesar za shraniti."
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
+#, fuzzy
 msgid ""
 "aLinkCreator, the aMule eD2k link creator\n"
 "\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+"(c) 2004 ThePolish <"
+msgstr "aLinkCreator, ustvarjalnik povezav eD2k"
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+">\n"
 "\n"
-"Pixmaps from http://www.everaldo.com and http://www.icomania.com\n"
-"and http://jimmac.musichall.cz/ikony.php3\n"
+"Pixmaps from "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid " and "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+"\n"
+"and "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+"\n"
 "\n"
 "Distributed under GPL"
 msgstr ""
-"aLinkCreator, ustvarjalnik povezav eD2k\n"
-"\n"
-"© 2004 ThePolish  <thepolish@vipmail.ru>\n"
-"\n"
-"Ikone od http://www.everaldo.com in http://www.icomania.com\n"
-"in http://jimmac.musichall.cz/ikony.php3\n"
-"\n"
-"Razširja se pod pogoji licence GPL"
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Hashing..."
@@ -9075,22 +9151,26 @@ msgid "Printing"
 msgstr "Tiskanje"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
+#, fuzzy
 msgid ""
 "wxCas, aMule OnLine Signature Statistics\n"
 "\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+"(c) 2004 ThePolish <"
+msgstr "wxCas, spletna statistika aMule"
+
+#: src/utils/wxCas/src/wxcasframe.cpp
+msgid ""
+">\n"
 "\n"
-"Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
+"Based on CAS by Pedro de Oliveira <"
+msgstr ""
+
+#: src/utils/wxCas/src/wxcasframe.cpp
+msgid ""
+">\n"
 "\n"
 "Distributed under GPL"
 msgstr ""
-"wxCas, aMule statistika spletnega podpisa\n"
-"\n"
-"© 2004 ThePolish <thepolish@vipmail.ru>\n"
-"\n"
-"Temelji na CAS, avtorja Pedro de Oliveira <falso@rdk.homeip.net>\n"
-"\n"
-"Na voljo pod licenco GPL"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Oh Oh, aMule is not running..."
@@ -9453,13 +9533,13 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule appears to be running from $INSTDIR.\r\n"
+"aMule appears to be running from $INSTDIR.\n"
 "Please close aMule (and aMuleD / aMuleGUI) and try again."
 msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\n"
+"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\n"
 "Please stop it and try again."
 msgstr ""
 
@@ -9469,7 +9549,7 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"Could not remove the previous aMule installation at $0.\r\n"
+"Could not remove the previous aMule installation at $0.\n"
 "Please close any running aMule processes and try again, or uninstall the previous version manually first."
 msgstr ""
 
@@ -9480,6 +9560,70 @@ msgstr ""
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Visit https://github.com/amule-org/amule/releases/latest to check if a new version is available."
+#~ msgstr "Obiščite https://github.com/amule-org/amule/releases/latest da preverite, če je na voljo nova različica."
+
+#, fuzzy
+#~ msgid "ERROR: Failed to load backup file. Search https://github.com/amule-org/amule/discussions for .part.met recovery solutions."
+#~ msgstr "NAPAKA: nalaganje varnostne kopije ni uspelo. Na https://github.com/amule-org/amule/discussions pošičite rešitve za obnavljanje datotek .part.met."
+
+#~ msgid ""
+#~ "aLinkCreator, the aMule eD2k link creator\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Pixmaps from http://www.everaldo.com and http://www.icomania.com\n"
+#~ "and http://jimmac.musichall.cz/ikony.php3\n"
+#~ "\n"
+#~ "Distributed under GPL"
+#~ msgstr ""
+#~ "aLinkCreator, ustvarjalnik povezav eD2k\n"
+#~ "\n"
+#~ "© 2004 ThePolish  <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Ikone od http://www.everaldo.com in http://www.icomania.com\n"
+#~ "in http://jimmac.musichall.cz/ikony.php3\n"
+#~ "\n"
+#~ "Razširja se pod pogoji licence GPL"
+
+#~ msgid ""
+#~ "wxCas, aMule OnLine Signature Statistics\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
+#~ "\n"
+#~ "Distributed under GPL"
+#~ msgstr ""
+#~ "wxCas, aMule statistika spletnega podpisa\n"
+#~ "\n"
+#~ "© 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Temelji na CAS, avtorja Pedro de Oliveira <falso@rdk.homeip.net>\n"
+#~ "\n"
+#~ "Na voljo pod licenco GPL"
+
+#, fuzzy
+#~ msgid "Clear Search History"
+#~ msgstr "Zapomni si te nastavitve"
+
+#, fuzzy
+#~ msgid "Search in progress"
+#~ msgstr "Napredek iskanja: %u %% \n"
+
+#, fuzzy
+#~ msgid "WARNING: Stored search list corrupted, contains invalid header."
+#~ msgstr "OPOZORILO: seznam znanih datotek je pokvarjen, vsebuje neveljavno glavo."
+
+#, fuzzy
+#~ msgid "Invalid entry in stored search list, file may be corrupt"
+#~ msgstr "Neveljaven vnos na seznamu znanih datotek, datoteka je morda pokvarjena: "
+
+#, fuzzy, c-format
+#~ msgid "Error %u: %s\n"
+#~ msgstr "Napaka pri posodabljanju GeoIP.dat"
 
 #, fuzzy
 #~ msgid "Ratio"

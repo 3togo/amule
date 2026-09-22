@@ -217,7 +217,7 @@ int CamuleDaemonApp::OnRun()
 			  "cannot be used without external connections. To run aMule daemon, you must set "
 			  "the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate "
 			  "value. Execute amuled with the flag --ec-config to set the password. More "
-			  "information can be found at https://amule-org.github.io/docs"));
+			  "information can be found at ") + wxT("https://amule-org.github.io/docs"));
 		return 0;
 	}
 
