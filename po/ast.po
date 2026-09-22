@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-18 22:25+0100\n"
+"POT-Creation-Date: 2026-09-22 10:09+0800\n"
 "PO-Revision-Date: 2026-09-19 14:32+0000\n"
 "Last-Translator: astur <malditoastur@gmail.com>\n"
 "Language-Team: Language ast <malditoastur@gmail.com>\n"
@@ -60,8 +60,13 @@ msgid "Kademlia: Peer-to-peer routing based on the XOR metric.\n"
 msgstr "Kademlia: Direicionamientu P2P basáu na métrica XOR.\n"
 
 #: src/AboutDialog.cpp
-msgid " Copyright (c) 2002-2011 Petar Maymounkov ( petar@maymounkov.org )\n"
+#, fuzzy
+msgid " Copyright (c) 2002-2011 Petar Maymounkov ( "
 msgstr " Copyright (c) 2002-2011 Petar Maymounkov ( petar@maymounkov.org )\n"
+
+#: src/AboutDialog.cpp
+msgid " )\n"
+msgstr ""
 
 #: src/AboutDialog.cpp
 msgid "Website:"
@@ -276,7 +281,7 @@ msgstr "Matando instancia amuleweb con pid `%d' ... "
 msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr "Matando instancia amuleweb con pid `%d' ... "
 
-#: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/ClientRef.cpp src/ServerListCtrl.cpp
 msgid "Failed"
 msgstr "Falló"
 
@@ -411,7 +416,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Solicitaste executar el sirvidor web al aniciu pero nun pudo correse'l binariu d'amuleweb. Por favor instala'l paquete que contenga'l sirvidor web d'aMule o compila aMule usando --enable-webserver y executa make install"
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/PrefsUnifiedDlg.cpp
 msgid "ERROR"
 msgstr "FALLU"
 
@@ -494,11 +499,17 @@ msgid "More information, support and new releases can found at our homepage,\n"
 msgstr "Podrás alcontrar na nuesa web, más información, sofitu y nueves versiones, \n"
 
 #: src/amule.cpp
-msgid "at https://amule-org.github.io, or in our IRC channel #aMule at irc.libera.chat.\n"
+msgid "at "
+msgstr ""
+
+#: src/amule.cpp
+#, fuzzy
+msgid ", or in our IRC channel #aMule at irc.libera.chat.\n"
 msgstr "en https://amule-org.github.io, o nel nuesu canal de IRC #aMule en irc.libera.chat. \n"
 
 #: src/amule.cpp
-msgid "Feel free to report any bugs to https://github.com/amule-org/amule/issues"
+#, fuzzy
+msgid "Feel free to report any bugs to "
 msgstr "Unvíanos cualesquier fallu a https://github.com/amule-org/amule/issues"
 
 #: src/amule.cpp
@@ -567,7 +578,8 @@ msgid "Your aMule version is %i.%i.%i and the latest version is %li.%li.%li"
 msgstr "La to versión de aMule ye %i.%i.%i y la cabera versión ye %li.%li.%li"
 
 #: src/amule.cpp
-msgid "The latest version can always be found at https://github.com/amule-org/amule/releases/latest"
+#, fuzzy
+msgid "The latest version can always be found at "
 msgstr "La cabera versión pues alcontrala siempres en https://github.com/amule-org/amule/releases/latest"
 
 #: src/amule.cpp
@@ -653,7 +665,7 @@ msgstr "ERROR: el daemon d'aMule nun pue usase cuando tán desactivaes les conex
 
 #: src/amuled.cpp
 #, fuzzy
-msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
+msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at "
 msgstr "ERROR: Contraseña válida ye requería pa usar conexones esternes y el demoniu aMule nun pue usase ensin conexones esternes. P'aniciar el demoniu aMule, tienes d'especificar nel campu \"ECPassword\" del ficheru ~/.aMule/amule.conf col valor apropiáu. Executa amuled col parámetru --ec-config pa especificar la contraseña. Más información pue alcontrase en https://amule-org.github.io/docs"
 
 #: src/amuled.cpp
@@ -680,8 +692,13 @@ msgid "Running on %s"
 msgstr "Executándose en %s"
 
 #: src/amuleDlg.cpp
-msgid "Visit https://github.com/amule-org/amule/releases/latest to check if a new version is available."
-msgstr "Visita https://github.com/amule-org/amule/releases/latest pa comprobar si hai una nueva versión disponible"
+msgid "Visit "
+msgstr ""
+
+#: src/amuleDlg.cpp
+#, fuzzy
+msgid " to check if a new version is available."
+msgstr "Non disponible"
 
 #: src/amuleDlg.cpp
 msgid "FATAL ERROR: Failed to create Timer"
@@ -1164,7 +1181,7 @@ msgstr "Usuariu %s (%u) solicitó la to llista de ficheros compartíos del direu
 msgid "Failed to retrieve shared files from user '%s'"
 msgstr "Fallu al obtener la llista de compartíos del usuariu '%s'"
 
-#: src/CanceledFileList.cpp src/KnownFileList.cpp src/SearchList.cpp
+#: src/CanceledFileList.cpp src/KnownFileList.cpp
 #, fuzzy, c-format
 msgid "WARNING: %s cannot be opened."
 msgstr "ALVERTENCIA: nun puede abrise known.met."
@@ -1174,7 +1191,7 @@ msgstr "ALVERTENCIA: nun puede abrise known.met."
 msgid "WARNING: Canceled file list corrupted, contains invalid header."
 msgstr "AVISU: Ficheru de llista de compartíos corruptu, tien una testera inválida."
 
-#: src/CanceledFileList.cpp src/KnownFileList.cpp src/SearchList.cpp
+#: src/CanceledFileList.cpp src/KnownFileList.cpp
 #, fuzzy, c-format
 msgid "IO error while reading %s file: %s"
 msgstr "IO error lleendo'l ficheru known.met: %s"
@@ -2015,8 +2032,13 @@ msgid "Loading PartFile %u of %u"
 msgstr "Cargando ficheru part %u de %u"
 
 #: src/DownloadQueue.cpp
-msgid "ERROR: Failed to load backup file. Search https://github.com/amule-org/amule/discussions for .part.met recovery solutions."
-msgstr "ERROR: Nun pudo cargase'l ficheru de copia de seguridá. Llea en https://github.com/amule-org/amule/discussions p'alcontrar soluciones de recuperación d'archivos part.met."
+#, fuzzy
+msgid "ERROR: Failed to load backup file. Search "
+msgstr "ERROR: Fallu al abrir ficheru part '%s'"
+
+#: src/DownloadQueue.cpp
+msgid " for .part.met recovery solutions."
+msgstr ""
 
 #: src/DownloadQueue.cpp
 msgid "All PartFiles Loaded."
@@ -3606,7 +3628,7 @@ msgstr "Cortar"
 msgid "Copy"
 msgstr "Copiar"
 
-#: src/MuleTextCtrl.cpp src/SearchDlg.cpp
+#: src/MuleTextCtrl.cpp
 msgid "Paste"
 msgstr "Apegar"
 
@@ -4395,7 +4417,8 @@ msgid "Nick"
 msgstr "Nomatu"
 
 #: src/muuli_wdr.cpp
-msgid "https://amule-org.github.io - the multi-platform Mule"
+#, fuzzy
+msgid " - the multi-platform Mule"
 msgstr "https://amule-org.github.io - la mula multi-plataforma"
 
 #: src/muuli_wdr.cpp
@@ -5463,8 +5486,13 @@ msgstr ""
 msgid ""
 "No configuration required.\n"
 "\n"
-"IP-to-Country data by DB-IP.com - https://db-ip.com\n"
-"License: Creative Commons BY 4.0 - https://creativecommons.org/licenses/by/4.0/"
+"IP-to-Country data by DB-IP.com - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
+"License: Creative Commons BY 4.0 - "
 msgstr ""
 
 #: src/muuli_wdr.cpp
@@ -5472,12 +5500,25 @@ msgid "License key:"
 msgstr ""
 
 #: src/muuli_wdr.cpp
+msgid "Sign up for a free MaxMind account, then generate a License Key:\n"
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid ""
-"Sign up for a free MaxMind account, then generate a License Key:\n"
-"https://www.maxmind.com/en/geolite2/signup\n"
 "\n"
-"This product includes GeoLite2 data created by MaxMind - https://www.maxmind.com\n"
-"License: MaxMind GeoLite2 EULA - https://www.maxmind.com/en/geolite2/eula\n"
+"\n"
+"This product includes GeoLite2 data created by MaxMind - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
+"License: MaxMind GeoLite2 EULA - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
 "Requires attribution and account registration; refresh at least every 30 days."
 msgstr ""
 
@@ -5489,7 +5530,12 @@ msgstr "Descargáu:"
 #: src/muuli_wdr.cpp
 msgid ""
 "Must point to an .mmdb file or a .gz / .tar.gz containing one.\n"
-"URL may include credentials (https://user:pass@host/...).\n"
+"URL may include credentials ("
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+").\n"
 "License and attribution terms are set by the upstream URL - you are responsible."
 msgstr ""
 
@@ -6706,19 +6752,6 @@ msgid "Choose the local folder"
 msgstr "Escueye una carpeta pa %s"
 
 #: src/SearchDlg.cpp
-#, fuzzy
-msgid "Clear Search History"
-msgstr "Remembrar estes opciones"
-
-#: src/SearchDlg.cpp
-msgid "Clear the saved search history? This cannot be undone."
-msgstr ""
-
-#: src/SearchDlg.cpp
-msgid "Search warning"
-msgstr "Alerta de gueta"
-
-#: src/SearchDlg.cpp
 msgid "It's impossible to search when both eD2k and Kademlia are disabled."
 msgstr ""
 
@@ -6728,75 +6761,112 @@ msgid "Search error"
 msgstr "Guetar"
 
 #: src/SearchDlg.cpp
-msgid ""
-"An eD2k search is still running. Starting a new one will stop it, because the eD2k protocol allows only one search at a time.\n"
-"\n"
-"Results already found are kept; only new ones stop arriving.\n"
-"\n"
-"Start the new search anyway?"
+msgid "Please select a search type."
+msgstr ""
+
+#: src/SearchDlg.cpp
+msgid "Local (eD2k)"
 msgstr ""
 
 #: src/SearchDlg.cpp
 #, fuzzy
-msgid "Search in progress"
-msgstr "En progresu"
+msgid "Global (eD2k)"
+msgstr "Global"
+
+#: src/SearchDlg.cpp
+msgid "The selected search type ("
+msgstr ""
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "No search tabs available."
+msgstr "Non disponible"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Search Error"
+msgstr "Guetar"
+
+#: src/SearchDlg.cpp
+msgid "Invalid search ID. The selected tab may not be a valid search."
+msgstr ""
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Search Error - No Parameters Available"
+msgstr "Amosar porcentax de progresu"
+
+#: src/SearchDlg.cpp
+msgid "Search Error - Empty Search String"
+msgstr ""
 
 #: src/SearchDlg.cpp
 msgid "Min size must be smaller than max size. Max size ignored."
 msgstr "El tamañu mínimu tien de ser menor al tamañu máximu. Tamañu máximu inoráu."
+
+#: src/SearchDlg.cpp
+msgid "Search warning"
+msgstr "Alerta de gueta"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "No networks are enabled."
+msgstr "Toles redes tán deshabilitaes"
+
+#: src/SearchDlg.cpp src/SearchList.cpp
+#, fuzzy
+msgid "No keyword for Kad search - aborting"
+msgstr "Pallabra clave pa gueta: %s"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Failed to start search"
+msgstr "¡Fallu al guardar server.met!"
 
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
 msgid "Main"
 msgstr "Principal"
 
 #: src/SearchList.cpp
-#, c-format
-msgid "Only saving the %u most recent of %u open searches to %s."
-msgstr ""
-
-#: src/SearchList.cpp
-#, c-format
-msgid "Only saving the first %u of %u results for search \"%s\"."
-msgstr ""
-
-#: src/SearchList.cpp
-#, fuzzy
-msgid "WARNING: Stored search list corrupted, contains invalid header."
-msgstr "AVISU: Ficheru de llista de compartíos corruptu, tien una testera inválida."
-
-#: src/SearchList.cpp
-msgid "Invalid entry in stored search list, file may be corrupt"
-msgstr ""
-
-#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "Nun pue facese una gueta en eD2k si nun se ta coneutáu a eD2k"
 
 #: src/SearchList.cpp
+msgid "Search ID is already in use"
+msgstr ""
+
+#: src/SearchList.cpp
 #, fuzzy
-msgid "No keyword for Kad search - aborting"
-msgstr "Pallabra clave pa gueta: %s"
+msgid "Kademlia search ID mismatch"
+msgstr "Kademlia: pallabra de gueta enforma curtia"
+
+#: src/SearchList.cpp
+#, fuzzy
+msgid "Failed to create per-search state for Kad search"
+msgstr "Fallu al obtener la llista de compartíos del usuariu '%s'"
 
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Fallu non esperáu mentantu tentaba guetar en Kad: "
 
 #: src/SearchList.cpp
-msgid "Search timed out: the server did not answer."
+#, fuzzy
+msgid "Failed to create per-search state for ED2K search"
+msgstr "Fallu al obtener la llista de compartíos del usuariu '%s'"
+
+#: src/SearchList.cpp
+msgid "No search parameters available for this search"
 msgstr ""
 
 #: src/SearchList.cpp
-msgid "Kad search: requested wider results from one more peer."
-msgstr ""
+#, fuzzy
+msgid "Invalid server"
+msgstr "Argumentu non válidu."
 
 #: src/SearchList.cpp
-msgid "Kad search: no peer left to reask for more results (cap reached or no responses yet)."
-msgstr ""
-
-#: src/SearchList.cpp
-#, fuzzy, c-format
-msgid "Error %u: %s\n"
-msgstr "Fallu actualizando GeoIP.dat"
+#, fuzzy
+msgid "Failed to create search data"
+msgstr "ERROR: Fallu al criar el ficheru part"
 
 #: src/SearchListCtrl.cpp
 msgid "FileID"
@@ -7227,7 +7297,8 @@ msgid "\tMost likely this is because you're behind a firewall or router."
 msgstr "\tEsto asocede porque tas darrera d'un torgafueos o d'un router."
 
 #: src/ServerSocket.cpp
-msgid "\tFor more information, please refer to https://amule-org.github.io/docs"
+#, fuzzy
+msgid "\tFor more information, please refer to "
 msgstr "\tPa mas información, por favor ve a https://amule-org.github.io/docs"
 
 #: src/ServerSocket.cpp
@@ -8838,24 +8909,36 @@ msgid "Nothing to save for now !"
 msgstr "¡Nun hai res agora pa guardar!"
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
+#, fuzzy
 msgid ""
 "aLinkCreator, the aMule eD2k link creator\n"
 "\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+"(c) 2004 ThePolish <"
+msgstr "aLinkCreator, el criador d'enllaces eD2k p'aMule"
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+">\n"
 "\n"
-"Pixmaps from http://www.everaldo.com and http://www.icomania.com\n"
-"and http://jimmac.musichall.cz/ikony.php3\n"
+"Pixmaps from "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid " and "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+"\n"
+"and "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+"\n"
 "\n"
 "Distributed under GPL"
 msgstr ""
-"aLinkCreator, el criador d'enllaces eD2k de aMule\n"
-"\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
-"\n"
-"Imáxenes dende http://www.everaldo.com y http://www.icomania.com\n"
-"y http://jimmac.musichall.cz/ikony.php3\n"
-"\n"
-"Distribuyíu baxo la llicencia GPL"
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Hashing..."
@@ -9022,22 +9105,26 @@ msgid "Printing"
 msgstr "Imprentando"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
+#, fuzzy
 msgid ""
 "wxCas, aMule OnLine Signature Statistics\n"
 "\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+"(c) 2004 ThePolish <"
+msgstr "wxCas, Estadístiques aMule en llinia"
+
+#: src/utils/wxCas/src/wxcasframe.cpp
+msgid ""
+">\n"
 "\n"
-"Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
+"Based on CAS by Pedro de Oliveira <"
+msgstr ""
+
+#: src/utils/wxCas/src/wxcasframe.cpp
+msgid ""
+">\n"
 "\n"
 "Distributed under GPL"
 msgstr ""
-"wxCas, Estadística de robla en llinia de aMule\n"
-"\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
-"\n"
-"Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
-"\n"
-"Distributed under GPL"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Oh Oh, aMule is not running..."
@@ -9400,13 +9487,13 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule appears to be running from $INSTDIR.\r\n"
+"aMule appears to be running from $INSTDIR.\n"
 "Please close aMule (and aMuleD / aMuleGUI) and try again."
 msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\n"
+"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\n"
 "Please stop it and try again."
 msgstr ""
 
@@ -9416,7 +9503,7 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"Could not remove the previous aMule installation at $0.\r\n"
+"Could not remove the previous aMule installation at $0.\n"
 "Please close any running aMule processes and try again, or uninstall the previous version manually first."
 msgstr ""
 
@@ -9427,6 +9514,64 @@ msgstr ""
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr ""
+
+#~ msgid "Visit https://github.com/amule-org/amule/releases/latest to check if a new version is available."
+#~ msgstr "Visita https://github.com/amule-org/amule/releases/latest pa comprobar si hai una nueva versión disponible"
+
+#~ msgid "ERROR: Failed to load backup file. Search https://github.com/amule-org/amule/discussions for .part.met recovery solutions."
+#~ msgstr "ERROR: Nun pudo cargase'l ficheru de copia de seguridá. Llea en https://github.com/amule-org/amule/discussions p'alcontrar soluciones de recuperación d'archivos part.met."
+
+#~ msgid ""
+#~ "aLinkCreator, the aMule eD2k link creator\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Pixmaps from http://www.everaldo.com and http://www.icomania.com\n"
+#~ "and http://jimmac.musichall.cz/ikony.php3\n"
+#~ "\n"
+#~ "Distributed under GPL"
+#~ msgstr ""
+#~ "aLinkCreator, el criador d'enllaces eD2k de aMule\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Imáxenes dende http://www.everaldo.com y http://www.icomania.com\n"
+#~ "y http://jimmac.musichall.cz/ikony.php3\n"
+#~ "\n"
+#~ "Distribuyíu baxo la llicencia GPL"
+
+#~ msgid ""
+#~ "wxCas, aMule OnLine Signature Statistics\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
+#~ "\n"
+#~ "Distributed under GPL"
+#~ msgstr ""
+#~ "wxCas, Estadística de robla en llinia de aMule\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
+#~ "\n"
+#~ "Distributed under GPL"
+
+#, fuzzy
+#~ msgid "Clear Search History"
+#~ msgstr "Remembrar estes opciones"
+
+#, fuzzy
+#~ msgid "Search in progress"
+#~ msgstr "En progresu"
+
+#, fuzzy
+#~ msgid "WARNING: Stored search list corrupted, contains invalid header."
+#~ msgstr "AVISU: Ficheru de llista de compartíos corruptu, tien una testera inválida."
+
+#, fuzzy, c-format
+#~ msgid "Error %u: %s\n"
+#~ msgstr "Fallu actualizando GeoIP.dat"
 
 #, fuzzy
 #~ msgid "Ratio"

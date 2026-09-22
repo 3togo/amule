@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-18 22:25+0100\n"
+"POT-Creation-Date: 2026-09-22 10:09+0800\n"
 "PO-Revision-Date: 2026-09-19 14:37+0000\n"
 "Last-Translator: Dévai Tamás <gonosztopi@amule.org>\n"
 "Language-Team: Hungarian <hu@li.org>\n"
@@ -57,8 +57,13 @@ msgid "Kademlia: Peer-to-peer routing based on the XOR metric.\n"
 msgstr "Kademlia: Egyenrangú útvonal-megállapítás a XOR metrika alapján.\n"
 
 #: src/AboutDialog.cpp
-msgid " Copyright (c) 2002-2011 Petar Maymounkov ( petar@maymounkov.org )\n"
+#, fuzzy
+msgid " Copyright (c) 2002-2011 Petar Maymounkov ( "
 msgstr " Copyright (c) 2002-2011 Petar Maymounkov ( petar@maymounkov.org )\n"
+
+#: src/AboutDialog.cpp
+msgid " )\n"
+msgstr ""
 
 #: src/AboutDialog.cpp
 msgid "Website:"
@@ -279,7 +284,7 @@ msgstr "Az amuleweb instancia - melynek a pid-je '%d' - bezárása ... "
 msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr "Az amuleweb instancia - melynek a pid-je '%d' - kivégzése ... "
 
-#: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/ClientRef.cpp src/ServerListCtrl.cpp
 msgid "Failed"
 msgstr "Sikertelen"
 
@@ -413,7 +418,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "A web szerver futtatását kérte induláskor, de az amuleweb program nem futtatható. Kérem telepítse az aMule web szervert tartalmazó csomagot, vagy építse az aMule-t a forráskódból a -DBUILD_WEBSERVER=YES paraméterrel és installálja azt."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/PrefsUnifiedDlg.cpp
 msgid "ERROR"
 msgstr "HIBA"
 
@@ -496,11 +501,17 @@ msgid "More information, support and new releases can found at our homepage,\n"
 msgstr "Még több információ, támogatás és új kiadások találhatóak honlapunkon,\n"
 
 #: src/amule.cpp
-msgid "at https://amule-org.github.io, or in our IRC channel #aMule at irc.libera.chat.\n"
+msgid "at "
+msgstr ""
+
+#: src/amule.cpp
+#, fuzzy
+msgid ", or in our IRC channel #aMule at irc.libera.chat.\n"
 msgstr "a https://amule-org.github.io, vagy az #aMule IRC csatornánkon az irc.libera.chat.\n"
 
 #: src/amule.cpp
-msgid "Feel free to report any bugs to https://github.com/amule-org/amule/issues"
+#, fuzzy
+msgid "Feel free to report any bugs to "
 msgstr "Nyugodtan jelezz bármilyen hibát a https://github.com/amule-org/amule/issues"
 
 #: src/amule.cpp
@@ -569,7 +580,8 @@ msgid "Your aMule version is %i.%i.%i and the latest version is %li.%li.%li"
 msgstr "A te aMule verziód %i.%i.%i, a legújabb verzió pedig %li.%li.%li"
 
 #: src/amule.cpp
-msgid "The latest version can always be found at https://github.com/amule-org/amule/releases/latest"
+#, fuzzy
+msgid "The latest version can always be found at "
 msgstr "A legújabb verzió mindig megtalálható a https://github.com/amule-org/amule/releases/latest honlapon."
 
 #: src/amule.cpp
@@ -654,7 +666,8 @@ msgid "ERROR: aMule daemon cannot be used when external connections are disabled
 msgstr "HIBA: az aMule démon nem használható, ha a külső kapcsolatok le vannak tiltva. A Külső Kapcsolatok engedélyezéséhez használd a normál aMule-t, vagy indítsd az amuled-t a --ec-config paraméterrel, vagy állítsd az \"AcceptExternalConnections\" kulcs értékét 1-re a ~/.aMule/amule.conf fájlban."
 
 #: src/amuled.cpp
-msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
+#, fuzzy
+msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at "
 msgstr "HIBA: Egy érvényes jelszó szükséges a külső kapcsolatok használatához, és az aMule démon nem használható külső kapcsolatok nélkül. Az aMule démon futtatásához az \"ECPassword\" nevű mezőt a ~/.aMule/amule.conf nevű fájlban egy megfelelő értékre kell állítani. Indítsa az amuled-t a --ec-config paraméterrel, a jelszó beállításához. További információk https://amule-org.github.io/docs alatt találhatóak."
 
 #: src/amuled.cpp
@@ -681,8 +694,13 @@ msgid "Running on %s"
 msgstr "%s-en fut"
 
 #: src/amuleDlg.cpp
-msgid "Visit https://github.com/amule-org/amule/releases/latest to check if a new version is available."
-msgstr "Új verzióért látogasd meg a https://github.com/amule-org/amule/releases/latest oldalt."
+msgid "Visit "
+msgstr ""
+
+#: src/amuleDlg.cpp
+#, fuzzy
+msgid " to check if a new version is available."
+msgstr "Nem elérhető"
 
 #: src/amuleDlg.cpp
 msgid "FATAL ERROR: Failed to create Timer"
@@ -1164,7 +1182,7 @@ msgstr "A(z) %s (%u) felhasználó lekérdezte a nem létező '%s' könyvtárban
 msgid "Failed to retrieve shared files from user '%s'"
 msgstr "Megosztott fájlok lehozatala sikertelen a(z) '%s' felhasználótól"
 
-#: src/CanceledFileList.cpp src/KnownFileList.cpp src/SearchList.cpp
+#: src/CanceledFileList.cpp src/KnownFileList.cpp
 #, c-format
 msgid "WARNING: %s cannot be opened."
 msgstr "FIGYELEM: %s nem nyitható meg."
@@ -1173,7 +1191,7 @@ msgstr "FIGYELEM: %s nem nyitható meg."
 msgid "WARNING: Canceled file list corrupted, contains invalid header."
 msgstr "FIGYELEM: A megszakított fájlok listája sérült, érvénytelen fejlécet tartalmaz."
 
-#: src/CanceledFileList.cpp src/KnownFileList.cpp src/SearchList.cpp
+#: src/CanceledFileList.cpp src/KnownFileList.cpp
 #, c-format
 msgid "IO error while reading %s file: %s"
 msgstr "IO hiba a %s fájl olvasása közben: %s"
@@ -2002,8 +2020,13 @@ msgid "Loading PartFile %u of %u"
 msgstr "PartFile betöltése %u a(z) %u-ből"
 
 #: src/DownloadQueue.cpp
-msgid "ERROR: Failed to load backup file. Search https://github.com/amule-org/amule/discussions for .part.met recovery solutions."
-msgstr "HIBA: A biztonsági mentés betöltése sikertelen. Keressen a https://github.com/amule-org/amule/discussions oldalon .part.met visszaállítási lehetőségeket."
+#, fuzzy
+msgid "ERROR: Failed to load backup file. Search "
+msgstr "HIBA: A(z) '%s' részfájl megnyitása sikertelen."
+
+#: src/DownloadQueue.cpp
+msgid " for .part.met recovery solutions."
+msgstr ""
 
 #: src/DownloadQueue.cpp
 msgid "All PartFiles Loaded."
@@ -3572,7 +3595,7 @@ msgstr "Kivágás"
 msgid "Copy"
 msgstr "Másolás"
 
-#: src/MuleTextCtrl.cpp src/SearchDlg.cpp
+#: src/MuleTextCtrl.cpp
 msgid "Paste"
 msgstr "Beillesztés"
 
@@ -4352,7 +4375,8 @@ msgid "Nick"
 msgstr "Becenév"
 
 #: src/muuli_wdr.cpp
-msgid "https://amule-org.github.io - the multi-platform Mule"
+#, fuzzy
+msgid " - the multi-platform Mule"
 msgstr "https://amule-org.github.io - a multi-platform Mule"
 
 #: src/muuli_wdr.cpp
@@ -5413,47 +5437,61 @@ msgstr "Válassza ki a GeoIP MMDB adatbázis szolgáltatóját. DB-IP az alapér
 msgid ""
 "No configuration required.\n"
 "\n"
-"IP-to-Country data by DB-IP.com - https://db-ip.com\n"
-"License: Creative Commons BY 4.0 - https://creativecommons.org/licenses/by/4.0/"
+"IP-to-Country data by DB-IP.com - "
 msgstr ""
-"Nincs szükség konfigurációra.\n"
+
+#: src/muuli_wdr.cpp
+msgid ""
 "\n"
-"IP-to-Country adat DB-IP.com által - https://db-ip.com\n"
-"Licenc: Creative Commons BY 4.0 - https://creativecommons.org/licenses/by/4.0/"
+"License: Creative Commons BY 4.0 - "
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "License key:"
 msgstr "Licenckulcs:"
 
 #: src/muuli_wdr.cpp
+msgid "Sign up for a free MaxMind account, then generate a License Key:\n"
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid ""
-"Sign up for a free MaxMind account, then generate a License Key:\n"
-"https://www.maxmind.com/en/geolite2/signup\n"
 "\n"
-"This product includes GeoLite2 data created by MaxMind - https://www.maxmind.com\n"
-"License: MaxMind GeoLite2 EULA - https://www.maxmind.com/en/geolite2/eula\n"
+"\n"
+"This product includes GeoLite2 data created by MaxMind - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
+"License: MaxMind GeoLite2 EULA - "
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"\n"
 "Requires attribution and account registration; refresh at least every 30 days."
 msgstr ""
-"Regisztráljon egy ingyenes MaxMind fiókért, majd generáljon egy licenckulcsot:\n"
-"https://www.maxmind.com/en/geolite2/signup\n"
-"\n"
-"Ez a termék a MaxMind által létrehozott GeoLite2 adatokat tartalmaz - https://www.maxmind.com\n"
-"Licenc: MaxMind GeoLite2 EULA - https://www.maxmind.com/en/geolite2/eula\n"
-"Hozzárendelést és fiókregisztrációt igényel; legalább 30 naponta frissítse."
 
 #: src/muuli_wdr.cpp
 msgid "Download URL:"
 msgstr "Letöltési URL:"
 
 #: src/muuli_wdr.cpp
+#, fuzzy
 msgid ""
 "Must point to an .mmdb file or a .gz / .tar.gz containing one.\n"
-"URL may include credentials (https://user:pass@host/...).\n"
-"License and attribution terms are set by the upstream URL - you are responsible."
+"URL may include credentials ("
 msgstr ""
 "Egy .mmdb fájlra vagy egy azt tartalmazó .gz / .tar.gz fájlra kell mutasson.\n"
 "Az URL tartalmazhat hitelesítő adatokat (https://user:pass@host/...).\n"
 "A licenc- és megnevezési feltételeket a felmenő URL határozza meg - ön a felelőss."
+
+#: src/muuli_wdr.cpp
+msgid ""
+").\n"
+"License and attribution terms are set by the upstream URL - you are responsible."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Download the GeoIP database from the selected source."
@@ -6648,19 +6686,6 @@ msgid "Choose the local folder"
 msgstr "Válassz egy mappát a %s-nek"
 
 #: src/SearchDlg.cpp
-#, fuzzy
-msgid "Clear Search History"
-msgstr "Emlékezzen ezekre a beállításokra"
-
-#: src/SearchDlg.cpp
-msgid "Clear the saved search history? This cannot be undone."
-msgstr ""
-
-#: src/SearchDlg.cpp
-msgid "Search warning"
-msgstr "Keresési figyelmeztetés"
-
-#: src/SearchDlg.cpp
 msgid "It's impossible to search when both eD2k and Kademlia are disabled."
 msgstr "Nem lehet keresni, ha az eD2k és a Kademlia hálózat is le van tiltva."
 
@@ -6669,75 +6694,111 @@ msgid "Search error"
 msgstr "Keresési hiba"
 
 #: src/SearchDlg.cpp
-msgid ""
-"An eD2k search is still running. Starting a new one will stop it, because the eD2k protocol allows only one search at a time.\n"
-"\n"
-"Results already found are kept; only new ones stop arriving.\n"
-"\n"
-"Start the new search anyway?"
+msgid "Please select a search type."
+msgstr ""
+
+#: src/SearchDlg.cpp
+msgid "Local (eD2k)"
 msgstr ""
 
 #: src/SearchDlg.cpp
 #, fuzzy
-msgid "Search in progress"
-msgstr "Keresés haladása: %u %% \n"
+msgid "Global (eD2k)"
+msgstr "Globális"
+
+#: src/SearchDlg.cpp
+msgid "The selected search type ("
+msgstr ""
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "No search tabs available."
+msgstr "Nem elérhető"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Search Error"
+msgstr "Keresési hiba"
+
+#: src/SearchDlg.cpp
+msgid "Invalid search ID. The selected tab may not be a valid search."
+msgstr ""
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Search Error - No Parameters Available"
+msgstr "Keresés haladása nem elérhető"
+
+#: src/SearchDlg.cpp
+msgid "Search Error - Empty Search String"
+msgstr ""
 
 #: src/SearchDlg.cpp
 msgid "Min size must be smaller than max size. Max size ignored."
 msgstr "A minimum méretnek kisebbnek kell lennie a maximum méretnél. Maximum méret figyelmen kívül hagyva."
+
+#: src/SearchDlg.cpp
+msgid "Search warning"
+msgstr "Keresési figyelmeztetés"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "No networks are enabled."
+msgstr "Minden hálózat le van tiltva."
+
+#: src/SearchDlg.cpp src/SearchList.cpp
+msgid "No keyword for Kad search - aborting"
+msgstr "A Kad kereséshez nincs kulcsszó - megszakítva"
+
+#: src/SearchDlg.cpp
+#, fuzzy
+msgid "Failed to start search"
+msgstr "A server.met mentése sikertelen!"
 
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
 msgid "Main"
 msgstr "Alap"
 
 #: src/SearchList.cpp
-#, c-format
-msgid "Only saving the %u most recent of %u open searches to %s."
-msgstr ""
-
-#: src/SearchList.cpp
-#, c-format
-msgid "Only saving the first %u of %u results for search \"%s\"."
-msgstr ""
-
-#: src/SearchList.cpp
-#, fuzzy
-msgid "WARNING: Stored search list corrupted, contains invalid header."
-msgstr "FIGYELEM: Az ismert fájlok listája sérült, érvénytelen fejlécet tartalmaz."
-
-#: src/SearchList.cpp
-#, fuzzy
-msgid "Invalid entry in stored search list, file may be corrupt"
-msgstr "Érvénytelen bejegyzés az ismert fájlok listájában, hiba lehet a fájlban: "
-
-#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "eD2k keresést nem lehet végrehajtani, ha nincs kapcsolódva az eD2k-hoz"
 
 #: src/SearchList.cpp
-msgid "No keyword for Kad search - aborting"
-msgstr "A Kad kereséshez nincs kulcsszó - megszakítva"
+msgid "Search ID is already in use"
+msgstr ""
+
+#: src/SearchList.cpp
+#, fuzzy
+msgid "Kademlia search ID mismatch"
+msgstr "Kademlia: a keresési kulcsszó túl rövid"
+
+#: src/SearchList.cpp
+#, fuzzy
+msgid "Failed to create per-search state for Kad search"
+msgstr "A %s iránti HTTP kérés létrehozása sikertelen"
 
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Nem várt hiba amíg a Kad kereséssel próbálkoztam: "
 
 #: src/SearchList.cpp
-msgid "Search timed out: the server did not answer."
+#, fuzzy
+msgid "Failed to create per-search state for ED2K search"
+msgstr "A %s iránti HTTP kérés létrehozása sikertelen"
+
+#: src/SearchList.cpp
+msgid "No search parameters available for this search"
 msgstr ""
 
 #: src/SearchList.cpp
-msgid "Kad search: requested wider results from one more peer."
-msgstr ""
+#, fuzzy
+msgid "Invalid server"
+msgstr "Érvénytelen paraméter."
 
 #: src/SearchList.cpp
-msgid "Kad search: no peer left to reask for more results (cap reached or no responses yet)."
-msgstr ""
-
-#: src/SearchList.cpp
-#, fuzzy, c-format
-msgid "Error %u: %s\n"
-msgstr "Hiba %s frissítésekor"
+#, fuzzy
+msgid "Failed to create search data"
+msgstr "HIBA: Részfájl létrehozása sikertelen"
 
 #: src/SearchListCtrl.cpp
 msgid "FileID"
@@ -7162,7 +7223,8 @@ msgid "\tMost likely this is because you're behind a firewall or router."
 msgstr "\tLegvalószínűbb oka az lehet, hogy tűzfal vagy router mögött vagy."
 
 #: src/ServerSocket.cpp
-msgid "\tFor more information, please refer to https://amule-org.github.io/docs"
+#, fuzzy
+msgid "\tFor more information, please refer to "
 msgstr "\tTovábbi információért, kérlek látogasd meg a https://amule-org.github.io/docs"
 
 #: src/ServerSocket.cpp
@@ -8737,24 +8799,36 @@ msgid "Nothing to save for now !"
 msgstr "Nem került mentésre semmi !"
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
+#, fuzzy
 msgid ""
 "aLinkCreator, the aMule eD2k link creator\n"
 "\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+"(c) 2004 ThePolish <"
+msgstr "aLinkCreator, az aMule eD2k hivatkozás készítője"
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+">\n"
 "\n"
-"Pixmaps from http://www.everaldo.com and http://www.icomania.com\n"
-"and http://jimmac.musichall.cz/ikony.php3\n"
+"Pixmaps from "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid " and "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+"\n"
+"and "
+msgstr ""
+
+#: src/utils/aLinkCreator/src/alcframe.cpp
+msgid ""
+"\n"
 "\n"
 "Distributed under GPL"
 msgstr ""
-"aLinkCreator, az aMule eD2k hivatkozás készítője\n"
-"\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
-"\n"
-"Képek: http://www.everaldo.com, http://www.icomania.com\n"
-"és http://jimmac.musichall.cz/ikony.php3\n"
-"\n"
-"GPL alatt terjesztve"
 
 #: src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Hashing..."
@@ -8921,22 +8995,26 @@ msgid "Printing"
 msgstr "Nyomtatás"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
+#, fuzzy
 msgid ""
 "wxCas, aMule OnLine Signature Statistics\n"
 "\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+"(c) 2004 ThePolish <"
+msgstr "wxCas, aMule Online Statisztikák"
+
+#: src/utils/wxCas/src/wxcasframe.cpp
+msgid ""
+">\n"
 "\n"
-"Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
+"Based on CAS by Pedro de Oliveira <"
+msgstr ""
+
+#: src/utils/wxCas/src/wxcasframe.cpp
+msgid ""
+">\n"
 "\n"
 "Distributed under GPL"
 msgstr ""
-"wxCas, aMule OnLine Aláírás Statisztikák\n"
-"\n"
-"(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
-"\n"
-"Pedro de Oliveira <falso@rdk.homeip.net> által készített CAS alapokon\n"
-"\n"
-"Distributed under GPL"
 
 #: src/utils/wxCas/src/wxcasframe.cpp
 msgid "Oh Oh, aMule is not running..."
@@ -9299,13 +9377,13 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule appears to be running from $INSTDIR.\r\n"
+"aMule appears to be running from $INSTDIR.\n"
 "Please close aMule (and aMuleD / aMuleGUI) and try again."
 msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\n"
+"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\n"
 "Please stop it and try again."
 msgstr ""
 
@@ -9315,7 +9393,7 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"Could not remove the previous aMule installation at $0.\r\n"
+"Could not remove the previous aMule installation at $0.\n"
 "Please close any running aMule processes and try again, or uninstall the previous version manually first."
 msgstr ""
 
@@ -9326,6 +9404,94 @@ msgstr ""
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr ""
+
+#~ msgid "Visit https://github.com/amule-org/amule/releases/latest to check if a new version is available."
+#~ msgstr "Új verzióért látogasd meg a https://github.com/amule-org/amule/releases/latest oldalt."
+
+#~ msgid "ERROR: Failed to load backup file. Search https://github.com/amule-org/amule/discussions for .part.met recovery solutions."
+#~ msgstr "HIBA: A biztonsági mentés betöltése sikertelen. Keressen a https://github.com/amule-org/amule/discussions oldalon .part.met visszaállítási lehetőségeket."
+
+#~ msgid ""
+#~ "No configuration required.\n"
+#~ "\n"
+#~ "IP-to-Country data by DB-IP.com - https://db-ip.com\n"
+#~ "License: Creative Commons BY 4.0 - https://creativecommons.org/licenses/by/4.0/"
+#~ msgstr ""
+#~ "Nincs szükség konfigurációra.\n"
+#~ "\n"
+#~ "IP-to-Country adat DB-IP.com által - https://db-ip.com\n"
+#~ "Licenc: Creative Commons BY 4.0 - https://creativecommons.org/licenses/by/4.0/"
+
+#~ msgid ""
+#~ "Sign up for a free MaxMind account, then generate a License Key:\n"
+#~ "https://www.maxmind.com/en/geolite2/signup\n"
+#~ "\n"
+#~ "This product includes GeoLite2 data created by MaxMind - https://www.maxmind.com\n"
+#~ "License: MaxMind GeoLite2 EULA - https://www.maxmind.com/en/geolite2/eula\n"
+#~ "Requires attribution and account registration; refresh at least every 30 days."
+#~ msgstr ""
+#~ "Regisztráljon egy ingyenes MaxMind fiókért, majd generáljon egy licenckulcsot:\n"
+#~ "https://www.maxmind.com/en/geolite2/signup\n"
+#~ "\n"
+#~ "Ez a termék a MaxMind által létrehozott GeoLite2 adatokat tartalmaz - https://www.maxmind.com\n"
+#~ "Licenc: MaxMind GeoLite2 EULA - https://www.maxmind.com/en/geolite2/eula\n"
+#~ "Hozzárendelést és fiókregisztrációt igényel; legalább 30 naponta frissítse."
+
+#~ msgid ""
+#~ "aLinkCreator, the aMule eD2k link creator\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Pixmaps from http://www.everaldo.com and http://www.icomania.com\n"
+#~ "and http://jimmac.musichall.cz/ikony.php3\n"
+#~ "\n"
+#~ "Distributed under GPL"
+#~ msgstr ""
+#~ "aLinkCreator, az aMule eD2k hivatkozás készítője\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Képek: http://www.everaldo.com, http://www.icomania.com\n"
+#~ "és http://jimmac.musichall.cz/ikony.php3\n"
+#~ "\n"
+#~ "GPL alatt terjesztve"
+
+#~ msgid ""
+#~ "wxCas, aMule OnLine Signature Statistics\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Based on CAS by Pedro de Oliveira <falso@rdk.homeip.net>\n"
+#~ "\n"
+#~ "Distributed under GPL"
+#~ msgstr ""
+#~ "wxCas, aMule OnLine Aláírás Statisztikák\n"
+#~ "\n"
+#~ "(c) 2004 ThePolish <thepolish@vipmail.ru>\n"
+#~ "\n"
+#~ "Pedro de Oliveira <falso@rdk.homeip.net> által készített CAS alapokon\n"
+#~ "\n"
+#~ "Distributed under GPL"
+
+#, fuzzy
+#~ msgid "Clear Search History"
+#~ msgstr "Emlékezzen ezekre a beállításokra"
+
+#, fuzzy
+#~ msgid "Search in progress"
+#~ msgstr "Keresés haladása: %u %% \n"
+
+#, fuzzy
+#~ msgid "WARNING: Stored search list corrupted, contains invalid header."
+#~ msgstr "FIGYELEM: Az ismert fájlok listája sérült, érvénytelen fejlécet tartalmaz."
+
+#, fuzzy
+#~ msgid "Invalid entry in stored search list, file may be corrupt"
+#~ msgstr "Érvénytelen bejegyzés az ismert fájlok listájában, hiba lehet a fájlban: "
+
+#, fuzzy, c-format
+#~ msgid "Error %u: %s\n"
+#~ msgstr "Hiba %s frissítésekor"
 
 #, fuzzy
 #~ msgid "Ratio"

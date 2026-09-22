@@ -1616,7 +1616,7 @@ void CamuleApp::OnlineSig(bool zero /* reset stats (used on shutdown) */)
 	wxString temp;
 
 	if (zero) {
-		emulesig_string = L"0\xA0.0|0.0|0";
+		emulesig_string = L"0\u00A0.0|0.0|0";
 		amulesig_out.AddLine("0\n0\n0\n0\n0\n0\n0.0\n0.0\n0\n0");
 	} else {
 		if (IsConnectedED2K()) {
@@ -1794,9 +1794,9 @@ void CamuleApp::Trigger_New_version(wxString new_version)
 	// General info
 	info += "\n";
 	info += _("More information, support and new releases can found at our homepage,\n");
-	info += _("at https://amule-org.github.io, or in our IRC channel #aMule at irc.libera.chat.\n");
+	info += _("at ") + wxT("https://amule-org.github.io") + _(", or in our IRC channel #aMule at irc.libera.chat.\n");
 	info += "\n";
-	info += _("Feel free to report any bugs to https://github.com/amule-org/amule/issues");
+	info += _("Feel free to report any bugs to ") + wxT("https://github.com/amule-org/amule/issues");
 
 	ShowAlert(info, _("Info"), wxCENTRE | wxOK | wxICON_ERROR);
 }
@@ -2773,8 +2773,8 @@ void CamuleApp::CheckNewVersion(uint32 result)
 						      "is %li.%li.%li")) %
 					    VERSION_MJR % VERSION_MIN % VERSION_UPDATE % vc.major % vc.minor %
 					    vc.update);
-				AddLogLineN(_("The latest version can always be found at "
-					      "https://github.com/amule-org/amule/releases/latest"));
+			AddLogLineN(_("The latest version can always be found at ") +
+				      wxT("https://github.com/amule-org/amule/releases/latest"));
 #ifdef AMULE_DAEMON
 				AddLogLineCS(CFormat(_("WARNING: Your aMuled version is outdated: %i.%i.%i < "
 						       "%li.%li.%li")) %

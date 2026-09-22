@@ -395,8 +395,8 @@ bool CServerSocket::ProcessPacket(const uint8_t *packet, uint32 size, int8 opcod
 				AddLogLineC(_("WARNING: You have received Low-ID!"));
 				AddLogLineN(_(
 					"\tMost likely this is because you're behind a firewall or router."));
-				AddLogLineN(_("\tFor more information, please refer to "
-					      "https://amule-org.github.io/docs"));
+			AddLogLineN(_("\tFor more information, please refer to ") +
+				      wxT("https://amule-org.github.io/docs"));
 			}
 
 			theApp->downloadqueue->ResetLocalServerRequests();
