@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-22 16:11+0100\n"
-"PO-Revision-Date: 2026-09-20 20:20+0000\n"
+"PO-Revision-Date: 2026-09-22 16:54+0000\n"
 "Last-Translator: David Watzke <david@watzke.cz>\n"
 "Language-Team: cs <cs@li.org>\n"
 "Language: cs\n"
@@ -2130,11 +2130,11 @@ msgstr "Externí připojení uzavřeno."
 
 #: src/ExternalConn.cpp
 msgid "External connections disabled due to empty password!"
-msgstr "Externí připojení jsou zakázány kvůli prázdnému heslu!"
+msgstr "Externí připojení jsou zakázána kvůli prázdnému heslu!"
 
 #: src/ExternalConn.cpp
 msgid "External connections disabled in config file"
-msgstr "Externí připojení jsou zakázány v konfiguračním souboru"
+msgstr "Externí připojení jsou zakázána v konfiguračním souboru"
 
 #: src/ExternalConn.cpp
 msgid "New external connection accepted"
