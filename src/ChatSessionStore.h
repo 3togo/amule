@@ -26,12 +26,84 @@
 #define CHATSESSIONSTORE_H
 
 #include "Types.h" // uint64 / uint32 / uint8
+#include "MD4Hash.h"
+#include "NetworkAddress.h"
+#include "PeerAddressing.h"
+
+#include <memory>
+
+#include <wx/string.h>
+
+// Hashes identify peers; hashless targets temporarily share a normalized route.
+// Promotion requires an explicit handshake, never an endpoint-only identity match.
+class CChatPeer
+{
+public:
+	CChatPeer() = default;
+	CChatPeer(const CMD4Hash &hash)
+	: CChatPeer(hash, CNetworkAddress(), 0)
+	{
+	}
+	CChatPeer(const CMD4Hash &hash, const CNetworkAddress &address, uint16 port)
+	: m_state(std::make_shared<State>(State{ hash, address, port }))
+	{
+	}
+
+	const CMD4Hash &Hash() const
+	{
+		static const CMD4Hash empty;
+		return m_state ? m_state->hash : empty;
+	}
+	CNetworkAddress Address() const { return m_state ? m_state->address : CNetworkAddress(); }
+	uint16 Port() const { return m_state ? m_state->port : 0; }
+	bool IsEmpty() const
+	{
+		return Hash().IsEmpty() &&
+		       (Address().IsAbsent() || !Port() ||
+			       (Address().IsIPv4() && !Address().ToIPv4NetworkOrderOrZero()));
+	}
+	wxString Encode() const { return Hash().Encode(); }
+	friend bool operator==(const CChatPeer &a, const CChatPeer &b)
+	{
+		if (!a.Hash().IsEmpty() || !b.Hash().IsEmpty()) {
+			return !a.Hash().IsEmpty() && a.Hash() == b.Hash();
+		}
+		return (a.IsEmpty() && b.IsEmpty()) ||
+		       (!a.IsEmpty() && !b.IsEmpty() && a.Port() == b.Port() &&
+			       PeerAddressing::IndexKey(a.Address()) ==
+				       PeerAddressing::IndexKey(b.Address()));
+	}
+	friend bool operator!=(const CChatPeer &a, const CChatPeer &b) { return !(a == b); }
+
+private:
+	friend class CChatSessionStore;
+	struct State
+	{
+		CMD4Hash hash;
+		CNetworkAddress address;
+		uint16 port;
+	};
+	std::shared_ptr<State> m_state;
+};
+
+// Only the remote GUI uses the legacy EC address projection.
+#ifdef CLIENT_GUI
+using CChatTarget = uint64;
+inline bool ChatTargetValid(CChatTarget id)
+{
+	return id != 0;
+}
+#else
+using CChatTarget = CChatPeer;
+inline bool ChatTargetValid(const CChatTarget &id)
+{
+	return !id.IsEmpty();
+}
+#endif
 
 #include <deque>
 #include <list>
 #include <vector>
-
-#include <wx/string.h>
 
 // The core's record of who we are chatting with and what was said.
 //
@@ -70,12 +142,15 @@ public:
 
 	struct Session
 	{
-		uint64 gui_id = 0; //!< GUI_ID(ip, port) -- the key
-		wxString name;     //!< peer display name; may be empty
-		uint32 ip = 0;
+		CChatPeer peer;          //!< shared provisional identity, then stable handshake hash
+		wxString name;           //!< peer display name; may be empty
+		CNetworkAddress address; //!< mutable route, may be absent
 		uint16 port = 0;
 		uint32 last_activity = 0; //!< unix seconds, drives session eviction
 		std::deque<Message> messages;
+
+		// Legacy EC only: zero means this route cannot be represented as IPv4.
+		uint64 LegacyGuiId() const;
 
 		//! Highest message id in this session, 0 when it holds none.
 		uint32 LastMsgId() const { return messages.empty() ? 0 : messages.back().id; }
@@ -90,14 +165,32 @@ public:
 	// Record one message, creating the session when it is the first. `name` updates the stored
 	// display name when non-empty, so a peer that only reveals its nick later still ends up
 	// named. Returns the id assigned.
-	uint32 AddIncoming(uint64 gui_id, const wxString &name, const wxString &text);
-	uint32 AddOutgoing(uint64 gui_id, const wxString &text);
+	// Bare empty hashes are unavailable. Route-bound targets must be opened explicitly.
+	// A hash is a protocol identity, not proof of authentication.
+	uint32 AddIncoming(const CChatPeer &peer,
+		const wxString &name,
+		const wxString &text,
+		const CNetworkAddress &address = CNetworkAddress(),
+		uint16 port = 0);
+	uint32 AddOutgoing(const CChatPeer &peer,
+		const wxString &text,
+		const CNetworkAddress &address = CNetworkAddress(),
+		uint16 port = 0);
 
 	// Drop one session. Returns false when there was none, so the EC handler
 	// can answer 404-equivalent rather than silently succeeding.
-	bool CloseSession(uint64 gui_id);
+	bool CloseSession(const CChatPeer &peer);
 
-	const Session *Find(uint64 gui_id) const;
+	const Session *Find(const CChatPeer &peer) const;
+
+	// Reuse a known hash or a normalized provisional route. A route-only transcript
+	// is temporary: the first successful handshake claims it. Other identified
+	// occupants remain separate even when they share that route.
+	CChatPeer Open(
+		const CMD4Hash &hash, const CNetworkAddress &address, uint16 port, const wxString &name);
+	bool Promote(const CChatPeer &peer, const CMD4Hash &hash);
+	// Ambiguous endpoints are not projected: EC cannot distinguish their peers.
+	const Session *FindLegacy(uint64 gui_id) const;
 
 	// Sessions in most-recently-active-first order -- the order a client wants
 	// to render, and the order eviction walks backwards through.
@@ -109,13 +202,14 @@ public:
 	size_t SessionCount() const { return m_sessions.size(); }
 
 private:
-	Session &Touch(uint64 gui_id, const wxString &name);
+	Session &Touch(
+		const CChatPeer &peer, const wxString &name, const CNetworkAddress &address, uint16 port);
 	uint32 Append(Session &s, uint8 direction, const wxString &text);
 	void EvictSessionsIfNeeded();
 
 	// A list, not a map: the working set is at most MAX_SESSIONS, and the dominant operations
 	// are "walk in activity order" and "move to front", both O(1) here and both awkward on a
-	// map keyed by GUI_ID. Front is the most recently active session.
+	// map keyed by peer hash. Front is the most recently active session.
 	std::list<Session> m_sessions;
 	uint32 m_lastMsgId = 0;
 };

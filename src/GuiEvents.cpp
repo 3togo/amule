@@ -688,7 +688,7 @@ void Browse_Status(uint64 NOT_ON_DAEMON(searchID), uint32 NOT_ON_DAEMON(status))
 // `name` is taken by value because the notify functor stores each argument by the handler's
 // parameter type and deep-copies into it, so a const-ref parameter would dangle.
 // NOLINTNEXTLINE(performance-unnecessary-value-param)
-void Chat_SessionRemoved(uint64 NOT_ON_DAEMON(gui_id))
+void Chat_SessionRemoved(CChatTarget NOT_ON_DAEMON(gui_id))
 {
 #ifndef AMULE_DAEMON
 	if (theApp->amuledlg && theApp->amuledlg->m_chatwnd) {
@@ -740,7 +740,12 @@ void Browse_Started(uint32 NOT_ON_DAEMON(ecid), wxString NOT_ON_DAEMON(name), ui
 #endif
 }
 
-void ChatConnResult(bool NOT_ON_DAEMON(success), uint64 NOT_ON_DAEMON(id), wxString NOT_ON_DAEMON(message))
+// MuleNotify stores notification arguments by value, so this handler must retain the value
+// signature even though the GUI only reads the string and target.
+// NOLINTBEGIN(performance-unnecessary-value-param)
+void ChatConnResult(
+	bool NOT_ON_DAEMON(success), CChatTarget NOT_ON_DAEMON(id), wxString NOT_ON_DAEMON(message))
+// NOLINTEND(performance-unnecessary-value-param)
 {
 #ifndef AMULE_DAEMON
 	if (theApp->amuledlg->m_chatwnd) {
@@ -749,10 +754,21 @@ void ChatConnResult(bool NOT_ON_DAEMON(success), uint64 NOT_ON_DAEMON(id), wxStr
 #endif
 }
 
+// Keep value parameters for MuleNotify's queued argument storage.
+// NOLINTNEXTLINE(performance-unnecessary-value-param)
+void ChatRekeySession(CChatTarget NOT_ON_DAEMON(old_id), CChatTarget NOT_ON_DAEMON(new_id))
+{
+#ifndef AMULE_DAEMON
+	if (theApp->amuledlg->m_chatwnd) {
+		theApp->amuledlg->m_chatwnd->RekeySession(old_id, new_id);
+	}
+#endif
+}
+
 // MuleNotify stores the notify args by value, so a `const wxString &` param would dangle -- keep
 // it by value like every other notify handler.
 // NOLINTNEXTLINE(performance-unnecessary-value-param)
-void ChatProcessMsg(uint64 sender, wxString message)
+void ChatProcessMsg(CChatTarget sender, wxString message)
 {
 	// No EC relay here any more: CUpDownClient::ProcessChatMessage records the message in the
 	// core store before this notify fires, and every EC client reads it from there. The built-
@@ -764,7 +780,11 @@ void ChatProcessMsg(uint64 sender, wxString message)
 #endif
 }
 
-void ChatSendCaptcha(wxString NOT_ON_DAEMON(captcha), uint64 NOT_ON_DAEMON(to_id))
+// MuleNotify stores notification arguments by value; a reference would not match the queued
+// callback signature.
+// NOLINTBEGIN(performance-unnecessary-value-param)
+void ChatSendCaptcha(wxString NOT_ON_DAEMON(captcha), CChatTarget NOT_ON_DAEMON(to_id))
+// NOLINTEND(performance-unnecessary-value-param)
 {
 #ifndef AMULE_DAEMON
 	if (theApp->amuledlg->m_chatwnd) {

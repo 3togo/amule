@@ -24,17 +24,27 @@
 
 #include "ChatSessionStore.h"
 
-#include "OtherFunctions.h" // IP_FROM_GUI_ID / PORT_FROM_GUI_ID
+#include "OtherFunctions.h" // GUI_ID: legacy EC projection only
 
 #include <algorithm>
 #include <ctime>
 
-CChatSessionStore::Session &CChatSessionStore::Touch(uint64 gui_id, const wxString &name)
+uint64 CChatSessionStore::Session::LegacyGuiId() const
+{
+	if (!address.IsIPv4()) {
+		return 0;
+	}
+	const uint32 ip = address.ToIPv4NetworkOrderOrZero();
+	return ip && port ? GUI_ID(ip, port) : 0;
+}
+
+CChatSessionStore::Session &CChatSessionStore::Touch(
+	const CChatPeer &peer, const wxString &name, const CNetworkAddress &address, uint16 port)
 {
 	const uint32 now = static_cast<uint32>(time(nullptr));
 
 	for (auto it = m_sessions.begin(); it != m_sessions.end(); ++it) {
-		if (it->gui_id != gui_id) {
+		if (it->peer != peer) {
 			continue;
 		}
 		// Only overwrite the name when the caller actually has one. An outbound message
@@ -43,6 +53,8 @@ CChatSessionStore::Session &CChatSessionStore::Touch(uint64 gui_id, const wxStri
 		if (!name.IsEmpty()) {
 			it->name = name;
 		}
+		it->address = address;
+		it->port = port;
 		it->last_activity = now;
 		// Move to front: activity order is what Sessions() returns and what
 		// eviction walks backwards through.
@@ -53,10 +65,10 @@ CChatSessionStore::Session &CChatSessionStore::Touch(uint64 gui_id, const wxStri
 	}
 
 	Session s;
-	s.gui_id = gui_id;
+	s.peer = peer;
 	s.name = name;
-	s.ip = static_cast<uint32>(IP_FROM_GUI_ID(gui_id));
-	s.port = static_cast<uint16>(PORT_FROM_GUI_ID(gui_id));
+	s.address = address;
+	s.port = port;
 	s.last_activity = now;
 	m_sessions.push_front(std::move(s));
 	EvictSessionsIfNeeded();
@@ -79,20 +91,31 @@ uint32 CChatSessionStore::Append(Session &s, uint8 direction, const wxString &te
 	return m_lastMsgId;
 }
 
-uint32 CChatSessionStore::AddIncoming(uint64 gui_id, const wxString &name, const wxString &text)
+uint32 CChatSessionStore::AddIncoming(const CChatPeer &peer,
+	const wxString &name,
+	const wxString &text,
+	const CNetworkAddress &address,
+	uint16 port)
 {
-	return Append(Touch(gui_id, name), DIR_IN, text);
+	if (peer.IsEmpty() || (peer.Hash().IsEmpty() && !Find(peer))) {
+		return 0;
+	}
+	return Append(Touch(peer, name, address, port), DIR_IN, text);
 }
 
-uint32 CChatSessionStore::AddOutgoing(uint64 gui_id, const wxString &text)
+uint32 CChatSessionStore::AddOutgoing(
+	const CChatPeer &peer, const wxString &text, const CNetworkAddress &address, uint16 port)
 {
-	return Append(Touch(gui_id, wxEmptyString), DIR_OUT, text);
+	if (peer.IsEmpty() || (peer.Hash().IsEmpty() && !Find(peer))) {
+		return 0;
+	}
+	return Append(Touch(peer, wxEmptyString, address, port), DIR_OUT, text);
 }
 
-bool CChatSessionStore::CloseSession(uint64 gui_id)
+bool CChatSessionStore::CloseSession(const CChatPeer &peer)
 {
 	for (auto it = m_sessions.begin(); it != m_sessions.end(); ++it) {
-		if (it->gui_id == gui_id) {
+		if (it->peer == peer) {
 			m_sessions.erase(it);
 			return true;
 		}
@@ -100,14 +123,31 @@ bool CChatSessionStore::CloseSession(uint64 gui_id)
 	return false;
 }
 
-const CChatSessionStore::Session *CChatSessionStore::Find(uint64 gui_id) const
+const CChatSessionStore::Session *CChatSessionStore::Find(const CChatPeer &peer) const
 {
 	for (const Session &s : m_sessions) {
-		if (s.gui_id == gui_id) {
+		if (s.peer == peer) {
 			return &s;
 		}
 	}
 	return nullptr;
+}
+
+const CChatSessionStore::Session *CChatSessionStore::FindLegacy(uint64 gui_id) const
+{
+	if (!gui_id) {
+		return nullptr;
+	}
+	const Session *found = nullptr;
+	for (const Session &s : m_sessions) {
+		if (s.LegacyGuiId() == gui_id) {
+			if (found) {
+				return nullptr; // Never choose an arbitrary peer sharing an endpoint.
+			}
+			found = &s;
+		}
+	}
+	return found;
 }
 
 std::vector<const CChatSessionStore::Session *> CChatSessionStore::Sessions() const
@@ -120,10 +160,70 @@ std::vector<const CChatSessionStore::Session *> CChatSessionStore::Sessions() co
 	return out;
 }
 
+CChatPeer CChatSessionStore::Open(
+	const CMD4Hash &hash, const CNetworkAddress &address, uint16 port, const wxString &name)
+{
+	if (hash.IsEmpty() &&
+		(address.IsAbsent() || !port || (address.IsIPv4() && !address.ToIPv4NetworkOrderOrZero()))) {
+		return CChatPeer();
+	}
+	const CChatPeer peer(hash, address, port);
+	for (const auto &session : m_sessions) {
+		if (session.peer == peer) {
+			return session.peer;
+		}
+	}
+	Touch(peer, name, address, port);
+	return peer;
+}
+
+bool CChatSessionStore::Promote(const CChatPeer &peer, const CMD4Hash &hash)
+{
+	if (peer.IsEmpty() || hash.IsEmpty() || (peer.Hash().IsEmpty() && !Find(peer)) ||
+		(!peer.Hash().IsEmpty() && peer.Hash() != hash)) {
+		return false;
+	}
+	// Resolve by value before mutating: callers may hold independently constructed
+	// route targets. Claim only the provisional record, never another route occupant.
+	for (auto &session : m_sessions) {
+		if (session.peer == peer) {
+			session.peer.m_state->hash = hash;
+			break;
+		}
+	}
+	peer.m_state->hash = hash;
+	// Existing copies (tabs, notifications and replacement clients) now resolve
+	// by hash. Merge in global message order, without issuing new cursor IDs.
+	auto survivor = m_sessions.end();
+	for (auto it = m_sessions.begin(); it != m_sessions.end();) {
+		if (it->peer.Hash() != hash) {
+			++it;
+		} else if (survivor == m_sessions.end()) {
+			survivor = it++;
+		} else {
+			survivor->messages.insert(
+				survivor->messages.end(), it->messages.begin(), it->messages.end());
+			if (survivor->name.IsEmpty()) {
+				survivor->name = it->name;
+			}
+			it = m_sessions.erase(it);
+		}
+	}
+	if (survivor != m_sessions.end()) {
+		std::sort(survivor->messages.begin(),
+			survivor->messages.end(),
+			[](const Message &a, const Message &b) { return a.id < b.id; });
+		while (survivor->messages.size() > MAX_MESSAGES_PER_SESSION) {
+			survivor->messages.pop_front();
+		}
+	}
+	return true;
+}
+
 void CChatSessionStore::EvictSessionsIfNeeded()
 {
 	// Least recently active first, i.e. from the back. Note this drops a conversation whole
-	// rather than trimming it: a client tracking that GUI_ID sees it vanish from the session
+	// rather than trimming it: an EC client tracking its projection sees it vanish from the session
 	// list and closes its tab, the same rule a session closed by another client follows.
 	while (m_sessions.size() > MAX_SESSIONS) {
 		m_sessions.pop_back();

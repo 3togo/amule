@@ -1494,7 +1494,7 @@ bool CUpDownClient::Disconnected(const wxString &DEBUG_ONLY(strReason), bool bFr
 	if (GetChatState() != MS_NONE) {
 		bDelete = false;
 		m_pendingMessage.Clear();
-		Notify_ChatConnResult(false, GUI_ID(GetIP(), GetUserPort()), "");
+		Notify_ChatConnResult(false, GetChatPeer(), "");
 	}
 
 	// Delete socket
@@ -2029,7 +2029,7 @@ void CUpDownClient::ConnectionEstablished()
 		if (!m_pendingMessage.IsEmpty()) {
 			result = SendChatMessage(m_pendingMessage);
 		}
-		Notify_ChatConnResult(result, GUI_ID(GetIP(), GetUserPort()), m_pendingMessage);
+		Notify_ChatConnResult(result, GetChatPeer(), m_pendingMessage);
 		m_pendingMessage.Clear();
 	}
 
@@ -2867,6 +2867,42 @@ void CUpDownClient::SetUserAddress(const CNetworkAddress &address)
 	m_userAddress = key;
 	m_connectAddress = key;
 	m_FullUserIP = key.ToIPv4NetworkOrderOrZero();
+	// Here as well as in SetUserHash(): a hello sets the hash first and the address
+	// last, so this is the point at which an inbound client knows both.
+	AdoptProvisionalChatSession();
+}
+
+/**
+ * Claim a provisional session waiting at this peer's route.
+ *
+ * A provisional session is keyed on a route because nothing better was known when the user opened
+ * it. Promotion otherwise runs only from the client that carries the binding, which is the client
+ * that dialled. A peer that identifies through any other object -- an inbound connection arriving
+ * while our attempt is still pending, or after it failed -- would leave that session provisional
+ * forever, and its first message would open a second transcript beside the tab the user is already
+ * looking at. Both directions shared one tab before sessions were keyed on identity.
+ *
+ * The route is the only identity a provisional session has, so a stranger reaching the same
+ * endpoint is adopted by it. That is the same trade the provisional state already makes, and it
+ * ends the moment either side is identified. A session that carries a hash is never claimed here:
+ * CChatPeer only compares routes when neither side has one.
+ */
+void CUpDownClient::AdoptProvisionalChatSession()
+{
+	if (!HasValidHash() || !m_chatPeer.IsEmpty() || theApp->chatsessions == nullptr) {
+		return;
+	}
+	CChatPeer route(CMD4Hash(), GetUserAddress(), GetUserPort());
+	if (route.IsEmpty() || !theApp->chatsessions->Find(route)) {
+		return;
+	}
+	// Kept for the notification: promotion writes the hash into the handle above.
+	const CChatPeer oldPeer(CMD4Hash(), route.Address(), route.Port());
+	if (!theApp->chatsessions->Promote(route, GetUserHash())) {
+		return;
+	}
+	m_chatPeer = route;
+	Notify_ChatRekeySession(oldPeer, m_chatPeer);
 }
 
 void CUpDownClient::SetUserHash(const CMD4Hash &userhash)
@@ -2876,6 +2912,24 @@ void CUpDownClient::SetUserHash(const CMD4Hash &userhash)
 	m_UserHash = userhash;
 
 	ValidateHash();
+	if (!m_chatPeer.IsEmpty() && HasValidHash() && theApp->chatsessions) {
+		// Promotion mutates shared handles; preserve the route key for GUI tabs.
+		const CChatPeer oldPeer(m_chatPeer.Hash(), m_chatPeer.Address(), m_chatPeer.Port());
+		if (!theApp->chatsessions->Promote(m_chatPeer, userhash)) {
+			// A stale friend route reached somebody else. Do not deliver the
+			// queued text or attach the stranger to the friend's transcript.
+			m_pendingMessage.Clear();
+			Notify_ChatConnResult(false, m_chatPeer, "");
+			SetChatState(MS_NONE);
+			m_chatPeer = CChatPeer();
+		} else if (oldPeer != m_chatPeer) {
+			Notify_ChatRekeySession(oldPeer, m_chatPeer);
+		}
+	} else {
+		// No binding, but the address may already be known: a client identified
+		// after its route was learned reaches the provisional session from here.
+		AdoptProvisionalChatSession();
+	}
 }
 
 EUtf8Str CUpDownClient::GetUnicodeSupport() const
@@ -3098,7 +3152,7 @@ void CUpDownClient::ProcessCaptchaReqRes(uint8 WXUNUSED(nStatus)) {}
 
 void CUpDownClient::ProcessCaptchaRequest(CMemFile *data)
 {
-	uint64 id = GUI_ID(GetIP(), GetUserPort());
+	const CChatPeer id = GetChatPeer();
 	// received a captcha request, check if we actually accept it (only after sending a message ourself to
 	// this client)
 	if (GetChatCaptchaState() == CA_ACCEPTING && GetChatState() != MS_NONE &&
@@ -3151,7 +3205,7 @@ void CUpDownClient::ProcessCaptchaRequest(CMemFile *data)
 
 void CUpDownClient::ProcessCaptchaReqRes(uint8 nStatus)
 {
-	uint64 id = GUI_ID(GetIP(), GetUserPort());
+	const CChatPeer id = GetChatPeer();
 	if (GetChatCaptchaState() == CA_SOLUTIONSENT && GetChatState() != MS_NONE &&
 		theApp->amuledlg->m_chatwnd->IsIdValid(id)) {
 		wxASSERT(nStatus < 3);
@@ -3176,6 +3230,10 @@ void CUpDownClient::ProcessCaptchaReqRes(uint8 nStatus)
 // NOLINTNEXTLINE(performance-unnecessary-value-param)
 void CUpDownClient::ProcessChatMessage(wxString message)
 {
+	if (!HasValidHash()) {
+		AddDebugLogLineN(logClient, "Chat unavailable until the peer supplies a valid hash.");
+		return;
+	}
 	if (IsMessageFiltered(message)) {
 		AddLogLineC(CFormat(_("Message filtered from '%s' (IP:%s)")) % GetUserName() % GetFullIP());
 		return;
@@ -3320,7 +3378,7 @@ void CUpDownClient::ProcessChatMessage(wxString message)
 			AddDebugLogLineN(
 				logClient, CFormat("'%s' has been marked as spammer") % GetUserName());
 			SetSpammer(true);
-			theApp->amuledlg->m_chatwnd->EndSession(GUI_ID(GetIP(), GetUserPort()));
+			theApp->amuledlg->m_chatwnd->EndSession(GetChatPeer());
 			return;
 		}
 	}
@@ -3338,10 +3396,11 @@ void CUpDownClient::ProcessChatMessage(wxString message)
 	// all, and what lets the local GUI and every EC client agree on one. Placed after the
 	// filter / spammer branches above so a filtered message is not stored.
 	if (theApp->chatsessions) {
-		theApp->chatsessions->AddIncoming(GUI_ID(GetIP(), GetUserPort()), GetUserName(), message);
+		theApp->chatsessions->AddIncoming(
+			GetChatPeer(), GetUserName(), message, GetUserAddress(), GetUserPort());
 	}
 
-	Notify_ChatProcessMsg(GUI_ID(GetIP(), GetUserPort()), GetUserName() + "|" + message);
+	Notify_ChatProcessMsg(GetChatPeer(), GetUserName() + "|" + message);
 }
 
 // Prefs-based and GUI-free, so it's shared by both builds -- the daemon's

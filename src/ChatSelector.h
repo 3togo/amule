@@ -28,7 +28,7 @@
 
 #include "MuleTextCtrl.h"
 #include "MuleNotebook.h"
-#include "Types.h" // Needed for uint16
+#include "ChatSessionStore.h"
 
 class CClientRef;
 class CFriend;
@@ -49,7 +49,7 @@ public:
 		const wxString &name = wxTextCtrlNameStr);
 	~CChatSession();
 
-	uint64 m_client_id;
+	CChatTarget m_client_id;
 	bool m_active;
 
 	/**
@@ -71,11 +71,13 @@ class CChatSelector : public CMuleNotebook
 public:
 	CChatSelector(wxWindow *parent, wxWindowID id, const wxPoint &pos, wxSize siz, long style);
 	virtual ~CChatSelector() {};
-	CChatSession *StartSession(uint64 client_id, const wxString &client_name, bool show = true);
-	void EndSession(uint64 client_id = 0);
-	CChatSession *GetPageByClientID(uint64 client_id);
-	int GetTabByClientID(uint64 client_id);
-	bool ProcessMessage(uint64 sender_id, const wxString &message);
+	CChatSession *StartSession(
+		const CChatTarget &client_id, const wxString &client_name, bool show = true);
+	void EndSession(const CChatTarget &client_id = {});
+	void RekeySession(const CChatTarget &old_id, const CChatTarget &new_id);
+	CChatSession *GetPageByClientID(const CChatTarget &client_id);
+	int GetTabByClientID(const CChatTarget &client_id);
+	bool ProcessMessage(const CChatTarget &sender_id, const wxString &message);
 
 	/**
 	 * Render one message the core's session store already holds.
@@ -85,11 +87,13 @@ public:
 	 * the new-message blink -- the caller decides that, because replaying history on connect
 	 * must not light the Messages button up for messages already read elsewhere.
 	 */
-	void AppendStoredMessage(uint64 gui_id, const wxString &name, const wxString &text, bool outgoing);
-	bool SendMessage(const wxString &message, const wxString &client_name = "", uint64 to_id = 0);
-	void ConnectionResult(bool success, const wxString &message, uint64 id);
-	void RefreshFriend(uint64 toupdate_id, const wxString &new_name);
-	void ShowCaptchaResult(uint64 id, bool ok);
+	void AppendStoredMessage(
+		const CChatTarget &gui_id, const wxString &name, const wxString &text, bool outgoing);
+	bool SendMessage(
+		const wxString &message, const wxString &client_name = "", const CChatTarget &to_id = {});
+	void ConnectionResult(bool success, const wxString &message, const CChatTarget &id);
+	void RefreshFriend(const CChatTarget &toupdate_id, const wxString &new_name);
+	void ShowCaptchaResult(const CChatTarget &id, bool ok);
 	bool GetCurrentClient(CClientRef &) const;
 };
 
