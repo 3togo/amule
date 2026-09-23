@@ -537,9 +537,25 @@ must send none of the operations below unless it saw `0x27` echoed.
 | `EC_TAG_CHAT_DIRECTION` | `0x0905` | `uint8`  | `0` = incoming, `1` = outgoing |
 | `EC_TAG_CHAT_TIMESTAMP` | `0x0906` | `uint32` | Unix seconds, stamped by the core |
 | `EC_TAG_CHAT_PEER_NAME` | `0x0907` | `string` | Peer display name; may be empty |
+| `EC_TAG_CHAT_PEER_HASH` | `0x0908` | `CMD4Hash` | Peer's stable identity; omitted while the peer is still provisional |
 
 The IP inside a GUI_ID uses the same byte order as
 `EC_TAG_CLIENT_USER_IP`.
+
+`EC_TAG_CHAT_PEER_HASH` is additive: a daemon that omits it from a session
+predates this tag. It is the only way to address a peer a GUI_ID cannot
+express -- an IPv6 route, a provisional session, or an endpoint two
+identified peers share -- so a client should prefer it over the GUI_ID
+whenever a session carries one.
+
+Gated by its own `EC_TAG_CAN_CHAT_PEER_HASH` (`0x28`), distinct from
+`EC_TAG_CAN_CHAT_SESSIONS`: a client that predates the hash tag would
+merge two sessions that share one GUI_ID under a single legacy id, so
+the daemon includes such a session -- and the hash tag on any session --
+only for a connection that advertised it. A client that never saw `0x28`
+echoed must not send `EC_TAG_CHAT_PEER_HASH` either; it addresses and
+lists chat sessions by GUI_ID only, exactly as a build that predates the
+tag would.
 
 #### `EC_OP_GET_CHAT_SESSIONS` (`0x63`) → `EC_OP_CHAT_SESSIONS` (`0x64`)
 
@@ -561,46 +577,65 @@ The top-level cursor is present even when no messages come back, so a
 client can advance past ids that were evicted rather than requesting
 them forever.
 
-The reply is the server's **complete** session set. A session the client
-is tracking that is absent from it was closed — by another client, or by
-eviction — which is the only signal a close produces. No expiry tag is
-needed, and a client must drop such a session rather than assume it
-still exists.
+The reply is the server's complete session set **for this connection's
+capabilities**: a session with no unique GUI_ID (an IPv6 route, a
+provisional session, or an endpoint shared with another peer) is included,
+with its `EC_TAG_CHAT_PEER_HASH`, only once the connection advertised
+`EC_TAG_CAN_CHAT_PEER_HASH`; otherwise it is omitted exactly as it always
+was.
+
+A session the client is tracking that is absent from the reply was
+closed — by another client, or by eviction — which is the only signal a
+close produces. No expiry tag is needed, and a client must drop such a
+session rather than assume it still exists.
 
 #### `EC_OP_GET_CHAT_MESSAGES` (`0x5B`) → `EC_OP_CHAT_MESSAGES` (`0x5C`)
 
 Non-destructive backfill of **one** session, for a client opening a
-conversation it has no transcript for. Takes a required
+conversation it has no transcript for. Takes `EC_TAG_CHAT_PEER_HASH` or
 `EC_TAG_CHAT_CLIENT_ID` and an optional `EC_TAG_CHAT_MSG_ID` cursor, and
 replies with the same shape as above containing a single session
-container.
+container. `EC_OP_FAILED` when neither target tag is present or there is
+no such session.
 
 #### `EC_OP_CHAT_SEND` (`0x65`)
 
-Takes `EC_TAG_CHAT` (the text, non-empty) plus exactly one target:
+Takes `EC_TAG_CHAT` (the text, non-empty) plus one or both target tags:
 
 | Target tag              | Addresses |
 | ----------------------- | --------- |
-| `EC_TAG_CHAT_CLIENT_ID` | A GUI_ID — replying needs no lookup, it is the id messages arrive with |
-| `EC_TAG_CLIENT`         | A live peer by ECID |
-| `EC_TAG_FRIEND`         | A friend by ECID — resolved through the friend's stored address, so an **offline** friend is reachable |
+| `EC_TAG_CHAT_PEER_HASH` | A peer by its stable identity — the only target that reaches an IPv6 route, a provisional session, or a peer sharing an endpoint with another. Prefer this whenever the session carries a hash. |
+| `EC_TAG_CHAT_CLIENT_ID` | A GUI_ID — kept for clients that predate the hash tag; refused alone when the GUI_ID is ambiguous or unprojectable |
+
+When both are present, the hash is the identity and the GUI_ID is a dial
+hint: it gives the daemon a route for a peer it has no session or live
+client for yet, e.g. an offline friend the sender only knows by address
+and hash. Sent together, an IPv4 GUI_ID is never discarded just because
+a hash also identified the target.
 
 The server creates the session when it does not exist, so this doubles
-as "start a chat with this address".
+as "start a chat with this address" for a `EC_TAG_CHAT_CLIENT_ID` target.
+A `EC_TAG_CHAT_PEER_HASH` target with no prior session and no usable
+GUI_ID dial hint answers `EC_OP_FAILED`: nothing gives the daemon
+somewhere to dial.
 
-**Reply:** `EC_OP_NOOP` with `EC_TAG_CHAT_CLIENT_ID` (the resolved
-GUI_ID) and `EC_TAG_CHAT_MSG_ID` (the id assigned), so the sender can
-correlate without waiting for the next poll. `EC_OP_FAILED` with an
-`EC_TAG_STRING` on an unknown target or empty text.
+**Reply:** `EC_OP_NOOP` with `EC_TAG_CHAT_CLIENT_ID` (`0` when the
+session's route is not IPv4-projectable), `EC_TAG_CHAT_PEER_HASH` when
+the peer has one and this connection advertised
+`EC_TAG_CAN_CHAT_PEER_HASH`, and `EC_TAG_CHAT_MSG_ID` (the id assigned),
+so the sender can correlate without waiting for the next poll.
+`EC_OP_FAILED` with an `EC_TAG_STRING` on an unknown target or empty
+text.
 
 Note that the core's own send returning `false` means *queued while
 connecting*, not *failed*, and does not produce an `EC_OP_FAILED`.
 
 #### `EC_OP_CHAT_CLOSE_SESSION` (`0x66`)
 
-Takes `EC_TAG_CHAT_CLIENT_ID`; drops the session from the store and
-resets the peer's chat state. Replies `EC_OP_NOOP`, or `EC_OP_FAILED`
-when there is no such session.
+Takes `EC_TAG_CHAT_PEER_HASH` or `EC_TAG_CHAT_CLIENT_ID`; drops the
+session from the store and resets the peer's chat state. Replies
+`EC_OP_NOOP`, or `EC_OP_FAILED` when neither tag is present or there is
+no such session.
 
 Closing is **global**, matching the semantics search tabs already have:
 the core state is destroyed for every client, and the others learn of it

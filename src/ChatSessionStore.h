@@ -86,20 +86,22 @@ private:
 	std::shared_ptr<State> m_state;
 };
 
-// Only the remote GUI uses the legacy EC address projection.
-#ifdef CLIENT_GUI
-using CChatTarget = uint64;
-inline bool ChatTargetValid(CChatTarget id)
-{
-	return id != 0;
-}
-#else
+// One target type for both builds. The remote GUI decodes it from EC_TAG_CHAT_PEER_HASH or
+// the legacy GUI_ID; everything downstream (CChatSelector, CChatWnd) is shared code that only
+// ever compares CChatTarget values, so unifying the type is what keeps that code build-agnostic.
 using CChatTarget = CChatPeer;
 inline bool ChatTargetValid(const CChatTarget &id)
 {
 	return !id.IsEmpty();
 }
-#endif
+
+// Builds a target that carries both an identity and a route when either is known, so
+// neither a promotion nor a re-dial loses information the caller already had. hash
+// empty and ip/port zero together mean "no target at all" -- see CChatPeer::IsEmpty().
+inline CChatPeer BuildChatPeer(const CMD4Hash &hash, uint32 ip, uint16 port)
+{
+	return CChatPeer(hash, CNetworkAddress::FromIPv4NetworkOrderOrAbsent(ip), port);
+}
 
 #include <deque>
 #include <list>
