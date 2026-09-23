@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-23 09:04+0100\n"
-"PO-Revision-Date: 2026-09-22 17:42+0000\n"
+"PO-Revision-Date: 2026-09-23 09:54+0000\n"
 "Last-Translator: Marcelo Jimenez <mroberto@users.sourceforge.com>\n"
 "Language-Team: Português (Brasileiro) <pt@li.org>\n"
 "Language: pt_BR\n"
@@ -368,24 +368,21 @@ msgid "WARNING"
 msgstr "CUIDADO"
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Loading known files"
-msgstr "Carregando arquivos temporários"
+msgstr "Carregando os arquivos conhecidos"
 
 #: src/amule.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Loading known files (%u of %u)"
-msgstr "Carregando arquivos temporários (%u de %u)"
+msgstr "Carregando os arquivos conhecidos (%u de %u)"
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Loading credits"
-msgstr "Carregando arquivos compartilhados"
+msgstr "Carregando os créditos"
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Loading IP filter"
-msgstr "Carregando arquivos temporários"
+msgstr "Carregando o filtro de IP"
 
 #: src/amule.cpp
 msgid "Initializing network"
@@ -1245,9 +1242,9 @@ msgid "Failed to create incoming dir for category. Please specify a valid path!"
 msgstr "Falha ao definir pasta para a categoria. Favor informar um caminho válido!"
 
 #: src/ChatSelector.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Chat-Session Started: %s - %s %s"
-msgstr "Sessão de Chat iniciada: %s (%s:%u) - %s %s"
+msgstr "Sessão de Chat iniciada: %s - %s %s"
 
 #: src/ChatSelector.cpp
 msgid "*** Connected to Client ***"
@@ -1255,7 +1252,7 @@ msgstr "*** Conectado ao Cliente ***"
 
 #: src/ChatSelector.cpp
 msgid "*** Chat unavailable: peer identity or route is not available ***"
-msgstr ""
+msgstr "*** Chat indisponível: a identidade ou rota do par não está disponível ***"
 
 #: src/ChatSelector.cpp
 msgid "*** Connecting to Client ***"
@@ -1315,12 +1312,11 @@ msgstr "Enviar mensagem"
 
 #: src/ClientContextActions.cpp
 msgid "Chat is unavailable until the peer supplies a valid identity."
-msgstr ""
+msgstr "O chat não está disponível até que o par forneça uma identidade válida."
 
 #: src/ClientContextActions.cpp
-#, fuzzy
 msgid "Chat unavailable"
-msgstr "Não disponível"
+msgstr "Chat indisponível"
 
 #: src/ClientContextActions.cpp
 msgid "Send message to user"
@@ -2366,7 +2362,7 @@ msgstr "Alvo de chat desconhecido"
 
 #: src/ExternalConn.cpp
 msgid "Chat unavailable: peer identity or route is not available"
-msgstr ""
+msgstr "Chat indisponível: a identidade ou rota do par não está disponível"
 
 #: src/ExternalConn.cpp
 msgid "Kad is disabled in preferences."
@@ -4802,21 +4798,19 @@ msgstr "Exclui arquivos correspondendo a:"
 
 #: src/muuli_wdr.cpp
 msgid "Files whose name matches are not shared. Matching is case-insensitive. As wildcards: patterns separated by '|', e.g. .DS_Store|Thumbs.db|*.tmp, where '*' matches any run of characters and '?' a single one. Tick the box below to write one regular expression instead."
-msgstr ""
+msgstr "Arquivos cujos nomes casarem não são compartilhados. O casamento é sensível à letras maiúsculas/minúsculas. Como caracteres coringas: padrões separados por '|', e.g. .DS_Store|Thumbs.db|*.tmp, onde '*' casa com qualquer sequência de caracteres e '?' casa com um único. Marque a caixa abaixo para ao invés disso escrever uma expressão regular."
 
 #: src/muuli_wdr.cpp
 msgid "Patterns are regular expressions"
 msgstr "Padrões são expressões regulares"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "When set, the whole field is one regular expression: '|' is alternation, and '*' and '?' take their regular-expression meaning rather than the wildcard one. When unset, it is a list of '|'-separated wildcards."
-msgstr "Quando ligado, o campo inteiro é uma expressão regular ('|' é alternativa). Quando desligado, é uma lista de caracteres curinga separados por '|'."
+msgstr "Quando ligado, o campo inteiro é uma expressão regular: '|' é alternativa, '*' e '?' têm o seu significado em expressões regulares ao invés do de caracteres coringa). Quando desligado, é uma lista de caracteres coringa separados por '|'."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Show how many of the files in your shared folders the current pattern would exclude, counted over the last scan."
-msgstr "Mostra quantos arquivos compartilhados o padrão atual excluiria."
+msgstr "Mostra quantos arquivos em sua pasta de arquivos compartilhados o padrão atual excluiria, contados sobre a última varredura."
 
 #: src/muuli_wdr.cpp
 msgid "When the connected core's files live on a different machine, map a path prefix it reports to where that filesystem is reachable from here (a network share, say) so \"Open\" and \"Show in folder\" work."
@@ -6468,16 +6462,16 @@ msgid "Choose a folder for %s"
 msgstr "Escolha uma pasta para %s"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Would exclude %u or more of the files in your shared folders"
-msgstr "Iria excluir %u de %u arquivo compartilhado"
+msgstr "Excluiria %u ou mais dos arquivo em suas pastas compartilhadas"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Would exclude %u of %u file in your shared folders"
 msgid_plural "Would exclude %u of %u files in your shared folders"
-msgstr[0] "Iria excluir %u de %u arquivo compartilhado"
-msgstr[1] "Iria excluir %u de %u arquivos compartilhados"
+msgstr[0] "Excluiria %u de %u arquivo em suas pastas compartilhadas"
+msgstr[1] "Excluiria %u de %u arquivos em suas pastas compartilhadas"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Browse for videoplayer"

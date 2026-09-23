@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-23 09:04+0100\n"
-"PO-Revision-Date: 2026-09-22 17:46+0000\n"
+"PO-Revision-Date: 2026-09-23 10:02+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
 "Language: zh_CN\n"
@@ -365,24 +365,21 @@ msgid "WARNING"
 msgstr "警告"
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Loading known files"
-msgstr "正加载临时文件"
+msgstr "正加载已知文件"
 
 #: src/amule.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Loading known files (%u of %u)"
-msgstr "正加载临时文件 （第 %u 个，共 %u 个）"
+msgstr "正加载已知文件 （第 %u 个，共 %u 个）"
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Loading credits"
-msgstr "正加载共享文件"
+msgstr "正加载积分"
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Loading IP filter"
-msgstr "正加载临时文件"
+msgstr "正加载 IP 过滤器"
 
 #: src/amule.cpp
 msgid "Initializing network"
@@ -1241,9 +1238,9 @@ msgid "Failed to create incoming dir for category. Please specify a valid path!"
 msgstr "无法建立该分类的接收文件夹，请给出一个有效的分类路径！"
 
 #: src/ChatSelector.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Chat-Session Started: %s - %s %s"
-msgstr "聊天已开始：%s（%s：%u）- %s %s"
+msgstr "聊天会话已开始：%s - %s %s"
 
 #: src/ChatSelector.cpp
 msgid "*** Connected to Client ***"
@@ -1251,7 +1248,7 @@ msgstr "*** 已连接到用户 ***"
 
 #: src/ChatSelector.cpp
 msgid "*** Chat unavailable: peer identity or route is not available ***"
-msgstr ""
+msgstr "*** 聊天不可用：对等方身份或路由不可用 ***"
 
 #: src/ChatSelector.cpp
 msgid "*** Connecting to Client ***"
@@ -1311,12 +1308,11 @@ msgstr "发送消息"
 
 #: src/ClientContextActions.cpp
 msgid "Chat is unavailable until the peer supplies a valid identity."
-msgstr ""
+msgstr "在对等方提供有效身份前聊天不可用。"
 
 #: src/ClientContextActions.cpp
-#, fuzzy
 msgid "Chat unavailable"
-msgstr "不可用"
+msgstr "聊天不可用"
 
 #: src/ClientContextActions.cpp
 msgid "Send message to user"
@@ -2362,7 +2358,7 @@ msgstr "未知聊天目标"
 
 #: src/ExternalConn.cpp
 msgid "Chat unavailable: peer identity or route is not available"
-msgstr ""
+msgstr "聊天不可用：对等方身份或路由不可用"
 
 #: src/ExternalConn.cpp
 msgid "Kad is disabled in preferences."
@@ -4798,21 +4794,19 @@ msgstr "排除文件匹配："
 
 #: src/muuli_wdr.cpp
 msgid "Files whose name matches are not shared. Matching is case-insensitive. As wildcards: patterns separated by '|', e.g. .DS_Store|Thumbs.db|*.tmp, where '*' matches any run of characters and '?' a single one. Tick the box below to write one regular expression instead."
-msgstr ""
+msgstr "名称匹配不共享的文件。匹配不区分大小写。通配符：以“|”分隔的模式，例如 .DS_Store|Thumbs.db|*.tmp，“*”匹配任意连续字符，“?”匹配单个字符。勾选下面的方框写一个正则表达式。"
 
 #: src/muuli_wdr.cpp
 msgid "Patterns are regular expressions"
 msgstr "模式是正则表达式"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "When set, the whole field is one regular expression: '|' is alternation, and '*' and '?' take their regular-expression meaning rather than the wildcard one. When unset, it is a list of '|'-separated wildcards."
-msgstr "启用后，整个字段是一个正则表达式（'|' 表示交替）。禁用后，它是一个以 '|' 分隔的通配符列表。"
+msgstr "启用后，整个字段是一个正则表达式（'|' 表示交替，'*' 和 '?' 表示的是正则表达式含义，而不是通配符含义。）。禁用后，它是一个以 '|' 分隔的通配符列表。"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Show how many of the files in your shared folders the current pattern would exclude, counted over the last scan."
-msgstr "显示当前模式会排除多少共享文件。"
+msgstr "在上次扫描基础上显示当前模式会排除共享文件夹中多少个文件。"
 
 #: src/muuli_wdr.cpp
 msgid "When the connected core's files live on a different machine, map a path prefix it reports to where that filesystem is reachable from here (a network share, say) so \"Open\" and \"Show in folder\" work."
@@ -6464,16 +6458,16 @@ msgid "Choose a folder for %s"
 msgstr "为%s选择文件夹"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Would exclude %u or more of the files in your shared folders"
-msgstr "将排除 %u 个共享文件，共 %u 个"
+msgstr "将排除共享文件夹中至少 %u 个共享文件"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Would exclude %u of %u file in your shared folders"
 msgid_plural "Would exclude %u of %u files in your shared folders"
-msgstr[0] "将排除 %u 个共享文件，共 %u 个"
-msgstr[1] "将排除 %u 个共享文件，共 %u 个"
+msgstr[0] "将排除共享文件夹中 %u 个共享文件，共 %u 个"
+msgstr[1] "将排除共享文件夹中 %u 个共享文件，共 %u 个"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Browse for videoplayer"
