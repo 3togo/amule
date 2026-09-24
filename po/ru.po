@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-23 12:47+0100\n"
-"PO-Revision-Date: 2026-09-23 14:40+0000\n"
+"PO-Revision-Date: 2026-09-24 16:18+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
 "Language: ru\n"
@@ -4831,14 +4831,12 @@ msgid "Follow symbolic links in shared folders"
 msgstr "Переходить по символическим ссылкам в общих папках"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Exclude files and folders matching:"
-msgstr "Исключать файлы по шаблону:"
+msgstr "Исключать файлы и папки по шаблону:"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Files and folders whose name matches are not shared. A matching folder inside a share that includes its subfolders is skipped with everything in it; a folder you share yourself is always shared. Matching is case-insensitive. As wildcards: patterns separated by '|', e.g. .DS_Store|Thumbs.db|*.tmp, where '*' matches any run of characters and '?' a single one. Tick the box below to write one regular expression instead."
-msgstr "Файлы с совпадающим именем не публикуются. Регистр не учитывается. Как подстановочные знаки: шаблоны, разделённые «|», например .DS_Store|Thumbs.db|*.tmp, где «*» соответствует любой последовательности символов, а «?» — одному. Установите флажок ниже, чтобы вместо этого задать одно регулярное выражение."
+msgstr "Файлы и папки с совпадающим именем не публикуются. Совпадающая папка внутри публикации, включающей её подпапки, пропускается вместе со всем содержимым; папка, которую вы публикуете сами, публикуется всегда. Регистр не учитывается. Как подстановочные знаки: шаблоны, разделённые «|», например .DS_Store|Thumbs.db|*.tmp, где «*» соответствует любой последовательности символов, а «?» — одному. Установите флажок ниже, чтобы вместо этого задать одно регулярное выражение."
 
 #: src/muuli_wdr.cpp
 msgid "Patterns are regular expressions"
@@ -4849,9 +4847,8 @@ msgid "When set, the whole field is one regular expression: '|' is alternation, 
 msgstr "Если включено, всё поле является одним регулярным выражением: «|» означает альтернативу, а «*» и «?» имеют смысл регулярного выражения, а не подстановочных знаков. Если выключено, это список подстановочных шаблонов, разделённых «|»."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Show how many of the files and folders in your shared folders the current pattern would exclude, counted over the last scan."
-msgstr "Показать, сколько файлов в ваших общих папках исключит текущий шаблон, по результатам последнего сканирования."
+msgstr "Показать, сколько файлов и папок в ваших общих папках исключит текущий шаблон, по результатам последнего сканирования."
 
 #: src/muuli_wdr.cpp
 msgid "When the connected core's files live on a different machine, map a path prefix it reports to where that filesystem is reachable from here (a network share, say) so \"Open\" and \"Show in folder\" work."
@@ -6528,17 +6525,17 @@ msgstr[1] "Будут исключены %u из %u файлов в ваших �
 msgstr[2] "Будет исключено %u из %u файлов в ваших общих папках"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Would also exclude %u or more folders, with everything in them"
-msgstr "Будет исключено %u или более файлов в ваших общих папках"
+msgstr "Также будет исключено %u или более папок вместе со всем содержимым"
 
 #: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Would also exclude %u folder, with everything in it"
 msgid_plural "Would also exclude %u folders, with everything in them"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Также будет исключена %u папка вместе со всем содержимым"
+msgstr[1] "Также будут исключены %u папки вместе со всем содержимым"
+msgstr[2] "Также будет исключено %u папок вместе со всем содержимым"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Browse for videoplayer"

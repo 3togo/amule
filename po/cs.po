@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-23 12:47+0100\n"
-"PO-Revision-Date: 2026-09-23 14:29+0000\n"
+"PO-Revision-Date: 2026-09-24 16:18+0000\n"
 "Last-Translator: David Watzke <david@watzke.cz>\n"
 "Language-Team: cs <cs@li.org>\n"
 "Language: cs\n"
@@ -4808,13 +4808,12 @@ msgid "Follow symbolic links in shared folders"
 msgstr "Sledovat symbolické odkazy ve sdílených složkách"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Exclude files and folders matching:"
-msgstr "Vyloučit soubory odpovídající:"
+msgstr "Vyloučit soubory a složky odpovídající:"
 
 #: src/muuli_wdr.cpp
 msgid "Files and folders whose name matches are not shared. A matching folder inside a share that includes its subfolders is skipped with everything in it; a folder you share yourself is always shared. Matching is case-insensitive. As wildcards: patterns separated by '|', e.g. .DS_Store|Thumbs.db|*.tmp, where '*' matches any run of characters and '?' a single one. Tick the box below to write one regular expression instead."
-msgstr ""
+msgstr "Soubory a složky, jejichž jména odpovídají zadání, nejsou sdíleny. V odpovídajících složkách nebude sdílen ani jejich obsah; Pokud však odpovídající složku výslovně vyberete ke sdílení, bude sdílena. Porovnávání jmen není citlivé na velikost písmen. Zástupné vzory v zadání oddělte znakem '|', např. .DS_Store|Thumbs.db|*.tmp, kde '*' odpovídá libovolnému počtu znaků a '?' jednomu znaku. Pokud chcete místo toho použít regulární výraz, zaškrtněte políčko níže."
 
 #: src/muuli_wdr.cpp
 msgid "Patterns are regular expressions"
@@ -4825,9 +4824,8 @@ msgid "When set, the whole field is one regular expression: '|' is alternation, 
 msgstr "Je-li nastaveno, celé pole je jedním regulárním výrazem: '|' znamená alternaci, '*' a '?' nejsou použity jako zástupné znaky ale mají svůj běžný význam regulárního výrazu. Pokud není nastaveno jako reg. výraz, tak jde o seznam zástupných vzorů oddělených '|'."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Show how many of the files and folders in your shared folders the current pattern would exclude, counted over the last scan."
-msgstr "Zobrazit, kolik sdílených souborů by aktuální vzor vyloučil."
+msgstr "Podívejte se, kolik souborů a složek ve sdílených složkách by současné vzory nebo reg. výraz vyloučily. Počítáno na základě počtu souborů z posledního skenování."
 
 #: src/muuli_wdr.cpp
 msgid "When the connected core's files live on a different machine, map a path prefix it reports to where that filesystem is reachable from here (a network share, say) so \"Open\" and \"Show in folder\" work."
@@ -6496,17 +6494,17 @@ msgstr[1] "Vyloučí %u z %u souborů ve vašich sdílených složkách"
 msgstr[2] "Vyloučí %u z %u souborů ve vašich sdílených složkách"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Would also exclude %u or more folders, with everything in them"
-msgstr "Bylo by vyloučeno %u z %u sdíleného souboru"
+msgstr "Bylo by také vyloučeno %u nebo více složek, včetně jejich obsahu"
 
 #: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Would also exclude %u folder, with everything in it"
 msgid_plural "Would also exclude %u folders, with everything in them"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Byla by také vyloučena %u složka, včetně jejího obsahu"
+msgstr[1] "Byly by také vyloučeny %u složky, včetně jejich obsahu"
+msgstr[2] "Bylo by také vyloučeno %u složek, včetně jejich obsahu"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Browse for videoplayer"

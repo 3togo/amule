@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-23 12:47+0100\n"
-"PO-Revision-Date: 2026-09-23 14:38+0000\n"
+"PO-Revision-Date: 2026-09-24 16:18+0000\n"
 "Last-Translator: Marcelo Jimenez <mroberto@users.sourceforge.com>\n"
 "Language-Team: Português (Brasileiro) <pt@li.org>\n"
 "Language: pt_BR\n"
@@ -4793,14 +4793,12 @@ msgid "Follow symbolic links in shared folders"
 msgstr "Segue links simbólicos em pastas compartilhadas"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Exclude files and folders matching:"
-msgstr "Exclui arquivos correspondendo a:"
+msgstr "Excluir arquivos e pastas correspondendo a:"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Files and folders whose name matches are not shared. A matching folder inside a share that includes its subfolders is skipped with everything in it; a folder you share yourself is always shared. Matching is case-insensitive. As wildcards: patterns separated by '|', e.g. .DS_Store|Thumbs.db|*.tmp, where '*' matches any run of characters and '?' a single one. Tick the box below to write one regular expression instead."
-msgstr "Arquivos cujos nomes casarem não são compartilhados. O casamento é sensível à letras maiúsculas/minúsculas. Como caracteres coringas: padrões separados por '|', e.g. .DS_Store|Thumbs.db|*.tmp, onde '*' casa com qualquer sequência de caracteres e '?' casa com um único. Marque a caixa abaixo para ao invés disso escrever uma expressão regular."
+msgstr "Arquivos e pastas cujos nomes corresponderem não são compartilhados. A pasta correspondente dentro de um compartilhamento que inclua suas subpastas é pulada com tudo que há dentro; Uma pasta que você mesmo compartilhar é sempre compartilhada. correspondência é insensível à letras maiúsculas/minúsculas. Como caracteres coringas: padrões separados por '|', e.g. .DS_Store|Thumbs.db|*.tmp, onde '*' corresponde a qualquer sequência de caracteres e '?' corresponde a com um único caracter. Marque a caixa abaixo para ao invés disso escrever uma expressão regular."
 
 #: src/muuli_wdr.cpp
 msgid "Patterns are regular expressions"
@@ -4811,9 +4809,8 @@ msgid "When set, the whole field is one regular expression: '|' is alternation, 
 msgstr "Quando ligado, o campo inteiro é uma expressão regular: '|' é alternativa, '*' e '?' têm o seu significado em expressões regulares ao invés do de caracteres coringa). Quando desligado, é uma lista de caracteres coringa separados por '|'."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Show how many of the files and folders in your shared folders the current pattern would exclude, counted over the last scan."
-msgstr "Mostra quantos arquivos em sua pasta de arquivos compartilhados o padrão atual excluiria, contados sobre a última varredura."
+msgstr "Mostra quantos arquivos e pastas em sua pasta de arquivos compartilhados o padrão atual excluiria, contados sobre a última varredura."
 
 #: src/muuli_wdr.cpp
 msgid "When the connected core's files live on a different machine, map a path prefix it reports to where that filesystem is reachable from here (a network share, say) so \"Open\" and \"Show in folder\" work."
@@ -5747,7 +5744,7 @@ msgstr "dias"
 #: src/OtherFunctions.cpp
 #, c-format
 msgid "%u kbps"
-msgstr ""
+msgstr "%u kbps"
 
 #. TRANSLATORS:
 #. Punctuation for a "label: value" pair. %s is the already-translated
@@ -6477,16 +6474,16 @@ msgstr[0] "Excluiria %u de %u arquivo em suas pastas compartilhadas"
 msgstr[1] "Excluiria %u de %u arquivos em suas pastas compartilhadas"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Would also exclude %u or more folders, with everything in them"
-msgstr "Excluiria %u ou mais dos arquivo em suas pastas compartilhadas"
+msgstr "Excluiria também %u ou mais pastas, com tudo dentro delas"
 
 #: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Would also exclude %u folder, with everything in it"
 msgid_plural "Would also exclude %u folders, with everything in them"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Excluiria também %u pasta, com tudo dentro dela"
+msgstr[1] "Excluiria também %u pastas, com tudo dentro delas"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Browse for videoplayer"

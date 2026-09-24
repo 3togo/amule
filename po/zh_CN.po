@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-23 12:47+0100\n"
-"PO-Revision-Date: 2026-09-23 14:43+0000\n"
+"PO-Revision-Date: 2026-09-24 16:18+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
 "Language: zh_CN\n"
@@ -4789,14 +4789,12 @@ msgid "Follow symbolic links in shared folders"
 msgstr "在共享文件夹中跟踪符号链接"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Exclude files and folders matching:"
-msgstr "排除文件匹配："
+msgstr "排除匹配下列规则的文件和文件夹："
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Files and folders whose name matches are not shared. A matching folder inside a share that includes its subfolders is skipped with everything in it; a folder you share yourself is always shared. Matching is case-insensitive. As wildcards: patterns separated by '|', e.g. .DS_Store|Thumbs.db|*.tmp, where '*' matches any run of characters and '?' a single one. Tick the box below to write one regular expression instead."
-msgstr "名称匹配不共享的文件。匹配不区分大小写。通配符：以“|”分隔的模式，例如 .DS_Store|Thumbs.db|*.tmp，“*”匹配任意连续字符，“?”匹配单个字符。勾选下面的方框写一个正则表达式。"
+msgstr "不会共享名称匹配过滤规则的文件和文件夹。如果分享中包括匹配文件夹的子文件夹，那么程序不会分享这个匹配文件夹中的一切内容；你自己分享的文件夹将始终被分享。匹配不区分大小写。通配符以“|”分隔，例如 .DS_Store|Thumbs.db|*.tmp，“*”匹配任意连续字符，“?”匹配单个字符。勾选下面的方框写一个正则表达式。"
 
 #: src/muuli_wdr.cpp
 msgid "Patterns are regular expressions"
@@ -4807,9 +4805,8 @@ msgid "When set, the whole field is one regular expression: '|' is alternation, 
 msgstr "启用后，整个字段是一个正则表达式（'|' 表示交替，'*' 和 '?' 表示的是正则表达式含义，而不是通配符含义。）。禁用后，它是一个以 '|' 分隔的通配符列表。"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Show how many of the files and folders in your shared folders the current pattern would exclude, counted over the last scan."
-msgstr "在上次扫描基础上显示当前模式会排除共享文件夹中多少个文件。"
+msgstr "在上次扫描基础上显示当前模式会排除共享文件夹中多少个文件和文件夹。"
 
 #: src/muuli_wdr.cpp
 msgid "When the connected core's files live on a different machine, map a path prefix it reports to where that filesystem is reachable from here (a network share, say) so \"Open\" and \"Show in folder\" work."
@@ -6473,16 +6470,16 @@ msgstr[0] "将排除共享文件夹中 %u 个共享文件，共 %u 个"
 msgstr[1] "将排除共享文件夹中 %u 个共享文件，共 %u 个"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Would also exclude %u or more folders, with everything in them"
-msgstr "将排除共享文件夹中至少 %u 个共享文件"
+msgstr "也将排除至少 %u 个文件夹，包括其中的一切"
 
 #: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Would also exclude %u folder, with everything in it"
 msgid_plural "Would also exclude %u folders, with everything in them"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "也会排除 %u 个文件夹，包括其中的一切内容"
+msgstr[1] "也会排除 %u 个文件夹，包括其中的一切内容"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Browse for videoplayer"
