@@ -1479,7 +1479,9 @@ void CSearchDlg::StartNewSearch()
 		const uint32 status = theApp->searchlist->GetSearchBarStatusById(page->GetSearchId());
 #endif
 		if (page->CanReuseSearch(request, status)) {
-			m_notebook->SetSelection(i);
+			// Avoid firing EVT_NOTEBOOK_PAGE_CHANGED here: refresh the controls
+			// exactly once below after selecting the existing result page.
+			m_notebook->ChangeSelection(i);
 			wxBookCtrlEvent pageChanged;
 			OnSearchPageChanged(pageChanged);
 			return;
