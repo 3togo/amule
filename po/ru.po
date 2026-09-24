@@ -6765,6 +6765,10 @@ msgid "Search error"
 msgstr "Ошибка поиска"
 
 #: src/SearchDlg.cpp
+msgid "Min size must be smaller than max size. Max size ignored."
+msgstr "Мин. размер должен быть меньше макс. размера. Игнорирую макс. размер."
+
+#: src/SearchDlg.cpp
 msgid ""
 "An eD2k search is still running. Starting a new one will stop it, because the eD2k protocol allows only one search at a time.\n"
 "\n"
@@ -6781,10 +6785,6 @@ msgstr ""
 #: src/SearchDlg.cpp
 msgid "Search in progress"
 msgstr "Поиск выполняется"
-
-#: src/SearchDlg.cpp
-msgid "Min size must be smaller than max size. Max size ignored."
-msgstr "Мин. размер должен быть меньше макс. размера. Игнорирую макс. размер."
 
 # It's about default category to download to.
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
