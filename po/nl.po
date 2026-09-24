@@ -13,7 +13,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-09-23 12:47+0100\n"
-"PO-Revision-Date: 2026-09-23 14:37+0000\n"
+"PO-Revision-Date: 2026-09-24 16:18+0000\n"
 "Last-Translator: Marcel Pol <marcel@timelord.nl>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "Language: nl\n"
@@ -4790,14 +4790,12 @@ msgid "Follow symbolic links in shared folders"
 msgstr "Symbolische koppelingen in gedeelde mappen volgen"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Exclude files and folders matching:"
-msgstr "Bestanden uitsluiten die overeenkomen met:"
+msgstr "Bestanden en mappen uitsluiten die overeenkomen met:"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Files and folders whose name matches are not shared. A matching folder inside a share that includes its subfolders is skipped with everything in it; a folder you share yourself is always shared. Matching is case-insensitive. As wildcards: patterns separated by '|', e.g. .DS_Store|Thumbs.db|*.tmp, where '*' matches any run of characters and '?' a single one. Tick the box below to write one regular expression instead."
-msgstr "Bestanden waarvan de naamovereenkomsten niet worden gedeeld. Matchen is niet hoofdlettergevoelig. Als jokertekens: patronen gesplitst door '|', b.v.b. .DS_Store|Thumbs.db|*.tmp, waar '*' overeenkomt met een reeks tekens en '?' met een enkel teken. Vink het vakje hieronder aan om in plaats daarvan een reguliere expressie te schrijven."
+msgstr "Bestanden en mappen waarvan de naamovereenkomsten niet worden gedeeld. Een overeenkomstige map in een gedeelde locatie die submappen bevat wordt met alles wat daarin staat overgeslagen; een map die u zelf deelt wordt altijd gedeeld. Matchen is niet hoofdlettergevoelig. Als jokertekens: patronen gesplitst door '|', b.v.b. .DS_Store|Thumbs.db|*.tmp, waar '*' overeenkomt met een reeks tekens en '?' met een enkel teken. Vink het vakje hieronder aan om in plaats daarvan een reguliere expressie te schrijven."
 
 #: src/muuli_wdr.cpp
 msgid "Patterns are regular expressions"
@@ -4808,9 +4806,8 @@ msgid "When set, the whole field is one regular expression: '|' is alternation, 
 msgstr "Indien ingeschakeld, is het volledige veld één reguliere expressie: '|' is alternatie en '*' en '?' nemen hun betekenis over van reguliere uitdrukkingen in plaats van die van een jokerteken. Indien uitgeschakeld, is het een lijst van door '|' gescheiden jokertekens."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Show how many of the files and folders in your shared folders the current pattern would exclude, counted over the last scan."
-msgstr "Toon hoeveel van de bestanden in uw gedeelde mappen door het huidige patroon zouden worden uitgesloten, geteld in de laatste scan."
+msgstr "Toon hoeveel van de bestanden en mappen in uw gedeelde mappen door het huidige patroon zouden worden uitgesloten, geteld in de laatste scan."
 
 #: src/muuli_wdr.cpp
 msgid "When the connected core's files live on a different machine, map a path prefix it reports to where that filesystem is reachable from here (a network share, say) so \"Open\" and \"Show in folder\" work."
@@ -6474,16 +6471,16 @@ msgstr[0] "Zou %u van %u bestand in uw gedeelde mappen uitsluiten"
 msgstr[1] "Zou %u van %u bestanden in uw gedeelde mappen uitsluiten"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Would also exclude %u or more folders, with everything in them"
-msgstr "Zou %u of meer van de bestanden in uw gedeelde mappen uitsluiten"
+msgstr "Zou ook %u of meer mappen uitsluiten, met alles wat daarin staat"
 
 #: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Would also exclude %u folder, with everything in it"
 msgid_plural "Would also exclude %u folders, with everything in them"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Zou ook %u map uitsluiten met alles wat daarin staat"
+msgstr[1] "Zou ook %u mappen uitsluiten met alles wat daarin staat"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Browse for videoplayer"
