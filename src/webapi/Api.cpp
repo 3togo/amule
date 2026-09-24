@@ -5623,17 +5623,25 @@ bool FindFriendByEcid(const webapi::CState &state, std::uint32_t ecid, webapi::F
 namespace
 {
 
-// Parse "<ip>:<port>" back into a GUI_ID. Strict on purpose: anything that is
-// not four dotted octets plus a port would address some other conversation.
-bool ParseChatPeerKey(const std::string &peer, std::uint64_t &out_gui_id)
+// Normalize a peer hash or a legacy IPv4 route into a public key.
+bool ParseChatPeerKey(const std::string &peer, std::string &out_key, std::uint64_t *out_route = nullptr)
 {
+	if (out_route)
+		*out_route = 0;
+	CMD4Hash hash;
+	if (HashFromHex(peer, hash) && !hash.IsEmpty()) {
+		out_key = std::string(hash.Encode().Lower().utf8_str());
+		return true;
+	}
+	if (peer.size() > 21 || peer.find_first_not_of("0123456789.:") != std::string::npos)
+		return false;
 	const std::size_t colon = peer.rfind(':');
 	if (colon == std::string::npos || colon == 0 || colon + 1 >= peer.size())
 		return false;
 
 	unsigned a = 0, b = 0, c = 0, d = 0;
 	char extra = 0;
-	if (std::sscanf(peer.substr(0, colon).c_str(), "%u.%u.%u.%u%c", &a, &b, &c, &d, &extra) != 4)
+	if (std::sscanf(peer.substr(0, colon).c_str(), "%3u.%3u.%3u.%3u%c", &a, &b, &c, &d, &extra) != 4)
 		return false;
 	if (a > 255 || b > 255 || c > 255 || d > 255)
 		return false;
@@ -5649,7 +5657,10 @@ bool ParseChatPeerKey(const std::string &peer, std::uint64_t &out_gui_id)
 	const std::uint32_t ip = static_cast<std::uint32_t>(a) | (static_cast<std::uint32_t>(b) << 8) |
 				 (static_cast<std::uint32_t>(c) << 16) |
 				 (static_cast<std::uint32_t>(d) << 24);
-	out_gui_id = (static_cast<std::uint64_t>(ip) << 16) | static_cast<std::uint64_t>(port);
+	const std::uint64_t route = (static_cast<std::uint64_t>(ip) << 16) | static_cast<std::uint64_t>(port);
+	out_key = webapi::ChatPeerKeyFromGuiId(route);
+	if (out_route)
+		*out_route = route;
 	return true;
 }
 
@@ -5675,10 +5686,17 @@ void WriteChatObject(CJsonWriter &w, const webapi::ChatSessionSnapshot &s)
 	w.BeginObject();
 	w.Key("address");
 	w.ValueString(wxString::FromUTF8(s.PeerKey().c_str()));
+	w.Key("hash");
+	if (s.peer_hash.empty())
+		w.ValueNull();
+	else
+		w.ValueString(wxString::FromUTF8(s.peer_hash.c_str()));
 	w.Key("ip");
-	w.ValueString(wxString::FromUTF8(s.ip.c_str()));
-	w.Key("port");
-	w.ValueInt(static_cast<int64_t>(s.port));
+	if (s.ip.empty())
+		w.ValueNull();
+	else
+		w.ValueString(wxString::FromUTF8(s.ip.c_str()));
+	WriteIntOrNull(w, "port", !s.ip.empty(), static_cast<int64_t>(s.port));
 	w.Key("name");
 	w.ValueString(wxString::FromUTF8(s.DisplayName().c_str()));
 	// null rather than 0 for "no live connection" / "not a friend": 0 is not how
@@ -5709,13 +5727,23 @@ void WriteChatObject(CJsonWriter &w, const webapi::ChatSessionSnapshot &s)
 }
 
 const webapi::ChatSessionSnapshot *FindChat(
-	const std::vector<webapi::ChatSessionSnapshot> &chats, std::uint64_t gui_id)
+	const std::vector<webapi::ChatSessionSnapshot> &chats, const std::string &key)
 {
 	for (const webapi::ChatSessionSnapshot &s : chats) {
-		if (s.gui_id == gui_id)
+		if (!s.peer_hash.empty() && s.peer_hash == key)
 			return &s;
 	}
-	return nullptr;
+	// A legacy URL remains usable after promotion, but never selects arbitrarily
+	// between distinct identities sharing an endpoint.
+	const webapi::ChatSessionSnapshot *match = nullptr;
+	for (const auto &s : chats) {
+		if (s.gui_id && s.ip + ":" + std::to_string(s.port) == key) {
+			if (match)
+				return nullptr;
+			match = &s;
+		}
+	}
+	return match;
 }
 
 } // namespace
@@ -5880,13 +5908,14 @@ CHttpServer::Response CApiDispatcher::HandleChatMessages(
 	if (auto r = RequireSnapshot(m_state))
 		return *r;
 
-	std::uint64_t gui_id = 0;
-	if (!ParseChatPeerKey(peer, gui_id)) {
-		return ErrorResponse(400, "bad_request", "path `{address}` must be `<ip>:<port>`");
+	std::string key;
+	if (!ParseChatPeerKey(peer, key)) {
+		return ErrorResponse(
+			400, "bad_request", "path `{address}` must be a peer hash or IPv4 `<ip>:<port>`");
 	}
 
 	const std::vector<webapi::ChatSessionSnapshot> chats = m_state.Chats();
-	const webapi::ChatSessionSnapshot *session = FindChat(chats, gui_id);
+	const webapi::ChatSessionSnapshot *session = FindChat(chats, key);
 	if (!session) {
 		return ErrorResponse(404, "not_found", "no chat session with that peer");
 	}
@@ -5929,6 +5958,11 @@ CHttpServer::Response CApiDispatcher::HandleChatMessages(
 	w.BeginObject();
 	w.Key("address");
 	w.ValueString(wxString::FromUTF8(session->PeerKey().c_str()));
+	w.Key("hash");
+	if (session->peer_hash.empty())
+		w.ValueNull();
+	else
+		w.ValueString(wxString::FromUTF8(session->peer_hash.c_str()));
 	w.Key("messages");
 	w.BeginArray();
 	for (const webapi::ChatMessageSnapshot *m : selected)
@@ -5946,10 +5980,10 @@ CHttpServer::Response CApiDispatcher::HandleChatMessages(
 	return r;
 }
 
-// Shared by all three send forms. `target` is the already-built EC tag naming the
-// recipient -- a GUI_ID, a live peer's ECID, or a friend's ECID. The friend form is
-// the one that reaches an OFFLINE friend, via the stored ip:port.
-CHttpServer::Response CApiDispatcher::SendChatMessageTo(const CHttpServer::Request &req, const CECTag &target)
+// `target` names the recipient by peer hash with an optional legacy route hint,
+// or by the legacy route alone. ECIDs are not chat identities.
+CHttpServer::Response CApiDispatcher::SendChatMessageTo(
+	const CHttpServer::Request &req, const CECTag &target, std::uint64_t route_hint)
 {
 	picojson::value root;
 	std::string parse_err;
@@ -5973,6 +6007,8 @@ CHttpServer::Response CApiDispatcher::SendChatMessageTo(const CHttpServer::Reque
 	std::unique_ptr<CECPacket> ec_req(new CECPacket(EC_OP_CHAT_SEND));
 	ec_req->AddTag(CECTag(EC_TAG_CHAT, wxString::FromUTF8(text.c_str())));
 	ec_req->AddTag(target);
+	if (route_hint != 0)
+		ec_req->AddTag(CECTag(EC_TAG_CHAT_CLIENT_ID, route_hint));
 
 	const CECPacket *ec_resp = m_app.SendRecvSerialized(ec_req.get());
 	if (!ec_resp) {
@@ -5985,6 +6021,12 @@ CHttpServer::Response CApiDispatcher::SendChatMessageTo(const CHttpServer::Reque
 	}
 	std::uint64_t gui_id = 0;
 	std::uint32_t msg_id = 0;
+	std::string peer_hash;
+	if (const CECTag *t = ec_resp->GetTagByName(EC_TAG_CHAT_PEER_HASH)) {
+		const auto hash = t->GetMD4Data();
+		if (!hash.IsEmpty())
+			peer_hash = std::string(hash.Encode().Lower().utf8_str());
+	}
 	if (const CECTag *t = ec_resp->GetTagByName(EC_TAG_CHAT_CLIENT_ID))
 		gui_id = t->GetInt();
 	if (const CECTag *t = ec_resp->GetTagByName(EC_TAG_CHAT_MSG_ID))
@@ -5999,8 +6041,23 @@ CHttpServer::Response CApiDispatcher::SendChatMessageTo(const CHttpServer::Reque
 	// The nested `message` object is the created resource, built through the same writer
 	// GET /chats/{address}/messages uses. `sent_at` is null here and only here:
 	// EC_OP_CHAT_SEND answers with ids and no timestamp.
+	// Same rule as the list: a route another identity holds is not this peer's address.
+	std::string address = gui_id ? webapi::ChatPeerKeyFromGuiId(gui_id) : peer_hash;
+	if (gui_id && !peer_hash.empty()) {
+		for (const webapi::ChatSessionSnapshot &s : m_state.Chats()) {
+			if (s.gui_id == gui_id && !s.peer_hash.empty() && s.peer_hash != peer_hash) {
+				address = peer_hash;
+				break;
+			}
+		}
+	}
 	w.Key("address");
-	w.ValueString(wxString::FromUTF8(webapi::ChatPeerKeyFromGuiId(gui_id).c_str()));
+	w.ValueString(wxString::FromUTF8(address.c_str()));
+	w.Key("hash");
+	if (peer_hash.empty())
+		w.ValueNull();
+	else
+		w.ValueString(wxString::FromUTF8(peer_hash.c_str()));
 	w.Key("message");
 	webapi::ChatMessageSnapshot sent;
 	sent.id = msg_id;
@@ -6026,13 +6083,30 @@ CHttpServer::Response CApiDispatcher::HandleChatSend(const CHttpServer::Request 
 		return ErrorResponse(
 			503, "ec_unsupported", "the connected amuled does not serve chat sessions");
 	}
-	std::uint64_t gui_id = 0;
-	if (!ParseChatPeerKey(peer, gui_id)) {
-		return ErrorResponse(400, "bad_request", "path `{address}` must be `<ip>:<port>`");
+	std::string key;
+	std::uint64_t route = 0;
+	if (!ParseChatPeerKey(peer, key, &route))
+		return ErrorResponse(
+			400, "bad_request", "path `{address}` must be a peer hash or IPv4 `<ip>:<port>`");
+	// Legacy route POSTs may create a conversation without a cached session.
+	// Hash targets, unlike dial addresses, must resolve to a known identity.
+	if (route != 0)
+		return SendChatMessageTo(req, CECTag(EC_TAG_CHAT_CLIENT_ID, route));
+	if (auto r = RequireSnapshot(m_state))
+		return *r;
+	const auto chats = m_state.Chats();
+	const auto *session = FindChat(chats, key);
+	if (!session)
+		return ErrorResponse(404, "not_found", "no chat session with that peer");
+	if (!m_app.IsServerChatPeerHashActive())
+		return ErrorResponse(
+			503, "ec_unsupported", "the connected amuled does not support chat hashes");
+	if (!session->peer_hash.empty()) {
+		CMD4Hash hash;
+		HashFromHex(session->peer_hash, hash);
+		return SendChatMessageTo(req, CECTag(EC_TAG_CHAT_PEER_HASH, hash), session->gui_id);
 	}
-	// No 404 for an unknown peer here: the core creates the session if it does
-	// not exist, so this doubles as "start a chat with this address".
-	return SendChatMessageTo(req, CECTag(EC_TAG_CHAT_CLIENT_ID, gui_id));
+	return SendChatMessageTo(req, CECTag(EC_TAG_CHAT_CLIENT_ID, session->gui_id));
 }
 
 CHttpServer::Response CApiDispatcher::HandleChatClose(
@@ -6047,13 +6121,31 @@ CHttpServer::Response CApiDispatcher::HandleChatClose(
 		return ErrorResponse(
 			503, "ec_unsupported", "the connected amuled does not serve chat sessions");
 	}
-	std::uint64_t gui_id = 0;
-	if (!ParseChatPeerKey(peer, gui_id)) {
-		return ErrorResponse(400, "bad_request", "path `{address}` must be `<ip>:<port>`");
+	std::string key;
+	std::uint64_t route = 0;
+	if (!ParseChatPeerKey(peer, key, &route))
+		return ErrorResponse(
+			400, "bad_request", "path `{address}` must be a peer hash or IPv4 `<ip>:<port>`");
+	if (!route) {
+		if (auto r = RequireSnapshot(m_state))
+			return *r;
 	}
+	const auto chats = m_state.Chats();
+	const auto *session = FindChat(chats, key);
+	if (!session && !route)
+		return ErrorResponse(404, "not_found", "no chat session with that peer");
+	if (!route && !m_app.IsServerChatPeerHashActive())
+		return ErrorResponse(
+			503, "ec_unsupported", "the connected amuled does not support chat hashes");
 
 	std::unique_ptr<CECPacket> ec_req(new CECPacket(EC_OP_CHAT_CLOSE_SESSION));
-	ec_req->AddTag(CECTag(EC_TAG_CHAT_CLIENT_ID, gui_id));
+	if (session && !session->peer_hash.empty() && m_app.IsServerChatPeerHashActive()) {
+		CMD4Hash hash;
+		HashFromHex(session->peer_hash, hash);
+		ec_req->AddTag(CECTag(EC_TAG_CHAT_PEER_HASH, hash));
+	} else {
+		ec_req->AddTag(CECTag(EC_TAG_CHAT_CLIENT_ID, session ? session->gui_id : route));
+	}
 	const CECPacket *ec_resp = m_app.SendRecvSerialized(ec_req.get());
 	if (!ec_resp) {
 		return ErrorResponse(503, "ec_unavailable", "EC roundtrip failed for chat close");

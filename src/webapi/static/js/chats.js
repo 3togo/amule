@@ -2,8 +2,9 @@
 // survive navigation (like searches.js). Publishes a light tab list on store
 // "chats" and the active transcript on "chat:<peer>".
 //
-// `peer` is "<ip>:<port>" and goes into the URL verbatim — amuleapi does not
-// percent-decode path captures, so an encoded colon is a 400.
+// `peer` is the stable conversation identity (hash when known).
+// `address` is what requests use: the route, or the hash when the route is
+// absent or shared. It can change while the tab identity stays.
 
 import { api } from "./api.js";
 import { store } from "./store.js";
@@ -27,7 +28,7 @@ let offs = [];
 let lastMessage = null, lastClosed = null, lastResync = null;
 
 // The API's `name` for a peer the core has no nick for.
-function fallbackName(ip, port) { return "IP: " + ip + " Port: " + port; }
+function fallbackName(ip, port, hash) { return hash ? hash.toUpperCase() : "IP: " + ip + " Port: " + port; }
 
 function pageVisible() {
   return (location.hash || "").replace(/^#\/?/, "").split("?")[0] === "messages";
@@ -35,13 +36,13 @@ function pageVisible() {
 
 // Don't let the API fallback overwrite a real name a caller gave us.
 function betterName(conv, name) {
-  return name && name !== fallbackName(conv.ip, conv.port) ? name : conv.name;
+  return name && name !== fallbackName(conv.ip, conv.port, conv.hash) ? name : conv.name;
 }
 
-function newConv({ peer, ip, port, name = "", clientEcid = 0, friendEcid = 0, online = false }) {
+function newConv({ peer, address = peer, hash = "", ip, port, name = "", clientEcid = 0, friendEcid = 0, online = false }) {
   return {
-    peer, ip, port,
-    name: name || fallbackName(ip, port),
+    peer: hash || peer, address, hash, ip, port,
+    name: name || fallbackName(ip, port, hash),
     clientEcid, friendEcid, online,
     messages: new Map(),
     lastMsgId: 0,
@@ -61,7 +62,7 @@ function messageList(conv) {
 // Resolve the API fallback name against the live friends list, so a friend's
 // conversation shows the friend's name.
 function displayName(conv) {
-  if (conv.name !== fallbackName(conv.ip, conv.port)) return conv.name;
+  if (conv.name !== fallbackName(conv.ip, conv.port, conv.hash)) return conv.name;
   const friends = store.get("friends") || [];
   const f = friends.find((x) => (conv.friendEcid && x.ecid === conv.friendEcid) ||
                                 (x.ip === conv.ip && x.port === conv.port));
@@ -70,7 +71,7 @@ function displayName(conv) {
 
 function tabList() {
   return Array.from(convs.values()).map((c) => ({
-    peer: c.peer, name: displayName(c),
+    peer: c.peer, address: c.address, name: displayName(c),
     clientEcid: c.clientEcid, friendEcid: c.friendEcid,
     // Online mirrors the desktop: a linked live client (clientEcid set), not the
     // momentary TCP state. Like the desktop's blue name, this lights on a contact
@@ -122,19 +123,18 @@ async function loadMessages(peer) {
   conv.fetching = true;
   try {
     const q = conv.loaded ? "?since_message_id=" + conv.lastMsgId : "?tail=" + HISTORY_LIMIT;
-    const r = await api.get("chats/" + peer + "/messages" + q);
-    const cur = convs.get(peer);
-    if (!cur) return;
-    for (const m of r.messages || []) addMessage(cur, m);
-    cur.loaded = true;
+    const r = await api.get("chats/" + conv.address + "/messages" + q);
+    if (convs.get(conv.peer) !== conv) return;
+    adoptKey(conv, r);
+    for (const m of r.messages || []) addMessage(conv, m);
+    conv.loaded = true;
     publishTabs();
-    publishLog(peer);
+    publishLog(conv.peer);
   } catch (e) {
     noteError(e);
-    if (e && e.status === 404) { const cur = convs.get(peer); if (cur) cur.loaded = true; }
+    if (e && e.status === 404) conv.loaded = true;
   } finally {
-    const cur = convs.get(peer);
-    if (cur) cur.fetching = false;
+    conv.fetching = false;
   }
 }
 
@@ -149,6 +149,41 @@ function addMessage(conv, m) {
   }
 }
 
+// Match identity before route, and never join two known hashes at one endpoint.
+function findConv({ address, hash, ip, port }) {
+  const exact = (hash && convs.get(hash)) || convs.get(address);
+  if (exact && (!hash || !exact.hash || exact.hash === hash)) return exact;
+  if (!ip || !port) return null;
+  const matches = Array.from(convs.values()).filter((c) =>
+    c.ip === ip && c.port === port && (!hash || !c.hash || c.hash === hash));
+  return matches.length === 1 ? matches[0] : null;
+}
+
+// Promotion moves the existing tab, transcript and selection, not just the URL.
+function adoptKey(conv, row) {
+  const old = conv.peer;
+  const identity = row.hash || conv.hash || row.address;
+  if (identity && identity !== old) {
+    convs.delete(old);
+    conv.peer = identity;
+    convs.set(conv.peer, conv);
+    store.set("chat:" + old, []);
+    if (activePeer === old) activePeer = conv.peer;
+  }
+  conv.address = row.address || conv.address;
+  conv.hash = row.hash || conv.hash;
+  if (row.ip !== undefined) conv.ip = row.ip;
+  if (row.port !== undefined) conv.port = row.port;
+  publishLog(conv.peer);
+  return conv;
+}
+
+// A new hash is not a dial address: only known hash sessions can be opened.
+function peerFor({ address, user_hash: hash, ip, port }) {
+  const conv = findConv({ address, hash, ip, port });
+  return conv ? conv.peer : (ip && port ? hash || ip + ":" + port : "");
+}
+
 // Adopt conversations any client opened and drop ones the daemon no longer
 // holds. Transcripts load lazily on activation, not here.
 async function adopt() {
@@ -156,9 +191,13 @@ async function adopt() {
   try { list = (await api.get("chats")).chats || []; }
   catch (e) { noteError(e); return; }
   let added = false;
+  const reload = [];
   for (const s of list) {
-    const cur = convs.get(s.address);
+    const ambiguousRoute = s.ip && list.filter((x) => x.ip === s.ip && x.port === s.port).length > 1;
+    const cur = findConv(ambiguousRoute ? { address: s.address, hash: s.hash } : s);
     if (cur) {
+      if (cur.peer !== (s.hash || s.address) || cur.address !== s.address) added = true;
+      adoptKey(cur, s);
       cur.known = true;
       const name = betterName(cur, s.name);
       if (name !== cur.name) { cur.name = name; added = true; }
@@ -168,26 +207,28 @@ async function adopt() {
       if (fEcid !== cur.friendEcid) { cur.friendEcid = fEcid; added = true; }
       const onl = cEcid !== 0;
       if (onl !== cur.online) { cur.online = onl; added = true; }
-      if (cur.loaded && s.last_message_id > cur.lastMsgId) loadMessages(s.address);
+      if (cur.loaded && s.last_message_id > cur.lastMsgId) reload.push(cur.peer);
       continue;
     }
     const conv = newConv({
-      peer: s.address, ip: s.ip, port: s.port, name: s.name,
+      peer: s.address, hash: s.hash, ip: s.ip, port: s.port, name: s.name,
       clientEcid: s.client_ecid || 0, friendEcid: s.friend_ecid || 0,
       online: (s.client_ecid || 0) !== 0,
     });
     conv.known = true;
-    convs.set(s.address, conv);
+    convs.set(conv.peer, conv);
     added = true;
   }
   // Absent = closed elsewhere or evicted by the daemon's cap. Skip local-only
   // ones, not listed yet by definition.
   for (const peer of Array.from(convs.keys())) {
     const conv = convs.get(peer);
-    if (conv && conv.known && !list.some((s) => s.address === peer)) { drop(peer, false); added = true; }
+    if (conv && conv.known && !list.some((s) => (s.hash || s.address) === peer)) { drop(peer, false); added = true; }
   }
+  // Resolve request targets only after all shared routes have been adopted.
+  for (const peer of reload) loadMessages(peer);
   // The daemon lists most-recently-active first.
-  if (!activePeer && list.length) { setActive(list[0].address); return; }
+  if (!activePeer && list.length) { setActive(list[0].hash || list[0].address); return; }
   if (added) publishTabs();
 }
 
@@ -206,12 +247,14 @@ function setActive(peer, read = true) {
 }
 
 // Select or create a conversation without sending — from the friend list / Clients.
-function open({ peer, ip, port, name, friendEcid = 0, clientEcid = 0 }) {
-  const conv = convs.get(peer);
+function open({ peer, hash, ip, port, name, friendEcid = 0, clientEcid = 0 }) {
+  const conv = findConv({ address: peer, hash, ip, port });
+  peer = conv ? conv.peer : (ip && port ? hash || ip + ":" + port : "");
+  if (!peer) return "";
   if (!conv) {
     // A passed clientEcid is a live linked client, so it is online right away;
     // the daemon's session reconciliation takes over once a message goes out.
-    convs.set(peer, newConv({ peer, ip, port, name, friendEcid, clientEcid, online: !!clientEcid }));
+    convs.set(peer, newConv({ peer, address: ip && port ? ip + ":" + port : peer, hash, ip, port, name, friendEcid, clientEcid, online: !!clientEcid }));
   } else {
     // The caller's links/name may be fresher than the listing.
     if (name) conv.name = name;
@@ -244,17 +287,18 @@ function onMessage(p) {
   if (!p || p === lastMessage) return;
   lastMessage = p;
   if (!p.address || !p.message) return;
-  let conv = convs.get(p.address);
+  let conv = findConv(p);
+  if (conv) adoptKey(conv, p);
   if (!conv) {
     // No "conversation started" event; the first message implies a new one.
     conv = newConv({
-      peer: p.address, ip: p.ip, port: p.port, name: p.name,
+      peer: p.address, hash: p.hash, ip: p.ip, port: p.port, name: p.name,
       clientEcid: p.client_ecid || 0, friendEcid: p.friend_ecid || 0,
       // No reachability here: chat_message carries address/ip/port/name/
       // client_ecid/friend_ecid/message and nothing else. Defaults to false
       // until GET /chats or a friend_updated says otherwise.
     });
-    convs.set(p.address, conv);
+    convs.set(conv.peer, conv);
   } else {
     conv.name = betterName(conv, p.name);
     conv.clientEcid = p.client_ecid || 0;
@@ -267,20 +311,22 @@ function onMessage(p) {
   const seen = conv.messages.has(p.message.id);
   addMessage(conv, p.message);
   // Not unread: our own outbound line, or an id already held (a send's echo).
-  if (!seen && p.message.direction === "in" && (!pageVisible() || p.address !== activePeer)) {
+  if (!seen && p.message.direction === "in" && (!pageVisible() || conv.peer !== activePeer)) {
     conv.unread++;
   }
   // The strip must always have one selected; off-page, don't clear its unread.
-  if (!activePeer) { setActive(p.address, pageVisible()); return; }
+  if (!activePeer) { setActive(conv.peer, pageVisible()); return; }
   publishTabsSoon();
-  publishLogSoon(p.address);
+  publishLogSoon(conv.peer);
 }
 
 function onClosed(p) {
   if (!p || p === lastClosed) return;
   lastClosed = p;
   // Closing is global — any client can do it.
-  if (p.address) drop(p.address, p.address === activePeer);
+  // A closure can retire a route without closing the hash identity. Reconcile
+  // first so its transcript and selection survive even a message-free move.
+  if (p.address) adopt();
 }
 
 function onResync(v) {
@@ -370,6 +416,7 @@ export const chats = {
 
   setActive,
   open,
+  peerFor,
   adopt,
 
   // Opening the Messages page marks the visible conversation read.
@@ -384,7 +431,9 @@ export const chats = {
     const conv = convs.get(peer);
     if (!conv || !text) return;
     try {
-      const r = await api.post("chats/" + peer + "/messages", { text });
+      const r = await api.post("chats/" + conv.address + "/messages", { text });
+      adoptKey(conv, r || {});
+      peer = conv.peer;
       conv.known = true; // the core creates the conversation on this call
       const m = (r || {}).message;
       if (m) {
@@ -405,7 +454,7 @@ export const chats = {
     const conv = convs.get(peer);
     // One the daemon never had is ours alone to forget.
     if (conv && !conv.known) { drop(peer, false); return; }
-    try { await api.del("chats/" + peer); }
+    try { await api.del("chats/" + (conv ? conv.address : peer)); }
     catch (e) {
       if (!e || e.status !== 404) { toast(terr(noteError(e)) || t("messages_error"), "error"); return; }
     }

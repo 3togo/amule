@@ -3169,7 +3169,7 @@ Clients whose country could not be resolved — GeoIP disabled, unsupported by t
 
 Conversations with clients, backed by the chat session store in `amuled`. The store is shared: a message sent from the desktop GUI, from amulegui or through this API lands in the same transcript, and every client sees the same conversation.
 
-A conversation is keyed on `{address}` = `"<ip>:<port>"` (for example `203.0.113.42:4662`). That is the readable form of the internal id the EC wire already uses, it is stable across client reconnects — unlike an ECID — and it needs no identifier of its own. A `{address}` that is not four dotted octets plus a port is a `400`.
+`address` remains the current IPv4 route `"<ip>:<port>"` whenever available (for example `203.0.113.42:4662`), including on hash-capable daemons. It is the lowercase MD4 hash when there is no IPv4 route, or when another conversation holds the same route, so `address` is always unique. The separate nullable `hash` is the stable conversation identity: use it for UI tabs and use `address` for API requests. Route changes preserve history and emit `chat_session_closed` for the old address; re-fetch the list to reconcile the identity. Learning a hash at the same route does not close it. Hash URLs remain accepted for known sessions; route URLs resolve only when unambiguous. A malformed hash or IPv4 route is a `400`. Distinct hashes sharing an endpoint remain distinct conversations.
 
 The store is **in memory**: an `amuled` restart empties every conversation, exactly as the desktop's own transcript dies with its notebook tab. Retention is bounded at 200 messages per conversation and 50 conversations, evicting the least recently active first.
 
@@ -3190,8 +3190,9 @@ curl -s -H "Authorization: Bearer $TOKEN" "http://$HOST/api/v1/chats"
   "chats": [
     {
       "address":            "203.0.113.42:4662",
-      "ip":              "203.0.113.42",
-      "port":            4662,
+      "hash":               "0123456789abcdef0123456789abcdef",
+      "ip":                 "203.0.113.42",
+      "port":               4662,
       "name":            "alice",
       "client_ecid":     4382,
       "friend_ecid":     12,
@@ -3206,7 +3207,7 @@ curl -s -H "Authorization: Bearer $TOKEN" "http://$HOST/api/v1/chats"
 }
 ```
 
-`name` falls back to `"IP: <ip> Port: <port>"` when the core has no nickname for the client, matching what the desktop shows; the same string appears in the SSE payload. `client_ecid` is `null` when the client is offline and `friend_ecid` is `null` when the client is not a friend — join either against [`GET /clients`](#get-apiv1clients) and [`GET /friends`](#get-apiv1friends). `connected` says whether a connection to the peer is actually up, which is not the same as `client_ecid` being non-null: the daemon holds a client object from the first contact attempt, so a conversation opened against an unreachable address has an ecid and is not online. `null` means the daemon does not report peer connectivity.
+`name` falls back to the uppercase hash when known, otherwise `"IP: <ip> Port: <port>"`, matching desktop `ChatPeerFallbackName`. The same string appears in the SSE payload. `client_ecid` is `null` when the client is offline and `friend_ecid` is `null` when the client is not a friend — join either against [`GET /clients`](#get-apiv1clients) and [`GET /friends`](#get-apiv1friends). `connected` says whether a connection to the peer is actually up, which is not the same as `client_ecid` being non-null: the daemon holds a client object from the first contact attempt, so a conversation opened against an unreachable address has an ecid and is not online. `null` means the daemon does not report peer connectivity.
 
 `last_message` is `null` for a conversation that holds none; the key is always present. The full transcript is deliberately **not** on the list: 50 conversations at 200 messages each would be 10 000 objects per read. Use the messages endpoint below.
 
@@ -3223,6 +3224,7 @@ Served from the refresher snapshot — no EC roundtrip per request. Standard [li
 ```json
 {
   "address": "203.0.113.42:4662",
+  "hash": "0123456789abcdef0123456789abcdef",
   "messages": [
     { "id": 90, "direction": "out", "text": "hi",      "sent_at": 1786652700 },
     { "id": 91, "direction": "in",  "text": "thanks!", "sent_at": 1786652714 }
@@ -3248,15 +3250,15 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/
 ```
 
 ```json
-{ "address": "203.0.113.42:4662",
+{ "address": "203.0.113.42:4662", "hash": null,
   "message": { "id": 92, "direction": "out", "text": "hello", "sent_at": null } }
 ```
 
 The created message stays in the body because the store-assigned `id` is only readable here. It is the same object shape [`GET /chats/{address}/messages`](#get-apiv1chatsaddressmessages) returns, emitted by the same writer, with one difference: `sent_at` is **`null`**, because `EC_OP_CHAT_SEND` answers with the message id and no timestamp. Read the timestamp back from [`GET /chats`](#get-apiv1chats) (as `last_message`), from the per-conversation messages endpoint, or from the `chat_message` SSE event.
 
-The core creates the conversation if it does not exist, so this doubles as "start a chat with this address" — an unknown `{address}` is not a `404` here.
+A legacy route key can create the conversation if it does not exist, so this doubles as "start a chat with this address". An unknown hash key cannot be dialed without a route and returns `404`; use the route from a chat row or friend record when starting a new legacy conversation.
 
-This is the only way to send: a conversation is addressed by `ip:port`, never by ECID. The address is already on the rows a caller holds — [`GET /friends`](#get-apiv1friends) and [`GET /clients`](#get-apiv1clients) both carry `ip` and `port` — and the core opens the session for an address it has never seen, so an ECID-keyed form would only save a lookup. Browsing is the other way round for a real reason: [`POST /friends/{ecid}/shared_files`](#post-apiv1friendsecidshared_files) reaches an offline friend through an address only the daemon holds, which no caller can supply.
+The hash is the identity used for capable daemons. When a hash row also has an IPv4 route, the API sends that route as a dial hint; it is not used as the conversation key.
 
 Returns `202 Accepted`, not `200`: the core acknowledges that it queued the message on the client connection, not that the client received it. An unreachable client is not an error — the desktop behaves the same, optimistically showing `*** Connecting to Client ***`.
 
@@ -3266,7 +3268,7 @@ Returns `202 Accepted`, not `200`: the core acknowledges that it queued the mess
 
 **Auth:** `ADMIN`
 
-Closes the conversation: drops it from the core store and resets the client's chat state.
+Closes the conversation: drops it from the core store and resets the client's chat state. A legacy route can be closed immediately after POST, even before the refresher has listed it: unmatched route keys are sent to the daemon directly. Hash keys require a known snapshot session. Hash-addressed mutations require negotiated daemon support; otherwise they answer `503 ec_unsupported`.
 
 **Response:** `204 No Content`.
 
