@@ -85,6 +85,7 @@ public:
 	// Stored on the page so closing it discards the request and rekeying a
 	// remote placeholder keeps it. Restored/discovered tabs have no request.
 	void SetSearchRequest(const CSearchRequest &request) { m_searchRequest = request; }
+	void ClearSearchRequest() { m_searchRequest.reset(); }
 	bool CanReuseSearch(const CSearchRequest &request, uint32_t progress) const
 	{
 		return !IsBrowse() && m_searchRequest && m_searchRequest->CanReuse(request, progress);

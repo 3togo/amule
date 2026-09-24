@@ -582,6 +582,9 @@ void CSearchDlg::OnSearchTypeChanged(wxCommandEvent &WXUNUSED(evt))
 
 void CSearchDlg::ResetResultViews()
 {
+	// A restarted daemon restores results, not the running searches behind them.
+	// Discard the previous session's progress before its first new poll arrives.
+	m_searchProgress.clear();
 	for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
 		CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
 		if (page == nullptr) {
@@ -589,6 +592,7 @@ void CSearchDlg::ResetResultViews()
 		}
 		// Re-show the id the tab already has: same tab, same search, but the model reloads from
 		// the index rather than keeping items that no longer point at anything.
+		page->ClearSearchRequest();
 		page->ShowResults(page->GetSearchId());
 	}
 }
@@ -1242,6 +1246,12 @@ void CSearchDlg::OnBnClickedStop(wxCommandEvent &WXUNUSED(evt))
 	// the visible tab's own id.
 	wxUIntPtr sid = GetVisibleSearchId();
 	if (sid) {
+		// Remote progress may still say "running" until the STOP is processed.
+		// Clear the request permanently so even a delayed progress reply cannot
+		// make this stopped tab absorb the user's next identical search.
+		if (CSearchListCtrl *page = GetSearchList(sid)) {
+			page->ClearSearchRequest();
+		}
 		theApp->searchlist->StopSearchById(sid);
 	} else {
 		theApp->searchlist->StopSearch();
