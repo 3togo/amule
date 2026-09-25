@@ -9349,18 +9349,18 @@ msgstr "Suprimeix permanentment %APPDATA%\\aMule de l'usuari actual (aMule.conf,
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule appears to be running from $INSTDIR.\r\n"
+"aMule appears to be running from $INSTDIR.\n"
 "Please close aMule (and aMuleD / aMuleGUI) and try again."
 msgstr ""
-"Sembla que l'aMule s'està executant des de $INSTDIR.\r\n"
+"Sembla que l'aMule s'està executant des de $INSTDIR.\n"
 "Tanqueu l'aMule (i l'aMuleD / aMuleGUI) i torneu-ho a provar."
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\n"
+"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\n"
 "Please stop it and try again."
 msgstr ""
-"Sembla que el dimoni de l'aMule (amuled.exe) s'està executant des de $INSTDIR.\r\n"
+"Sembla que el dimoni de l'aMule (amuled.exe) s'està executant des de $INSTDIR.\n"
 "Atureu-lo i torneu-ho a provar."
 
 #: packaging/windows/installer_strings.c
@@ -9369,10 +9369,10 @@ msgstr "S'està eliminant la instal·lació anterior de l'aMule a $0..."
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"Could not remove the previous aMule installation at $0.\r\n"
+"Could not remove the previous aMule installation at $0.\n"
 "Please close any running aMule processes and try again, or uninstall the previous version manually first."
 msgstr ""
-"No s'ha pogut eliminar la instal·lació anterior de l'aMule a $0.\r\n"
+"No s'ha pogut eliminar la instal·lació anterior de l'aMule a $0.\n"
 "Tanqueu qualsevol procés de l'aMule que s'estigui executant i torneu-ho a provar, o desinstal·leu primer la versió anterior manualment."
 
 #: packaging/windows/installer_strings.c

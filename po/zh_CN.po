@@ -9340,7 +9340,7 @@ msgstr "永久删除当前用户的 %APPDATA%\\aMule 目录（包含 aMule.conf 
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule appears to be running from $INSTDIR.\r\n"
+"aMule appears to be running from $INSTDIR.\n"
 "Please close aMule (and aMuleD / aMuleGUI) and try again."
 msgstr ""
 "aMule 似乎正从 $INSTDIR 目录运行。\n"
@@ -9348,7 +9348,7 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\n"
+"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\n"
 "Please stop it and try again."
 msgstr ""
 "aMule守护进程（amuled.exe）似乎正从 $INSTDIR目录运行。\n"
@@ -9360,7 +9360,7 @@ msgstr "正在删除之前 $0 位置的 aMule 安装…"
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"Could not remove the previous aMule installation at $0.\r\n"
+"Could not remove the previous aMule installation at $0.\n"
 "Please close any running aMule processes and try again, or uninstall the previous version manually first."
 msgstr ""
 "无法删除之前在 $0 处安装的 aMule。\n"

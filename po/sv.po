@@ -9349,18 +9349,18 @@ msgstr "Ta bort %APPDATA%\\aMule permanent för den aktuella användaren (aMule.
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule appears to be running from $INSTDIR.\r\n"
+"aMule appears to be running from $INSTDIR.\n"
 "Please close aMule (and aMuleD / aMuleGUI) and try again."
 msgstr ""
-"aMule verkar köras från $INSTDIR.\r\n"
+"aMule verkar köras från $INSTDIR.\n"
 "Stäng aMule (och aMuleD/aMuleGUI) och försök igen."
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\n"
+"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\n"
 "Please stop it and try again."
 msgstr ""
-"aMule-demonen (amuled.exe) verkar köras från $INSTDIR.\r\n"
+"aMule-demonen (amuled.exe) verkar köras från $INSTDIR.\n"
 "Stoppa den och försök igen."
 
 #: packaging/windows/installer_strings.c
@@ -9369,10 +9369,10 @@ msgstr "Tar bort föregående aMule-installation vid $0..."
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"Could not remove the previous aMule installation at $0.\r\n"
+"Could not remove the previous aMule installation at $0.\n"
 "Please close any running aMule processes and try again, or uninstall the previous version manually first."
 msgstr ""
-"Kunde inte ta bort föregående aMule-installation vid $0.\r\n"
+"Kunde inte ta bort föregående aMule-installation vid $0.\n"
 "Stäng alla aMule-processer som körs och försök igen, eller avinstallera den föregående versionen manuellt först."
 
 #: packaging/windows/installer_strings.c

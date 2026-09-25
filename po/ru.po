@@ -9432,7 +9432,7 @@ msgstr "Безвозвратно удалить %APPDATA%\\aMule для теку
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule appears to be running from $INSTDIR.\r\n"
+"aMule appears to be running from $INSTDIR.\n"
 "Please close aMule (and aMuleD / aMuleGUI) and try again."
 msgstr ""
 "Похоже, что aMule запущен из $INSTDIR.\n"
@@ -9440,7 +9440,7 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\n"
+"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\n"
 "Please stop it and try again."
 msgstr ""
 "Похоже, что демон aMule (amuled.exe) запущен из $INSTDIR.\n"
@@ -9452,7 +9452,7 @@ msgstr "Удаление предыдущей установки aMule в $0…"
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"Could not remove the previous aMule installation at $0.\r\n"
+"Could not remove the previous aMule installation at $0.\n"
 "Please close any running aMule processes and try again, or uninstall the previous version manually first."
 msgstr ""
 "Не удалось удалить предыдущую установку aMule в $0.\n"

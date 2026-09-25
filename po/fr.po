@@ -9353,18 +9353,18 @@ msgstr "Effacer de manière permanente %APPDATA%\\aMule pour l'utilisateur actue
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule appears to be running from $INSTDIR.\r\n"
+"aMule appears to be running from $INSTDIR.\n"
 "Please close aMule (and aMuleD / aMuleGUI) and try again."
 msgstr ""
-"aMule semble être en cours d'exécution depuis $INSTDIR.\r\n"
+"aMule semble être en cours d'exécution depuis $INSTDIR.\n"
 "Veuillez fermer aMule (et aMuleD / aMuleGUI) et réessayer."
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\n"
+"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\n"
 "Please stop it and try again."
 msgstr ""
-"Le démon aMule (amuled.exe) semble être en cours d'exécution depuis $INSTDIR.\r\n"
+"Le démon aMule (amuled.exe) semble être en cours d'exécution depuis $INSTDIR.\n"
 "Veuillez le fermer et réessayer."
 
 #: packaging/windows/installer_strings.c
@@ -9373,10 +9373,10 @@ msgstr "Suppression de l'installation précédente d'aMule sur $0…"
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"Could not remove the previous aMule installation at $0.\r\n"
+"Could not remove the previous aMule installation at $0.\n"
 "Please close any running aMule processes and try again, or uninstall the previous version manually first."
 msgstr ""
-"Échec de la suppression de l'installation précédente d'aMule sur $0.\r\n"
+"Échec de la suppression de l'installation précédente d'aMule sur $0.\n"
 "Veuillez fermer tous les processus aMule en cours d'exécution et réessayer, ou désinstallez d'abord manuellement la version précédente."
 
 #: packaging/windows/installer_strings.c

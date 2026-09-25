@@ -9348,7 +9348,7 @@ msgstr "Verwijder %APPDATA%\\aMule voor de huidige gebruiker permanent (aMule.co
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule appears to be running from $INSTDIR.\r\n"
+"aMule appears to be running from $INSTDIR.\n"
 "Please close aMule (and aMuleD / aMuleGUI) and try again."
 msgstr ""
 "aMule lijkt te worden uitgevoerd vanuit $INSTDIR.\n"
@@ -9356,7 +9356,7 @@ msgstr ""
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\n"
+"aMule daemon (amuled.exe) appears to be running from $INSTDIR.\n"
 "Please stop it and try again."
 msgstr ""
 "De aMule-daemon (amuled.exe) lijkt te worden uitgevoerd vanuit $INSTDIR.\n"
@@ -9368,7 +9368,7 @@ msgstr "Vorige aMule-installatie op $0 wordt verwijderd..."
 
 #: packaging/windows/installer_strings.c
 msgid ""
-"Could not remove the previous aMule installation at $0.\r\n"
+"Could not remove the previous aMule installation at $0.\n"
 "Please close any running aMule processes and try again, or uninstall the previous version manually first."
 msgstr ""
 "Kon de vorige aMule-installatie op $0 niet verwijderen.\n"

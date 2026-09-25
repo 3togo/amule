@@ -27,7 +27,7 @@ applies).
 Standard C escapes in the .po msgstr are translated to NSIS string-
 literal escapes:
     \\r -> $\\r        (NSIS CR)
-    \\n -> $\\n        (NSIS LF)
+    \\n -> $\\r$\\n    (NSIS CRLF; existing CRLF stays CRLF)
     \\t -> $\\t        (NSIS TAB)
     "  -> $\\"        (NSIS escaped double-quote)
     \\  -> $\\\\        (NSIS escape character)
@@ -148,13 +148,13 @@ KEYS = [
     ("MYSTR_DESC_REMOVE_USERDATA",
         "Permanently delete %APPDATA%\\aMule for the current user (aMule.conf, ED2K server list, Kad nodes, partfiles, IP filters, friends list). Leave unchecked to keep your settings."),
     ("MYSTR_MSG_AMULE_RUNNING",
-        "aMule appears to be running from $INSTDIR.\r\nPlease close aMule (and aMuleD / aMuleGUI) and try again."),
+        "aMule appears to be running from $INSTDIR.\nPlease close aMule (and aMuleD / aMuleGUI) and try again."),
     ("MYSTR_MSG_AMULED_RUNNING",
-        "aMule daemon (amuled.exe) appears to be running from $INSTDIR.\r\nPlease stop it and try again."),
+        "aMule daemon (amuled.exe) appears to be running from $INSTDIR.\nPlease stop it and try again."),
     ("MYSTR_MSG_REMOVING_PRIOR",
         "Removing previous aMule installation at $0..."),
     ("MYSTR_MSG_PRIOR_FAILED",
-        "Could not remove the previous aMule installation at $0.\r\nPlease close any running aMule processes and try again, or uninstall the previous version manually first."),
+        "Could not remove the previous aMule installation at $0.\nPlease close any running aMule processes and try again, or uninstall the previous version manually first."),
     ("MYSTR_MSG_RUNNING_FOR_UNINST",
         "aMule appears to be running. Please close it and re-run the uninstaller."),
     ("MYSTR_MSG_REMOVING_USERDATA",
@@ -238,12 +238,14 @@ def nsis_quote_body(s):
     NSIS runtime variables ($INSTDIR, $0, $APPDATA, ...) and language-
     string refs ($(MYSTR_X)) are passed through verbatim; NSIS
     evaluates them at install time."""
+    # Catalogs use LF; accept existing CRLF translations without doubling CR.
+    s = s.replace("\r\n", "\n")
     out = []
     for c in s:
         if c == "\r":
             out.append("$\\r")
         elif c == "\n":
-            out.append("$\\n")
+            out.append("$\\r$\\n")
         elif c == "\t":
             out.append("$\\t")
         elif c == '"':
