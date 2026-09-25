@@ -86,9 +86,9 @@ public:
 	// remote placeholder keeps it. Restored/discovered tabs have no request.
 	void SetSearchRequest(const CSearchRequest &request) { m_searchRequest = request; }
 	void ClearSearchRequest() { m_searchRequest.reset(); }
-	bool CanReuseSearch(const CSearchRequest &request, uint32_t progress) const
+	const CSearchRequest *GetSearchRequest() const
 	{
-		return !IsBrowse() && m_searchRequest && m_searchRequest->CanReuse(request, progress);
+		return m_searchRequest ? &*m_searchRequest : nullptr;
 	}
 
 	/// Re-key this control's search ID: the multi-search remote GUI remaps an optimistically-

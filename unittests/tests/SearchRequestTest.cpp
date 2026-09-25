@@ -39,7 +39,8 @@ TEST(SearchRequest, OnlyRunningRequestsAreReused)
 	ASSERT_TRUE(request.CanReuse(request, 100));
 	ASSERT_TRUE(!request.CanReuse(request, 0xffff));
 	ASSERT_TRUE(!request.CanReuse(request, 0xfffe));
-	ASSERT_TRUE(!request.CanReuse(request, 0xffffffff));
+	// Progress and reuse share the protocol's two terminal sentinels.
+	ASSERT_TRUE(request.CanReuse(request, 101));
 }
 
 TEST(SearchRequest, EverySubmittedFilterDistinguishesRequests)
@@ -99,4 +100,76 @@ TEST(SearchRequest, RequestOwnsItsValuesAndPreservesQuerySyntax)
 	// The Kad keyword is derived by the core after submission, not another filter.
 	params.strKeyword = "ubuntu";
 	ASSERT_TRUE(submitted.CanReuse(CSearchRequest(KadSearch, params), 0));
+}
+
+TEST(SearchRequest, FindsMatchingPageAmongFinishedAndForeignTabs)
+{
+	CSearchList::CSearchParams params;
+	params.searchString = "ubuntu";
+	const CSearchRequest request(GlobalSearch, params);
+	const CSearchRequest other(KadSearch, params);
+	const std::vector<CSearchReuseCandidate> pages{
+		{ nullptr, 10 }, // Externally discovered search: no submitted filters.
+		{ &request, 0xffff },
+		{ &other, 25 },
+		{ &request, 45 },
+		{ &request, 60 }
+	};
+	ASSERT_EQUALS(size_t(3), FindReusableSearch(pages, request));
+	ASSERT_EQUALS(size_t(2), FindReusableSearch(pages, other));
+	ASSERT_EQUALS(size_t(0), FindReusableSearch({}, request));
+}
+
+TEST(SearchRequest, PendingSubmissionIsReusableBeforeFirstProgress)
+{
+	CSearchList::CSearchParams params;
+	params.searchString = "ubuntu";
+	for (const auto type : { LocalSearch, GlobalSearch, KadSearch }) {
+		const CSearchRequest request(type, params);
+		std::vector<CSearchReuseCandidate> pages{ { nullptr,
+								  std::nullopt }, // Restored or browse page.
+			{ &request, std::nullopt } };
+		ASSERT_EQUALS(size_t(1), FindReusableSearch(pages, request));
+		// Rekeying the page does not change its owned request; progress can follow later.
+		pages[1].progress = 0;
+		ASSERT_EQUALS(size_t(1), FindReusableSearch(pages, request));
+		pages[1].progress = 100;
+		ASSERT_EQUALS(size_t(1), FindReusableSearch(pages, request));
+		for (const uint32_t terminal : { 0xffffu, 0xfffeu }) {
+			pages[1].progress = terminal;
+			ASSERT_EQUALS(pages.size(), FindReusableSearch(pages, request));
+		}
+	}
+}
+
+TEST(SearchRequest, InvalidatedRequestCannotBeRevivedByDelayedProgress)
+{
+	CSearchList::CSearchParams params;
+	params.searchString = "ubuntu";
+	const CSearchRequest request(GlobalSearch, params);
+	std::vector<CSearchReuseCandidate> pages{ { &request, 35 } };
+	ASSERT_EQUALS(size_t(0), FindReusableSearch(pages, request));
+	// Explicit or implicit stop clears the request before the next daemon poll.
+	pages[0].request = nullptr;
+	pages[0].progress = 40;
+	ASSERT_EQUALS(pages.size(), FindReusableSearch(pages, request));
+	// A daemon restart also drops progress; it must not turn a restored tab into pending work.
+	pages[0].progress.reset();
+	ASSERT_EQUALS(pages.size(), FindReusableSearch(pages, request));
+	// Rejection and close remove the candidate entirely.
+	pages.clear();
+	ASSERT_EQUALS(pages.size(), FindReusableSearch(pages, request));
+}
+
+TEST(SearchRequest, PendingRequestStillRequiresEveryFilterToMatch)
+{
+	CSearchList::CSearchParams params;
+	params.searchString = "ubuntu";
+	params.extension = "iso";
+	const CSearchRequest submitted(GlobalSearch, params);
+	const std::vector<CSearchReuseCandidate> pages{ { &submitted, std::nullopt } };
+	params.extension = "zip";
+	ASSERT_EQUALS(pages.size(), FindReusableSearch(pages, CSearchRequest(GlobalSearch, params)));
+	params.extension = "iso";
+	ASSERT_EQUALS(pages.size(), FindReusableSearch(pages, CSearchRequest(KadSearch, params)));
 }

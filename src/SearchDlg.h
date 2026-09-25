@@ -32,6 +32,8 @@
 
 class wxStaticLine;
 
+#include "SearchList.h" // Needed for CSearchParams
+
 #include "Types.h" // Needed for uint16 and uint32
 
 #include <map>        // Needed for std::map (per-tab progress cache)
@@ -216,6 +218,7 @@ public:
 #endif
 
 	void StartNewSearch();
+	void StopSearchForNewRequest();
 
 	void FixSearchTypes();
 
@@ -225,6 +228,10 @@ public:
 	int GetSelectedSearchTypeCanonical();
 
 private:
+	CSearchList::CSearchParams ReadSearchParams(bool showWarning);
+	bool TryReuseSearch(const CSearchList::CSearchParams &params);
+	void ClearSearchRequests(bool ed2kOnly);
+
 	// Event handlers
 	void OnFieldChanged(wxEvent &evt);
 

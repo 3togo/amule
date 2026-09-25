@@ -6766,10 +6766,6 @@ msgid "Search error"
 msgstr "Bilaketak"
 
 #: src/SearchDlg.cpp
-msgid "Min size must be smaller than max size. Max size ignored."
-msgstr "Gutxienezko tamaina gehienezkoa baino txikiagoa izan behar da. Gehienezkoa alde batetara utziko da."
-
-#: src/SearchDlg.cpp
 msgid ""
 "An eD2k search is still running. Starting a new one will stop it, because the eD2k protocol allows only one search at a time.\n"
 "\n"
@@ -6782,6 +6778,10 @@ msgstr ""
 #, fuzzy
 msgid "Search in progress"
 msgstr "Bilaketa aurrerapena: %u %% \n"
+
+#: src/SearchDlg.cpp
+msgid "Min size must be smaller than max size. Max size ignored."
+msgstr "Gutxienezko tamaina gehienezkoa baino txikiagoa izan behar da. Gehienezkoa alde batetara utziko da."
 
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
 msgid "Main"

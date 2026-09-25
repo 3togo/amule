@@ -958,7 +958,7 @@ void CSearchListCtrl::OnRelatedSearch(wxCommandEvent &WXUNUSED(event))
 	if (thePrefs::GetNetworkED2K() && theApp->serverconnect->GetCurrentServer() != NULL &&
 		theApp->serverconnect->GetCurrentServer()->GetRelatedSearchSupport()) {
 
-		theApp->searchlist->StopSearch(true);
+		theApp->amuledlg->m_searchwnd->StopSearchForNewRequest();
 		theApp->amuledlg->m_searchwnd->ResetControls();
 		wxString keyword("related");
 		for (const CSearchFile *file : files) {

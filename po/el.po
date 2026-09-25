@@ -6802,10 +6802,6 @@ msgid "Search error"
 msgstr "Αναζητήσεις"
 
 #: src/SearchDlg.cpp
-msgid "Min size must be smaller than max size. Max size ignored."
-msgstr "Το ελάχιστο μέγεθος πρέπει να είναι μικρότερο από το μέγιστο. Το μέγιστο μέγεθος θα αγνοηθεί."
-
-#: src/SearchDlg.cpp
 msgid ""
 "An eD2k search is still running. Starting a new one will stop it, because the eD2k protocol allows only one search at a time.\n"
 "\n"
@@ -6818,6 +6814,10 @@ msgstr ""
 #, fuzzy
 msgid "Search in progress"
 msgstr "Σε εξέλιξη"
+
+#: src/SearchDlg.cpp
+msgid "Min size must be smaller than max size. Max size ignored."
+msgstr "Το ελάχιστο μέγεθος πρέπει να είναι μικρότερο από το μέγιστο. Το μέγιστο μέγεθος θα αγνοηθεί."
 
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
 msgid "Main"

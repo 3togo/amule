@@ -6703,10 +6703,6 @@ msgid "Search error"
 msgstr "Arama hatası"
 
 #: src/SearchDlg.cpp
-msgid "Min size must be smaller than max size. Max size ignored."
-msgstr "En küçük boyut, en büyük boyuttan küçük olmalıdır. En büyük boyut göz ardı ediliyor."
-
-#: src/SearchDlg.cpp
 msgid ""
 "An eD2k search is still running. Starting a new one will stop it, because the eD2k protocol allows only one search at a time.\n"
 "\n"
@@ -6723,6 +6719,10 @@ msgstr ""
 #: src/SearchDlg.cpp
 msgid "Search in progress"
 msgstr "Arama devam ediyor"
+
+#: src/SearchDlg.cpp
+msgid "Min size must be smaller than max size. Max size ignored."
+msgstr "En küçük boyut, en büyük boyuttan küçük olmalıdır. En büyük boyut göz ardı ediliyor."
 
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
 msgid "Main"

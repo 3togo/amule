@@ -27,6 +27,13 @@
 
 #include <wx/string.h>
 #include <cstdint>
+#include <optional>
+#include <vector>
+
+inline bool IsRunningSearchStatus(uint32_t status)
+{
+	return status != 0xffff && status != 0xfffe;
+}
 
 // The submitted request, independent of the result label and the search ID.
 // Keep exact text: merging requests with different spelling or Boolean syntax
@@ -46,14 +53,15 @@ public:
 	{
 	}
 
+	int GetType() const { return m_type; }
+
 	bool CanReuse(const CSearchRequest &other, uint32_t progress) const
 	{
-		// Only a reported running search is reusable. The eD2k/Kad terminal
-		// sentinels (0xffff/0xfffe) must allow a fresh request.
-		return progress <= 100 && m_type == other.m_type && m_query == other.m_query &&
-		       m_fileType == other.m_fileType && m_extension == other.m_extension &&
-		       m_minSize == other.m_minSize && m_maxSize == other.m_maxSize &&
-		       m_availability == other.m_availability;
+		// The eD2k/Kad terminal sentinels must allow a fresh request.
+		return IsRunningSearchStatus(progress) && m_type == other.m_type &&
+		       m_query == other.m_query && m_fileType == other.m_fileType &&
+		       m_extension == other.m_extension && m_minSize == other.m_minSize &&
+		       m_maxSize == other.m_maxSize && m_availability == other.m_availability;
 	}
 
 private:
@@ -65,5 +73,24 @@ private:
 	uint64_t m_maxSize;
 	uint32_t m_availability;
 };
+
+// A null request denotes a restored/discovered/browse tab or a locally stopped search.
+// Missing progress is pending only when this session submitted the request.
+struct CSearchReuseCandidate
+{
+	const CSearchRequest *request = nullptr;
+	std::optional<uint32_t> progress;
+};
+
+inline size_t FindReusableSearch(
+	const std::vector<CSearchReuseCandidate> &pages, const CSearchRequest &request)
+{
+	for (size_t i = 0; i < pages.size(); ++i) {
+		if (pages[i].request && pages[i].request->CanReuse(request, pages[i].progress.value_or(0))) {
+			return i;
+		}
+	}
+	return pages.size();
+}
 
 #endif
