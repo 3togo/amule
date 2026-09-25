@@ -4,6 +4,7 @@
 #include <MemFile.h>
 #include <tags/FileTags.h>
 #include <math.h>
+#include <memory>
 
 #include "MD4Hash.h"
 #include "amule.h"
@@ -968,4 +969,62 @@ TEST_M(CTag, Ed2kBlob2, "Ed2k: Read/Write BLOB - string tagname")
 		CheckTagName("AA", &tag);
 		CheckTagValue(valid_tag_value(blob), &tag);
 	}
+}
+
+static void CheckSkippedTagCopy(uint8 type, bool assignment)
+{
+	CMemFile packet;
+	packet.WriteUInt8(type);
+	if (type == TAGTYPE_BOOL) {
+		packet.WriteUInt16(1);
+		packet.WriteUInt8(0xF0);
+		packet.WriteUInt8(1);
+	} else {
+		packet.WriteString("skipped", utf8strNone);
+		packet.WriteUInt16(8);
+		// Match the reader's existing (bits / 8) + 1 byte count.
+		packet.WriteUInt8(0x80);
+		packet.WriteUInt8(0);
+	}
+	packet.Seek(0, wxFromStart);
+	CTag original(packet, true);
+	ASSERT_EQUALS(packet.GetLength(), packet.GetPosition());
+	ASSERT_EQUALS(type, original.GetType());
+
+	std::unique_ptr<CTag> copy;
+	if (assignment) {
+		// Assignment must also release the destination's previous owned value.
+		copy = std::make_unique<CTagString>("previous", "owned string");
+		*copy = original;
+	} else {
+		copy = std::make_unique<CTag>(original);
+	}
+	ASSERT_EQUALS(original.GetType(), copy->GetType());
+	ASSERT_EQUALS(original.GetNameID(), copy->GetNameID());
+	ASSERT_EQUALS(original.GetName(), copy->GetName());
+
+	// Copying skipped metadata does not make its discarded payload serializable.
+	CMemFile output;
+	ASSERT_FALSE(copy->WriteTagToFile(&output));
+	ASSERT_EQUALS(uint64(0), output.GetLength());
+}
+
+TEST_M(CTag, CopyBool, "Copy parsed BOOL metadata")
+{
+	CheckSkippedTagCopy(TAGTYPE_BOOL, false);
+}
+
+TEST_M(CTag, CopyBoolArray, "Copy parsed BOOLARRAY metadata")
+{
+	CheckSkippedTagCopy(TAGTYPE_BOOLARRAY, false);
+}
+
+TEST_M(CTag, AssignBool, "Assign parsed BOOL metadata over an owned string")
+{
+	CheckSkippedTagCopy(TAGTYPE_BOOL, true);
+}
+
+TEST_M(CTag, AssignBoolArray, "Assign parsed BOOLARRAY metadata over an owned string")
+{
+	CheckSkippedTagCopy(TAGTYPE_BOOLARRAY, true);
 }

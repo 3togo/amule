@@ -73,6 +73,9 @@ CTag::CTag(const CTag &rTag)
 		m_nSize = rTag.GetBsobSize();
 		m_pData = new unsigned char[rTag.GetBsobSize()];
 		memcpy(m_pData, rTag.GetBsob(), rTag.GetBsobSize());
+	} else if (rTag.m_uType == TAGTYPE_BOOL || rTag.m_uType == TAGTYPE_BOOLARRAY) {
+		// The reader skips these payloads; only their type and name survive.
+		m_uVal = 0;
 	} else {
 		wxFAIL;
 		m_uVal = 0;
@@ -236,6 +239,9 @@ CTag &CTag::operator=(const CTag &rhs)
 			m_nSize = rhs.GetBsobSize();
 			m_pData = new unsigned char[rhs.GetBsobSize()];
 			memcpy(m_pData, rhs.GetBsob(), rhs.GetBsobSize());
+		} else if (rhs.m_uType == TAGTYPE_BOOL || rhs.m_uType == TAGTYPE_BOOLARRAY) {
+			// Match the copy constructor for payloads discarded by the reader.
+			m_uVal = 0;
 		} else {
 			wxFAIL;
 			m_uVal = 0;
