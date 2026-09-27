@@ -3564,6 +3564,13 @@ bool CSearchListRem::IsKadSearch(uint32_t searchID) const
 	return it != m_kadActive.end() && it->second;
 }
 
+bool CSearchListRem::HasKadComponent(uint32_t searchID) const
+{
+	// AllSearch contains a Kad component; the daemon reports it via the same m_kadActive
+	// flag (LIFECYCLE_KIND == AllSearch is treated the same as KadSearch for this gate).
+	return IsKadSearch(searchID);
+}
+
 bool CSearchListRem::RequestMoreResults(uint32_t searchID)
 {
 	if (searchID == 0) {
@@ -3706,7 +3713,8 @@ void CSearchListRem::ApplySearchProgress(const CECTag *src)
 				const CECTag *stateTag = src->GetTagByName(EC_TAG_SEARCH_LIFECYCLE_STATE);
 				if (kindTag && stateTag) {
 					m_kadActive[(uint32)idTag->GetInt()] =
-						(kindTag->GetInt() == KadSearch) &&
+						(kindTag->GetInt() == KadSearch ||
+							kindTag->GetInt() == AllSearch) &&
 						(stateTag->GetInt() == CSearchList::SEARCH_LIFECYCLE_RUNNING);
 				}
 				theApp->amuledlg->m_searchwnd->UpdateSearchProgress(

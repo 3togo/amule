@@ -705,6 +705,7 @@ public:
 	// progress reply. RequestMoreResults sends EC_OP_SEARCH_REQUEST_MORE so the daemon widens
 	// that Kad search.
 	bool IsKadSearch(uint32_t searchID) const;
+	bool HasKadComponent(uint32_t searchID) const;
 	bool RequestMoreResults(uint32_t searchID);
 
 	// template

@@ -1810,6 +1810,19 @@ target_include_directories (SearchRequestTest PRIVATE
 )
 target_link_libraries (SearchRequestTest muleunit mulecommon)
 
+# AllSearch type (issue #1542): enum/EC alignment and CSearchRequest reuse logic.
+add_executable (AllSearchTypeTest AllSearchTypeTest.cpp)
+add_test (NAME AllSearchTypeTest COMMAND AllSearchTypeTest)
+target_include_directories (AllSearchTypeTest PRIVATE
+	${CMAKE_BINARY_DIR}
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_SOURCE_DIR}/src/include
+	${CMAKE_SOURCE_DIR}/src/libs
+	${CMAKE_BINARY_DIR}/src/libs
+	${CMAKE_BINARY_DIR}/src/libs/ec/cpp
+)
+target_link_libraries (AllSearchTypeTest muleunit mulecommon ec)
+
 # Linux only: the Windows and macOS autostart backends write the user's own registry and
 # LaunchAgents; the XDG one follows $XDG_CONFIG_HOME into a scratch directory.
 if (UNIX AND NOT APPLE)

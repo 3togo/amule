@@ -2356,6 +2356,8 @@ static_assert(
 	static_cast<int>(KadSearch) == EC_SEARCH_KAD, "SearchType and EC_SEARCH_TYPE must agree: KadSearch");
 static_assert(static_cast<int>(BrowseSearch) == EC_SEARCH_BROWSE,
 	"SearchType and EC_SEARCH_TYPE must agree: BrowseSearch");
+static_assert(
+	static_cast<int>(AllSearch) == EC_SEARCH_ALL, "SearchType and EC_SEARCH_TYPE must agree: AllSearch");
 
 static uint32 AllocateBrowseSearchId();
 // Undo an AllocateBrowseSearchId() whose browse never started. Drops the results and
@@ -3156,6 +3158,7 @@ static CECPacket *Get_EC_Response_Search(const CECPacket *request, bool multiSea
 	} else {
 		SearchType core_search_type = (search_type == EC_SEARCH_GLOBAL) ? GlobalSearch
 					      : (search_type == EC_SEARCH_KAD)  ? KadSearch
+					      : (search_type == EC_SEARCH_ALL)  ? AllSearch
 										: LocalSearch;
 
 		if (multiSearch) {

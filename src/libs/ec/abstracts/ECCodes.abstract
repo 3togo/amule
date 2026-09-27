@@ -781,6 +781,8 @@ EC_SEARCH_WEB           0x03
 ## that read the kind compare it for equality rather than switching on it, so
 ## an unknown value stays inert on either side of a version mismatch.
 EC_SEARCH_BROWSE        0x04
+## Search all available networks simultaneously (eD2k local + global + Kad).
+EC_SEARCH_ALL           0x05
 [/Section]
 
 [Section Content]

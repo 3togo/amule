@@ -180,9 +180,17 @@ CSearch *CSearchManager::PrepareFindKeywords(const wxString &keyword,
 		// GonoszTopi - seconded
 		KadGetKeywordHash(wstrKeyword, &s->m_target);
 
-		// Verify that we are not already searching for this target.
+		// Stop any existing search for the same target so a new one can start.
 		if (AlreadySearchingFor(s->m_target)) {
-			throw _("Kademlia: Search keyword is already on search list: ") + wstrKeyword;
+			SearchMap::iterator it = m_searches.find(s->m_target);
+			if (it != m_searches.end()) {
+				AddDebugLogLineN(logSearch,
+					CFormat("Stopping existing Kad search for keyword '%s' to start a "
+						"new one") %
+						wstrKeyword);
+				delete it->second;
+				m_searches.erase(it);
+			}
 		}
 
 		s->SetSearchTermData(searchTermsDataSize, searchTermsData);

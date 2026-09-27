@@ -67,7 +67,9 @@ enum SearchType
 	// 3 is EC_SEARCH_WEB -- deliberately skipped, see above.
 	//! A "View Files" browse of one peer's share. Shares the id space and the lifecycle
 	//! machinery with real searches, but is started by EnsureBrowseTab, not a query.
-	BrowseSearch = 4
+	BrowseSearch = 4,
+	//! Search all available networks simultaneously (eD2k local + global + Kad).
+	AllSearch = 5
 };
 
 typedef std::vector<CSearchFile *> CSearchResultList;
@@ -203,9 +205,15 @@ public:
 	/**
 	 * Ask the Kad search identified by searchID to widen its frontier via
 	 * KADEMLIA_FIND_VALUE_MORE. Wired to the search dialog "More" button. Returns true if
-	 * a reask was dispatched.
+	 * a reask was dispatched. For AllSearch, the ed2k tab ID is mapped to its Kad component.
 	 */
 	bool RequestMoreResults(uint32_t searchID);
+
+	/**
+	 * True if this search ID has a Kad component -- either a direct Kad search or an
+	 * AllSearch whose Kad part is still active. Used to gate the "More" button.
+	 */
+	bool HasKadComponent(uint32_t searchID) const;
 
 	/** Returns the completion percentage of the current search. */
 	uint32 GetSearchProgress() const;
@@ -522,6 +530,23 @@ private:
 	//! each polled tab's real type instead of the scalar m_searchType (which only tracks the
 	//! most-recently-started search). Pruned in RemoveResults.
 	std::map<uint32_t, SearchType> m_searchKinds;
+
+	//! Per-search result-source attribution: how many results each network delivered.
+	//! Used to verify AllSearch actually returns results from all networks.
+	struct ResultSourceCounts
+	{
+		size_t tcp = 0;
+		size_t udp = 0;
+		size_t kad = 0;
+		size_t total() const { return tcp + udp + kad; }
+	};
+	std::map<uint32_t, ResultSourceCounts> m_resultSourceCounts;
+	void LogResultSourceCounts(uint32_t searchID, const wxString &context);
+
+	//! For AllSearch, a Kad search is started alongside the ed2k one under a separate
+	//! Kad-assigned ID. This maps that Kad ID back to the ed2k ID that owns the tab, so
+	//! KademliaSearchKeyword results land in the right bucket. Pruned in RemoveResults.
+	std::map<uint32_t, uint32_t> m_kadToEd2kSearchId;
 	//! Peer ecid per browse id; see RegisterBrowseSearch().
 	std::map<uint32_t, uint32> m_browsePeers;
 

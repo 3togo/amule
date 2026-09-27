@@ -196,8 +196,15 @@ void CMuleUDPSocket::OnDisconnected(int WXUNUSED(errorCode))
 	 *
 	 * Reported as patch #1885472:
 	 * http://sourceforge.net/tracker/index.php?func=detail&aid=1885472&group_id=9863&atid=309863
+	 *
+	 * Note: this callback is currently not invoked in the ASIO socket layer, but is kept for
+	 * correctness. It must hold m_mutex because DestroySocket/CreateSocket mutate m_socket,
+	 * which other threads (notably the UBT thread via SendControlData) access under the same
+	 * lock. Without it, a reconnect here races against SendControlData's m_socket->SendTo,
+	 * causing heap corruption.
 	 */
 	AddDebugLogLineC(logMuleUDP, m_name + "Socket died, recreating.");
+	wxMutexLocker lock(m_mutex);
 	DestroySocket();
 	CreateSocket();
 }

@@ -240,10 +240,11 @@ wxSizer *searchDlg( wxWindow *parent, bool call_fit, bool set_sizer )
     wxString strs8[] = 
     {
         _("Local"), 
-        _("Global"), 
-        _("Kad")
+        _("Remote Servers"), 
+        _("Kad"),
+        _("All")
     };
-    wxChoice *item8 = new wxChoice( item2, ID_SEARCHTYPE, wxDefaultPosition, wxDefaultSize, 3, strs8, 0 );
+    wxChoice *item8 = new wxChoice( item2, ID_SEARCHTYPE, wxDefaultPosition, wxDefaultSize, 4, strs8, 0 );
     item6->Add( item8, wxSizerFlags().Center().Border(wxALL, 5) );
     wxStaticLine *item9 = new wxStaticLine( item2, -1, wxDefaultPosition, wxSize(-1,20), wxLI_VERTICAL );
     item6->Add( item9, wxSizerFlags().Expand().CenterVertical().Border(wxALL, 5) );

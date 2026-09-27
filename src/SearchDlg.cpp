@@ -64,6 +64,22 @@ namespace
 //! How long typing has to pause before the filter is applied, in ms.
 const int kFilterDebounceMs = 250;
 const int ID_FILTER_DEBOUNCE_TIMER = wxID_HIGHEST + 1301;
+
+wxString GetSearchTypeTag(SearchType type)
+{
+	switch (type) {
+	case LocalSearch:
+		return wxT("[T] ");
+	case GlobalSearch:
+		return wxT("[TU] ");
+	case KadSearch:
+		return wxT("[K] ");
+	case AllSearch:
+		return wxT("[TUK] ");
+	default:
+		return wxT("");
+	}
+}
 } // namespace
 
 wxBEGIN_EVENT_TABLE(CSearchDlg, wxPanel)
@@ -143,8 +159,10 @@ CSearchDlg::CSearchDlg(wxWindow *pParent)
 	wxChoice *searchchoice = CastChild(ID_SEARCHTYPE, wxChoice);
 	wxASSERT(searchchoice);
 	wxASSERT(searchchoice->GetString(0) == _("Local"));
+	wxASSERT(searchchoice->GetString(1) == _("Remote Servers"));
 	wxASSERT(searchchoice->GetString(2) == _("Kad"));
-	wxASSERT(searchchoice->GetCount() == 3);
+	wxASSERT(searchchoice->GetString(3) == _("All"));
+	wxASSERT(searchchoice->GetCount() == 4);
 
 	m_searchchoices = searchchoice->GetStrings();
 
@@ -520,31 +538,35 @@ void CSearchDlg::FixSearchTypes()
 
 	searchchoice->Clear();
 
-	// We should have only filedonkey now. Let's insert stuff.
-
 	int pos = 0;
 
 	if (thePrefs::GetNetworkED2K()) {
-		searchchoice->Insert(m_searchchoices[0], pos++);
-		searchchoice->Insert(m_searchchoices[1], pos++);
+		searchchoice->Insert(m_searchchoices[0], pos++); // "Local"
+		searchchoice->Insert(m_searchchoices[1], pos++); // "Remote Servers"
 	}
 
 	if (thePrefs::GetNetworkKademlia()) {
-		searchchoice->Insert(m_searchchoices[2], pos++);
+		searchchoice->Insert(m_searchchoices[2], pos++); // "Kad"
+	}
+
+	if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
+		searchchoice->Insert(m_searchchoices[3], pos++); // "All"
 	}
 
 	// Restore the last-used search type (persisted in OnSearchTypeChanged) instead of always
 	// defaulting to Local. The stored value is the stable canonical code (0 = Local, 1 =
-	// Global, 2 = Kad); map it back onto whichever entries are present now, falling back to the
-	// first entry when the saved type's network is disabled (amule-org/amule#608).
+	// Remote Servers, 2 = Kad, 3 = All); map it back onto whichever entries are present now,
+	// falling back to the first entry when the saved type's network is disabled.
 	long savedType = 0;
 	wxConfigBase::Get()->Read("/eMule/DefaultSearchType", &savedType, 0);
 	int selection = 0;
 	if (thePrefs::GetNetworkED2K()) {
-		if (savedType == 1) { // Global
+		if (savedType == 1) { // Remote Servers
 			selection = 1;
 		} else if (savedType == 2 && thePrefs::GetNetworkKademlia()) { // Kad
 			selection = 2;
+		} else if (savedType == 3 && thePrefs::GetNetworkKademlia()) { // All
+			selection = 3;
 		}
 		// else Local (0), or the saved network is gone -> first entry
 	}
@@ -563,9 +585,9 @@ int CSearchDlg::GetSelectedSearchTypeCanonical()
 	if (selection == wxNOT_FOUND) {
 		return wxNOT_FOUND;
 	}
-	// FixSearchTypes() inserts choices as Local, Global, Kad, but drops the ED2K pair when ED2K
-	// is disabled -- then the only entry (Kad) sits at 0, so shift it onto the canonical Kad
-	// code (2).
+	// FixSearchTypes() inserts choices as Local, Remote Servers, Kad, All, but drops the ED2K
+	// pair when ED2K is disabled -- then the only entry (Kad) sits at 0, so shift it onto the
+	// canonical Kad code (2).
 	if (!thePrefs::GetNetworkED2K()) {
 		selection += 2;
 	}
@@ -925,7 +947,14 @@ void CSearchDlg::OnSearchAdded(wxUIntPtr searchID, const wxString &name, uint32 
 	// it must not pull the selection away from what the user is doing. Synchronous, matching its
 	// mirror Search_Removed -> CloseSearchTab: both run from wherever the core changed the
 	// search set, including inside EC packet handling.
-	CreateNewTab(((kind == KadSearch) ? "!" : "") + name + " (0)", searchID, false);
+	CreateNewTab(((kind == KadSearch) ? "!" : "") + GetSearchTypeTag(static_cast<SearchType>(kind)) +
+			     name + " (0)",
+		searchID,
+		false);
+	if (CSearchListCtrl *page = GetSearchList(searchID)) {
+		page->SetSearchTabLabel(GetSearchTypeTag(static_cast<SearchType>(kind)) + name);
+		page->SetSearchRunning(kind == KadSearch);
+	}
 }
 
 void CSearchDlg::CloseSearchTab(wxUIntPtr searchID)
@@ -1027,7 +1056,8 @@ void CSearchDlg::OnBnClickedStart(wxCommandEvent &WXUNUSED(evt))
 		// Ask first, so stopping it is the user's decision. Only ed2k-over-ed2k: starting a Kad
 		// search alongside a running ed2k one is fine, and so is the reverse.
 		const int newType = GetSelectedSearchTypeCanonical();
-		if ((newType == LocalSearch || newType == GlobalSearch) && HasRunningEd2kSearch()) {
+		if ((newType == LocalSearch || newType == GlobalSearch || newType == AllSearch) &&
+			HasRunningEd2kSearch()) {
 			const int answer = wxMessageBox(
 				_("An eD2k search is still running. Starting a new one will stop it, "
 				  "because the eD2k protocol allows only one search at a time.\n\n"
@@ -1356,7 +1386,7 @@ void CSearchDlg::MarkMoreExhausted(uint32_t searchID)
 
 bool CSearchDlg::MoreAllowed(uint32_t searchID) const
 {
-	return searchID && theApp->searchlist->IsKadSearch(searchID) &&
+	return searchID && theApp->searchlist->HasKadComponent(searchID) &&
 	       m_moreExhausted.find(searchID) == m_moreExhausted.end();
 }
 
@@ -1410,12 +1440,9 @@ void CSearchDlg::KadSearchEnd(uint32 id)
 	int nPages = m_notebook->GetPageCount();
 	for (int i = 0; i < nPages; ++i) {
 		CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
-		if (page->GetSearchId() == id || id == 0) { // 0: just update all pages (there is only one KAD
-							    // search running at a time anyway)
-			wxString rest;
-			if (m_notebook->GetPageText(i).StartsWith("!", &rest)) {
-				m_notebook->SetPageText(i, rest);
-			}
+		if (page->GetSearchId() == id || id == 0) {
+			page->SetSearchRunning(false);
+			UpdateHitCount(page);
 		}
 	}
 
@@ -1546,11 +1573,14 @@ void CSearchDlg::StartNewSearch()
 	case 0: // Local Search
 		search_type = LocalSearch;
 		break;
-	case 1: // Global Search
+	case 1: // Remote Servers (was Global)
 		search_type = GlobalSearch;
 		break;
 	case 2: // Kad search
 		search_type = KadSearch;
+		break;
+	case 3: // All networks
+		search_type = AllSearch;
 		break;
 	default:
 		// Should never happen
@@ -1598,9 +1628,13 @@ void CSearchDlg::StartNewSearch()
 		// rejection arrives later over EC.
 		OnStartRejected(real_id, error);
 	} else {
-		CreateNewTab(((search_type == KadSearch) ? "!" : "") + params.searchString + " (0)", real_id);
+		CreateNewTab(((search_type == KadSearch || search_type == AllSearch) ? "!" : "") +
+				     GetSearchTypeTag(search_type) + params.searchString + " (0)",
+			real_id);
 		if (CSearchListCtrl *page = GetSearchList(real_id)) {
 			page->SetSearchRequest(request);
+			page->SetSearchTabLabel(GetSearchTypeTag(search_type) + params.searchString);
+			page->SetSearchRunning(search_type == KadSearch || search_type == AllSearch);
 		}
 	}
 }
@@ -1637,7 +1671,12 @@ void CSearchDlg::UpdateHitCount(CSearchListCtrl *page)
 				break;
 			}
 
-			wxString searchtxt = m_notebook->GetPageText(i).BeforeLast(' ');
+			wxString searchtxt = page->GetSearchTabLabel();
+			if (searchtxt.IsEmpty()) {
+				searchtxt = m_notebook->GetPageText(i).BeforeLast(' ');
+			} else if (page->IsSearchRunning()) {
+				searchtxt = wxT("!") + searchtxt;
+			}
 			if (!searchtxt.IsEmpty()) {
 				if (hidden) {
 					searchtxt += CFormat(" (%u/%u)") % shown % (shown + hidden);
