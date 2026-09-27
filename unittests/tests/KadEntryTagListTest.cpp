@@ -43,8 +43,8 @@ using Kademlia::CKeyEntry;
 // catches a miscount in either direction, which asserting on the tag total alone does not.
 //
 // The expected tag total is deliberately never hardcoded: WriteTagListWithPublishInfo() writes one
-// tag of its own without ENABLE_KAD_PROTOCOL_10 and up to two with it, and these tests are meant
-// to hold in both configurations.
+// tag without the KadProtocol10 preference and up to two with it, and these tests are meant to
+// hold in both configurations.
 
 static const uint32_t SENTINEL = 0xA1C4DEADu;
 

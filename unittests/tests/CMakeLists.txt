@@ -611,6 +611,7 @@ target_link_libraries (CUInt128Test
 add_executable (KadAICHHashListTest
 	KadAICHHashListTest.cpp
 	${CMAKE_SOURCE_DIR}/src/kademlia/kademlia/AICHHashList.cpp
+	KadPrefsStub.cpp
 )
 
 add_test (NAME KadAICHHashListTest
@@ -643,6 +644,7 @@ add_executable (KadEntryTagListTest
 	# As for CValueMapTest: the no-op DoECLogLine / theLogger definitions, which
 	# Entry.cpp's AddDebugLogLine* calls resolve against in a Debug build.
 	${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp
+	KadPrefsStub.cpp
 )
 
 add_test (NAME KadEntryTagListTest

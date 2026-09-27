@@ -692,19 +692,21 @@ void CKeyEntry::WritePublishTrackingDataToFile(CFileDataIO *data)
 	// otherwise a hash whose last publisher expired would be reloaded with a popularity of zero
 	// for ever.
 	//
-	// Gated together with the keyword-index version in CIndexed: with the gate off we write a
-	// version-3 file with neither the AICH block nor the per-publisher index, which is
-	// byte-for-byte what upstream writes and what an upstream binary can read back.
-#ifdef ENABLE_KAD_PROTOCOL_10
-	const std::vector<uint16_t> newIndexes = m_aichHashes.BuildCompactionMap();
-	data->WriteUInt16(m_aichHashes.GetReferencedCount());
-	for (uint16_t i = 0; i < m_aichHashes.GetSlotCount(); i++) {
-		if (newIndexes[i] != CKadAICHHashList::INVALID_INDEX) {
-			const CKadAICHHash &hash = m_aichHashes.GetHashAt(i);
-			data->Write(hash.data(), hash.size());
+	// Gated together with the keyword-index version in CIndexed: with KadProtocol10
+	// off we write a version-3 file with neither the AICH block nor the per-publisher
+	// index, which is byte-for-byte what upstream writes and what an upstream binary
+	// can read back.
+	std::vector<uint16_t> newIndexes;
+	if (thePrefs::GetKadProtocol10()) {
+		newIndexes = m_aichHashes.BuildCompactionMap();
+		data->WriteUInt16(m_aichHashes.GetReferencedCount());
+		for (uint16_t i = 0; i < m_aichHashes.GetSlotCount(); i++) {
+			if (newIndexes[i] != CKadAICHHashList::INVALID_INDEX) {
+				const CKadAICHHash &hash = m_aichHashes.GetHashAt(i);
+				data->Write(hash.data(), hash.size());
+			}
 		}
 	}
-#endif
 
 	data->WriteUInt32((uint32_t)m_filenames.size());
 	for (FileNameList::const_iterator it = m_filenames.begin(); it != m_filenames.end(); ++it) {
@@ -720,13 +722,13 @@ void CKeyEntry::WritePublishTrackingDataToFile(CFileDataIO *data)
 			wxASSERT(it->m_ip != 0);
 			data->WriteUInt32(it->m_ip);
 			data->WriteUInt32((uint32_t)it->m_lastPublish);
-#ifdef ENABLE_KAD_PROTOCOL_10
-			uint16_t idx = CKadAICHHashList::INVALID_INDEX;
-			if (it->m_aichHashIdx != CKadAICHHashList::INVALID_INDEX) {
-				idx = newIndexes[it->m_aichHashIdx];
+			if (thePrefs::GetKadProtocol10()) {
+				uint16_t idx = CKadAICHHashList::INVALID_INDEX;
+				if (it->m_aichHashIdx != CKadAICHHashList::INVALID_INDEX) {
+					idx = newIndexes[it->m_aichHashIdx];
+				}
+				data->WriteUInt16(idx);
 			}
-			data->WriteUInt16(idx);
-#endif
 		}
 	} else {
 		wxFAIL;
@@ -831,13 +833,10 @@ void CKeyEntry::WriteTagListWithPublishInfo(CFileDataIO *data)
 	// the *receiver* that gates on the sender's advertised version (see
 	// CSearch::ProcessResultKeyword), so a fake tag from an old node cannot be laundered
 	// through us.
-#ifdef ENABLE_KAD_PROTOCOL_10
-	std::vector<uint8_t> aichTagValue = m_aichHashes.EncodeResultTag();
-#else
-	// Gate off: no AICH tag is ever put in a search answer, so the tag count
-	// and the packet are exactly upstream's.
-	const std::vector<uint8_t> aichTagValue;
-#endif
+	std::vector<uint8_t> aichTagValue;
+	if (thePrefs::GetKadProtocol10()) {
+		aichTagValue = m_aichHashes.EncodeResultTag();
+	}
 	WriteTagListInc(data, aichTagValue.empty() ? 1 : 2);
 
 	uint32_t trust = (uint16_t)(GetTrustValue() * 100);

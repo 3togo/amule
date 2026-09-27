@@ -369,21 +369,17 @@ TEST(KadAICHHashList, AICHKeywordStorageIsGatedOnKadVersion0x09)
 	ASSERT_TRUE(CKadAICHHashList::PeerSupportsAICHKeywordStorage(0xFF));
 }
 
-// The version byte we advertise is what makes this change visible on the wire, so both states of
-// the ENABLE_KAD_PROTOCOL_10 switch are pinned here: with the switch off aMule must still announce
-// 0x08, exactly as upstream does, and must not claim AICH keyword storage it does not use.
-TEST(KadAICHHashList, AdvertisedKadVersionFollowsTheBuildSwitch)
+// The version byte we advertise is what makes this change visible on the wire. With the runtime
+// preference off (the default), aMule must announce 0x08, exactly as upstream does, and must not
+// claim AICH keyword storage it does not use. With it on, 0x0a and AICH support.
+TEST(KadAICHHashList, AdvertisedKadVersionDefaults)
 {
-#ifdef ENABLE_KAD_PROTOCOL_10
-	ASSERT_EQUALS(0x0au, (unsigned)KADEMLIA_VERSION);
-	ASSERT_TRUE(CKadAICHHashList::PeerSupportsAICHKeywordStorage(KADEMLIA_VERSION));
-#else
-	ASSERT_EQUALS(0x08u, (unsigned)KADEMLIA_VERSION);
-	ASSERT_FALSE(CKadAICHHashList::PeerSupportsAICHKeywordStorage(KADEMLIA_VERSION));
-#endif
+	// The compile-time default constants
+	ASSERT_EQUALS(0x08u, (unsigned)KADEMLIA_VERSION_DEFAULT);
+	ASSERT_EQUALS(0x0au, (unsigned)KADEMLIA_VERSION_PROTOCOL10);
 	// The eD2k CT_EMULE_MISCOPTIONS2 capability field reserves four bits for the Kad version
 	// (BaseClient.cpp, uKadVersion << 0), so a bump past 0x0F needs that field changed first.
-	ASSERT_TRUE(KADEMLIA_VERSION <= 0x0F);
+	ASSERT_TRUE(KADEMLIA_VERSION_PROTOCOL10 <= 0x0F);
 }
 
 TEST(KadAICHHashList, PopularitySaturatesInsteadOfWrapping)

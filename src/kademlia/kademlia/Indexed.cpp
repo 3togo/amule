@@ -377,15 +377,11 @@ CIndexed::~CIndexed()
 		CFile k_file;
 		if (k_file.Open(m_kfilename, CFile::write)) {
 			// Version 4 carries the AICH block and the per-publisher hash index; gated
-			// with the writer in CKeyEntry::WritePublishTrackingDataToFile, so a gate-
-			// off build writes the version-3 file upstream writes. Reading both is
-			// unconditional, so switching the gate never invalidates an existing
-			// keyword index.
-#ifdef ENABLE_KAD_PROTOCOL_10
-			k_file.WriteUInt32(4); // version, see the note in ReadFile()
-#else
-			k_file.WriteUInt32(3); // version, see the note in ReadFile()
-#endif
+			// with the writer in CKeyEntry::WritePublishTrackingDataToFile, so with
+			// KadProtocol10 off we write the version-3 file upstream writes. Reading
+			// both is unconditional, so toggling the preference never invalidates an
+			// existing keyword index.
+			k_file.WriteUInt32(thePrefs::GetKadProtocol10() ? 4 : 3);
 			k_file.WriteUInt32(now + KADEMLIAREPUBLISHTIMEK);
 			k_file.WriteUInt128(Kademlia::CKademlia::GetPrefs()->GetKadID());
 
