@@ -1067,13 +1067,15 @@ void CPreferences::BuildItemList(const wxString &appdir)
 	// Enabled networks
 	NewCfgItem(IDC_NETWORKKAD, (new Cfg_Bool("/eMule/ConnectToKad", s_ConnectToKad, true)));
 	NewCfgItem(IDC_NETWORKED2K, (new Cfg_Bool("/eMule/ConnectToED2K", s_ConnectToED2K, true)));
-	NewCfgItem(IDC_KADPROTOCOL10, (new Cfg_Bool("/eMule/KadProtocol10", s_KadProtocol10,
+	NewCfgItem(IDC_KADPROTOCOL10,
+		(new Cfg_Bool("/eMule/KadProtocol10",
+			s_KadProtocol10,
 #ifdef ENABLE_KAD_PROTOCOL_10
-		true
+			true
 #else
-		false
+			false
 #endif
-		)));
+			)));
 	NewCfgItem(IDC_KADSTRICTAICHPUBLISHERS,
 		(new Cfg_Bool("/eMule/KadStrictAichPublishers", s_KadStrictAichPublishers, false)));
 

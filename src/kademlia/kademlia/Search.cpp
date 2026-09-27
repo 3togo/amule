@@ -1240,7 +1240,8 @@ void CSearch::ProcessResultKeyword(
 		// is that we do not take those at face value.
 		for (ContactMap::const_iterator it = m_tried.begin(); it != m_tried.end(); ++it) {
 			const CContact *tmpContact = it->second;
-			if ((tmpContact->GetIPAddress() == fromIP) && (tmpContact->GetUDPPort() == fromPort)) {
+			if ((tmpContact->GetIPAddress() == fromIP) &&
+				(tmpContact->GetUDPPort() == fromPort)) {
 				fromKadVersion = tmpContact->GetVersion();
 				break;
 			}

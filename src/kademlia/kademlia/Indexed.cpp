@@ -145,7 +145,7 @@ void CIndexed::ReadFile()
 												delete tag;
 											} else if (
 												!tag->GetName()
-													 .Cmp(TAG_FILESIZE)) {
+													.Cmp(TAG_FILESIZE)) {
 												if (tag->IsBsob() &&
 													(tag->GetBsobSize() ==
 														8)) {
@@ -174,7 +174,7 @@ void CIndexed::ReadFile()
 												delete tag;
 											} else if (
 												!tag->GetName()
-													 .Cmp(TAG_SOURCEIP)) {
+													.Cmp(TAG_SOURCEIP)) {
 												toAdd->m_uIP =
 													tag->GetInt();
 												toAdd->AddTag(
@@ -182,7 +182,7 @@ void CIndexed::ReadFile()
 													0);
 											} else if (
 												!tag->GetName()
-													 .Cmp(TAG_SOURCEPORT)) {
+													.Cmp(TAG_SOURCEPORT)) {
 												toAdd->m_uTCPport =
 													tag->GetInt();
 												toAdd->AddTag(
@@ -190,7 +190,7 @@ void CIndexed::ReadFile()
 													0);
 											} else if (
 												!tag->GetName()
-													 .Cmp(TAG_SOURCEUPORT)) {
+													.Cmp(TAG_SOURCEUPORT)) {
 												toAdd->m_uUDPport =
 													tag->GetInt();
 												toAdd->AddTag(

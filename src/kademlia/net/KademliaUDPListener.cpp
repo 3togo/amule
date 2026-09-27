@@ -1218,37 +1218,44 @@ void CKademliaUDPListener::Process2PublishKeyRequest(const uint8_t *packetData,
 						}
 						delete tag; // tag is no longer stored, but membervar is used
 					} else if (!tag->GetName().Cmp(TAG_KADAICHHASHPUB)) {
-						// AICH root hash of the published file (Kad protocol version 0x09).
-						// Kept as a member rather than a tag: MergeIPsAndFilenames() attaches
-						// it to this publisher and maintains the popularity counts of the
-						// stored entry.
+						// AICH root hash of the published file (Kad protocol version
+						// 0x09). Kept as a member rather than a tag:
+						// MergeIPsAndFilenames() attaches it to this publisher and
+						// maintains the popularity counts of the stored entry.
 						//
-						// Security: when KadStrictAichPublishers is enabled, AICH publish tags
-						// from nodes whose advertised Kad version is < 0x09 are rejected, since
-						// a node at 0x08 cannot have produced this tag itself. Nodes with
-						// unknown version (not in our routing table) are still accepted: a
-						// legitimate 0x09+ publisher we have not yet exchanged a hello with
-						// should not be penalised, and SelectTrusted() on the search-result
-						// side still refuses uncorroborated hashes.
+						// Security: when KadStrictAichPublishers is enabled, AICH
+						// publish tags from nodes whose advertised Kad version is <
+						// 0x09 are rejected, since a node at 0x08 cannot have
+						// produced this tag itself. Nodes with unknown version (not
+						// in our routing table) are still accepted: a legitimate
+						// 0x09+ publisher we have not yet exchanged a hello with
+						// should not be penalised, and SelectTrusted() on the
+						// search-result side still refuses uncorroborated hashes.
 						if (thePrefs::GetKadProtocol10() && tag->IsBsob() &&
 							tag->GetBsobSize() == KAD_AICH_HASH_SIZE) {
 							bool acceptTag = true;
 							if (thePrefs::GetKadStrictAichPublishers()) {
 								uint8_t publisherVersion = 0;
 								CContact *publisher =
-									CKademlia::GetRoutingZone()->GetContact(ip, port, false);
+									CKademlia::GetRoutingZone()
+										->GetContact(ip, port, false);
 								if (publisher != nullptr) {
-									publisherVersion = publisher->GetVersion();
+									publisherVersion =
+										publisher->GetVersion();
 								}
 								if (publisherVersion != 0 &&
-									!CKadAICHHashList::PeerSupportsAICHKeywordStorage(
-										publisherVersion)) {
+									!CKadAICHHashList::
+										PeerSupportsAICHKeywordStorage(
+											publisherVersion)) {
 									acceptTag = false;
 									AddDebugLogLineN(logClientKadUDP,
-										"TAG_KADAICHHASHPUB received from node "
-										"advertising Kad version " +
-											CFormat("%u") % publisherVersion +
-											" (< 0x09), rejecting. " +
+										CFormat("TAG_KADAICHHASHPUB "
+											"received from node "
+											"advertising Kad "
+											"version %u (< "
+											"0x09), rejecting. "
+											"%s") %
+											publisherVersion %
 											KadIPToString(ip));
 								}
 							}
@@ -1261,7 +1268,8 @@ void CKademliaUDPListener::Process2PublishKeyRequest(const uint8_t *packetData,
 									entry->SetPublishedAICHHash(hash);
 								} else {
 									AddDebugLogLineN(logClientKadUDP,
-										"Multiple TAG_KADAICHHASHPUB tags "
+										"Multiple TAG_KADAICHHASHPUB "
+										"tags "
 										"received for a single file "
 										"from " +
 											KadIPToString(ip));

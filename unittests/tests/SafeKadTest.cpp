@@ -59,7 +59,8 @@ TEST(SafeKad, SameIdentityIsAcceptedRepeatedly)
 {
 	CSafeKad safe;
 	for (unsigned i = 0; i < 20; ++i) {
-		ASSERT_FALSE(safe.IsBadNode(IP_A, PORT_A, Id(1), KADEMLIA_VERSION_DEFAULT, true, true, T0 + i));
+		ASSERT_FALSE(
+			safe.IsBadNode(IP_A, PORT_A, Id(1), KADEMLIA_VERSION_DEFAULT, true, true, T0 + i));
 	}
 	ASSERT_EQUALS(1u, (unsigned)safe.GetTrackedNodeCount());
 }
@@ -256,7 +257,8 @@ TEST(SafeKad, EvictionAtCapacityDropsTheLeastRecentlyReferencedEntry)
 
 	// The refreshed address survived: it still remembers its identity, so a
 	// rotation inside the one-hour interval is refused.
-	ASSERT_TRUE(safe.IsBadNode(0x50000005, PORT_A, Id(0xBEEF), KADEMLIA_VERSION_DEFAULT, true, false, T0 + 1));
+	ASSERT_TRUE(safe.IsBadNode(
+		0x50000005, PORT_A, Id(0xBEEF), KADEMLIA_VERSION_DEFAULT, true, false, T0 + 1));
 
 	// The least recently referenced address is the one that went: a new identity for it is
 	// accepted as a first sighting rather than rejected as a rotation, which is only possible

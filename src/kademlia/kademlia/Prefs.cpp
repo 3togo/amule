@@ -241,8 +241,7 @@ uint32_t CPrefs::GetUDPVerifyKey(uint32_t targetIP)
 
 uint8_t CPrefs::GetAdvertisedKadVersion() noexcept
 {
-	return thePrefs::GetKadProtocol10() ? KADEMLIA_VERSION_PROTOCOL10
-					    : KADEMLIA_VERSION_DEFAULT;
+	return thePrefs::GetKadProtocol10() ? KADEMLIA_VERSION_PROTOCOL10 : KADEMLIA_VERSION_DEFAULT;
 }
 
 float CPrefs::StatsGetFirewalledRatio(bool udp) const noexcept
