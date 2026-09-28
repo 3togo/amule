@@ -52,7 +52,7 @@ inline wxString FormatSearchSources(
 
 inline wxString FormatSearchSourcesTooltip(uint32_t total,
 	uint32_t complete,
-	size_t clients,
+	std::optional<size_t> clients,
 	const std::optional<CSearchSourceCount> &networks = std::nullopt)
 {
 	wxString text = CFormat(_("Estimated availability: %u")) % total;
@@ -70,7 +70,9 @@ inline wxString FormatSearchSourcesTooltip(uint32_t total,
 		text += "\n" + _("Network breakdown unavailable.");
 	}
 	text += "\n" + (CFormat(_("Complete sources: %u")) % complete).GetString();
-	text += "\n" + (CFormat(_("Direct client endpoints: %u")) % clients).GetString();
+	if (clients) {
+		text += "\n" + (CFormat(_("Direct client endpoints: %u")) % *clients).GetString();
+	}
 	return text;
 }
 

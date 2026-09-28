@@ -27,6 +27,7 @@
 #include "SearchSourceFormat.h"
 #include <algorithm>
 #include <array>
+#include <limits>
 
 using namespace muleunit;
 DECLARE_SIMPLE(SearchSourceCount)
@@ -75,6 +76,24 @@ TEST(SearchSourceCount, SingleNetworkCountsKeepTheirExistingSemantics)
 	ASSERT_EQUALS(uint32_t(0), CSearchSourceCount().Total());
 }
 
+TEST(SearchSourceCount, ServerCountsSaturateInsteadOfWrapping)
+{
+	const uint32_t maximum = std::numeric_limits<uint32_t>::max();
+	CSearchSourceCount servers(maximum - 5, false);
+	servers.Merge(CSearchSourceCount(10, false));
+	ASSERT_EQUALS(maximum, servers.Ed2k());
+	ASSERT_EQUALS(maximum, servers.Total());
+	servers.Merge(CSearchSourceCount(20, true));
+	servers.Merge(CSearchSourceCount(1, false));
+	ASSERT_EQUALS(maximum, servers.Total());
+	ASSERT_EQUALS(uint32_t(20), servers.Kad());
+
+	// Grouped filename totals use the same merge, including a saturated child.
+	CSearchSourceCount parent(7, false);
+	parent.Merge(servers);
+	ASSERT_EQUALS(maximum, parent.Ed2k());
+}
+
 TEST(SearchSourceCount, CompactDisplay)
 {
 	ASSERT_EQUALS(
@@ -95,4 +114,7 @@ TEST(SearchSourceCount, TooltipExplainsCounts)
 	ASSERT_TRUE(mixed.Contains("Kad sources: 50"));
 	ASSERT_TRUE(mixed.Contains("Network counts may overlap"));
 	ASSERT_TRUE(FormatSearchSourcesTooltip(50, 0, 0).Contains("Network breakdown unavailable."));
+	// Remote results have no endpoint count; absence must not claim zero.
+	ASSERT_FALSE(FormatSearchSourcesTooltip(50, 3, std::nullopt).Contains("Direct client endpoints:"));
+	ASSERT_TRUE(FormatSearchSourcesTooltip(50, 3, 0).Contains("Direct client endpoints: 0"));
 }

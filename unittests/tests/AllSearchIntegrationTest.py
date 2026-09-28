@@ -239,8 +239,9 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                                         queries.put(packet[1:])
                                         if not answer.wait(10):
                                             return
+                                        sources = 0xffffffff if b'overflow' in packet else 10
                                         body = (b'\x33' + struct.pack('<I', 3)
-                                                + search_record('regression.bin')
+                                                + search_record('regression.bin', sources)
                                                 + search_record('variant.bin')
                                                 + search_record('variant.bin'))
                                         peer.sendall(struct.pack('<BI', 0xe3, len(body)) + body)
@@ -332,6 +333,17 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                     # The optional pair must remain available on repeated update polls.
                     counts = ec.call(0x28, [integer(0x70e, sid)])[1][0x700][1]
                     assert counts[0x718][0] == 30 and counts[0x719][0] == 0, counts
+                    # Oversized server reports must not wrap when filename
+                    # variants are grouped, including through EC serialization.
+                    overflow = ec.start('overflow regression')
+                    queries.get(timeout=5)
+                    for _ in range(50):
+                        if ec.progress(overflow)[0x70a][0] == 2:
+                            break
+                        time.sleep(0.1)
+                    counts = ec.call(0x28, [integer(0x70e, overflow)])[1][0x700][1]
+                    assert counts[0x30a][0] == 0xffffffff, counts
+                    assert counts[0x718][0] == 0xffffffff, counts
                     # Close while a server response is in flight. Its late results
                     # must not recreate the removed bucket.
                     answer.clear()

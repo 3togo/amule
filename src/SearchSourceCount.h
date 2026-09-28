@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 
 // Server reports contribute to an eD2k total; Kad reports repeat a network-wide
 // estimate. The networks can overlap, so display the larger estimate, not their
@@ -44,7 +45,10 @@ public:
 
 	void Merge(const CSearchSourceCount &other)
 	{
-		m_ed2k += other.m_ed2k;
+		// Counts come from untrusted server reports. Keep availability monotonic
+		// even when their sum exceeds the range of the EC/on-disk count fields.
+		const uint32_t maximum = std::numeric_limits<uint32_t>::max();
+		m_ed2k += std::min(other.m_ed2k, maximum - m_ed2k);
 		m_kad = std::max(m_kad, other.m_kad);
 	}
 

@@ -850,14 +850,16 @@ describes the peer only.
 `EC_SEARCH_ALL` (`5`) starts a global eD2k search and a Kad keyword search
 under one public search ID. It uses whichever networks are available at
 submission time; neither available is an error. A Kad keyword already in
-use is preserved; if eD2k is connected the new search continues there and
-logs why its Kad component could not start. A query with no usable Kad keyword
+use by another keyword search replaces that search's Kad component, retaining
+its results. Other Kad operations using the same target are preserved; if eD2k
+is connected the new search continues there and logs why its Kad component
+could not start. A query with no usable Kad keyword
 also continues over eD2k when connected; it fails when Kad is the only available
 network.
 
 Combined result rows sum eD2k source reports and take the maximum Kad source
 estimate, then display the larger of those two counts because the networks
-can overlap.
+can overlap. Summed eD2k counts saturate at the unsigned 32-bit maximum.
 
 Single-network search results and ALL results with a known split carry
 `EC_TAG_SEARCHFILE_ED2K_SOURCES` (`0x0718`) and
@@ -868,7 +870,9 @@ Existing aggregate source tags retain their meaning and determine sorting.
 Clients display only nonzero network counts: `E:9`, `K:50`, or `E:9 K:50`.
 Both zero produces `0`; an unknown breakdown displays the aggregate alone.
 A Sources-cell tooltip explains estimated availability, network counts,
-complete sources, direct client endpoints, and overlapping network estimates.
+complete sources, direct client endpoints when available locally, and overlapping
+network estimates. EC does not supply a direct-endpoint count, so remote clients
+omit that detail rather than displaying zero.
 Both tags remain present on the wire even when one is zero. New saved results
 retain the split.
 

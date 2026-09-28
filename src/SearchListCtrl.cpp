@@ -226,7 +226,12 @@ CSearchListCtrl::CSearchListCtrl(
 			const auto *file = CSearchListModel::ToFile(item);
 			tip = FormatSearchSourcesTooltip(file->GetSourceCount(),
 				file->GetCompleteSourceCount(),
+#ifdef CLIENT_GUI
+				// EC does not send the daemon's complete endpoint list/count.
+				std::nullopt,
+#else
 				file->GetClientsCount(),
+#endif
 				file->GetNetworkSourceCounts());
 		}
 		if (tip != body->GetToolTipText()) {
