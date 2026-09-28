@@ -221,7 +221,7 @@ public:
 	void FixSearchTypes();
 
 	// Current ID_SEARCHTYPE selection normalised to a stable code (0 = Local, 1 = Global, 2 =
-	// Kad) independent of which networks are enabled, so it can be persisted across restarts.
+	// Kad, 5 = All) independent of enabled networks, so it can be persisted across restarts.
 	// wxNOT_FOUND if nothing is selected.
 	int GetSelectedSearchTypeCanonical();
 

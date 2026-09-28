@@ -29,8 +29,10 @@
 #include "SearchList.h"
 #include "MuleNotebook.h"
 #include <wx/artprov.h>
+#include <wx/image.h>
 #include <wx/imaglist.h>
 #include <wx/intl.h>
+#include <array>
 #include <memory>
 #include <cstring>
 
@@ -119,18 +121,21 @@ inline std::unique_ptr<wxImageList> CreateSearchModeImages(const wxWindow *windo
 	const wxSize size = window->FromDIP(wxSize(16, 16));
 	const int closeWidth = SearchModeCloseWidth(window);
 	const int modeOffset = closeWidth > 0 ? closeWidth + window->FromDIP(4) : 0;
+	const wxBitmap closeBitmap = closeWidth > 0 ? ThemedCloseIcon(size) : wxNullBitmap;
+	const wxImage closeImage = closeBitmap.IsOk() ? closeBitmap.ConvertToImage() : wxImage();
+	constexpr std::array<SearchType, 4> types{ LocalSearch, GlobalSearch, KadSearch, AllSearch };
+	constexpr int firstModeImage = 2;
 	auto images = std::make_unique<wxImageList>(modeOffset + size.x, size.y);
-	for (int index = 0; index < 6; ++index) {
+	for (int index = 0; index < firstModeImage + static_cast<int>(types.size()); ++index) {
 		wxImage image(modeOffset + size.x, size.y);
 		image.InitAlpha();
 		std::memset(image.GetAlpha(), 0, image.GetWidth() * image.GetHeight());
-		if (closeWidth > 0) {
-			image.Paste(ThemedCloseIcon(size).ConvertToImage(), 0, 0);
+		if (closeImage.IsOk()) {
+			image.Paste(closeImage, 0, 0);
 		}
-		if (index >= 2) {
-			const SearchType types[] = { LocalSearch, GlobalSearch, KadSearch, AllSearch };
+		if (index >= firstModeImage) {
 			const wxBitmap icon = wxArtProvider::GetBitmap(
-				SearchModeArtId(types[index - 2]), wxART_OTHER, size);
+				SearchModeArtId(types[index - firstModeImage]), wxART_OTHER, size);
 			if (icon.IsOk()) {
 				image.Paste(icon.ConvertToImage(), modeOffset, 0);
 			}

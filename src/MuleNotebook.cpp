@@ -90,14 +90,21 @@ CMuleNotebook::~CMuleNotebook()
 	DeleteAllPages();
 }
 
+void CMuleNotebook::SetPageToolTip(size_t page, const wxString &text)
+{
+	wxCHECK_RET(page < GetPageCount(), "Invalid page for tab tooltip");
+	m_pageTooltips[GetPage(page)] = text;
+}
+
 bool CMuleNotebook::DeletePage(int nPage)
 {
 	wxCHECK_MSG((nPage >= 0) && (nPage < (int)GetPageCount()),
 		false,
 		"Trying to delete invalid page-index in CMuleNotebook::DeletePage");
-	if (m_tabTooltips) {
+	if (!m_pageTooltips.empty()) {
 		UnsetToolTip();
 	}
+	m_pageTooltips.erase(GetPage(nPage));
 	m_tabDownIcon = m_tabDownMiddle = -1;
 
 	wxNotebookEvent evt(wxEVT_COMMAND_MULENOTEBOOK_PAGE_CLOSING, GetId(), nPage);
@@ -237,7 +244,7 @@ bool CMuleNotebook::IsCloseIconHit(const wxPoint &position, int tab, long flags)
 		return true;
 	}
 	// wxNotebook exposes HitTest, but no portable image rectangle. Locate its
-	// leading edge with a bounded scan so the adjacent mode icon remains selectable.
+	// left edge with a bounded scan so the adjacent mode icon remains selectable.
 	int width, height;
 	if (!GetImageList() || !GetImageList()->GetSize(GetPageImage(tab), width, height)) {
 		return false;
@@ -256,7 +263,7 @@ bool CMuleNotebook::IsCloseIconHit(const wxPoint &position, int tab, long flags)
 
 void CMuleNotebook::OnMouseLeave(wxMouseEvent &event)
 {
-	if (m_tabTooltips) {
+	if (!m_pageTooltips.empty()) {
 		UnsetToolTip();
 	}
 	event.Skip();
@@ -270,12 +277,10 @@ void CMuleNotebook::OnMouseButton(wxMouseEvent &event)
 		return;
 	}
 
-	long xpos, ypos;
-	event.GetPosition(&xpos, &ypos);
-
+	const wxPoint position = event.GetPosition();
 	long flags = 0;
-	int tab = HitTest(wxPoint(xpos, ypos), &flags);
-	const bool onClose = IsCloseIconHit(event.GetPosition(), tab, flags);
+	const int tab = HitTest(position, &flags);
+	const bool onClose = IsCloseIconHit(position, tab, flags);
 
 	if (event.LeftDown() && onClose) {
 		m_tabDownIcon = tab;
@@ -307,13 +312,20 @@ void CMuleNotebook::OnMouseMotion(wxMouseEvent &event)
 		return;
 	}
 
+	const wxPoint position = event.GetPosition();
 	long flags = 0;
-	int tab = HitTest(wxPoint(event.m_x, event.m_y), &flags);
+	const int tab = HitTest(position, &flags);
 	const bool onIcon = (tab != -1) && (flags == wxNB_HITTEST_ONICON);
-	if (m_tabTooltips) {
-		const wxString tip = IsCloseIconHit(event.GetPosition(), tab, flags) ? _("Close tab")
-				     : tab != wxNOT_FOUND ? GetPage(tab)->GetHelpText()
-							  : wxString();
+	if (!m_pageTooltips.empty()) {
+		wxString tip;
+		if (IsCloseIconHit(position, tab, flags)) {
+			tip = _("Close tab");
+		} else if (tab != wxNOT_FOUND) {
+			const auto found = m_pageTooltips.find(GetPage(tab));
+			if (found != m_pageTooltips.end()) {
+				tip = found->second;
+			}
+		}
 		if (tip != GetToolTipText()) {
 			if (tip.empty()) {
 				UnsetToolTip();

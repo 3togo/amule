@@ -130,7 +130,6 @@ CSearchDlg::CSearchDlg(wxWindow *pParent)
 	m_notebook = CastChild(ID_NOTEBOOK, CMuleNotebook);
 
 	m_notebook->SetCloseIconWidth(SearchModeCloseWidth(m_notebook));
-	m_notebook->EnableTabTooltips(true);
 	m_notebook->AssignImageList(CreateSearchModeImages(m_notebook).release());
 
 	FixSearchTypes();
@@ -1165,9 +1164,14 @@ bool CSearchDlg::CheckTabNameExists(const wxString &searchString)
 void CSearchDlg::CreateNewTab(const wxString &searchString, wxUIntPtr nSearchID, bool select, SearchType type)
 {
 	CSearchListCtrl *list = new CSearchListCtrl(m_notebook, ID_SEARCHLISTCTRL);
-	list->SetName(SearchModeLabel(type) + ": " + searchString);
-	list->SetHelpText(SearchModeLabel(type) + " — " + SearchModeHelp(type));
+	if (type != BrowseSearch) {
+		list->SetName(SearchModeLabel(type));
+	}
 	m_notebook->AddPage(list, searchString, select, SearchModeImage(type));
+	if (type != BrowseSearch) {
+		m_notebook->SetPageToolTip(
+			m_notebook->GetPageCount() - 1, SearchModeLabel(type) + ": " + SearchModeHelp(type));
+	}
 
 	// Ensure that new results are filtered
 	bool enable = CastChild(IDC_FILTERCHECK, wxCheckBox)->GetValue();
@@ -1379,8 +1383,16 @@ void CSearchDlg::KadSearchEnd(uint32 id)
 		if (page->GetSearchId() == id || id == 0) {
 			// For AllSearch the Kad component may finish while eD2k is still
 			// running; only clear the running flag once the whole search is done.
-			if (theApp->searchlist->GetSearchLifecycleStateById(page->GetSearchId()) ==
-				CSearchList::SEARCH_LIFECYCLE_FINISHED) {
+#ifdef CLIENT_GUI
+			const auto progress = m_searchProgress.find(page->GetSearchId());
+			const bool finished = progress != m_searchProgress.end() &&
+					      !IsRunningSearchStatus(progress->second);
+#else
+			const bool finished =
+				theApp->searchlist->GetSearchLifecycleStateById(page->GetSearchId()) ==
+				CSearchList::SEARCH_LIFECYCLE_FINISHED;
+#endif
+			if (finished) {
 				page->SetSearchRunning(false);
 			}
 			UpdateHitCount(page);

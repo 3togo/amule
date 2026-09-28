@@ -27,6 +27,7 @@
 
 #include <algorithm> // Needed for std::find, std::min, std::sort
 #include <vector>    // Needed for std::vector
+#include <wx/bmpcbox.h>
 
 #include <common/MenuIDs.h>
 #include <common/Format.h> // Needed for CFormat
@@ -42,7 +43,8 @@
 #include "GetTickCount.h"     // Needed for GetTickCount64()
 #include "CommentDialogLst.h" // Needed for CCommentDialogLst (Kad comments/ratings)
 #include "SearchDlg.h"        // Needed for CSearchDlg
-#include "amuleDlg.h"         // Needed for CamuleDlg
+#include "SearchModeIcons.h"
+#include "amuleDlg.h" // Needed for CamuleDlg
 #ifndef CLIENT_GUI
 #include "TransferWnd.h"      // Needed for CTransferWnd (download-list batching)
 #include "DownloadListCtrl.h" // Needed for CDownloadListCtrl (download-list batching)
@@ -964,8 +966,10 @@ void CSearchListCtrl::OnRelatedSearch(wxCommandEvent &WXUNUSED(event))
 			keyword << "::" << file->GetFileHash().Encode();
 		}
 		CastByID(IDC_SEARCHNAME, theApp->amuledlg->m_searchwnd, wxTextEntry)->SetValue(keyword);
-		wxChoice *searchtype = CastByID(ID_SEARCHTYPE, theApp->amuledlg->m_searchwnd, wxChoice);
-		searchtype->SetSelection(searchtype->FindString(_("Local")));
+		wxBitmapComboBox *searchtype =
+			CastByID(ID_SEARCHTYPE, theApp->amuledlg->m_searchwnd, wxBitmapComboBox);
+		searchtype->SetSelection(searchtype->FindString(SearchModeLabel(LocalSearch)));
+		searchtype->SetToolTip(SearchModeHelp(LocalSearch));
 		theApp->amuledlg->m_searchwnd->StartNewSearch();
 	} else {
 		wxMessageBox(_("You are not currently connected to a server supporting the Related Files "
