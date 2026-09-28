@@ -716,7 +716,7 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 	if (!preserveEd2kAnchor) {
 		m_searchType = type;
 	}
-	m_searchStart = time(NULL);
+	m_searchStart = time(nullptr);
 
 	// Record this search's own start time so its (cosmetic Kad) progress ramp is computed from
 	// *its* age even after it is no longer the most-recently-started search -- otherwise a Kad
