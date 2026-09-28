@@ -24,6 +24,7 @@
 
 #include <muleunit/test.h>
 #include "SearchSourceCount.h"
+#include "SearchSourceFormat.h"
 #include <algorithm>
 #include <array>
 
@@ -43,6 +44,8 @@ TEST(SearchSourceCount, MixedReportsAreIndependentOfArrivalOrder)
 			total.Merge(reports[index]);
 		}
 		ASSERT_EQUALS(uint32_t(25), total.Total());
+		ASSERT_EQUALS(uint32_t(25), total.Ed2k());
+		ASSERT_EQUALS(uint32_t(20), total.Kad());
 	} while (std::next_permutation(order.begin(), order.end()));
 }
 
@@ -70,4 +73,22 @@ TEST(SearchSourceCount, SingleNetworkCountsKeepTheirExistingSemantics)
 	kad.Merge(CSearchSourceCount(5, true));
 	ASSERT_EQUALS(uint32_t(20), kad.Total());
 	ASSERT_EQUALS(uint32_t(0), CSearchSourceCount().Total());
+}
+
+TEST(SearchSourceCount, AllDisplayPreservesCompleteAndClientCounts)
+{
+	const auto counts = CSearchSourceCount::FromNetworks(10, 50);
+	ASSERT_EQUALS(
+		wxString::FromUTF8("50 (3) · E:10 K:50"), FormatSearchSources(counts.Total(), 3, 0, counts));
+	ASSERT_EQUALS(wxString::FromUTF8("50 (3) [2] · E:10 K:50"),
+		FormatSearchSources(counts.Total(), 3, 2, counts));
+}
+
+TEST(SearchSourceCount, UnknownSplitAndSingleNetworkFallbackAreDistinct)
+{
+	ASSERT_EQUALS(wxString("50 (3) [2]"), FormatSearchSources(50, 3, 2));
+	ASSERT_EQUALS(wxString::FromUTF8("10 · E:10 K:0"),
+		FormatSearchSources(10, 0, 0, CSearchSourceCount::FromNetworks(10, 0)));
+	ASSERT_EQUALS(wxString::FromUTF8("50 · E:0 K:50"),
+		FormatSearchSources(50, 0, 0, CSearchSourceCount::FromNetworks(0, 50)));
 }

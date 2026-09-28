@@ -1279,6 +1279,12 @@ bool CSearchList::HasKadComponent(uint32_t searchID) const
 	return false;
 }
 
+uint32_t CSearchList::GetEffectiveSearchId(uint32_t searchID) const
+{
+	const auto it = m_kadToEd2kSearchId.find(searchID);
+	return it != m_kadToEd2kSearchId.end() ? it->second : searchID;
+}
+
 bool CSearchList::IsOrWasKadSearch(uint32_t searchID) const
 {
 	// True if this ID is a Kad keyword search -- still active in the manager, or already

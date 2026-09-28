@@ -27,6 +27,7 @@
 #include <wx/statline.h> // Needed for wxStaticLine
 #include <wx/artprov.h>  // Needed for wxArtProvider::GetBitmap (search-tab close icon)
 #include <wx/clipbrd.h>  // Needed for wxTheClipboard (search-name Paste enable check)
+#include <wx/bmpcbox.h>
 #include <wx/combobox.h> // Needed for the IDC_SEARCHNAME history dropdown
 #include <wx/config.h>   // Needed to persist the default search type
 #include <wx/dataobj.h>  // Needed for wxTextDataObject (clipboard content check)
@@ -38,7 +39,8 @@
 
 #include <tags/FileTags.h>
 
-#include "SearchDlg.h"      // Interface declarations.
+#include "SearchDlg.h" // Interface declarations.
+#include "SearchModeIcons.h"
 #include "SearchHistory.h"  // Needed for ApplySearchHistoryEntry
 #include "SearchListCtrl.h" // Needed for CSearchListCtrl
 #include "muuli_wdr.h"      // Needed for IDC_STARTS
@@ -65,27 +67,12 @@ namespace
 const int kFilterDebounceMs = 250;
 const int ID_FILTER_DEBOUNCE_TIMER = wxID_HIGHEST + 1301;
 
-wxString GetSearchTypeTag(SearchType type)
-{
-	switch (type) {
-	case LocalSearch:
-		return wxT("[T] ");
-	case GlobalSearch:
-		return wxT("[TU] ");
-	case KadSearch:
-		return wxT("[K] ");
-	case AllSearch:
-		return wxT("[TUK] ");
-	default:
-		return wxT("");
-	}
-}
 } // namespace
 
 wxBEGIN_EVENT_TABLE(CSearchDlg, wxPanel)
 	EVT_BUTTON(IDC_STARTS, CSearchDlg::OnBnClickedStart)
 	EVT_TEXT_ENTER(IDC_SEARCHNAME, CSearchDlg::OnBnClickedStart)
-	EVT_CHOICE(ID_SEARCHTYPE, CSearchDlg::OnSearchTypeChanged)
+	EVT_COMBOBOX(ID_SEARCHTYPE, CSearchDlg::OnSearchTypeChanged)
 
 	EVT_BUTTON(IDC_CANCELS, CSearchDlg::OnBnClickedStop)
 	EVT_BUTTON(IDC_SEARCHMORE, CSearchDlg::OnBnClickedSearchMore)
@@ -142,31 +129,9 @@ CSearchDlg::CSearchDlg(wxWindow *pParent)
 
 	m_notebook = CastChild(ID_NOTEBOOK, CMuleNotebook);
 
-#ifdef __WXMAC__
-	// #warning TODO: restore the image list if/when wxMac supports locating the image
-#else
-	// Initialise the image list. Both entries were previously a bespoke "X in a box" bitmap
-	// differing only by a hover-highlight border colour; wx's own stock close icon covers both
-	// states just as well without a second custom asset.
-	wxImageList *m_ImageList = new wxImageList(16, 16);
-	wxBitmap closeIcon = ThemedCloseIcon(wxSize(16, 16));
-	m_ImageList->Add(closeIcon);
-	m_ImageList->Add(closeIcon);
-	m_notebook->AssignImageList(m_ImageList);
-#endif
-
-	// Sanity sanity
-	wxChoice *searchchoice = CastChild(ID_SEARCHTYPE, wxChoice);
-	wxASSERT(searchchoice);
-	wxASSERT(searchchoice->GetString(0) == _("Local"));
-	wxASSERT(searchchoice->GetString(1) == _("Remote Servers"));
-	wxASSERT(searchchoice->GetString(2) == _("Kad"));
-	wxASSERT(searchchoice->GetString(3) == _("All"));
-	wxASSERT(searchchoice->GetCount() == 4);
-
-	m_searchchoices = searchchoice->GetStrings();
-
-	// Let's break it now.
+	m_notebook->SetCloseIconWidth(SearchModeCloseWidth(m_notebook));
+	m_notebook->EnableTabTooltips(true);
+	m_notebook->AssignImageList(CreateSearchModeImages(m_notebook).release());
 
 	FixSearchTypes();
 
@@ -534,23 +499,26 @@ void CSearchDlg::OnSearchNameContextMenu(wxContextMenuEvent &WXUNUSED(evt))
 
 void CSearchDlg::FixSearchTypes()
 {
-	wxChoice *searchchoice = CastChild(ID_SEARCHTYPE, wxChoice);
+	wxBitmapComboBox *searchchoice = CastChild(ID_SEARCHTYPE, wxBitmapComboBox);
 
 	searchchoice->Clear();
 
-	int pos = 0;
+	const auto appendMode = [searchchoice](SearchType type) {
+		searchchoice->Append(SearchModeLabel(type),
+			wxArtProvider::GetBitmapBundle(SearchModeArtId(type), wxART_OTHER, wxSize(16, 16)));
+	};
 
 	if (thePrefs::GetNetworkED2K()) {
-		searchchoice->Insert(m_searchchoices[0], pos++); // "Local"
-		searchchoice->Insert(m_searchchoices[1], pos++); // "Remote Servers"
+		appendMode(LocalSearch);
+		appendMode(GlobalSearch);
 	}
 
 	if (thePrefs::GetNetworkKademlia()) {
-		searchchoice->Insert(m_searchchoices[2], pos++); // "Kad"
+		appendMode(KadSearch);
 	}
 
 	if (thePrefs::GetNetworkED2K() && thePrefs::GetNetworkKademlia()) {
-		searchchoice->Insert(m_searchchoices[3], pos++); // "All"
+		appendMode(AllSearch);
 	}
 
 	// Restore the last-used search type (persisted in OnSearchTypeChanged) instead of always
@@ -577,18 +545,22 @@ void CSearchDlg::FixSearchTypes()
 			selection = 0;
 		}
 		searchchoice->SetSelection(selection);
+		searchchoice->SetToolTip(
+			SearchModeHelp(static_cast<SearchType>(GetSelectedSearchTypeCanonical())));
 	}
 }
 
 int CSearchDlg::GetSelectedSearchTypeCanonical()
 {
 	return SearchTypeFromChoice(
-		CastChild(ID_SEARCHTYPE, wxChoice)->GetSelection(), thePrefs::GetNetworkED2K());
+		CastChild(ID_SEARCHTYPE, wxBitmapComboBox)->GetSelection(), thePrefs::GetNetworkED2K());
 }
 
 void CSearchDlg::OnSearchTypeChanged(wxCommandEvent &WXUNUSED(evt))
 {
 	const int canonical = GetSelectedSearchTypeCanonical();
+	CastChild(ID_SEARCHTYPE, wxBitmapComboBox)
+		->SetToolTip(SearchModeHelp(static_cast<SearchType>(canonical)));
 	if (canonical != wxNOT_FOUND) {
 		wxConfigBase::Get()->Write("/eMule/DefaultSearchType", (long)canonical);
 	}
@@ -956,12 +928,12 @@ void CSearchDlg::OnSearchAdded(wxUIntPtr searchID, const wxString &name, uint32 
 	// it must not pull the selection away from what the user is doing. Synchronous, matching its
 	// mirror Search_Removed -> CloseSearchTab: both run from wherever the core changed the
 	// search set, including inside EC packet handling.
-	CreateNewTab(((kind == KadSearch || kind == AllSearch) ? "!" : "") +
-			     GetSearchTypeTag(static_cast<SearchType>(kind)) + name + " (0)",
+	CreateNewTab(((kind == KadSearch || kind == AllSearch) ? "!" : "") + name + " (0)",
 		searchID,
-		false);
+		false,
+		static_cast<SearchType>(kind));
 	if (CSearchListCtrl *page = GetSearchList(searchID)) {
-		page->SetSearchTabLabel(GetSearchTypeTag(static_cast<SearchType>(kind)) + name);
+		page->SetSearchTabLabel(name);
 		page->SetSearchRunning(kind == KadSearch || kind == AllSearch);
 	}
 }
@@ -1190,10 +1162,12 @@ bool CSearchDlg::CheckTabNameExists(const wxString &searchString)
 	return false;
 }
 
-void CSearchDlg::CreateNewTab(const wxString &searchString, wxUIntPtr nSearchID, bool select)
+void CSearchDlg::CreateNewTab(const wxString &searchString, wxUIntPtr nSearchID, bool select, SearchType type)
 {
 	CSearchListCtrl *list = new CSearchListCtrl(m_notebook, ID_SEARCHLISTCTRL);
-	m_notebook->AddPage(list, searchString, select, 0);
+	list->SetName(SearchModeLabel(type) + ": " + searchString);
+	list->SetHelpText(SearchModeLabel(type) + " — " + SearchModeHelp(type));
+	m_notebook->AddPage(list, searchString, select, SearchModeImage(type));
 
 	// Ensure that new results are filtered
 	bool enable = CastChild(IDC_FILTERCHECK, wxCheckBox)->GetValue();
@@ -1403,7 +1377,12 @@ void CSearchDlg::KadSearchEnd(uint32 id)
 	for (int i = 0; i < nPages; ++i) {
 		CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
 		if (page->GetSearchId() == id || id == 0) {
-			page->SetSearchRunning(false);
+			// For AllSearch the Kad component may finish while eD2k is still
+			// running; only clear the running flag once the whole search is done.
+			if (theApp->searchlist->GetSearchLifecycleStateById(page->GetSearchId()) ==
+				CSearchList::SEARCH_LIFECYCLE_FINISHED) {
+				page->SetSearchRunning(false);
+			}
 			UpdateHitCount(page);
 		}
 	}
@@ -1590,11 +1569,13 @@ void CSearchDlg::StartNewSearch()
 		OnStartRejected(real_id, error);
 	} else {
 		CreateNewTab(((search_type == KadSearch || search_type == AllSearch) ? "!" : "") +
-				     GetSearchTypeTag(search_type) + params.searchString + " (0)",
-			real_id);
+				     params.searchString + " (0)",
+			real_id,
+			true,
+			search_type);
 		if (CSearchListCtrl *page = GetSearchList(real_id)) {
 			page->SetSearchRequest(request);
-			page->SetSearchTabLabel(GetSearchTypeTag(search_type) + params.searchString);
+			page->SetSearchTabLabel(params.searchString);
 			page->SetSearchRunning(search_type == KadSearch || search_type == AllSearch);
 		}
 	}

@@ -105,17 +105,22 @@ def connect_daemon(proc, port):
     raise TimeoutError('EC listener did not start')
 
 
-def search_record(name):
+def search_record(name, sources=10):
     name = name.encode()
     tags = (b'\x02\x01\x00\x01' + struct.pack('<H', len(name)) + name
             + b'\x03\x01\x00\x02' + struct.pack('<I', 4096)
-            + b'\x03\x01\x00\x15' + struct.pack('<I', 10)
+            + b'\x03\x01\x00\x15' + struct.pack('<I', sources)
             + b'\x03\x01\x00\x30' + struct.pack('<I', 3))
     return bytes(range(16)) + struct.pack('<IHI', 0, 0, 4) + tags
 
 
-def stored_result(name, children=()):
-    record = search_record(name)
+def stored_result(name, children=(), networks=None):
+    record = search_record(name, max(networks) if networks else 10)
+    if networks is not None:
+        extra = b''
+        for key, value in zip((b'AllSearchEd2kSources', b'AllSearchKadSources'), networks):
+            extra += b'\x03' + struct.pack('<H', len(key)) + key + struct.pack('<I', value)
+        record = record[:22] + struct.pack('<I', 6) + record[26:] + extra
     # Stored results omit the network record's client IP/port before the tags,
     # then append Kad, directory, client/server endpoints, publish info and lists.
     return (record[:16] + record[22:]
@@ -266,6 +271,8 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                             break
                         time.sleep(0.1)
                     assert state[0x70a][0] == 2 and state[0x70c][0] == 1, state
+                    local_counts = ec.call(0x28, [integer(0x70e, pending)])[1][0x700][1]
+                    assert 0x718 not in local_counts and 0x719 not in local_counts, local_counts
                     # Kad's minimum keyword length must not block eD2k fallback.
                     short = ec.start('go')
                     assert b'go' in queries.get(timeout=5)
@@ -301,6 +308,10 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                     assert state[0x70c][0] == 1, state
                     counts = ec.call(0x28, [integer(0x70e, sid)])[1][0x700][1]
                     assert counts[0x30a][0] == 30 and counts[0x30d][0] == 9, counts
+                    assert counts[0x718][0] == 30 and counts[0x719][0] == 0, counts
+                    # The optional pair must remain available on repeated update polls.
+                    counts = ec.call(0x28, [integer(0x70e, sid)])[1][0x700][1]
+                    assert counts[0x718][0] == 30 and counts[0x719][0] == 0, counts
                     # Close while a server response is in flight. Its late results
                     # must not recreate the removed bucket.
                     answer.clear()
@@ -323,6 +334,7 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                 assert state[0x70a][0] == 2 and state[0x717][0] == 0, state
                 counts = ec.call(0x28, [integer(0x70e, sid)])[1][0x700][1]
                 assert counts[0x30a][0] == 30 and counts[0x30d][0] == 9, counts
+                assert counts[0x718][0] == 30 and counts[0x719][0] == 0, counts
                 # Repeated close/restart and bulk shutdown exercise registry ownership.
                 ec.call(0x27, [integer(0x70e, sid), tag(0x711)])
                 assert ec.call(0x48)[0] == 1
@@ -346,12 +358,28 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                 second = stored_result('second.bin')
                 valid = stored_search([first, second])
                 nested = stored_search([stored_result('parent.bin', [first, second])])
-                for fixture, expected in ((valid, 2), (valid[:-1], 0), (nested[:-1], 0)):
+                mixed = stored_search([stored_result('mixed.bin', networks=(10, 50))])
+                for fixture, expected, networks in ((valid, 2, None), (mixed, 1, (10, 50)),
+                        (valid[:-1], 0, None), (nested[:-1], 0, None)):
                     (root / 'StoredSearches.met').write_bytes(fixture)
                     proc = subprocess.Popen([binary, '-c', str(root)], stdout=log, stderr=log, env=env)
                     ec = connect_daemon(proc, ec_port)
                     if expected:
                         assert ec.progress(123)[0x70c][0] == expected
+                        # Legacy saved ALL results contain only an aggregate, not
+                        # a reliable network split. Do not invent E/K counts.
+                        counts = ec.call(0x28, [integer(0x70e, 123)])[1][0x700][1]
+                        if networks is None:
+                            assert 0x718 not in counts and 0x719 not in counts, counts
+                        else:
+                            assert (counts[0x718][0], counts[0x719][0]) == networks, counts
+                            assert counts[0x30a][0] == max(networks), counts
+                            for _ in range(2):
+                                # amulegui uses incremental updates. The second
+                                # poll's value map has already seen these counts.
+                                counts = ec.call(0x28, [tag(4, b'\x04', 2),
+                                    integer(0x70e, 123)])[1][0x700][1]
+                                assert (counts[0x718][0], counts[0x719][0]) == networks, counts
                     else:
                         listing = ec.call(0x60)
                         assert not listing[1], listing

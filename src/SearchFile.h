@@ -29,6 +29,7 @@
 #include "KnownFile.h" // Needed for CAbstractFile
 #include "SearchSourceCount.h"
 #include <memory>
+#include <optional>
 
 class CMemFile;
 class CMD4Hash;
@@ -130,6 +131,10 @@ public:
 		return m_completeSourceContributions.Total();
 #endif
 	}
+	// Available only for ALL results with a known split. Legacy saved searches and
+	// older daemons expose only the aggregate; do not guess their network counts.
+	std::optional<CSearchSourceCount> GetNetworkSourceCounts() const;
+
 	/** Returns the ID of the search, used to select the right list when displaying. */
 	wxUIntPtr GetSearchID() const { return m_searchID; }
 	/** Returns true if the result is from a Kademlia search. */
@@ -244,14 +249,16 @@ private:
 	//! The unique ID of this search owning this result.
 	wxUIntPtr m_searchID;
 #ifdef CLIENT_GUI
-	//! The remote GUI receives aggregate counts and never merges network reports.
+	//! The remote GUI receives aggregates and an optional ALL breakdown; it never merges reports.
 	uint32 m_sourceCount;
 	uint32 m_completeSourceCount;
+	std::optional<CSearchSourceCount> m_networkSourceCounts;
 #else
 	//! Live per-network contributions, retained through copies and child merges.
 	//! Aggregate counts are derived on demand rather than stored a second time.
 	CSearchSourceCount m_sourceContributions;
 	CSearchSourceCount m_completeSourceContributions;
+	bool m_sourceContributionsKnown = false;
 #endif
 	//! Specifies if the result is from a kademlia search.
 	bool m_kademlia;

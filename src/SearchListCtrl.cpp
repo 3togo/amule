@@ -112,7 +112,7 @@ CSearchListCtrl::CSearchListCtrl(
 	AddTextColumn(_("Sources"),
 		CSearchListModel::COL_SOURCES,
 		"u",
-		50,
+		180,
 		wxALIGN_LEFT,
 		wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_SORTABLE);
 	AddTextColumn(_("Type"),

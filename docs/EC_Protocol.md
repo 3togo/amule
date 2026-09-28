@@ -859,6 +859,15 @@ Combined result rows sum eD2k source reports and take the maximum Kad source
 estimate, then display the larger of those two counts because the networks
 can overlap.
 
+ALL results with a known network split also carry
+`EC_TAG_SEARCHFILE_ED2K_SOURCES` (`0x0718`) and
+`EC_TAG_SEARCHFILE_KAD_SOURCES` (`0x0719`) as an optional pair of unsigned
+counts, including on updates. A zero means that network contributed zero;
+an absent pair means the split is unknown (older daemons or saved results).
+Existing aggregate source tags retain their meaning. Clients display, for
+example, `50 (3) · E:10 K:50`, preserving complete-source and optional `[clients]`
+counts, and sort by the aggregate. New saved ALL results retain the split.
+
 For multi-search clients, replacement requests are validated before the existing
 eD2k search is stopped. Rejected requests leave it running; standalone Kad searches
 run alongside it. The legacy single-search sentinel still replaces its one bucket.

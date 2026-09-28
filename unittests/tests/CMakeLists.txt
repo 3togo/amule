@@ -1813,7 +1813,10 @@ target_link_libraries (SearchRequestTest muleunit mulecommon)
 # Source estimates must be independent of network arrival order and filename grouping.
 add_executable (SearchSourceCountTest SearchSourceCountTest.cpp)
 add_test (NAME SearchSourceCountTest COMMAND SearchSourceCountTest)
-target_include_directories (SearchSourceCountTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_include_directories (SearchSourceCountTest PRIVATE
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_SOURCE_DIR}/src/libs
+)
 target_link_libraries (SearchSourceCountTest muleunit mulecommon)
 
 # AllSearch type (issue #1542): enum/EC alignment and CSearchRequest reuse logic.

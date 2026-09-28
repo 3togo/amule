@@ -231,6 +231,12 @@ public:
 	 */
 	bool HasKadComponent(uint32_t searchID) const;
 
+	/**
+	 * Maps a Kad search ID back to the ed2k tab ID that owns its results, or returns
+	 * the ID unchanged. Used so a Kad completion notification reaches the AllSearch tab.
+	 */
+	uint32_t GetEffectiveSearchId(uint32_t searchID) const;
+
 	/** Returns the completion percentage of the current search. */
 	uint32 GetSearchProgress() const;
 

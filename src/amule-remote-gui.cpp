@@ -3954,6 +3954,11 @@ CSearchFile::CSearchFile(const CEC_SearchFile_Tag *tag)
 	}
 }
 
+std::optional<CSearchSourceCount> CSearchFile::GetNetworkSourceCounts() const
+{
+	return m_networkSourceCounts;
+}
+
 void CSearchFile::AddChild(CSearchFile *file)
 {
 	m_children.push_back(file);
@@ -4028,6 +4033,17 @@ void CSearchListRem::ProcessItemUpdate(const CEC_SearchFile_Tag *tag, CSearchFil
 	tag->SourceCount(&file->m_sourceCount);
 	tag->CompleteSourceCount(&file->m_completeSourceCount);
 	tag->DownloadStatus((uint32 *)&file->m_downloadStatus);
+	bool networkCountsChanged = false;
+	const CECTag *ed2kTag = tag->GetTagByName(EC_TAG_SEARCHFILE_ED2K_SOURCES);
+	const CECTag *kadTag = tag->GetTagByName(EC_TAG_SEARCHFILE_KAD_SOURCES);
+	if (ed2kTag && kadTag) {
+		const uint32 ed2k = ed2kTag->GetInt();
+		const uint32 kad = kadTag->GetInt();
+		networkCountsChanged = !file->m_networkSourceCounts ||
+				       file->m_networkSourceCounts->Ed2k() != ed2k ||
+				       file->m_networkSourceCounts->Kad() != kad;
+		file->m_networkSourceCounts = CSearchSourceCount::FromNetworks(ed2k, kad);
+	}
 
 	// On-demand Kad community ratings/comments (same positional encoding as a partfile's;
 	// see CEC_SearchFile_Tag). The comments dialog polls the running flag + rating list
@@ -4053,8 +4069,8 @@ void CSearchListRem::ProcessItemUpdate(const CEC_SearchFile_Tag *tag, CSearchFil
 	// the monolithic client filled those columns in from the same server reply.
 	DecodeMediaTags(tag, file);
 
-	if (file->m_sourceCount != sourceCount || file->m_completeSourceCount != completeSourceCount ||
-		file->m_downloadStatus != status) {
+	if (networkCountsChanged || file->m_sourceCount != sourceCount ||
+		file->m_completeSourceCount != completeSourceCount || file->m_downloadStatus != status) {
 		if (theApp->amuledlg && theApp->amuledlg->m_searchwnd) {
 			theApp->amuledlg->m_searchwnd->UpdateResult(file);
 		}

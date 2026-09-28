@@ -38,6 +38,14 @@
 #include "PartFile.h"      // Needed for CPartFile::CanAddSource
 #include "DownloadQueue.h" // Needed for CDownloadQueue
 #include "KnownFileList.h" // Needed for CKnownFileList
+#include "SearchList.h"
+
+namespace
+{
+// Named, local persistence tags: older readers retain these as optional metadata.
+const wxString ED2K_SOURCES_TAG = "AllSearchEd2kSources";
+const wxString KAD_SOURCES_TAG = "AllSearchKadSources";
+} // namespace
 
 CSearchFile::CSearchFile(const CMemFile &data,
 	bool optUTF8,
@@ -49,6 +57,7 @@ CSearchFile::CSearchFile(const CMemFile &data,
 : m_parent(NULL)
 , m_showChildren(false)
 , m_searchID(searchID)
+, m_sourceContributionsKnown(true)
 , m_kademlia(kademlia)
 , m_downloadStatus(NEW)
 , m_directory(directory)
@@ -124,6 +133,7 @@ CSearchFile::CSearchFile(const CSearchFile &other) // NOLINT(bugprone-copy-const
 , m_searchID(other.m_searchID)
 , m_sourceContributions(other.m_sourceContributions)
 , m_completeSourceContributions(other.m_completeSourceContributions)
+, m_sourceContributionsKnown(other.m_sourceContributionsKnown)
 , m_kademlia(other.m_kademlia)
 , m_downloadStatus(other.m_downloadStatus)
 , m_directory(other.m_directory)
@@ -178,6 +188,15 @@ CSearchFile::~CSearchFile()
 	}
 }
 
+std::optional<CSearchSourceCount> CSearchFile::GetNetworkSourceCounts() const
+{
+	if (m_sourceContributionsKnown &&
+		theApp->searchlist->GetSearchLifecycleKindById(m_searchID) == AllSearch) {
+		return m_sourceContributions;
+	}
+	return std::nullopt;
+}
+
 bool CSearchFile::WriteToFile(CFileDataIO *file) const
 {
 	file->WriteHash(m_abyFileHash);
@@ -189,6 +208,10 @@ bool CSearchFile::WriteToFile(CFileDataIO *file) const
 	// format always writes the size as a single 64-bit-capable tag, so a size-hi tag here would
 	// be additive rather than complementary on read.
 	uint32 tagcount = 4;
+	const auto networkCounts = GetNetworkSourceCounts();
+	if (networkCounts) {
+		tagcount += 2;
+	}
 	if (m_iUserRating != 0) {
 		tagcount++;
 	}
@@ -206,6 +229,10 @@ bool CSearchFile::WriteToFile(CFileDataIO *file) const
 
 	CTagInt32 completesourcestag(FT_COMPLETE_SOURCES, GetCompleteSourceCount());
 	completesourcestag.WriteTagToFile(file);
+	if (networkCounts) {
+		CTagInt32(ED2K_SOURCES_TAG, networkCounts->Ed2k()).WriteTagToFile(file);
+		CTagInt32(KAD_SOURCES_TAG, networkCounts->Kad()).WriteTagToFile(file);
+	}
 
 	if (m_iUserRating != 0) {
 		CTagInt32 ratingtag(FT_FILERATING, m_iUserRating);
@@ -248,12 +275,20 @@ std::unique_ptr<CSearchFile> CSearchFile::LoadFromFile(CFileDataIO *file, bool a
 	std::unique_ptr<CSearchFile> result(new CSearchFile());
 	uint32 sourceCount = 0;
 	uint32 completeSourceCount = 0;
+	std::optional<uint32> ed2kSources;
+	std::optional<uint32> kadSources;
 
 	result->m_abyFileHash = file->ReadHash();
 
 	uint32 tagcount = file->ReadUInt32();
 	for (uint32 i = 0; i != tagcount; ++i) {
 		CTag tag(*file, true);
+		if (tag.GetName() == ED2K_SOURCES_TAG || tag.GetName() == KAD_SOURCES_TAG) {
+			if (tag.IsInt() && tag.GetInt() <= UINT32_MAX) {
+				(tag.GetName() == ED2K_SOURCES_TAG ? ed2kSources : kadSources) = tag.GetInt();
+			}
+			continue;
+		}
 		switch (tag.GetNameID()) {
 		case FT_FILENAME:
 			result->SetFileName(CPath::FromUniv(tag.GetStr()));
@@ -280,9 +315,16 @@ std::unique_ptr<CSearchFile> CSearchFile::LoadFromFile(CFileDataIO *file, bool a
 	}
 
 	result->m_kademlia = file->ReadUInt8() != 0;
-	// Restored searches are finished snapshots: preserve the stored aggregate.
-	// They never resume receiving results, so no wire-format change is needed.
+	// Older snapshots contain only the aggregate. Keep that value, but do not
+	// misrepresent it as a known network split in an ALL tab.
 	result->m_sourceContributions = CSearchSourceCount(sourceCount, result->m_kademlia);
+	if (ed2kSources && kadSources) {
+		const auto counts = CSearchSourceCount::FromNetworks(*ed2kSources, *kadSources);
+		if (counts.Total() == sourceCount) {
+			result->m_sourceContributions = counts;
+			result->m_sourceContributionsKnown = true;
+		}
+	}
 	result->m_completeSourceContributions = CSearchSourceCount(completeSourceCount, result->m_kademlia);
 	result->m_directory = file->ReadString(true);
 	result->m_clientID = file->ReadUInt32();
@@ -350,6 +392,7 @@ void CSearchFile::AddClient(const ClientStruct &client)
 
 void CSearchFile::MergeResults(const CSearchFile &other)
 {
+	m_sourceContributionsKnown = m_sourceContributionsKnown && other.m_sourceContributionsKnown;
 	m_sourceContributions.Merge(other.m_sourceContributions);
 	m_completeSourceContributions.Merge(other.m_completeSourceContributions);
 
@@ -457,6 +500,7 @@ void CSearchFile::UpdateParent()
 
 	CSearchSourceCount sourceCount;
 	CSearchSourceCount completeSourceCount;
+	m_sourceContributionsKnown = true;
 	uint32_t differentNames = 0;  // max known different names
 	uint32_t publishersKnown = 0; // max publishers known
 	uint32_t trustValue = 0;      // average trust value
@@ -473,6 +517,7 @@ void CSearchFile::UpdateParent()
 		}
 
 		sourceCount.Merge(child->m_sourceContributions);
+		m_sourceContributionsKnown = m_sourceContributionsKnown && child->m_sourceContributionsKnown;
 		completeSourceCount.Merge(child->m_completeSourceContributions);
 
 		// Publish info

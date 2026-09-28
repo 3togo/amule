@@ -653,7 +653,9 @@ void KadSearchEnd(uint32 id)
 	theApp->searchlist->SetKadSearchFinished(id);
 #ifndef AMULE_DAEMON
 	if (theApp->amuledlg && theApp->amuledlg->m_searchwnd) {
-		theApp->amuledlg->m_searchwnd->KadSearchEnd(id);
+		// AllSearch files Kad results under the ed2k tab ID, so the completion
+		// notification must reach that tab, not the Kad search's own ID.
+		theApp->amuledlg->m_searchwnd->KadSearchEnd(theApp->searchlist->GetEffectiveSearchId(id));
 	}
 #endif
 }

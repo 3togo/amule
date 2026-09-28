@@ -23,45 +23,31 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
-#ifndef SEARCHSOURCECOUNT_H
-#define SEARCHSOURCECOUNT_H
+#ifndef SEARCHSOURCEFORMAT_H
+#define SEARCHSOURCEFORMAT_H
 
-#include <algorithm>
-#include <cstdint>
+#include "SearchSourceCount.h"
+#include <common/Format.h>
+#include <optional>
 
-// Server reports contribute to an eD2k total; Kad reports repeat a network-wide
-// estimate. The networks can overlap, so display the larger estimate, not their
-// sum. Keep both contributions when merging rows and alternative filenames.
-class CSearchSourceCount
+// Shared by native and remote result models. Unknown network splits keep the
+// legacy display; zero is meaningful when a known ALL search used one network.
+inline wxString FormatSearchSources(uint32_t total,
+	uint32_t complete,
+	size_t clients,
+	const std::optional<CSearchSourceCount> &networks = std::nullopt)
 {
-public:
-	CSearchSourceCount() = default;
-	CSearchSourceCount(uint32_t count, bool kad)
-	: m_ed2k(kad ? 0 : count)
-	, m_kad(kad ? count : 0)
-	{
+	wxString text = CFormat("%u") % total;
+	if (complete) {
+		text += CFormat(" (%u)") % complete;
 	}
-
-	void Merge(const CSearchSourceCount &other)
-	{
-		m_ed2k += other.m_ed2k;
-		m_kad = std::max(m_kad, other.m_kad);
+	if (clients) {
+		text += CFormat(" [%u]") % clients;
 	}
-
-	uint32_t Total() const { return std::max(m_ed2k, m_kad); }
-	uint32_t Ed2k() const { return m_ed2k; }
-	uint32_t Kad() const { return m_kad; }
-
-	static CSearchSourceCount FromNetworks(uint32_t ed2k, uint32_t kad)
-	{
-		CSearchSourceCount counts(ed2k, false);
-		counts.m_kad = kad;
-		return counts;
+	if (networks) {
+		text += CFormat(wxString::FromUTF8(" · E:%u K:%u")) % networks->Ed2k() % networks->Kad();
 	}
-
-private:
-	uint32_t m_ed2k = 0;
-	uint32_t m_kad = 0;
-};
+	return text;
+}
 
 #endif

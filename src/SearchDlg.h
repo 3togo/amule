@@ -85,7 +85,10 @@ public:
 	 * which must not steal the selection from whatever the user is looking at, possibly mid-
 	 * typing (got3nks, amule-org/amule#703).
 	 */
-	void CreateNewTab(const wxString &searchString, wxUIntPtr nSearchID, bool select = true);
+	void CreateNewTab(const wxString &searchString,
+		wxUIntPtr nSearchID,
+		bool select = true,
+		SearchType type = BrowseSearch);
 
 	/// The local search is over.
 	void LocalSearchEnd();
@@ -339,8 +342,6 @@ private:
 	wxGauge *m_progressbar;
 
 	CMuleNotebook *m_notebook;
-
-	wxArrayString m_searchchoices;
 
 	/**
 	 * Tabs whose hit-count label needs recomputing, flushed once per idle.
