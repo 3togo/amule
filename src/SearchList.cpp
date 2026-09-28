@@ -666,8 +666,12 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 		if (type == AllSearch && kadData.get()) {
 			try {
 				// Always allocate a distinct Kad ID, including for legacy EC's sentinel.
-				Kademlia::CSearch *search = Kademlia::CSearchManager::PrepareFindKeywords(
-					params.strKeyword, kadData->GetLength(), kadData->GetRawBuffer(), 0);
+				Kademlia::CSearch *search =
+					Kademlia::CSearchManager::PrepareFindKeywords(params.strKeyword,
+						kadData->GetLength(),
+						kadData->GetRawBuffer(),
+						0,
+						true);
 				m_kadToEd2kSearchId[search->GetSearchID()] = *searchID;
 			} catch (const wxString &what) {
 				if (!theApp->IsConnectedED2K()) {

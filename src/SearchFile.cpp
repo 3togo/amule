@@ -190,9 +190,19 @@ CSearchFile::~CSearchFile()
 
 std::optional<CSearchSourceCount> CSearchFile::GetNetworkSourceCounts() const
 {
-	if (m_sourceContributionsKnown &&
-		theApp->searchlist->GetSearchLifecycleKindById(m_searchID) == AllSearch) {
-		return m_sourceContributions;
+	switch (theApp->searchlist->GetSearchLifecycleKindById(m_searchID)) {
+	case LocalSearch:
+	case GlobalSearch:
+		return CSearchSourceCount::FromNetworks(GetSourceCount(), 0);
+	case KadSearch:
+		return CSearchSourceCount::FromNetworks(0, GetSourceCount());
+	case AllSearch:
+		if (m_sourceContributionsKnown) {
+			return m_sourceContributions;
+		}
+		break;
+	default:
+		break;
 	}
 	return std::nullopt;
 }

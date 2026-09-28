@@ -131,8 +131,8 @@ public:
 		return m_completeSourceContributions.Total();
 #endif
 	}
-	// Available only for ALL results with a known split. Legacy saved searches and
-	// older daemons expose only the aggregate; do not guess their network counts.
+	// Single-network searches use their aggregate; ALL requires a known split.
+	// Older daemons and legacy ALL snapshots may expose only the aggregate.
 	std::optional<CSearchSourceCount> GetNetworkSourceCounts() const;
 
 	/** Returns the ID of the search, used to select the right list when displaying. */

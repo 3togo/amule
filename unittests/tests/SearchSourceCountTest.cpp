@@ -75,20 +75,24 @@ TEST(SearchSourceCount, SingleNetworkCountsKeepTheirExistingSemantics)
 	ASSERT_EQUALS(uint32_t(0), CSearchSourceCount().Total());
 }
 
-TEST(SearchSourceCount, AllDisplayPreservesCompleteAndClientCounts)
+TEST(SearchSourceCount, CompactDisplay)
 {
-	const auto counts = CSearchSourceCount::FromNetworks(10, 50);
 	ASSERT_EQUALS(
-		wxString::FromUTF8("50 (3) · E:10 K:50"), FormatSearchSources(counts.Total(), 3, 0, counts));
-	ASSERT_EQUALS(wxString::FromUTF8("50 (3) [2] · E:10 K:50"),
-		FormatSearchSources(counts.Total(), 3, 2, counts));
+		wxString("E:10 K:50"), FormatSearchSources(50, CSearchSourceCount::FromNetworks(10, 50)));
+	ASSERT_EQUALS(wxString("E:9"), FormatSearchSources(9, CSearchSourceCount::FromNetworks(9, 0)));
+	ASSERT_EQUALS(wxString("K:50"), FormatSearchSources(50, CSearchSourceCount::FromNetworks(0, 50)));
+	ASSERT_EQUALS(wxString("0"), FormatSearchSources(0, CSearchSourceCount()));
+	ASSERT_EQUALS(wxString("50"), FormatSearchSources(50));
 }
 
-TEST(SearchSourceCount, UnknownSplitAndSingleNetworkFallbackAreDistinct)
+TEST(SearchSourceCount, TooltipExplainsCounts)
 {
-	ASSERT_EQUALS(wxString("50 (3) [2]"), FormatSearchSources(50, 3, 2));
-	ASSERT_EQUALS(wxString::FromUTF8("10 · E:10 K:0"),
-		FormatSearchSources(10, 0, 0, CSearchSourceCount::FromNetworks(10, 0)));
-	ASSERT_EQUALS(wxString::FromUTF8("50 · E:0 K:50"),
-		FormatSearchSources(50, 0, 0, CSearchSourceCount::FromNetworks(0, 50)));
+	ASSERT_EQUALS(wxString("Estimated availability: 9\neD2k sources: 9\nComplete sources: 8\nDirect "
+			       "client endpoints: 1"),
+		FormatSearchSourcesTooltip(9, 8, 1, CSearchSourceCount::FromNetworks(9, 0)));
+	const wxString mixed = FormatSearchSourcesTooltip(50, 3, 2, CSearchSourceCount::FromNetworks(10, 50));
+	ASSERT_TRUE(mixed.Contains("eD2k sources: 10"));
+	ASSERT_TRUE(mixed.Contains("Kad sources: 50"));
+	ASSERT_TRUE(mixed.Contains("Network counts may overlap"));
+	ASSERT_TRUE(FormatSearchSourcesTooltip(50, 0, 0).Contains("Network breakdown unavailable."));
 }

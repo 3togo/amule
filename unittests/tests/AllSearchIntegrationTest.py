@@ -195,10 +195,17 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                 state = ec.progress(sid)
                 assert state[0x70b][0] == 5 and state[0x717][0] == 1, state
                 assert state[0x70a][0] == 1, state
-                # A duplicate target must reject the new request without deleting this one.
-                op, _ = ec.call(0x26, [tag(0x701, b'\x05', 2,
+                # Standalone Kad retains its duplicate-target rejection policy.
+                op, _ = ec.call(0x26, [tag(0x701, b'\x02', 2,
                     [string(0x702, 'ubuntu linux'), string(0x705, '')])])
                 assert op == 5 and ec.progress(sid)[0x717][0] == 1
+                # Repeating ALL replaces only the old Kad component, including
+                # when eD2k is unavailable; retain the old search bucket.
+                previous_all = sid
+                sid = ec.start('ubuntu linux')
+                assert ec.progress(previous_all)[0x70a][0] == 2
+                assert ec.progress(previous_all)[0x70b][0] == 5
+                assert ec.progress(sid)[0x717][0] == 1
                 assert ec.call(0x27, [integer(0x70e, sid)])[0] == 7
                 state = ec.progress(sid)
                 assert state[0x70a][0] == 2 and state[0x717][0] == 0, state
@@ -272,14 +279,27 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                         time.sleep(0.1)
                     assert state[0x70a][0] == 2 and state[0x70c][0] == 1, state
                     local_counts = ec.call(0x28, [integer(0x70e, pending)])[1][0x700][1]
-                    assert 0x718 not in local_counts and 0x719 not in local_counts, local_counts
+                    assert local_counts[0x718][0] == local_counts[0x30a][0], local_counts
+                    assert local_counts[0x719][0] == 0, local_counts
                     # Kad's minimum keyword length must not block eD2k fallback.
                     short = ec.start('go')
                     assert b'go' in queries.get(timeout=5)
                     state = ec.progress(short)
                     assert state[0x70b][0] == 5 and state[0x717][0] == 0, state
                     ec.call(0x27, [integer(0x70e, short)])
+                    # ALL must restart a conflicting Kad keyword instead of
+                    # silently degrading to eD2k-only (K:0).
+                    previous = ec.start('fedora workstation', kind=2)
+                    unrelated = ec.start('debian regression', kind=2)
+                    op, _ = ec.call(0x26, [tag(0x701, bytes([5]), 2,
+                        [string(0x702, 'fedora ('), string(0x705, '')])])
+                    assert op == 5, op
+                    assert ec.progress(previous)[0x70a][0] == 1
                     sid = ec.start('fedora workstation')
+                    assert ec.progress(previous)[0x70a][0] == 2
+                    assert ec.progress(sid)[0x717][0] == 1
+                    assert ec.progress(unrelated)[0x70a][0] == 1
+                    ec.call(0x27, [integer(0x70e, unrelated)])
                     query = queries.get(timeout=5)
                     assert b'fedora' in query and b'workstation' in query, query
                     time.sleep(2)

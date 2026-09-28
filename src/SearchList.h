@@ -573,6 +573,7 @@ private:
 	//! Kad-assigned ID. This maps that Kad ID back to the ed2k ID that owns the tab, so
 	//! KademliaSearchKeyword results land in the right bucket. Pruned in RemoveResults.
 	std::map<uint32_t, uint32_t> m_kadToEd2kSearchId;
+
 	//! Peer ecid per browse id; see RegisterBrowseSearch().
 	std::map<uint32_t, uint32> m_browsePeers;
 

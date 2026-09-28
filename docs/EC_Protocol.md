@@ -859,14 +859,18 @@ Combined result rows sum eD2k source reports and take the maximum Kad source
 estimate, then display the larger of those two counts because the networks
 can overlap.
 
-ALL results with a known network split also carry
+Single-network search results and ALL results with a known split carry
 `EC_TAG_SEARCHFILE_ED2K_SOURCES` (`0x0718`) and
 `EC_TAG_SEARCHFILE_KAD_SOURCES` (`0x0719`) as an optional pair of unsigned
 counts, including on updates. A zero means that network contributed zero;
-an absent pair means the split is unknown (older daemons or saved results).
-Existing aggregate source tags retain their meaning. Clients display, for
-example, `50 (3) · E:10 K:50`, preserving complete-source and optional `[clients]`
-counts, and sort by the aggregate. New saved ALL results retain the split.
+an absent pair means the split is unknown (older daemons or legacy ALL snapshots).
+Existing aggregate source tags retain their meaning and determine sorting.
+Clients display only nonzero network counts: `E:9`, `K:50`, or `E:9 K:50`.
+Both zero produces `0`; an unknown breakdown displays the aggregate alone.
+A Sources-cell tooltip explains estimated availability, network counts,
+complete sources, direct client endpoints, and overlapping network estimates.
+Both tags remain present on the wire even when one is zero. New saved results
+retain the split.
 
 For multi-search clients, replacement requests are validated before the existing
 eD2k search is stopped. Rejected requests leave it running; standalone Kad searches

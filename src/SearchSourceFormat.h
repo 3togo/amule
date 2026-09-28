@@ -29,24 +29,48 @@
 #include "SearchSourceCount.h"
 #include <common/Format.h>
 #include <optional>
+#include <wx/intl.h>
 
-// Shared by native and remote result models. Unknown network splits keep the
-// legacy display; zero is meaningful when a known ALL search used one network.
-inline wxString FormatSearchSources(uint32_t total,
+// Compact cell text; detailed counts belong in the tooltip.
+inline wxString FormatSearchSources(
+	uint32_t total, const std::optional<CSearchSourceCount> &networks = std::nullopt)
+{
+	wxString text;
+	if (networks) {
+		if (networks->Ed2k()) {
+			text = CFormat("E:%u") % networks->Ed2k();
+		}
+		if (networks->Kad()) {
+			if (!text.empty()) {
+				text += " ";
+			}
+			text += CFormat("K:%u") % networks->Kad();
+		}
+	}
+	return text.empty() ? (CFormat("%u") % total).GetString() : text;
+}
+
+inline wxString FormatSearchSourcesTooltip(uint32_t total,
 	uint32_t complete,
 	size_t clients,
 	const std::optional<CSearchSourceCount> &networks = std::nullopt)
 {
-	wxString text = CFormat("%u") % total;
-	if (complete) {
-		text += CFormat(" (%u)") % complete;
-	}
-	if (clients) {
-		text += CFormat(" [%u]") % clients;
-	}
+	wxString text = CFormat(_("Estimated availability: %u")) % total;
 	if (networks) {
-		text += CFormat(wxString::FromUTF8(" · E:%u K:%u")) % networks->Ed2k() % networks->Kad();
+		if (networks->Ed2k()) {
+			text += "\n" + (CFormat(_("eD2k sources: %u")) % networks->Ed2k()).GetString();
+		}
+		if (networks->Kad()) {
+			text += "\n" + (CFormat(_("Kad sources: %u")) % networks->Kad()).GetString();
+		}
+		if (networks->Ed2k() && networks->Kad()) {
+			text += "\n" + _("Network counts may overlap; they are not added together.");
+		}
+	} else {
+		text += "\n" + _("Network breakdown unavailable.");
 	}
+	text += "\n" + (CFormat(_("Complete sources: %u")) % complete).GetString();
+	text += "\n" + (CFormat(_("Direct client endpoints: %u")) % clients).GetString();
 	return text;
 }
 

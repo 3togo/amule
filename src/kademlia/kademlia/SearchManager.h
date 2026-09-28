@@ -72,11 +72,13 @@ public:
 	// Will return unique search id, returns zero if already searching for this file.
 	static CSearch *PrepareLookup(uint32_t type, bool start, const CUInt128 &id);
 
-	// Will return unique search id, returns zero if already searching for this keyword.
+	// Returns a started search, or throws on failure. ALL may replace an existing
+	// keyword search for the same target; other lookup types are never replaced.
 	static CSearch *PrepareFindKeywords(const wxString &keyword,
 		uint32_t searchTermsDataSize,
 		const uint8_t *searchTermsData,
-		uint32_t searchid);
+		uint32_t searchid,
+		bool replaceKeyword = false);
 
 	// Takes ownership on success, rejection, and exception.
 	static bool StartSearch(CSearch *search);
