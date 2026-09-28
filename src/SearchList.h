@@ -31,9 +31,10 @@
 #include "SearchFile.h"        // Needed for CSearchFile
 #include "SearchResultIndex.h" // Needed for CSearchResultIndex
 #include <common/SmartPtr.h>   // Needed for CSmartPtr
-#include <set>                 // Needed for std::set (per-search Kad completion)
-#include <map>                 // Needed for std::map (per-search start times)
-#include <vector>              // Needed for std::vector (same-hash result fan-out)
+#include <memory>
+#include <set>    // Needed for std::set (per-search Kad completion)
+#include <map>    // Needed for std::map (per-search start times)
+#include <vector> // Needed for std::vector (same-hash result fan-out)
 
 class CMemFile;
 class CMD4Hash;
@@ -71,6 +72,30 @@ enum SearchType
 	//! Search all available networks simultaneously (eD2k local + global + Kad).
 	AllSearch = 5
 };
+
+// The dropdown omits eD2k entries when that network is disabled. Its fourth
+// entry is AllSearch, whose wire value is 5 (3 is reserved for web searches).
+inline int SearchTypeFromChoice(int selection, bool ed2kEnabled)
+{
+	if (selection < 0) {
+		return selection;
+	}
+	if (!ed2kEnabled) {
+		return selection == 0 ? KadSearch : -1;
+	}
+	switch (selection) {
+	case 0:
+		return LocalSearch;
+	case 1:
+		return GlobalSearch;
+	case 2:
+		return KadSearch;
+	case 3:
+		return AllSearch;
+	default:
+		return -1;
+	}
+}
 
 typedef std::vector<CSearchFile *> CSearchResultList;
 
@@ -410,6 +435,7 @@ public:
 	 * GetSearchLifecycleState) path.
 	 */
 	void SetKadSearchFinished(uint32_t searchID);
+	bool IsShuttingDown() const { return m_shuttingDown; }
 
 private:
 	//! On-disk name of the search-results persistence file, in the config dir.
@@ -508,7 +534,7 @@ private:
 	uint32 m_nextEd2kId = 0;
 
 	//! The current packet used for searches.
-	CPacket *m_searchPacket;
+	std::unique_ptr<CPacket> m_searchPacket;
 
 	//! Does the current search packet contain 64bit values?
 	bool m_64bitSearchPacket;
@@ -531,7 +557,7 @@ private:
 	//! most-recently-started search). Pruned in RemoveResults.
 	std::map<uint32_t, SearchType> m_searchKinds;
 
-	//! Per-search result-source attribution: how many results each network delivered.
+	//! Accepted result records per network, including duplicate records merged into a row.
 	//! Used to verify AllSearch actually returns results from all networks.
 	struct ResultSourceCounts
 	{
@@ -584,9 +610,8 @@ private:
 	// The map of search-results (ResultMap / m_results) lives in
 	// CSearchResultIndex, shared with the remote search list.
 
-	//! Contains the results type desired in the current search.
-	//! If not empty, results of different types are filtered.
-	wxString m_resultType;
+	//! Per-search result type filters; missing or empty values accept all types.
+	std::map<uint32_t, wxString> m_resultTypes;
 
 	wxDECLARE_EVENT_TABLE();
 };

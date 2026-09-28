@@ -661,6 +661,7 @@ public:
 	// state == RUNNING), so "More" is enabled only while the search runs and greys out once
 	// it completes. Pruned on tab close / removal.
 	std::map<uint32, bool> m_kadActive;
+	std::map<uint32, bool> m_allKadActive;
 
 	// The result index (ResultMap / m_results) and GetSearchResults() live in
 	// CSearchResultIndex, shared with the monolithic search list. Results here are owned by

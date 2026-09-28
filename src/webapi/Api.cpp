@@ -7121,6 +7121,8 @@ wxString SearchKindToString(std::uint8_t kind)
 		return wxString::FromAscii("local");
 	case EC_SEARCH_KAD:
 		return wxString::FromAscii("kad");
+	case EC_SEARCH_ALL:
+		return wxString::FromAscii("all");
 	case EC_SEARCH_BROWSE:
 		// A "View Files" browse of one peer's share. Reported, never accepted
 		// by SearchTypeFromString: browses are not started through /search.

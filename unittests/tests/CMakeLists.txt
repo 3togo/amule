@@ -1838,3 +1838,15 @@ if (UNIX AND NOT APPLE)
 	)
 	target_link_libraries (AutostartManagerTest muleunit mulecommon)
 endif()
+
+# EC and eD2k loopback integration: isolated config, no public servers or Kad peers.
+if (BUILD_DAEMON AND UNIX AND NOT APPLE)
+	find_package (Python3 QUIET COMPONENTS Interpreter)
+	if (Python3_Interpreter_FOUND)
+		add_test (NAME AllSearchIntegrationTest
+			COMMAND ${Python3_EXECUTABLE}
+				${CMAKE_CURRENT_SOURCE_DIR}/AllSearchIntegrationTest.py $<TARGET_FILE:amuled>
+		)
+		set_tests_properties (AllSearchIntegrationTest PROPERTIES TIMEOUT 45)
+	endif ()
+endif ()

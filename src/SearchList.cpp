@@ -263,7 +263,6 @@ CSearchList::CSearchList()
 , m_searchType(LocalSearch)
 , m_searchInProgress(false)
 , m_currentSearch(-1)
-, m_searchPacket(NULL)
 , m_64bitSearchPacket(false)
 , m_KadSearchFinished(true)
 , m_ed2kSearchFinished(true)
@@ -275,12 +274,17 @@ CSearchList::CSearchList()
 
 CSearchList::~CSearchList()
 {
-	StopSearch();
-
 	// Teardown: the GUI is being dismantled around us, so suppress the Search_Removed broadcast
 	// below -- there is no tab left worth closing and the notify would reach a half-destroyed
 	// CamuleDlg.
 	m_shuttingDown = true;
+	StopSearch();
+	m_searchTimer.Stop();
+	m_searchPacket.reset();
+	// Searches with zero hits still own Kad work and per-search bookkeeping.
+	while (!m_searchStrings.empty()) {
+		RemoveResults(m_searchStrings.begin()->first);
+	}
 	while (!AllResults().empty()) {
 		RemoveResults(AllResults().begin()->first);
 	}
@@ -296,8 +300,39 @@ uint32 CSearchList::AllocateEd2kId()
 
 void CSearchList::RemoveResults(wxUIntPtr searchID)
 {
-	// A non-existent search id will just be ignored
-	Kademlia::CSearchManager::StopSearch(searchID, true);
+	if (!IsKnownSearchId(static_cast<uint32_t>(searchID)) && !HasSearchResults(searchID)) {
+		return;
+	}
+	StopSearchById(searchID);
+	struct RemovedResults
+	{
+		CSearchResultList files;
+		~RemovedResults()
+		{
+			for (CSearchFile *file : files) {
+				delete file;
+			}
+		}
+	} removed{ TakeSearchResults(searchID) };
+	for (auto it = m_kadToEd2kSearchId.begin(); it != m_kadToEd2kSearchId.end();) {
+		if (it->second == searchID) {
+			m_finishedKadSearches.erase(it->first);
+			it = m_kadToEd2kSearchId.erase(it);
+		} else {
+			++it;
+		}
+	}
+
+	// Drop any per-search tracking for this ID (bounded growth).
+	m_finishedKadSearches.erase(static_cast<uint32_t>(searchID));
+	m_searchStartTimes.erase(static_cast<uint32_t>(searchID));
+	m_searchKinds.erase(static_cast<uint32_t>(searchID));
+	m_searchStrings.erase(static_cast<uint32_t>(searchID));
+	m_browsePeers.erase(static_cast<uint32_t>(searchID));
+	m_resultSourceCounts.erase(static_cast<uint32_t>(searchID));
+	m_resultTypes.erase(static_cast<uint32_t>(searchID));
+	// The browse record outlives its client but not its search.
+	theApp->browsemanager->Remove(static_cast<uint32_t>(searchID));
 
 	// Tell the GUI before the CSearchFile objects below are deleted: in a monolithic build
 	// CSearchListCtrl's model holds them as raw pointers -- each row's wxDataViewItem ID is the
@@ -308,24 +343,7 @@ void CSearchList::RemoveResults(wxUIntPtr searchID)
 		Notify_Search_Removed(searchID);
 	}
 
-	// Drop any per-search tracking for this ID (bounded growth).
-	m_finishedKadSearches.erase(static_cast<uint32_t>(searchID));
-	m_searchStartTimes.erase(static_cast<uint32_t>(searchID));
-	m_searchKinds.erase(static_cast<uint32_t>(searchID));
-	m_kadToEd2kSearchId.erase(static_cast<uint32_t>(searchID));
-	m_searchStrings.erase(static_cast<uint32_t>(searchID));
-	m_browsePeers.erase(static_cast<uint32_t>(searchID));
-	m_resultSourceCounts.erase(static_cast<uint32_t>(searchID));
-	// The browse record outlives its client but not its search.
-	theApp->browsemanager->Remove(static_cast<uint32_t>(searchID));
-
-	// This list owns its results, so free them before dropping the index
-	// (which, being shared with the remote search list, never deletes).
-	const CSearchResultList &list = GetSearchResults(searchID);
-	for (CSearchFile *file : list) {
-		delete file;
-	}
-	DropResultIndex(searchID);
+	// removed owns the detached results until all notifications have returned.
 }
 
 const wxChar *const CSearchList::s_storedSearchesFilename = wxT("StoredSearches.met");
@@ -574,19 +592,7 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 		return _("eD2k search can't be done if eD2k is not connected");
 	}
 
-	if (params.typeText != ED2KFTSTR_PROGRAM) {
-		if (params.typeText.CmpNoCase("Any")) {
-			m_resultType = params.typeText;
-		} else {
-			m_resultType.Clear();
-		}
-	} else {
-		// No check is to be made on returned results if the
-		// type is 'Programs', since this returns multiple types.
-		m_resultType.Clear();
-	}
-
-	if (type == KadSearch || type == AllSearch) {
+	if (type == KadSearch || (type == AllSearch && Kademlia::CKademlia::IsRunning())) {
 		Kademlia::WordList words;
 		Kademlia::CSearchManager::GetWords(params.searchString, &words);
 		if (!words.empty()) {
@@ -596,7 +602,7 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 		}
 	}
 
-	bool supports64bit = (type == KadSearch || type == AllSearch)
+	bool supports64bit = type == KadSearch
 				     ? true
 				     : theApp->serverconnect->GetCurrentServer() != NULL &&
 					       (theApp->serverconnect->GetCurrentServer()->GetTCPFlags() &
@@ -604,7 +610,18 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 	bool packetUsing64bit;
 
 	// This MemFile is automatically free'd
-	CMemFilePtr data = CreateSearchData(params, type, supports64bit, packetUsing64bit);
+	// Server queries must keep the routing keyword; Kad queries omit it because
+	// the DHT target already supplies it. Never share a serialized query between them.
+	CMemFilePtr data = CreateSearchData(
+		params, type == AllSearch ? GlobalSearch : type, supports64bit, packetUsing64bit);
+	CMemFilePtr kadData;
+	if (data.get() && type == AllSearch && Kademlia::CKademlia::IsRunning()) {
+		bool kadUsing64bit;
+		kadData = CreateSearchData(params, KadSearch, true, kadUsing64bit);
+		if (!kadData.get()) {
+			data.reset();
+		}
+	}
 
 	if (data.get() == NULL) {
 		wxASSERT(_astrParserErrors.GetCount());
@@ -624,18 +641,9 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 	// ed2k search's late hits get dropped (wrong type) or misfiled (wrong bucket). Every other
 	// start updates the anchor as before.
 	const bool preserveEd2kAnchor = (type == KadSearch) && m_searchInProgress;
-	if (!preserveEd2kAnchor) {
-		m_searchType = type;
-	}
-	m_searchStart = time(NULL);
 
-	// EC clients reuse the sentinel 0xffffffff for every search regardless of network type.
-	// Get_EC_Response_Search -> RemoveResults(0xffffffff) already soft-stops the previous Kad
-	// search via PrepareToStop() so it can drain in-flight packets, but those late
-	// KademliaSearchKeyword callbacks would then land in the *new* search's bucket -- Kad
-	// results contaminating an ed2k result list, or the reverse, whenever an EC client switches
-	// search type without restarting the daemon. Hard-delete the previous Kad search first.
-	// Native-GUI searches allocate distinct top/bottom-half IDs, so they never take this branch.
+	// Legacy EC clients reuse the sentinel across networks. Ensure that no old
+	// Kad search can still deliver results to the bucket before reusing it.
 	if (*searchID == 0xffffffff) {
 		Kademlia::CSearchManager::StopSearch(0xffffffff, false);
 	}
@@ -660,67 +668,55 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 			AddLogLineC(what);
 			return _("Unexpected error while attempting Kad search: ") + what;
 		}
-	} else if (type == AllSearch) {
-		// AllSearch: send to the current server (local) AND arm the global sweep, then
-		// start a Kad search alongside. The ed2k ID is the tab's primary ID; the Kad ID
-		// is mapped back to it so KademliaSearchKeyword results land in the same bucket.
-		m_currentSearch = *(searchID);
-		m_searchInProgress = true;
-		m_ed2kSearchFinished = false;
-		m_resultSourceCounts[static_cast<uint32_t>(*searchID)] = ResultSourceCounts();
 
-		CPacket *searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_SEARCHREQUEST);
-
-		theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
-		theApp->serverconnect->SendPacket(searchPacket, true);
-
-		m_awaitingServerAnswer = true;
-		m_searchTimer.Start(SERVER_ANSWER_TIMEOUT_MS, true /* one shot */);
-
-		delete m_searchPacket;
-		m_searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_GLOBSEARCHREQ);
-		m_64bitSearchPacket = packetUsing64bit;
-
-		if (Kademlia::CKademlia::IsRunning()) {
+	} else {
+		// AllSearch owns an eD2k ID even when only Kad is available.
+		if (type == AllSearch && kadData.get()) {
 			try {
-				uint32_t kadSearchID = *searchID;
-				Kademlia::CSearch *search =
-					Kademlia::CSearchManager::PrepareFindKeywords(params.strKeyword,
-						data->GetLength(),
-						data->GetRawBuffer(),
-						kadSearchID);
-				kadSearchID = search->GetSearchID();
-				m_kadToEd2kSearchId[kadSearchID] = static_cast<uint32_t>(*searchID);
-				m_KadSearchFinished = false;
+				// Always allocate a distinct Kad ID, including for legacy EC's sentinel.
+				Kademlia::CSearch *search = Kademlia::CSearchManager::PrepareFindKeywords(
+					params.strKeyword, kadData->GetLength(), kadData->GetRawBuffer(), 0);
+				m_kadToEd2kSearchId[search->GetSearchID()] = *searchID;
 			} catch (const wxString &what) {
-				AddLogLineC(what);
+				if (!theApp->IsConnectedED2K()) {
+					return _("Unexpected error while attempting Kad search: ") + what;
+				}
+				AddLogLineN(_("All search: Kad component could not start: ") + what);
 			}
 		}
-	} else {
-		// This is an ed2k search, local or global
 		m_currentSearch = *(searchID);
-		m_searchInProgress = true;
-		m_ed2kSearchFinished = false;
+		m_searchInProgress = theApp->IsConnectedED2K();
+		m_ed2kSearchFinished = !m_searchInProgress;
 		m_resultSourceCounts[static_cast<uint32_t>(*searchID)] = ResultSourceCounts();
 
-		CPacket *searchPacket = new CPacket(*data.get(), OP_EDONKEYPROT, OP_SEARCHREQUEST);
+		if (m_searchInProgress) {
+			auto searchPacket =
+				std::make_unique<CPacket>(*data, OP_EDONKEYPROT, OP_SEARCHREQUEST);
 
-		theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
-		theApp->serverconnect->SendPacket(searchPacket, (type == LocalSearch));
+			theStats::AddUpOverheadServer(searchPacket->GetPacketSize());
+			theApp->serverconnect->SendPacket(searchPacket.get(), false);
 
-		// Bound the wait for the server's answer, for either kind: a local search has no other
-		// terminal path, and a global one's sweep is armed by the very answer we are waiting for.
-		m_awaitingServerAnswer = true;
-		m_searchTimer.Start(SERVER_ANSWER_TIMEOUT_MS, true /* one shot */);
+			// Bound the wait for the server's answer, for either kind: a local search has no
+			// other terminal path, and a global one's sweep is armed by the very answer we are
+			// waiting for.
+			m_awaitingServerAnswer = true;
+			m_searchTimer.Start(SERVER_ANSWER_TIMEOUT_MS, true /* one shot */);
 
-		if (type == GlobalSearch) {
-			delete m_searchPacket;
-			m_searchPacket = searchPacket;
-			m_64bitSearchPacket = packetUsing64bit;
-			m_searchPacket->SetOpCode(
-				OP_GLOBSEARCHREQ); // will be changed later when actually sending the packet!!
+			if (type == GlobalSearch || type == AllSearch) {
+				m_searchPacket = std::move(searchPacket);
+				m_64bitSearchPacket = packetUsing64bit;
+				m_searchPacket->SetOpCode(OP_GLOBSEARCHREQ); // will be changed later when
+									     // actually sending the packet!!
+			}
 		}
 	}
+
+	// Publish the new anchor only after startup succeeds. A rejected Kad request
+	// must not change the kind or progress of the previous search.
+	if (!preserveEd2kAnchor) {
+		m_searchType = type;
+	}
+	m_searchStart = time(NULL);
 
 	// Record this search's own start time so its (cosmetic Kad) progress ramp is computed from
 	// *its* age even after it is no longer the most-recently-started search -- otherwise a Kad
@@ -732,6 +728,13 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 	// search's real type regardless of the scalar anchor bookkeeping.
 	m_searchKinds[static_cast<uint32_t>(*searchID)] = type;
 	m_searchStrings[static_cast<uint32_t>(*searchID)] = params.searchString;
+	// Concurrent Kad searches can have different filters. Apply each query's own
+	// filter rather than whichever type was most recently submitted.
+	if (params.typeText != ED2KFTSTR_PROGRAM && params.typeText.CmpNoCase("Any")) {
+		m_resultTypes[*searchID] = params.typeText;
+	} else {
+		m_resultTypes.erase(*searchID);
+	}
 
 	// Tell the GUI a search now exists. Every producer funnels through here -- the monolithic
 	// dialog and the EC_OP_SEARCH_START handler alike -- so this one call covers a search
@@ -779,17 +782,23 @@ void CSearchList::FinalizeLocalSearch()
 	if (m_searchType == AllSearch) {
 		LogResultSourceCounts(
 			static_cast<uint32_t>(m_currentSearch), wxT("AllSearch eD2k component finished"));
-		if (m_KadSearchFinished) {
-			LogResultSourceCounts(
-				static_cast<uint32_t>(m_currentSearch), wxT("AllSearch COMPLETE"));
-		}
 	}
 
-	Notify_SearchLocalEnd();
+	if (!m_shuttingDown) {
+		Notify_SearchLocalEnd();
+	}
 }
 
 uint32 CSearchList::GetSearchProgress() const
 {
+	if (m_searchType == AllSearch) {
+		if (HasKadComponent(static_cast<uint32_t>(m_currentSearch))) {
+			return 0; // Kad progress is not measurable.
+		}
+		if (!m_searchInProgress) {
+			return 0xfffe;
+		}
+	}
 	if (m_searchType == KadSearch) {
 		// We cannot measure the progress of Kad searches.
 		// But we can tell when they are over.
@@ -833,7 +842,10 @@ CSearchList::SearchLifecycleState CSearchList::GetSearchLifecycleState() const
 	if (m_searchType == KadSearch) {
 		return m_KadSearchFinished ? SEARCH_LIFECYCLE_FINISHED : SEARCH_LIFECYCLE_RUNNING;
 	}
-	// ED2K (Local / Global / All): m_ed2kSearchFinished mirrors m_KadSearchFinished.
+	if (m_searchType == AllSearch && HasKadComponent(static_cast<uint32_t>(m_currentSearch))) {
+		return SEARCH_LIFECYCLE_RUNNING;
+	}
+	// The eD2k component is tracked separately from all concurrent Kad searches.
 	return m_ed2kSearchFinished ? SEARCH_LIFECYCLE_FINISHED : SEARCH_LIFECYCLE_RUNNING;
 }
 
@@ -897,7 +909,7 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent &WXUNUSED(evt))
 	}
 
 	// Ensure that the server-queue contains the current servers.
-	if (m_searchPacket == NULL) {
+	if (!m_searchPacket) {
 		// This was a pending event, handled after 'Stop' was pressed.
 		return;
 	} else if (!m_serverQueue.IsActive()) {
@@ -949,7 +961,7 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent &WXUNUSED(evt))
 						theStats::AddUpOverheadServer(
 							m_searchPacket->GetPacketSize());
 						theApp->serverconnect->SendUDPPacket(
-							m_searchPacket, server, false);
+							m_searchPacket.get(), server, false);
 					} else {
 						AddDebugLogLineN(logServerUDP,
 							"Skipped UDP search on server " +
@@ -967,7 +979,7 @@ void CSearchList::OnGlobalSearchTimer(CTimerEvent &WXUNUSED(evt))
 						theStats::AddUpOverheadServer(
 							m_searchPacket->GetPacketSize());
 						theApp->serverconnect->SendUDPPacket(
-							m_searchPacket, server, false);
+							m_searchPacket.get(), server, false);
 					} else {
 						AddDebugLogLineN(logServerUDP,
 							"Skipped UDP search on server " +
@@ -1110,25 +1122,25 @@ void CSearchList::ProcessUDPSearchAnswer(
 
 bool CSearchList::AddToList(CSearchFile *toadd, bool clientResponse)
 {
+	std::unique_ptr<CSearchFile> owned(toadd);
 	const uint64 fileSize = toadd->GetFileSize();
 	// If filesize is 0, or file is too large for the network, drop it
 	if ((fileSize == 0) || (fileSize > MAX_FILE_SIZE)) {
 		AddDebugLogLineN(logSearch,
 			CFormat("Dropped result with filesize %u: %s") % fileSize % toadd->GetFileName());
 
-		delete toadd;
 		return false;
 	}
 
 	// If the result was not the type the user wanted, drop it.
-	if ((clientResponse == false) && !m_resultType.IsEmpty()) {
-		if (GetFileTypeByName(toadd->GetFileName()) != m_resultType) {
+	const auto filter = m_resultTypes.find(static_cast<uint32_t>(toadd->GetSearchID()));
+	if (!clientResponse && filter != m_resultTypes.end() && !filter->second.IsEmpty()) {
+		if (GetFileTypeByName(toadd->GetFileName()) != filter->second) {
 			AddDebugLogLineN(logSearch,
 				CFormat("Dropped result type %s != %s, file %s") %
-					GetFileTypeByName(toadd->GetFileName()) % m_resultType %
+					GetFileTypeByName(toadd->GetFileName()) % filter->second %
 					toadd->GetFileName());
 
-			delete toadd;
 			return false;
 		}
 	}
@@ -1147,7 +1159,7 @@ bool CSearchList::AddToList(CSearchFile *toadd, bool clientResponse)
 					item->GetFileHash().Encode());
 			// Add the child, possibly updating the parents filename.
 			const size_t childrenBefore = item->GetChildren().size();
-			item->AddChild(toadd);
+			item->AddChild(owned.release());
 			// AddChild() MERGES a duplicate filename into an existing child and deletes the file
 			// it was handed, on two of its four paths -- notifying with `toadd` afterwards would
 			// then read freed memory (got3nks, PR #796 review). Infer survival from whether the
@@ -1172,6 +1184,7 @@ bool CSearchList::AddToList(CSearchFile *toadd, bool clientResponse)
 
 	// New unique result, simply add and display.
 	IndexResult(toadd);
+	owned.release();
 	Notify_Search_Add_Result(toadd);
 
 	return true;
@@ -1256,11 +1269,12 @@ bool CSearchList::IsKadSearch(uint32_t searchID) const
 
 bool CSearchList::HasKadComponent(uint32_t searchID) const
 {
-	if (IsKadSearch(searchID)) {
+	if (IsKadSearch(searchID) && !m_finishedKadSearches.count(searchID)) {
 		return true;
 	}
 	for (const auto &kv : m_kadToEd2kSearchId) {
-		if (kv.second == searchID && IsKadSearch(kv.first)) {
+		if (kv.second == searchID && !m_finishedKadSearches.count(kv.first) &&
+			IsKadSearch(kv.first)) {
 			return true;
 		}
 	}
@@ -1307,14 +1321,14 @@ void CSearchList::RegisterBrowseSearch(uint32 searchID, const wxString &peerName
 SearchType CSearchList::GetSearchLifecycleKindById(wxUIntPtr searchID) const
 {
 	const uint32_t sid = static_cast<uint32_t>(searchID);
-	// Kad is authoritative from the manager / finished-set even if the recorded
-	// kind was pruned with the results.
-	if (IsOrWasKadSearch(sid)) {
-		return KadSearch;
-	}
-	std::map<uint32_t, SearchType>::const_iterator it = m_searchKinds.find(sid);
+	// Recorded kinds preserve AllSearch after a restart, even though its finished
+	// marker also appears in the Kad completion set.
+	const auto it = m_searchKinds.find(sid);
 	if (it != m_searchKinds.end()) {
 		return it->second;
+	}
+	if (IsOrWasKadSearch(sid)) {
+		return KadSearch;
 	}
 	// Unknown id (never started here, or evicted): fall back to the scalar.
 	return m_searchType;
@@ -1353,7 +1367,11 @@ bool CSearchList::RequestMoreResults(uint32_t searchID)
 void CSearchList::StopSearch(bool globalOnly)
 {
 	if (m_searchType == GlobalSearch || m_searchType == AllSearch) {
-		FinalizeGlobalSearch();
+		if (m_searchType == AllSearch && !globalOnly) {
+			StopSearchById(m_currentSearch);
+		} else {
+			FinalizeGlobalSearch();
+		}
 		m_currentSearch = -1;
 	} else if (m_searchType == LocalSearch) {
 		// A local search has no sweep to halt, but it does have an armed answer timeout and an
@@ -1393,15 +1411,17 @@ void CSearchList::StopSearchById(wxUIntPtr searchID)
 
 void CSearchList::SetKadSearchFinished(uint32_t searchID)
 {
+	if (m_shuttingDown || (!m_searchStrings.count(searchID) && !m_kadToEd2kSearchId.count(searchID))) {
+		return;
+	}
 	m_finishedKadSearches.insert(searchID);
-	m_KadSearchFinished = true;
+	if (searchID == m_currentSearch && m_searchType == KadSearch) {
+		m_KadSearchFinished = true;
+	}
 
 	auto remap = m_kadToEd2kSearchId.find(searchID);
 	if (remap != m_kadToEd2kSearchId.end()) {
 		LogResultSourceCounts(remap->second, wxT("AllSearch Kad component finished"));
-		if (m_ed2kSearchFinished) {
-			LogResultSourceCounts(remap->second, wxT("AllSearch COMPLETE"));
-		}
 	} else {
 		LogResultSourceCounts(searchID, wxT("Kad search finished"));
 	}
@@ -1427,7 +1447,7 @@ CSearchList::SearchLifecycleState CSearchList::GetSearchLifecycleStateById(wxUIn
 	// as finished (its CSearch was destroyed on the result cap or the 45s lifetime) means
 	// finished. Independent of any other search, so one search ending never reports a different
 	// running search as finished.
-	if (IsKadSearch(sid)) {
+	if (HasKadComponent(sid)) {
 		return SEARCH_LIFECYCLE_RUNNING;
 	}
 	if (m_finishedKadSearches.count(sid)) {
@@ -1490,7 +1510,7 @@ uint8 CSearchList::GetSearchLifecyclePercentById(wxUIntPtr searchID) const
 		// 0xffff is the bar's terminal sentinel, not a percent.
 		return (pct == 0xffff) ? 100 : static_cast<uint8>(pct);
 	}
-	if (IsOrWasKadSearch(sid)) {
+	if (HasKadComponent(sid)) {
 		std::map<uint32_t, time_t>::const_iterator it = m_searchStartTimes.find(sid);
 		time_t start = (it != m_searchStartTimes.end()) ? it->second : m_searchStart;
 		time_t elapsed = time(nullptr) - start;
@@ -1538,8 +1558,9 @@ void CSearchList::LogResultSourceCounts(uint32_t searchID, const wxString &conte
 		return;
 	}
 	const ResultSourceCounts &c = it->second;
-	AddLogLineN(CFormat(wxT("%s [search %u]: TCP=%zu  UDP=%zu  Kad=%zu  total=%zu")) % context %
-		    searchID % c.tcp % c.udp % c.kad % c.total());
+	AddDebugLogLineN(logSearch,
+		CFormat(wxT("%s [search %u]: TCP=%zu  UDP=%zu  Kad=%zu  total=%zu")) % context % searchID %
+			c.tcp % c.udp % c.kad % c.total());
 }
 
 void CSearchList::StopInFlightEd2kSearch()
@@ -1560,8 +1581,7 @@ void CSearchList::FinalizeGlobalSearch()
 	// Order is crucial here: on wxMSW an additional event can be generated during the stop. So
 	// the packet has to be deleted first, so that OnGlobalSearchTimer() returns immediately
 	// (packet-null early return) without re-entering this path.
-	delete m_searchPacket;
-	m_searchPacket = NULL;
+	m_searchPacket.reset();
 	m_searchInProgress = false;
 	m_searchTimer.Stop();
 	m_awaitingServerAnswer = false;
@@ -1569,13 +1589,11 @@ void CSearchList::FinalizeGlobalSearch()
 	if (m_searchType == AllSearch) {
 		LogResultSourceCounts(
 			static_cast<uint32_t>(m_currentSearch), wxT("AllSearch eD2k component finished"));
-		if (m_KadSearchFinished) {
-			LogResultSourceCounts(
-				static_cast<uint32_t>(m_currentSearch), wxT("AllSearch COMPLETE"));
-		}
 	}
 
-	CoreNotify_Search_Update_Progress(0xffff);
+	if (!m_shuttingDown) {
+		CoreNotify_Search_Update_Progress(0xffff);
+	}
 }
 
 CSearchList::CMemFilePtr CSearchList::CreateSearchData(
@@ -1612,7 +1630,7 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(
 	_SearchExpr.m_aExpr.Empty();
 
 	s_strCurKadKeyword.Clear();
-	if (type == KadSearch || type == AllSearch) {
+	if (type == KadSearch) {
 		wxASSERT(!params.strKeyword.IsEmpty());
 		s_strCurKadKeyword = params.strKeyword;
 	}
@@ -1635,7 +1653,7 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(
 		return CMemFilePtr(nullptr);
 	}
 
-	if ((type == KadSearch || type == AllSearch) && s_strCurKadKeyword != params.strKeyword) {
+	if (type == KadSearch && s_strCurKadKeyword != params.strKeyword) {
 		AddDebugLogLineN(logSearch,
 			CFormat("Keyword was rearranged, using '%s' instead of '%s'") % s_strCurKadKeyword %
 				params.strKeyword);

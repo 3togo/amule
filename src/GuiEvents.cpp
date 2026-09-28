@@ -647,14 +647,15 @@ void SearchLocalEnd()
 
 void KadSearchEnd(uint32 id)
 {
+	if (!theApp->searchlist || theApp->searchlist->IsShuttingDown()) {
+		return;
+	}
+	theApp->searchlist->SetKadSearchFinished(id);
 #ifndef AMULE_DAEMON
-	if (theApp->amuledlg->m_searchwnd) {
+	if (theApp->amuledlg && theApp->amuledlg->m_searchwnd) {
 		theApp->amuledlg->m_searchwnd->KadSearchEnd(id);
 	}
 #endif
-	// Record this specific Kad search as finished (per-search completion for
-	// multi-search progress). Used on the daemon and monolithic builds.
-	theApp->searchlist->SetKadSearchFinished(id);
 }
 
 void Search_Update_Sources(CSearchFile *result)

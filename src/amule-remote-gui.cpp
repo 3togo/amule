@@ -3461,6 +3461,9 @@ CSearchListRem::CSearchListRem(CRemoteConnect *conn)
 wxString CSearchListRem::StartNewSearch(
 	uint32 *nSearchID, SearchType search_type, const CSearchList::CSearchParams &params)
 {
+	if (search_type == AllSearch && !m_conn->ServerSupportsSearchAll()) {
+		return _("The connected daemon does not support All searches.");
+	}
 	CECPacket search_req(EC_OP_SEARCH_START);
 	EC_SEARCH_TYPE ec_search_type = EC_SEARCH_LOCAL;
 	switch (search_type) {
@@ -3472,6 +3475,9 @@ wxString CSearchListRem::StartNewSearch(
 		break;
 	case KadSearch:
 		ec_search_type = EC_SEARCH_KAD;
+		break;
+	case AllSearch:
+		ec_search_type = EC_SEARCH_ALL;
 		break;
 	case BrowseSearch:
 		// Never a query: a browse goes out as EC_OP_FRIEND from SendBrowseRequest().
@@ -3544,6 +3550,7 @@ void CSearchListRem::StopSearchById(wxUIntPtr searchID, bool andClose)
 			// Tab closed: stop tracking this search's lifecycle.
 			m_activeSearches.erase((uint32)searchID);
 			m_kadActive.erase((uint32)searchID);
+			m_allKadActive.erase((uint32)searchID);
 			// Also the backstop for a START whose reply never attributed itself (an
 			// EC_OP_FAILED carries no ID): closing the tab the failed start left behind
 			// clears its entry, so the discovery deferral cannot be held open for the rest
@@ -3566,9 +3573,8 @@ bool CSearchListRem::IsKadSearch(uint32_t searchID) const
 
 bool CSearchListRem::HasKadComponent(uint32_t searchID) const
 {
-	// AllSearch contains a Kad component; the daemon reports it via the same m_kadActive
-	// flag (LIFECYCLE_KIND == AllSearch is treated the same as KadSearch for this gate).
-	return IsKadSearch(searchID);
+	const auto it = m_allKadActive.find(searchID);
+	return IsKadSearch(searchID) || (it != m_allKadActive.end() && it->second);
 }
 
 bool CSearchListRem::RequestMoreResults(uint32_t searchID)
@@ -3711,10 +3717,11 @@ void CSearchListRem::ApplySearchProgress(const CECTag *src)
 				// the progress call, which refreshes that button for the visible tab.
 				const CECTag *kindTag = src->GetTagByName(EC_TAG_SEARCH_LIFECYCLE_KIND);
 				const CECTag *stateTag = src->GetTagByName(EC_TAG_SEARCH_LIFECYCLE_STATE);
+				const CECTag *kadActive = src->GetTagByName(EC_TAG_SEARCH_KAD_ACTIVE);
+				m_allKadActive[(uint32)idTag->GetInt()] = kadActive && kadActive->GetInt();
 				if (kindTag && stateTag) {
 					m_kadActive[(uint32)idTag->GetInt()] =
-						(kindTag->GetInt() == KadSearch ||
-							kindTag->GetInt() == AllSearch) &&
+						(kindTag->GetInt() == KadSearch) &&
 						(stateTag->GetInt() == CSearchList::SEARCH_LIFECYCLE_RUNNING);
 				}
 				theApp->amuledlg->m_searchwnd->UpdateSearchProgress(
@@ -4087,6 +4094,7 @@ void CSearchListRem::RemoveResults(wxUIntPtr nSearchID)
 	// double-free.
 	DropResultIndex(nSearchID);
 	m_kadActive.erase((uint32)nSearchID);
+	m_allKadActive.erase((uint32)nSearchID);
 }
 
 void CStatsUpdaterRem::HandlePacket(const CECPacket *packet)

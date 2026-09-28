@@ -23,6 +23,8 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include <memory>
+
 #include "SearchFile.h" // Interface declarations.
 
 #include <tags/FileTags.h>
@@ -130,8 +132,17 @@ CSearchFile::CSearchFile(const CSearchFile &other) // NOLINT(bugprone-copy-const
 , m_clientServerPort(other.m_clientServerPort)
 , m_kadPublishInfo(other.m_kadPublishInfo)
 {
-	for (size_t i = 0; i < other.m_children.size(); ++i) {
-		m_children.push_back(new CSearchFile(*other.m_children.at(i)));
+	// Stage ownership until every copy and allocation succeeds. A throwing
+	// constructor does not run this object's destructor.
+	std::vector<std::unique_ptr<CSearchFile>> children;
+	children.reserve(other.m_children.size());
+	for (const CSearchFile *child : other.m_children) {
+		children.push_back(std::make_unique<CSearchFile>(*child));
+		children.back()->m_parent = this;
+	}
+	m_children.reserve(children.size());
+	for (auto &child : children) {
+		m_children.push_back(child.release());
 	}
 }
 
@@ -385,6 +396,7 @@ void CSearchFile::MergeResults(const CSearchFile &other)
 
 void CSearchFile::AddChild(CSearchFile *file)
 {
+	std::unique_ptr<CSearchFile> owned(file);
 	wxCHECK_RET(file, "Not a valid child!");
 	wxCHECK_RET(!file->GetParent(), "Search-result can only be child of one other result");
 	wxCHECK_RET(!file->HasChildren(), "Result already has children, cannot become child.");
@@ -398,13 +410,14 @@ void CSearchFile::AddChild(CSearchFile *file)
 		if (file->GetFileName() == GetFileName()) {
 			AddDebugLogLineN(logSearch, CFormat("Merged results for '%s'") % GetFileName());
 			MergeResults(*file);
-			delete file;
 			return;
 		} else {
 			// The first child will always be the first result we received.
 			AddDebugLogLineN(
 				logSearch, CFormat("Created initial child for result '%s'") % GetFileName());
-			m_children.push_back(new CSearchFile(*this));
+			auto initial = std::make_unique<CSearchFile>(*this);
+			m_children.push_back(initial.get());
+			initial.release();
 			m_children.back()->m_parent = this;
 			// Announced like any other new row. Without this the group is formed with
 			// two children while only the incoming one is ever notified, so a view that
@@ -423,13 +436,13 @@ void CSearchFile::AddChild(CSearchFile *file)
 		if (other->GetFileName() == file->GetFileName()) {
 			other->MergeResults(*file);
 			UpdateParent();
-			delete file;
 			return;
 		}
 	}
 
 	// New unique child.
 	m_children.push_back(file);
+	owned.release();
 	UpdateParent();
 
 	if (ShowChildren()) {

@@ -42,6 +42,7 @@ there client on the eMule forum..
 #include "../utils/UInt128.h"
 #include "../routing/Maps.h"
 #include "../../Tag.h"
+#include <memory>
 
 class CMemFile;
 
@@ -55,7 +56,7 @@ class CRoutingZone;
 class CKadClientSearcher;
 
 typedef std::list<wxString> WordList;
-typedef std::map<CUInt128, CSearch *> SearchMap;
+typedef std::map<CUInt128, std::unique_ptr<CSearch>> SearchMap;
 
 class CSearchManager
 {
@@ -77,6 +78,7 @@ public:
 		const uint8_t *searchTermsData,
 		uint32_t searchid);
 
+	// Takes ownership on success, rejection, and exception.
 	static bool StartSearch(CSearch *search);
 
 	static void ProcessResponse(
@@ -132,6 +134,7 @@ public:
 	static bool IsFWCheckUDPSearch(const CUInt128 &target);
 
 private:
+	static void DeleteSearch(SearchMap::iterator it);
 	static void FindNode(const CUInt128 &id, bool complete);
 	static bool FindNodeSpecial(const CUInt128 &id, CKadClientSearcher *requester);
 	static void CancelNodeSpecial(CKadClientSearcher *requester);

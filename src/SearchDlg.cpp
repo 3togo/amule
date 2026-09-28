@@ -555,7 +555,7 @@ void CSearchDlg::FixSearchTypes()
 
 	// Restore the last-used search type (persisted in OnSearchTypeChanged) instead of always
 	// defaulting to Local. The stored value is the stable canonical code (0 = Local, 1 =
-	// Remote Servers, 2 = Kad, 3 = All); map it back onto whichever entries are present now,
+	// Remote Servers, 2 = Kad, 5 = All); map it back onto whichever entries are present now,
 	// falling back to the first entry when the saved type's network is disabled.
 	long savedType = 0;
 	wxConfigBase::Get()->Read("/eMule/DefaultSearchType", &savedType, 0);
@@ -565,7 +565,8 @@ void CSearchDlg::FixSearchTypes()
 			selection = 1;
 		} else if (savedType == 2 && thePrefs::GetNetworkKademlia()) { // Kad
 			selection = 2;
-		} else if (savedType == 3 && thePrefs::GetNetworkKademlia()) { // All
+		} else if ((savedType == AllSearch || savedType == 3) &&
+			   thePrefs::GetNetworkKademlia()) { // All
 			selection = 3;
 		}
 		// else Local (0), or the saved network is gone -> first entry
@@ -581,17 +582,8 @@ void CSearchDlg::FixSearchTypes()
 
 int CSearchDlg::GetSelectedSearchTypeCanonical()
 {
-	int selection = CastChild(ID_SEARCHTYPE, wxChoice)->GetSelection();
-	if (selection == wxNOT_FOUND) {
-		return wxNOT_FOUND;
-	}
-	// FixSearchTypes() inserts choices as Local, Remote Servers, Kad, All, but drops the ED2K
-	// pair when ED2K is disabled -- then the only entry (Kad) sits at 0, so shift it onto the
-	// canonical Kad code (2).
-	if (!thePrefs::GetNetworkED2K()) {
-		selection += 2;
-	}
-	return selection;
+	return SearchTypeFromChoice(
+		CastChild(ID_SEARCHTYPE, wxChoice)->GetSelection(), thePrefs::GetNetworkED2K());
 }
 
 void CSearchDlg::OnSearchTypeChanged(wxCommandEvent &WXUNUSED(evt))
@@ -673,6 +665,15 @@ void CSearchDlg::ApplyProgressToBar(uint32 status)
 #ifndef CLIENT_GUI
 void CSearchDlg::RefreshVisibleTabProgress()
 {
+	for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
+		auto *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
+		if (page && page->IsSearchRunning() &&
+			theApp->searchlist->GetSearchLifecycleStateById(page->GetSearchId()) ==
+				CSearchList::SEARCH_LIFECYCLE_FINISHED) {
+			page->SetSearchRunning(false);
+			UpdateHitCount(page);
+		}
+	}
 	wxUIntPtr sid = GetVisibleSearchId();
 	// No tab => empty bar; otherwise reuse the same sentinel the EC PROGRESS
 	// reply builds, so monolithic and the remote GUI stay in lockstep.
@@ -947,13 +948,13 @@ void CSearchDlg::OnSearchAdded(wxUIntPtr searchID, const wxString &name, uint32 
 	// it must not pull the selection away from what the user is doing. Synchronous, matching its
 	// mirror Search_Removed -> CloseSearchTab: both run from wherever the core changed the
 	// search set, including inside EC packet handling.
-	CreateNewTab(((kind == KadSearch) ? "!" : "") + GetSearchTypeTag(static_cast<SearchType>(kind)) +
-			     name + " (0)",
+	CreateNewTab(((kind == KadSearch || kind == AllSearch) ? "!" : "") +
+			     GetSearchTypeTag(static_cast<SearchType>(kind)) + name + " (0)",
 		searchID,
 		false);
 	if (CSearchListCtrl *page = GetSearchList(searchID)) {
 		page->SetSearchTabLabel(GetSearchTypeTag(static_cast<SearchType>(kind)) + name);
-		page->SetSearchRunning(kind == KadSearch);
+		page->SetSearchRunning(kind == KadSearch || kind == AllSearch);
 	}
 }
 
@@ -1565,7 +1566,7 @@ void CSearchDlg::StartNewSearch()
 
 	SearchType search_type = KadSearch;
 
-	// Canonical order (0 = Local, 1 = Global, 2 = Kad), normalised for the
+	// Canonical types (0 = Local, 1 = Global, 2 = Kad, 5 = All), normalised for the
 	// disabled-ED2K case inside the helper.
 	int selection = GetSelectedSearchTypeCanonical();
 
@@ -1579,7 +1580,7 @@ void CSearchDlg::StartNewSearch()
 	case 2: // Kad search
 		search_type = KadSearch;
 		break;
-	case 3: // All networks
+	case AllSearch: // All networks
 		search_type = AllSearch;
 		break;
 	default:
@@ -1623,9 +1624,8 @@ void CSearchDlg::StartNewSearch()
 	}
 	if (!error.IsEmpty()) {
 		// Search failed / Remote in progress. Shared with amuleGUI's EC_OP_FAILED path so both
-		// builds report a rejected start the same way (got3nks, PR #680 review). Note amuleGUI
-		// never reaches here: CSearchListRem::StartNewSearch returns "" unconditionally and the
-		// rejection arrives later over EC.
+		// builds report a rejected start the same way. The remote GUI can also reject an
+		// unsupported search kind locally before sending it to an older daemon.
 		OnStartRejected(real_id, error);
 	} else {
 		CreateNewTab(((search_type == KadSearch || search_type == AllSearch) ? "!" : "") +

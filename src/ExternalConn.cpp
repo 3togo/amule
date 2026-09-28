@@ -1349,6 +1349,7 @@ const CECPacket *CECServerSocket::Authenticate(const CECPacket *request)
 				// gets no echo must not send the opcode at all -- it would land in
 				// ProcessRequest2's unknown-opcode branch and assert.
 				response->AddTag(CECEmptyTag(EC_TAG_CAN_SEARCH_LIST));
+				response->AddTag(CECEmptyTag(EC_TAG_CAN_SEARCH_ALL));
 			} else {
 				wxString err;
 				if (passwd) {
@@ -2973,6 +2974,8 @@ static void AppendSearchProgress(CECTag &out, wxUIntPtr sid)
 	out.AddTag(CECTag(EC_TAG_SEARCH_RESULT_COUNT,
 		static_cast<uint32>(theApp->searchlist->GetSearchResults(sid).size())));
 	out.AddTag(CECTag(EC_TAG_SEARCH_LIFECYCLE_PERCENT, pct));
+	out.AddTag(CECTag(EC_TAG_SEARCH_KAD_ACTIVE,
+		static_cast<uint8>(theApp->searchlist->HasKadComponent(static_cast<uint32>(sid)))));
 }
 
 // Progress for every search this connection could hold a tab for, one child per

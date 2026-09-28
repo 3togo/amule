@@ -197,7 +197,10 @@ CSearch::~CSearch()
 
 	switch (m_type) {
 	case KEYWORD:
-		Notify_KadSearchEnd(m_searchID);
+		// Rejected keyword searches have never been assigned a public identity.
+		if (HasSearchID()) {
+			Notify_KadSearchEnd(m_searchID);
+		}
 		break;
 	}
 }

@@ -134,3 +134,28 @@ TEST(AllSearchType, PendingAllSearchIsReusableBeforeProgress)
 	pages[0].progress = 0xfffeu;
 	ASSERT_EQUALS(pages.size(), FindReusableSearch(pages, allRequest));
 }
+
+// Exercise the actual dropdown conversion before matching a submitted request:
+// using the raw index 3 previously made the same All query start another tab.
+TEST(AllSearchType, AllChoiceReusesSubmittedAllSearch)
+{
+	CSearchList::CSearchParams params;
+	params.searchString = "ubuntu";
+	const CSearchRequest submitted(AllSearch, params);
+	const CSearchRequest selected(SearchTypeFromChoice(3, true), params);
+	const std::vector<CSearchReuseCandidate> pages{ { &submitted, 25 } };
+	ASSERT_EQUALS(size_t(0), FindReusableSearch(pages, selected));
+	ASSERT_EQUALS(static_cast<int>(EC_SEARCH_ALL), SearchTypeFromChoice(3, true));
+}
+
+TEST(AllSearchType, ChoiceMappingPreservesSingleNetworkSearches)
+{
+	ASSERT_EQUALS(static_cast<int>(LocalSearch), SearchTypeFromChoice(0, true));
+	ASSERT_EQUALS(static_cast<int>(GlobalSearch), SearchTypeFromChoice(1, true));
+	ASSERT_EQUALS(static_cast<int>(KadSearch), SearchTypeFromChoice(2, true));
+	ASSERT_EQUALS(static_cast<int>(KadSearch), SearchTypeFromChoice(0, false));
+	ASSERT_EQUALS(-1, SearchTypeFromChoice(-1, true));
+	ASSERT_EQUALS(-1, SearchTypeFromChoice(-1, false));
+	ASSERT_EQUALS(-1, SearchTypeFromChoice(1, false));
+	ASSERT_EQUALS(-1, SearchTypeFromChoice(4, true));
+}
