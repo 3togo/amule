@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-29 02:18+0800\n"
-"PO-Revision-Date: 2026-09-28 17:25+0000\n"
+"POT-Creation-Date: 2026-09-26 17:32+0100\n"
+"PO-Revision-Date: 2026-09-28 18:59+0000\n"
 "Last-Translator: \n"
 "Language-Team: Japanese\n"
 "Language: ja\n"
@@ -1115,10 +1115,6 @@ msgstr ""
 msgid "Unknown"
 msgstr "不明"
 
-#: src/amule-remote-gui.cpp
-msgid "The connected daemon does not support All searches."
-msgstr ""
-
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
 msgstr "LowID接続用の仲間を検索中"
@@ -1768,7 +1764,7 @@ msgstr "ローカルサーバ"
 msgid "Remote Server"
 msgstr "リモートサーバ"
 
-#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchModeIcons.h
+#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchDlg.cpp
 #: src/TextClient.cpp
 msgid "Kad"
 msgstr "Kad"
@@ -3895,10 +3891,13 @@ msgstr "検索"
 msgid "Type"
 msgstr "タイプ"
 
+#: src/muuli_wdr.cpp src/SearchDlg.cpp src/SearchListCtrl.cpp
+msgid "Local"
+msgstr "ローカル"
+
 #: src/muuli_wdr.cpp
-#, fuzzy
-msgid "Search network"
-msgstr "検索エラー"
+msgid "Global"
+msgstr "グローバル"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -6751,17 +6750,8 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr ""
 
 #: src/SearchList.cpp
-#, fuzzy
-msgid "All search can't be done if neither eD2k nor Kad is available"
-msgstr "Kadが走っていない中にはKadの検索はできません"
-
-#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "eD2k が接続されていない場合、eD2k 検索は実行できません"
-
-#: src/SearchList.cpp
-msgid "All search: no usable Kad keyword; continuing with eD2k."
-msgstr ""
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6770,10 +6760,6 @@ msgstr "Kad 検索用のキーワードがありません - 中止します"
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Kadを検索する間に不明なエラーが発生しました： "
-
-#: src/SearchList.cpp
-msgid "All search: Kad component could not start: "
-msgstr ""
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6829,39 +6815,6 @@ msgstr "キャンセルされました"
 msgid "New"
 msgstr "新規"
 
-#: src/SearchModeIcons.h
-#, fuzzy
-msgid "eD2k: Current server"
-msgstr "eD2kサーバリスト（server.met）"
-
-#: src/SearchModeIcons.h
-#, fuzzy
-msgid "eD2k: All servers"
-msgstr "全てのサーバを削除する"
-
-#: src/SearchModeIcons.h
-#, fuzzy
-msgid "All networks"
-msgstr "ネットワークなし"
-
-#: src/SearchModeIcons.h
-#, fuzzy
-msgid "Search the connected eD2k server."
-msgstr "現在接続しているサーバ。"
-
-#: src/SearchModeIcons.h
-msgid "Search the connected eD2k server and other servers in the server list."
-msgstr ""
-
-#: src/SearchModeIcons.h
-#, fuzzy
-msgid "Search the Kad network."
-msgstr "ネットワークへ接続します。"
-
-#: src/SearchModeIcons.h
-msgid "Search eD2k servers and Kad, using whichever networks are available."
-msgstr ""
-
 #: src/SearchProgressReport.cpp
 #, fuzzy
 msgid "running"
@@ -6902,40 +6855,6 @@ msgstr "検索の進行状況を取得できません"
 #: src/SearchProgressReport.cpp
 msgid "No search to report on.\n"
 msgstr ""
-
-#: src/SearchSourceFormat.h
-#, c-format
-msgid "Estimated availability: %u"
-msgstr ""
-
-#: src/SearchSourceFormat.h
-#, fuzzy, c-format
-msgid "eD2k sources: %u"
-msgstr "ファイルソース："
-
-#: src/SearchSourceFormat.h
-#, fuzzy, c-format
-msgid "Kad sources: %u"
-msgstr "見付かったソース： %s"
-
-#: src/SearchSourceFormat.h
-msgid "Network counts may overlap; they are not added together."
-msgstr ""
-
-#: src/SearchSourceFormat.h
-#, fuzzy
-msgid "Network breakdown unavailable."
-msgstr "新しいバージョンが利用可能です"
-
-#: src/SearchSourceFormat.h
-#, fuzzy, c-format
-msgid "Complete sources: %u"
-msgstr "ソース完了"
-
-#: src/SearchSourceFormat.h
-#, fuzzy, c-format
-msgid "Direct client endpoints: %u"
-msgstr "新しいclientidは%uです"
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
@@ -9491,12 +9410,6 @@ msgstr "aMule が実行中のようです。終了してからアンインスト
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "$APPDATA\\aMule のユーザデータを削除しています…"
-
-#~ msgid "Local"
-#~ msgstr "ローカル"
-
-#~ msgid "Global"
-#~ msgstr "グローバル"
 
 #~ msgid ""
 #~ "The number of a file from the last search has to be given.\n"

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-29 02:18+0800\n"
-"PO-Revision-Date: 2026-09-28 17:22+0000\n"
+"POT-Creation-Date: 2026-09-26 17:32+0100\n"
+"PO-Revision-Date: 2026-09-28 18:54+0000\n"
 "Last-Translator: Dévai Tamás <devait@vnet.hu>\n"
 "Language-Team: aMule Team <https://github.com/amule-org/amule>\n"
 "Language: en_GB\n"
@@ -1101,10 +1101,6 @@ msgstr ""
 msgid "Unknown"
 msgstr "Unknown"
 
-#: src/amule-remote-gui.cpp
-msgid "The connected daemon does not support All searches."
-msgstr ""
-
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
 msgstr "Searching buddy for lowid connection"
@@ -1754,7 +1750,7 @@ msgstr "Local Server"
 msgid "Remote Server"
 msgstr "Remote Server"
 
-#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchModeIcons.h
+#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchDlg.cpp
 #: src/TextClient.cpp
 msgid "Kad"
 msgstr ""
@@ -3887,9 +3883,13 @@ msgstr "Search"
 msgid "Type"
 msgstr "Type"
 
+#: src/muuli_wdr.cpp src/SearchDlg.cpp src/SearchListCtrl.cpp
+msgid "Local"
+msgstr "Local"
+
 #: src/muuli_wdr.cpp
-msgid "Search network"
-msgstr ""
+msgid "Global"
+msgstr "Global"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -6730,16 +6730,8 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr ""
 
 #: src/SearchList.cpp
-msgid "All search can't be done if neither eD2k nor Kad is available"
-msgstr ""
-
-#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "eD2k search can't be done if eD2k is not connected"
-
-#: src/SearchList.cpp
-msgid "All search: no usable Kad keyword; continuing with eD2k."
-msgstr ""
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6748,10 +6740,6 @@ msgstr "No keyword for Kad search - aborting"
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Unexpected error while attempting Kad search: "
-
-#: src/SearchList.cpp
-msgid "All search: Kad component could not start: "
-msgstr ""
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6806,35 +6794,6 @@ msgstr "Cancelled"
 msgid "New"
 msgstr "New"
 
-#: src/SearchModeIcons.h
-#, fuzzy
-msgid "eD2k: Current server"
-msgstr "eD2k server list (server.met)"
-
-#: src/SearchModeIcons.h
-msgid "eD2k: All servers"
-msgstr ""
-
-#: src/SearchModeIcons.h
-msgid "All networks"
-msgstr ""
-
-#: src/SearchModeIcons.h
-msgid "Search the connected eD2k server."
-msgstr ""
-
-#: src/SearchModeIcons.h
-msgid "Search the connected eD2k server and other servers in the server list."
-msgstr ""
-
-#: src/SearchModeIcons.h
-msgid "Search the Kad network."
-msgstr ""
-
-#: src/SearchModeIcons.h
-msgid "Search eD2k servers and Kad, using whichever networks are available."
-msgstr ""
-
 #: src/SearchProgressReport.cpp
 msgid "running"
 msgstr ""
@@ -6872,39 +6831,6 @@ msgstr "Search progress not available"
 
 #: src/SearchProgressReport.cpp
 msgid "No search to report on.\n"
-msgstr ""
-
-#: src/SearchSourceFormat.h
-#, c-format
-msgid "Estimated availability: %u"
-msgstr ""
-
-#: src/SearchSourceFormat.h
-#, c-format
-msgid "eD2k sources: %u"
-msgstr ""
-
-#: src/SearchSourceFormat.h
-#, c-format
-msgid "Kad sources: %u"
-msgstr ""
-
-#: src/SearchSourceFormat.h
-msgid "Network counts may overlap; they are not added together."
-msgstr ""
-
-#: src/SearchSourceFormat.h
-msgid "Network breakdown unavailable."
-msgstr ""
-
-#: src/SearchSourceFormat.h
-#, c-format
-msgid "Complete sources: %u"
-msgstr ""
-
-#: src/SearchSourceFormat.h
-#, c-format
-msgid "Direct client endpoints: %u"
 msgstr ""
 
 #: src/ServerConnect.cpp
@@ -9469,9 +9395,3 @@ msgstr "aMule appears to be running. Please close it and re-run the uninstaller.
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Removing user data at $APPDATA\\aMule..."
-
-#~ msgid "Local"
-#~ msgstr "Local"
-
-#~ msgid "Global"
-#~ msgstr "Global"
