@@ -49,8 +49,6 @@ CSearchFile::CSearchFile(const CMemFile &data,
 : m_parent(NULL)
 , m_showChildren(false)
 , m_searchID(searchID)
-, m_sourceCount(0)
-, m_completeSourceCount(0)
 , m_kademlia(kademlia)
 , m_downloadStatus(NEW)
 , m_directory(directory)
@@ -58,6 +56,8 @@ CSearchFile::CSearchFile(const CMemFile &data,
 , m_clientServerPort(serverPort)
 , m_kadPublishInfo(0)
 {
+	uint32 sourceCount = 0;
+	uint32 completeSourceCount = 0;
 	m_abyFileHash = data.ReadHash();
 	SetDownloadStatus();
 	m_clientID = data.ReadUInt32();
@@ -93,10 +93,10 @@ CSearchFile::CSearchFile(const CMemFile &data,
 			}
 			break;
 		case FT_SOURCES:
-			m_sourceCount = tag.GetInt();
+			sourceCount = tag.GetInt();
 			break;
 		case FT_COMPLETE_SOURCES:
-			m_completeSourceCount = tag.GetInt();
+			completeSourceCount = tag.GetInt();
 			break;
 		case FT_PERMISSIONS:
 		case FT_KADLASTPUBLISHKEY:
@@ -111,6 +111,8 @@ CSearchFile::CSearchFile(const CMemFile &data,
 	if (!GetFileName().IsOk()) {
 		throw CInvalidPacket("No filename in search result");
 	}
+	m_sourceContributions = CSearchSourceCount(sourceCount, m_kademlia);
+	m_completeSourceContributions = CSearchSourceCount(completeSourceCount, m_kademlia);
 }
 
 // CECID() below deliberately allocates a fresh EC ID instead of copying other's.
@@ -120,8 +122,8 @@ CSearchFile::CSearchFile(const CSearchFile &other) // NOLINT(bugprone-copy-const
 , m_parent(other.m_parent)
 , m_showChildren(other.m_showChildren)
 , m_searchID(other.m_searchID)
-, m_sourceCount(other.m_sourceCount)
-, m_completeSourceCount(other.m_completeSourceCount)
+, m_sourceContributions(other.m_sourceContributions)
+, m_completeSourceContributions(other.m_completeSourceContributions)
 , m_kademlia(other.m_kademlia)
 , m_downloadStatus(other.m_downloadStatus)
 , m_directory(other.m_directory)
@@ -154,8 +156,6 @@ CSearchFile::CSearchFile()
 : m_parent(nullptr)
 , m_showChildren(false)
 , m_searchID(0)
-, m_sourceCount(0)
-, m_completeSourceCount(0)
 , m_kademlia(false)
 , m_downloadStatus(NEW)
 , m_clientID(0)
@@ -201,10 +201,10 @@ bool CSearchFile::WriteToFile(CFileDataIO *file) const
 	CTagIntSized sizetag(FT_FILESIZE, GetFileSize(), 64);
 	sizetag.WriteTagToFile(file);
 
-	CTagInt32 sourcestag(FT_SOURCES, m_sourceCount);
+	CTagInt32 sourcestag(FT_SOURCES, GetSourceCount());
 	sourcestag.WriteTagToFile(file);
 
-	CTagInt32 completesourcestag(FT_COMPLETE_SOURCES, m_completeSourceCount);
+	CTagInt32 completesourcestag(FT_COMPLETE_SOURCES, GetCompleteSourceCount());
 	completesourcestag.WriteTagToFile(file);
 
 	if (m_iUserRating != 0) {
@@ -243,9 +243,11 @@ bool CSearchFile::WriteToFile(CFileDataIO *file) const
 	return true;
 }
 
-CSearchFile *CSearchFile::LoadFromFile(CFileDataIO *file, bool allowChildren)
+std::unique_ptr<CSearchFile> CSearchFile::LoadFromFile(CFileDataIO *file, bool allowChildren)
 {
 	std::unique_ptr<CSearchFile> result(new CSearchFile());
+	uint32 sourceCount = 0;
+	uint32 completeSourceCount = 0;
 
 	result->m_abyFileHash = file->ReadHash();
 
@@ -260,10 +262,10 @@ CSearchFile *CSearchFile::LoadFromFile(CFileDataIO *file, bool allowChildren)
 			result->SetFileSize(tag.GetInt());
 			break;
 		case FT_SOURCES:
-			result->m_sourceCount = tag.GetInt();
+			sourceCount = tag.GetInt();
 			break;
 		case FT_COMPLETE_SOURCES:
-			result->m_completeSourceCount = tag.GetInt();
+			completeSourceCount = tag.GetInt();
 			break;
 		case FT_FILERATING:
 			result->m_iUserRating = static_cast<int8>(tag.GetInt());
@@ -278,6 +280,10 @@ CSearchFile *CSearchFile::LoadFromFile(CFileDataIO *file, bool allowChildren)
 	}
 
 	result->m_kademlia = file->ReadUInt8() != 0;
+	// Restored searches are finished snapshots: preserve the stored aggregate.
+	// They never resume receiving results, so no wire-format change is needed.
+	result->m_sourceContributions = CSearchSourceCount(sourceCount, result->m_kademlia);
+	result->m_completeSourceContributions = CSearchSourceCount(completeSourceCount, result->m_kademlia);
 	result->m_directory = file->ReadString(true);
 	result->m_clientID = file->ReadUInt32();
 	result->m_clientPort = file->ReadUInt16();
@@ -304,7 +310,7 @@ CSearchFile *CSearchFile::LoadFromFile(CFileDataIO *file, bool allowChildren)
 		return nullptr;
 	}
 	for (uint16 i = 0; i != childcount; ++i) {
-		CSearchFile *child = LoadFromFile(file, false);
+		auto child = LoadFromFile(file, false);
 		if (!child) {
 			return nullptr;
 		}
@@ -312,13 +318,14 @@ CSearchFile *CSearchFile::LoadFromFile(CFileDataIO *file, bool allowChildren)
 		// apply to restoring an already finalized tree where every child was distinct when
 		// written.
 		child->m_parent = result.get();
-		result->m_children.push_back(child);
+		result->m_children.push_back(child.get());
+		child.release();
 	}
 
 	// m_downloadStatus is deliberately left at its NEW default: recomputing it needs
 	// theApp->downloadqueue/knownfiles/canceledfiles, which is the caller's job, so this stays
 	// a pure parser callable before those singletons exist.
-	return result.release();
+	return result;
 }
 
 // SearchFile.cpp is core-only (CORE_SOURCES); the amulegui build compiles its CSearchFile methods
@@ -343,14 +350,8 @@ void CSearchFile::AddClient(const ClientStruct &client)
 
 void CSearchFile::MergeResults(const CSearchFile &other)
 {
-	// Sources
-	if (m_kademlia) {
-		m_sourceCount = std::max(m_sourceCount, other.m_sourceCount);
-		m_completeSourceCount = std::max(m_completeSourceCount, other.m_completeSourceCount);
-	} else {
-		m_sourceCount += other.m_sourceCount;
-		m_completeSourceCount += other.m_completeSourceCount;
-	}
+	m_sourceContributions.Merge(other.m_sourceContributions);
+	m_completeSourceContributions.Merge(other.m_completeSourceContributions);
 
 	// Publish info
 	if (m_kadPublishInfo == 0) {
@@ -454,11 +455,11 @@ void CSearchFile::UpdateParent()
 {
 	wxCHECK_RET(!m_parent, "UpdateParent called on child item");
 
-	uint32_t sourceCount = 0;         // ed2k: sum of all sources, kad: the max sources found
-	uint32_t completeSourceCount = 0; // ed2k: sum of all sources, kad: the max sources found
-	uint32_t differentNames = 0;      // max known different names
-	uint32_t publishersKnown = 0;     // max publishers known
-	uint32_t trustValue = 0;          // average trust value
+	CSearchSourceCount sourceCount;
+	CSearchSourceCount completeSourceCount;
+	uint32_t differentNames = 0;  // max known different names
+	uint32_t publishersKnown = 0; // max publishers known
+	uint32_t trustValue = 0;      // average trust value
 	unsigned publishInfoTags = 0;
 	unsigned ratingCount = 0;
 	unsigned ratingTotal = 0;
@@ -471,14 +472,8 @@ void CSearchFile::UpdateParent()
 			best = it;
 		}
 
-		// Sources
-		if (m_kademlia) {
-			sourceCount = std::max(sourceCount, child->m_sourceCount);
-			completeSourceCount = std::max(completeSourceCount, child->m_completeSourceCount);
-		} else {
-			sourceCount += child->m_sourceCount;
-			completeSourceCount += child->m_completeSourceCount;
-		}
+		sourceCount.Merge(child->m_sourceContributions);
+		completeSourceCount.Merge(child->m_completeSourceContributions);
 
 		// Publish info
 		if (child->GetKadPublishInfo() != 0) {
@@ -511,8 +506,8 @@ void CSearchFile::UpdateParent()
 		}
 	}
 
-	m_sourceCount = sourceCount;
-	m_completeSourceCount = completeSourceCount;
+	m_sourceContributions = sourceCount;
+	m_completeSourceContributions = completeSourceCount;
 
 	if (publishInfoTags > 0) {
 		m_kadPublishInfo = ((differentNames & 0x000000FF) << 24) |

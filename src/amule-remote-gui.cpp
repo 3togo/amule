@@ -3549,8 +3549,7 @@ void CSearchListRem::StopSearchById(wxUIntPtr searchID, bool andClose)
 			search_req.AddTag(CECEmptyTag(EC_TAG_SEARCH_CLOSE));
 			// Tab closed: stop tracking this search's lifecycle.
 			m_activeSearches.erase((uint32)searchID);
-			m_kadActive.erase((uint32)searchID);
-			m_allKadActive.erase((uint32)searchID);
+			m_runningKadSearches.erase((uint32)searchID);
 			// Also the backstop for a START whose reply never attributed itself (an
 			// EC_OP_FAILED carries no ID): closing the tab the failed start left behind
 			// clears its entry, so the discovery deferral cannot be held open for the rest
@@ -3567,14 +3566,13 @@ bool CSearchListRem::IsKadSearch(uint32_t searchID) const
 	// The "More" button applies only to a *running* Kad search -- it greys out once the
 	// search completes. The flag is set from each search's per-id kind and lifecycle
 	// state in HandlePacket.
-	std::map<uint32, bool>::const_iterator it = m_kadActive.find(searchID);
-	return it != m_kadActive.end() && it->second;
+	const auto it = m_runningKadSearches.find(searchID);
+	return it != m_runningKadSearches.end() && it->second;
 }
 
 bool CSearchListRem::HasKadComponent(uint32_t searchID) const
 {
-	const auto it = m_allKadActive.find(searchID);
-	return IsKadSearch(searchID) || (it != m_allKadActive.end() && it->second);
+	return m_runningKadSearches.count(searchID) != 0;
 }
 
 bool CSearchListRem::RequestMoreResults(uint32_t searchID)
@@ -3708,21 +3706,30 @@ void CSearchListRem::ApplySearchProgress(const CECTag *src)
 				// EC_OP_SEARCH_STOP, since the daemon already does not know this id.
 				const uint32 sid = (uint32)idTag->GetInt();
 				m_activeSearches.erase(sid);
+				m_runningKadSearches.erase(sid);
 				if (theApp->amuledlg && theApp->amuledlg->m_searchwnd) {
 					theApp->amuledlg->m_searchwnd->CloseSearchTab(sid);
 				}
 			} else {
-				// Cache whether this tab is a *running* Kad search so IsKadSearch can gate
-				// the "More" button -- enabled only while the search runs. Updated before
-				// the progress call, which refreshes that button for the visible tab.
+				// Cache active Kad work before updating the controls. Older daemons
+				// report only standalone Kad lifecycle; newer ones also report All's
+				// Kad component independently of its eD2k activity.
 				const CECTag *kindTag = src->GetTagByName(EC_TAG_SEARCH_LIFECYCLE_KIND);
 				const CECTag *stateTag = src->GetTagByName(EC_TAG_SEARCH_LIFECYCLE_STATE);
 				const CECTag *kadActive = src->GetTagByName(EC_TAG_SEARCH_KAD_ACTIVE);
-				m_allKadActive[(uint32)idTag->GetInt()] = kadActive && kadActive->GetInt();
+				const uint32 sid = static_cast<uint32>(idTag->GetInt());
+				bool standalone;
 				if (kindTag && stateTag) {
-					m_kadActive[(uint32)idTag->GetInt()] =
-						(kindTag->GetInt() == KadSearch) &&
-						(stateTag->GetInt() == CSearchList::SEARCH_LIFECYCLE_RUNNING);
+					standalone =
+						kindTag->GetInt() == KadSearch &&
+						stateTag->GetInt() == CSearchList::SEARCH_LIFECYCLE_RUNNING;
+				} else {
+					standalone = IsKadSearch(sid);
+				}
+				if (standalone || (kadActive && kadActive->GetInt())) {
+					m_runningKadSearches.insert_or_assign(sid, standalone);
+				} else {
+					m_runningKadSearches.erase(sid);
 				}
 				theApp->amuledlg->m_searchwnd->UpdateSearchProgress(
 					idTag->GetInt(), (uint32)src->GetFirstTagSafe()->GetInt());
@@ -3775,12 +3782,14 @@ void CSearchListRem::HandlePacket(const CECPacket *packet)
 				// than whenever that id next gets polled.
 				//
 				// Snapshot first: CloseSearchTab erases from m_activeSearches.
-				const std::set<uint32> tracked = m_activeSearches;
+				const std::vector<uint32> tracked(
+					m_activeSearches.begin(), m_activeSearches.end());
 				for (uint32 id : tracked) {
 					if (reported.count(id)) {
 						continue;
 					}
 					m_activeSearches.erase(id);
+					m_runningKadSearches.erase(id);
 					if (theApp->amuledlg && theApp->amuledlg->m_searchwnd) {
 						theApp->amuledlg->m_searchwnd->CloseSearchTab(id);
 					}
@@ -3825,9 +3834,8 @@ void CSearchListRem::HandlePacket(const CECPacket *packet)
 								: wxString();
 				theApp->amuledlg->m_searchwnd->OnStartRejected(localID, reason);
 			}
-			// Nothing to prune from m_activeSearches / m_kadActive: both are only ever keyed
-			// by a daemon-allocated id (RemapSearch, or the discovery branch), never by an
-			// optimistic one.
+			// The activity caches use daemon IDs, never optimistic IDs, so a
+			// rejected start has no cached activity to remove.
 		}
 	} else if (packet->GetOpCode() == EC_OP_SEARCH_LIST) {
 		// One entry per search the daemon currently holds, so a search this client never
@@ -4073,7 +4081,7 @@ bool CSearchListRem::Phase1Done(const CECPacket *WXUNUSED(reply))
 		// Poll progress for each open search so every tab's lifecycle ("!", progress bar)
 		// is tracked independently. Snapshot the set: an expired reply may erase from
 		// m_activeSearches while iterating.
-		std::set<uint32> ids = m_activeSearches;
+		const std::vector<uint32> ids(m_activeSearches.begin(), m_activeSearches.end());
 		for (uint32 id : ids) {
 			CECPacket progress_req(EC_OP_SEARCH_PROGRESS);
 			progress_req.AddTag(CECTag(EC_TAG_SEARCH_ID, id));
@@ -4093,8 +4101,7 @@ void CSearchListRem::RemoveResults(wxUIntPtr nSearchID)
 	// through DeleteItem(), so dropping the index is all that is needed -- deleting would
 	// double-free.
 	DropResultIndex(nSearchID);
-	m_kadActive.erase((uint32)nSearchID);
-	m_allKadActive.erase((uint32)nSearchID);
+	m_runningKadSearches.erase((uint32)nSearchID);
 }
 
 void CStatsUpdaterRem::HandlePacket(const CECPacket *packet)

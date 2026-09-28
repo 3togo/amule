@@ -304,6 +304,10 @@ void CSearchList::RemoveResults(wxUIntPtr searchID)
 		return;
 	}
 	StopSearchById(searchID);
+	// A closed search must not be recreated by an already queued server reply.
+	if (m_currentSearch == searchID) {
+		m_currentSearch = wxUIntPtr(-1);
+	}
 	struct RemovedResults
 	{
 		CSearchResultList files;
@@ -431,18 +435,8 @@ struct LoadedSearch
 	wxString queryString;
 	SearchType kind;
 	time_t startTime;
-	std::vector<CSearchFile *> results;
+	std::vector<std::unique_ptr<CSearchFile>> results;
 };
-
-void FreeLoaded(std::vector<LoadedSearch> &loaded)
-{
-	for (LoadedSearch &entry : loaded) {
-		for (CSearchFile *f : entry.results) {
-			delete f;
-		}
-	}
-	loaded.clear();
-}
 } // namespace
 
 std::vector<uint32_t> CSearchList::LoadSearches()
@@ -498,35 +492,28 @@ std::vector<uint32_t> CSearchList::LoadSearches()
 			if (resultCount > MAX_STORED_RESULTS_PER_SEARCH * 2) {
 				AddLogLineC(
 					_("WARNING: Stored search list corrupted, contains invalid header."));
-				FreeLoaded(loaded);
 				return std::vector<uint32_t>();
 			}
 
 			entry.results.reserve(resultCount);
 			for (uint32 r = 0; r < resultCount; ++r) {
-				CSearchFile *result = CSearchFile::LoadFromFile(&file);
+				auto result = CSearchFile::LoadFromFile(&file);
 				if (!result) {
 					AddLogLineC(_(
 						"Invalid entry in stored search list, file may be corrupt"));
-					for (CSearchFile *f : entry.results) {
-						delete f;
-					}
-					FreeLoaded(loaded);
 					return std::vector<uint32_t>();
 				}
-				entry.results.push_back(result);
+				entry.results.push_back(std::move(result));
 			}
 
 			loaded.push_back(std::move(entry));
 		}
 	} catch (const CInvalidPacket &e) {
 		AddLogLineC(_("Invalid entry in stored search list, file may be corrupt") + ": " + e.what());
-		FreeLoaded(loaded);
 		return restored;
 	} catch (const CSafeIOException &e) {
 		AddLogLineC(CFormat(_("IO error while reading %s file: %s")) % s_storedSearchesFilename %
 			    e.what());
-		FreeLoaded(loaded);
 		return restored;
 	}
 
@@ -563,14 +550,15 @@ std::vector<uint32_t> CSearchList::LoadSearches()
 			m_finishedKadSearches.insert(entry.id);
 		}
 
-		for (CSearchFile *root : entry.results) {
+		for (auto &root : entry.results) {
 			root->m_searchID = entry.id;
 			root->SetDownloadStatus();
 			for (CSearchFile *child : root->GetChildren()) {
 				child->m_searchID = entry.id;
 				child->SetDownloadStatus();
 			}
-			IndexResult(root);
+			IndexResult(root.get());
+			root.release(); // The live list owns it only after indexing succeeds.
 		}
 
 		restored.push_back(entry.id);
@@ -592,11 +580,15 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 		return _("eD2k search can't be done if eD2k is not connected");
 	}
 
-	if (type == KadSearch || (type == AllSearch && Kademlia::CKademlia::IsRunning())) {
+	bool startKad = type == KadSearch || (type == AllSearch && Kademlia::CKademlia::IsRunning());
+	if (startKad) {
 		Kademlia::WordList words;
 		Kademlia::CSearchManager::GetWords(params.searchString, &words);
 		if (!words.empty()) {
 			params.strKeyword = words.front();
+		} else if (type == AllSearch && theApp->IsConnectedED2K()) {
+			startKad = false;
+			AddLogLineN(_("All search: no usable Kad keyword; continuing with eD2k."));
 		} else {
 			return _("No keyword for Kad search - aborting");
 		}
@@ -615,7 +607,7 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 	CMemFilePtr data = CreateSearchData(
 		params, type == AllSearch ? GlobalSearch : type, supports64bit, packetUsing64bit);
 	CMemFilePtr kadData;
-	if (data.get() && type == AllSearch && Kademlia::CKademlia::IsRunning()) {
+	if (data.get() && type == AllSearch && startKad) {
 		bool kadUsing64bit;
 		kadData = CreateSearchData(params, KadSearch, true, kadUsing64bit);
 		if (!kadData.get()) {
@@ -684,6 +676,10 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 				AddLogLineN(_("All search: Kad component could not start: ") + what);
 			}
 		}
+		// Replace the single eD2k slot only after query validation and Kad startup
+		// have succeeded. All entry points share this ordering; rejected requests
+		// and independent Kad searches must not terminate the previous search.
+		StopInFlightEd2kSearch();
 		m_currentSearch = *(searchID);
 		m_searchInProgress = theApp->IsConnectedED2K();
 		m_ed2kSearchFinished = !m_searchInProgress;
@@ -730,7 +726,8 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 	m_searchStrings[static_cast<uint32_t>(*searchID)] = params.searchString;
 	// Concurrent Kad searches can have different filters. Apply each query's own
 	// filter rather than whichever type was most recently submitted.
-	if (params.typeText != ED2KFTSTR_PROGRAM && params.typeText.CmpNoCase("Any")) {
+	if (!params.typeText.IsEmpty() && params.typeText != ED2KFTSTR_PROGRAM &&
+		params.typeText.CmpNoCase("Any")) {
 		m_resultTypes[*searchID] = params.typeText;
 	} else {
 		m_resultTypes.erase(*searchID);
@@ -1042,10 +1039,10 @@ void CSearchList::ProcessSharedFileList(const uint8_t *in_packet,
 	uint32 results = packet.ReadUInt32();
 	bool unicoded = (sender->GetUnicodeSupport() != utf8strNone);
 	for (unsigned int i = 0; i != results; ++i) {
-		CSearchFile *toadd = new CSearchFile(packet, unicoded, searchID, 0, 0, directory);
+		auto toadd = std::make_unique<CSearchFile>(packet, unicoded, searchID, 0, 0, directory);
 		toadd->SetClientID(sender->GetUserIDHybrid());
 		toadd->SetClientPort(sender->GetUserPort());
-		AddToList(toadd, true);
+		AddToList(std::move(toadd), true);
 	}
 
 	if (moreResultsAvailable)
@@ -1101,8 +1098,9 @@ void CSearchList::ProcessSearchAnswer(
 
 	uint32_t results = packet.ReadUInt32();
 	for (; results > 0; --results) {
-		CSearchFile *file = new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort);
-		if (AddToList(file, false)) {
+		auto file =
+			std::make_unique<CSearchFile>(packet, optUTF8, m_currentSearch, serverIP, serverPort);
+		if (AddToList(std::move(file), false)) {
 			m_resultSourceCounts[static_cast<uint32_t>(m_currentSearch)].tcp++;
 		}
 	}
@@ -1114,15 +1112,15 @@ void CSearchList::ProcessUDPSearchAnswer(
 	if (!CanFileServerAnswer()) {
 		return;
 	}
-	CSearchFile *file = new CSearchFile(packet, optUTF8, m_currentSearch, serverIP, serverPort);
-	if (AddToList(file, false)) {
+	auto file = std::make_unique<CSearchFile>(packet, optUTF8, m_currentSearch, serverIP, serverPort);
+	if (AddToList(std::move(file), false)) {
 		m_resultSourceCounts[static_cast<uint32_t>(m_currentSearch)].udp++;
 	}
 }
 
-bool CSearchList::AddToList(CSearchFile *toadd, bool clientResponse)
+bool CSearchList::AddToList(std::unique_ptr<CSearchFile> owned, bool clientResponse)
 {
-	std::unique_ptr<CSearchFile> owned(toadd);
+	CSearchFile *toadd = owned.get();
 	const uint64 fileSize = toadd->GetFileSize();
 	// If filesize is 0, or file is too large for the network, drop it
 	if ((fileSize == 0) || (fileSize > MAX_FILE_SIZE)) {
@@ -1462,11 +1460,8 @@ CSearchList::SearchLifecycleState CSearchList::GetSearchLifecycleStateById(wxUIn
 	// ed2k search takes that scalar nothing further can land in this id's bucket. Unreachable,
 	// not idle.
 	//
-	// Deliberately NOT "no other ed2k search is in flight", which is false on one of the two
-	// paths: only the EC start handler finalizes the previous sweep (StopInFlightEd2kSearch,
-	// whose sole caller it is), while the monolithic dialog calls StartNewSearch directly and
-	// merely abandons it, so an older search's sweep may well still be running. Reachability of
-	// the bucket is the narrower property, and the one that holds on both paths.
+	// StartNewSearch finalizes the previous eD2k slot before publishing a new one.
+	// Any surviving Kad component was handled above, independently of that slot.
 	//
 	// Deciding this from the retained results instead reported every search that indexed
 	// *nothing* as IDLE forever -- a query no server matched, one whose every hit AddToList
@@ -1565,11 +1560,9 @@ void CSearchList::LogResultSourceCounts(uint32_t searchID, const wxString &conte
 
 void CSearchList::StopInFlightEd2kSearch()
 {
-	// m_searchInProgress is true only while an ed2k (local/global) search is in flight. A local
-	// search finishes synchronously (LocalSearchEnd on the server reply), so in practice this
-	// finalizes an in-progress global sweep -- halting the timer and dropping the packet so no
-	// further UDP results are filed under the outgoing m_currentSearch. The results already
-	// collected are retained; the caller starts a fresh search next.
+	// Cancel the outgoing eD2k timer and packet before a validated replacement
+	// takes the slot. This covers both the TCP-answer wait and the UDP sweep.
+	// Results and any independent Kad component are retained.
 	if (m_searchInProgress) {
 		FinalizeGlobalSearch();
 	}
@@ -1984,11 +1977,11 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID,
 
 	temp.Seek(0, wxFromStart);
 
-	CSearchFile *tempFile =
-		new CSearchFile(temp, (eStrEncode == utf8strRaw), effectiveSearchID, 0, 0, "", true);
+	auto tempFile = std::make_unique<CSearchFile>(
+		temp, (eStrEncode == utf8strRaw), effectiveSearchID, 0, 0, "", true);
 	tempFile->SetKadPublishInfo(kadPublishInfo);
 
-	if (AddToList(tempFile)) {
+	if (AddToList(std::move(tempFile))) {
 		m_resultSourceCounts[effectiveSearchID].kad++;
 	}
 }

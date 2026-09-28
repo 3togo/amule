@@ -152,15 +152,6 @@ public:
 	void StopSearchById(wxUIntPtr searchID);
 
 	/**
-	 * Finalizes any in-flight ed2k (local/global) search, keeping its results. ed2k
-	 * searches share a single in-flight slot and file their results under the scalar
-	 * m_currentSearch, so the multi-search EC layer calls this before starting a new
-	 * search to stop the old sweep's late UDP results from leaking into the new search's
-	 * bucket. Running Kad searches are attributed by their own ID and are left untouched.
-	 */
-	void StopInFlightEd2kSearch();
-
-	/**
 	 * Allocates a fresh ed2k search ID from the single core counter shared by the
 	 * monolithic GUI and the EC daemon path. Returns IDs in the range [1, 0x3fffffff]
 	 * (never 0), provably disjoint from Kad's top-half IDs (>= 0x80000000) and from the
@@ -438,6 +429,9 @@ public:
 	bool IsShuttingDown() const { return m_shuttingDown; }
 
 private:
+	// Called only after a replacement query is validated. Kad work is independent.
+	void StopInFlightEd2kSearch();
+
 	//! On-disk name of the search-results persistence file, in the config dir.
 	static const wxChar *const s_storedSearchesFilename;
 
@@ -507,7 +501,7 @@ private:
 	 * Takes ownership of the CSearchFile object whether or not it was actually added to the
 	 * results list.
 	 */
-	bool AddToList(CSearchFile *toadd, bool clientResponse = false);
+	bool AddToList(std::unique_ptr<CSearchFile> owned, bool clientResponse = false);
 
 	//! This smart pointer is used to safely prevent leaks.
 	typedef CSmartPtr<CMemFile> CMemFilePtr;

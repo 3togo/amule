@@ -108,8 +108,25 @@ def connect_daemon(proc, port):
 def search_record(name):
     name = name.encode()
     tags = (b'\x02\x01\x00\x01' + struct.pack('<H', len(name)) + name
-            + b'\x03\x01\x00\x02' + struct.pack('<I', 4096))
-    return bytes(range(16)) + struct.pack('<IHI', 0, 0, 2) + tags
+            + b'\x03\x01\x00\x02' + struct.pack('<I', 4096)
+            + b'\x03\x01\x00\x15' + struct.pack('<I', 10)
+            + b'\x03\x01\x00\x30' + struct.pack('<I', 3))
+    return bytes(range(16)) + struct.pack('<IHI', 0, 0, 4) + tags
+
+
+def stored_result(name, children=()):
+    record = search_record(name)
+    # Stored results omit the network record's client IP/port before the tags,
+    # then append Kad, directory, client/server endpoints, publish info and lists.
+    return (record[:16] + record[22:]
+            + struct.pack('<BHIHIHIHH', 0, 0, 0, 0, 0, 0, 0, 0, len(children))
+            + b''.join(children))
+
+
+def stored_search(results):
+    query = b'restored'
+    return (struct.pack('<BIIH', 1, 1, 123, len(query)) + query
+            + struct.pack('<BQI', 5, int(time.time()), len(results)) + b''.join(results))
 
 
 def stop_daemon(proc):
@@ -164,6 +181,11 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                 assert op == 5, op
                 # Kad-only fallback must not wait for a nonexistent server response.
                 assert ec.call(0x48)[0] == 1
+                # A short query cannot use Kad when it is the only network.
+                for kind in (2, 5):
+                    op, _ = ec.call(0x26, [tag(0x701, bytes([kind]), 2,
+                        [string(0x702, 'go'), string(0x705, '')])])
+                    assert op == 5, (kind, op)
                 sid = ec.start('ubuntu linux')
                 state = ec.progress(sid)
                 assert state[0x70b][0] == 5 and state[0x717][0] == 1, state
@@ -223,6 +245,33 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                     ec.call(0x27, [integer(0x70e, sid)])
                     # Both components: eD2k completion cannot finish the Kad component.
                     assert ec.call(0x48)[0] == 1
+                    # Failed replacements and independent Kad searches must leave
+                    # the current eD2k request waiting for its server response.
+                    answer.clear()
+                    pending = ec.start('pending validation', kind=0)
+                    queries.get(timeout=5)
+                    for kind in (1, 5):
+                        op, _ = ec.call(0x26, [tag(0x701, bytes([kind]), 2,
+                            [string(0x702, '('), string(0x705, '')])])
+                        assert op == 5, (kind, op)
+                        assert ec.progress(pending)[0x70a][0] == 1
+                    independent = ec.start('independent regression', kind=2)
+                    assert ec.progress(pending)[0x70a][0] == 1
+                    ec.call(0x27, [integer(0x70e, independent), tag(0x711)])
+                    assert ec.progress(pending)[0x70a][0] == 1
+                    answer.set()
+                    for _ in range(50):
+                        state = ec.progress(pending)
+                        if state[0x70a][0] == 2:
+                            break
+                        time.sleep(0.1)
+                    assert state[0x70a][0] == 2 and state[0x70c][0] == 1, state
+                    # Kad's minimum keyword length must not block eD2k fallback.
+                    short = ec.start('go')
+                    assert b'go' in queries.get(timeout=5)
+                    state = ec.progress(short)
+                    assert state[0x70b][0] == 5 and state[0x717][0] == 0, state
+                    ec.call(0x27, [integer(0x70e, short)])
                     sid = ec.start('fedora workstation')
                     query = queries.get(timeout=5)
                     assert b'fedora' in query and b'workstation' in query, query
@@ -250,6 +299,18 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                         time.sleep(0.1)
                     assert state[0x70a][0] == 2, state
                     assert state[0x70c][0] == 1, state
+                    counts = ec.call(0x28, [integer(0x70e, sid)])[1][0x700][1]
+                    assert counts[0x30a][0] == 30 and counts[0x30d][0] == 9, counts
+                    # Close while a server response is in flight. Its late results
+                    # must not recreate the removed bucket.
+                    answer.clear()
+                    closed = ec.start('lateclose regression', kind=0)
+                    queries.get(timeout=5)
+                    ec.call(0x27, [integer(0x70e, closed), tag(0x711)])
+                    answer.set()
+                    time.sleep(0.2)
+                    state = ec.progress(closed)
+                    assert 0x710 in state, state
                     ec.sock.close()
                 # Persist and reload an All search: its finished Kad marker must not
                 # make it appear to be a standalone Kad search after restart.
@@ -260,6 +321,8 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                 state = ec.progress(sid)
                 assert state[0x70b][0] == 5, state
                 assert state[0x70a][0] == 2 and state[0x717][0] == 0, state
+                counts = ec.call(0x28, [integer(0x70e, sid)])[1][0x700][1]
+                assert counts[0x30a][0] == 30 and counts[0x30d][0] == 9, counts
                 # Repeated close/restart and bulk shutdown exercise registry ownership.
                 ec.call(0x27, [integer(0x70e, sid), tag(0x711)])
                 assert ec.call(0x48)[0] == 1
@@ -277,8 +340,26 @@ ECPassword={hashlib.md5(b'regression').hexdigest()}
                     ec.start(f'shutdownownership{i} regression', kind=2)
                 ec.sock.close()
                 stop_daemon(proc)
+                # Validate the fixture first, then truncate after a completed root
+                # and after a completed child. ASan/LSan checks cleanup on both paths.
+                first = stored_result('first.bin')
+                second = stored_result('second.bin')
+                valid = stored_search([first, second])
+                nested = stored_search([stored_result('parent.bin', [first, second])])
+                for fixture, expected in ((valid, 2), (valid[:-1], 0), (nested[:-1], 0)):
+                    (root / 'StoredSearches.met').write_bytes(fixture)
+                    proc = subprocess.Popen([binary, '-c', str(root)], stdout=log, stderr=log, env=env)
+                    ec = connect_daemon(proc, ec_port)
+                    if expected:
+                        assert ec.progress(123)[0x70c][0] == expected
+                    else:
+                        listing = ec.call(0x60)
+                        assert not listing[1], listing
+                    ec.sock.close()
+                    stop_daemon(proc)
                 print('PASS: network fallback, query encoding, both completion orders, '
-                      'duplicate targets, stop/close, persistence, ownership stress, clean shutdown')
+                      'duplicate targets, stop/close, persistence, truncated restore, '
+                      'ownership stress, clean shutdown')
             except BaseException:
                 log.flush()
                 print((root / 'stdout.log').read_text(), file=sys.stderr)

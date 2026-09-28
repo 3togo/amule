@@ -210,15 +210,10 @@ public:
 
 	void UpdateProgress(uint32 new_value);
 
-#ifndef CLIENT_GUI
-	// Monolithic: drive the bottom bar from the visible tab's core search lifecycle so the bar
-	// follows tab switches -- the local-core analogue of the remote GUI's per-search EC
-	// progress cache.
+	// Drive the controls from the visible tab's core lifecycle or remote progress cache.
 	void RefreshVisibleTabProgress();
-#endif
 
 	void StartNewSearch();
-	void StopSearchForNewRequest();
 
 	void FixSearchTypes();
 
@@ -230,7 +225,7 @@ public:
 private:
 	CSearchList::CSearchParams ReadSearchParams(bool showWarning);
 	bool TryReuseSearch(const CSearchList::CSearchParams &params);
-	void ClearSearchRequests(bool ed2kOnly);
+	void ClearSearchRequests();
 
 	// Event handlers
 	void OnFieldChanged(wxEvent &evt);

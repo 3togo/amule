@@ -851,7 +851,17 @@ describes the peer only.
 under one public search ID. It uses whichever networks are available at
 submission time; neither available is an error. A Kad keyword already in
 use is preserved; if eD2k is connected the new search continues there and
-logs why its Kad component could not start.
+logs why its Kad component could not start. A query with no usable Kad keyword
+also continues over eD2k when connected; it fails when Kad is the only available
+network.
+
+Combined result rows sum eD2k source reports and take the maximum Kad source
+estimate, then display the larger of those two counts because the networks
+can overlap.
+
+For multi-search clients, replacement requests are validated before the existing
+eD2k search is stopped. Rejected requests leave it running; standalone Kad searches
+run alongside it. The legacy single-search sentinel still replaces its one bucket.
 
 Clients must require `EC_TAG_CAN_SEARCH_ALL` (`0x0029`) in `EC_OP_AUTH_OK`
 before submitting this type. Older daemons may interpret an unknown search

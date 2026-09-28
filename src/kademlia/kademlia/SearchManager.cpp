@@ -154,10 +154,8 @@ bool CSearchManager::StartSearch(CSearch *search)
 	if (AlreadySearchingFor(target)) {
 		return false;
 	}
-	// emplace may theoretically fail if the key appears between the
-	// AlreadySearchingFor check and here. In that case owned retains
-	// ownership and deletes search on return -- no leak, no dangling.
-	auto [it, inserted] = m_searches.emplace(target, std::move(owned));
+	// Keep local ownership if registration rejects a duplicate target.
+	const bool inserted = m_searches.try_emplace(target, std::move(owned)).second;
 	if (!inserted) {
 		return false;
 	}
@@ -166,8 +164,10 @@ bool CSearchManager::StartSearch(CSearch *search)
 	} catch (...) {
 		// Go can throw after registration. Detach before freeing the search,
 		// otherwise the next response/stop would dereference a dangling entry.
-		if (it->second.get() == search) {
-			DeleteSearch(it);
+		// Go may invoke callbacks: do not reuse an iterator across that boundary.
+		const auto registered = m_searches.find(target);
+		if (registered != m_searches.end() && registered->second.get() == search) {
+			DeleteSearch(registered);
 		}
 		throw;
 	}

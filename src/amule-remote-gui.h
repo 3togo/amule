@@ -656,12 +656,10 @@ public:
 	// progress so each tab's lifecycle ("!", progress bar) is tracked independently.
 	// Populated on remap, removed on tab close.
 	std::set<uint32> m_activeSearches;
-	// Per-search "is this a running Kad search?" -- the SearchDlg "More" button gate. Set
-	// from LIFECYCLE_KIND + LIFECYCLE_STATE in each progress reply (kind == KadSearch &&
-	// state == RUNNING), so "More" is enabled only while the search runs and greys out once
-	// it completes. Pruned on tab close / removal.
-	std::map<uint32, bool> m_kadActive;
-	std::map<uint32, bool> m_allKadActive;
+	// Only searches with active Kad work are cached. The value distinguishes a
+	// standalone Kad search (true) from the Kad component of AllSearch (false).
+	// Finished searches have no entry, even while their result tabs remain open.
+	std::map<uint32, bool> m_runningKadSearches;
 
 	// The result index (ResultMap / m_results) and GetSearchResults() live in
 	// CSearchResultIndex, shared with the monolithic search list. Results here are owned by
@@ -700,11 +698,10 @@ public:
 	// there is exactly one decode here rather than one per shape.
 	void ApplySearchProgress(const CECTag *src);
 
-	// Monolithic CSearchList API parity over EC. IsKadSearch reports whether a given tab is a
-	// *live* Kad search -- the SearchDlg "More" button gate -- from m_kadActive, which
-	// HandlePacket fills from each search's per-id LIFECYCLE_KIND + LIFECYCLE_STATE in the
-	// progress reply. RequestMoreResults sends EC_OP_SEARCH_REQUEST_MORE so the daemon widens
-	// that Kad search.
+	// Monolithic CSearchList API parity over EC. IsKadSearch identifies a running
+	// standalone Kad search; HasKadComponent also includes AllSearch's Kad work.
+	// Both read the activity cache populated by progress replies. RequestMoreResults
+	// sends EC_OP_SEARCH_REQUEST_MORE for the daemon to widen that search.
 	bool IsKadSearch(uint32_t searchID) const;
 	bool HasKadComponent(uint32_t searchID) const;
 	bool RequestMoreResults(uint32_t searchID);

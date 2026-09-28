@@ -3165,16 +3165,8 @@ static CECPacket *Get_EC_Response_Search(const CECPacket *request, bool multiSea
 										: LocalSearch;
 
 		if (multiSearch) {
-			// START is additive -- it does not stop sibling searches. But ed2k
-			// (local/global) share a single in-flight slot and file their results under the
-			// scalar m_currentSearch, so starting a NEW ed2k search must finalize any
-			// in-flight one first, or its late UDP results land in the new search's bucket.
-			// A Kad search uses its own ID and machinery, so it must NOT disturb a running
-			// ed2k search -- doing so used to kill an in-flight global search, which then
-			// returned zero results.
-			if (core_search_type != KadSearch) {
-				theApp->searchlist->StopInFlightEd2kSearch();
-			}
+			// The core replaces an in-flight eD2k search only after validating the
+			// new request; a failed START leaves the existing search running.
 			// The daemon allocates the ID (no sentinel): ed2k gets a bottom-half ID; a Kad
 			// search self-allocates a top-half ID inside StartNewSearch, which overwrites
 			// this seed and we read the real ID back.

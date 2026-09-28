@@ -638,7 +638,8 @@ void CSearchDlg::RekeySearch(wxUIntPtr oldID, wxUIntPtr newID)
 wxUIntPtr CSearchDlg::GetVisibleSearchId()
 {
 	int sel = m_notebook->GetSelection();
-	if (sel == -1) {
+	// wxWidgets can transiently report an out-of-range selection while closing a tab.
+	if (sel < 0 || sel >= static_cast<int>(m_notebook->GetPageCount())) {
 		return 0;
 	}
 	CSearchListCtrl *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(sel));
@@ -662,9 +663,9 @@ void CSearchDlg::ApplyProgressToBar(uint32 status)
 	FindWindow(IDC_CANCELS)->Enable(!finished);
 }
 
-#ifndef CLIENT_GUI
 void CSearchDlg::RefreshVisibleTabProgress()
 {
+#ifndef CLIENT_GUI
 	for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
 		auto *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
 		if (page && page->IsSearchRunning() &&
@@ -674,17 +675,28 @@ void CSearchDlg::RefreshVisibleTabProgress()
 			UpdateHitCount(page);
 		}
 	}
+#endif
 	wxUIntPtr sid = GetVisibleSearchId();
+#ifdef CLIENT_GUI
+	const auto progress = m_searchProgress.find(sid);
+	const CSearchListCtrl *page = sid ? GetSearchList(sid) : nullptr;
+	// An optimistic tab with no reply yet is pending; an unknown/restored tab
+	// has no running request until the daemon reports one.
+	const uint32 status = progress != m_searchProgress.end()
+				      ? progress->second
+				      : (page && page->GetSearchRequest() ? 0 : 0xffff);
+	ApplyProgressToBar(status);
+#else
 	// No tab => empty bar; otherwise reuse the same sentinel the EC PROGRESS
 	// reply builds, so monolithic and the remote GUI stay in lockstep.
 	ApplyProgressToBar(sid ? theApp->searchlist->GetSearchBarStatusById(sid) : 0xffff);
+#endif
 	// Keep the Kad-only "More" button in step with the visible tab: enabled only while it is a
 	// running Kad search, greyed once the search completes (IsKadSearch goes false when the Kad
 	// search ends). Refreshing it on the same tick the bar updates is what makes it grey out on
 	// completion instead of lingering until the next tab switch.
 	FindWindow(IDC_SEARCHMORE)->Enable(MoreAllowed((uint32_t)sid));
 }
-#endif
 
 void CSearchDlg::UpdateSearchProgress(uint32 searchID, uint32 status)
 {
@@ -807,7 +819,7 @@ void CSearchDlg::UpdateDownloadButtonState()
 {
 	bool enable = false;
 	const int selection = m_notebook->GetSelection();
-	if (selection != wxNOT_FOUND) {
+	if (selection >= 0 && selection < static_cast<int>(m_notebook->GetPageCount())) {
 		// A page that is not a result list (or a half-built tab) leaves the
 		// button off rather than dereferencing a failed cast.
 		if (const CSearchListCtrl *ctrl =
@@ -879,13 +891,9 @@ void CSearchDlg::OnSearchClosing(wxBookCtrlEvent &evt)
 		theApp->searchlist->StopSearchById(searchID, true);
 	}
 	m_expiringSearchID = 0;
-#else
-	// Monolithic: abort the global search if it was the last tab closed;
-	// RemoveResults below stops any Kad search and frees the bucket in-process.
-	if (evt.GetSelection() == ((int)m_notebook->GetPageCount() - 1)) {
-		OnBnClickedStop(nullEvent);
-	}
 #endif
+	// RemoveResults stops this exact search in the monolithic core. The tab's
+	// position says nothing about which search currently owns the eD2k slot.
 	theApp->searchlist->RemoveResults(searchID);
 
 	// Do cleanups if this was the last tab
@@ -924,11 +932,11 @@ void CSearchDlg::OnStartRejected(wxUIntPtr searchID, const wxString &error)
 	}
 
 	if (!wasBrowse) {
-		// Back to the pre-search button state: the search never started, so
-		// "Stop" must not stay armed for it.
+		// A rejected replacement leaves the previous search running. Restore
+		// controls from the tab that remains visible, not a blanket idle state.
 		FindWindow(IDC_STARTS)->Enable();
-		FindWindow(IDC_SDOWNLOAD)->Disable();
-		FindWindow(IDC_CANCELS)->Disable();
+		UpdateDownloadButtonState();
+		RefreshVisibleTabProgress();
 	}
 }
 
@@ -989,47 +997,9 @@ void CSearchDlg::CloseSearchTab(wxUIntPtr searchID)
 
 void CSearchDlg::OnSearchPageChanged(wxBookCtrlEvent &WXUNUSED(evt))
 {
-	int selection = m_notebook->GetSelection();
-
-	// Workaround for a bug in wxWidgets, where deleting pages can result in an invalid
-	// selection. Reported as
-	// http://sourceforge.net/tracker/index.php?func=detail&aid=1865141&group_id=9863&atid=109863
-	if (selection >= (int)m_notebook->GetPageCount()) {
-		selection = m_notebook->GetPageCount() - 1;
-	}
-
 	// Whether Download is available follows the newly-visible list's selection.
 	UpdateDownloadButtonState();
-	if (selection != -1) {
-		CSearchListCtrl *ctrl = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(selection));
-
-		// Refresh the bottom bar instantly for the newly-visible tab so it
-		// tracks the selected search rather than the last one that updated it.
-#ifdef CLIENT_GUI
-		// Remote GUI: from the per-search EC progress cache. If this tab has no cached status yet
-		// (progress not polled, or daemon-side state lost across an EC reconnect), clear the bar
-		// rather than leaving it frozen on the previous tab's value -- the next poll fills in the
-		// real state.
-		if (!m_searchProgress.empty()) {
-			std::map<wxUIntPtr, uint32>::const_iterator it =
-				m_searchProgress.find(ctrl->GetSearchId());
-			if (it != m_searchProgress.end()) {
-				ApplyProgressToBar(it->second);
-			} else {
-				m_progressbar->SetValue(0);
-			}
-		}
-#else
-		// Monolithic: from the local core's per-search lifecycle.
-		RefreshVisibleTabProgress();
-#endif
-
-		// "More" is Kad-only -- enable when this tab's searchID still
-		// corresponds to an active Kad search.
-		FindWindow(IDC_SEARCHMORE)->Enable(MoreAllowed((uint32_t)ctrl->GetSearchId()));
-	} else {
-		FindWindow(IDC_SEARCHMORE)->Enable(false);
-	}
+	RefreshVisibleTabProgress();
 }
 
 void CSearchDlg::OnBnClickedStart(wxCommandEvent &WXUNUSED(evt))
@@ -1072,7 +1042,6 @@ void CSearchDlg::OnBnClickedStart(wxCommandEvent &WXUNUSED(evt))
 			}
 		}
 
-		StopSearchForNewRequest();
 		StartNewSearch();
 	}
 }
@@ -1109,22 +1078,14 @@ bool CSearchDlg::TryReuseSearch(const CSearchList::CSearchParams &params)
 	return true;
 }
 
-void CSearchDlg::ClearSearchRequests(bool ed2kOnly)
+void CSearchDlg::ClearSearchRequests()
 {
 	for (size_t i = 0; i < m_notebook->GetPageCount(); ++i) {
 		auto *page = dynamic_cast<CSearchListCtrl *>(m_notebook->GetPage(i));
-		if (page && (!ed2kOnly || (page->GetSearchRequest() &&
-						  page->GetSearchRequest()->GetType() != KadSearch))) {
+		if (page) {
 			page->ClearSearchRequest();
 		}
 	}
-}
-
-void CSearchDlg::StopSearchForNewRequest()
-{
-	// Invalidate before stopping: remote progress can still describe the old search.
-	ClearSearchRequests(true);
-	theApp->searchlist->StopSearch(/*globalOnly=*/true);
 }
 
 void CSearchDlg::OnFieldChanged(wxEvent &WXUNUSED(evt))
@@ -1362,7 +1323,7 @@ void CSearchDlg::OnBnClickedStop(wxCommandEvent &WXUNUSED(evt))
 		}
 		theApp->searchlist->StopSearchById(sid);
 	} else {
-		ClearSearchRequests(false);
+		ClearSearchRequests();
 		theApp->searchlist->StopSearch();
 	}
 	ResetControls();

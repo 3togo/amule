@@ -1,0 +1,58 @@
+//
+// This file is part of the aMule Project.
+//
+// Copyright (c) 2003-2026 aMule Team ( https://amule-org.github.io )
+// Copyright (c) 2002-2011 Merkur ( devs@emule-project.net / http://www.emule-project.net )
+//
+// Any parts of this program derived from the xMule, lMule or eMule project,
+// or contributed by third-party developers are copyrighted by their
+// respective authors.
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
+//
+
+#ifndef SEARCHSOURCECOUNT_H
+#define SEARCHSOURCECOUNT_H
+
+#include <algorithm>
+#include <cstdint>
+
+// Server reports contribute to an eD2k total; Kad reports repeat a network-wide
+// estimate. The networks can overlap, so display the larger estimate, not their
+// sum. Keep both contributions when merging rows and alternative filenames.
+class CSearchSourceCount
+{
+public:
+	CSearchSourceCount() = default;
+	CSearchSourceCount(uint32_t count, bool kad)
+	: m_ed2k(kad ? 0 : count)
+	, m_kad(kad ? count : 0)
+	{
+	}
+
+	void Merge(const CSearchSourceCount &other)
+	{
+		m_ed2k += other.m_ed2k;
+		m_kad = std::max(m_kad, other.m_kad);
+	}
+
+	uint32_t Total() const { return std::max(m_ed2k, m_kad); }
+
+private:
+	uint32_t m_ed2k = 0;
+	uint32_t m_kad = 0;
+};
+
+#endif
