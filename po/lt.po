@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-26 17:32+0100\n"
+"POT-Creation-Date: 2026-09-28 11:32+0800\n"
 "PO-Revision-Date: 2026-09-26 19:26+0000\n"
 "Last-Translator: Dovydas Sankauskas <laisve@gmail.com>\n"
 "Language-Team: Lithuanian <komp_lt@konf.lt>\n"
@@ -1119,6 +1119,10 @@ msgstr ""
 msgid "Unknown"
 msgstr "Nežinoma"
 
+#: src/amule-remote-gui.cpp
+msgid "The connected daemon does not support All searches."
+msgstr ""
+
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
 msgstr "Ieškoma draugo žemo ID (LowID) ryšiui"
@@ -1789,7 +1793,7 @@ msgstr "Vietinis serveris"
 msgid "Remote Server"
 msgstr "Nutolęs serveris"
 
-#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchDlg.cpp
+#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchModeIcons.h
 #: src/TextClient.cpp
 msgid "Kad"
 msgstr "Kademlia"
@@ -3940,13 +3944,10 @@ msgstr "Paieška"
 msgid "Type"
 msgstr "Tipas"
 
-#: src/muuli_wdr.cpp src/SearchDlg.cpp src/SearchListCtrl.cpp
-msgid "Local"
-msgstr "Vietinis"
-
 #: src/muuli_wdr.cpp
-msgid "Global"
-msgstr "Globalus"
+#, fuzzy
+msgid "Search network"
+msgstr "Paieškos klaida"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -6824,8 +6825,17 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr ""
 
 #: src/SearchList.cpp
+#, fuzzy
+msgid "All search can't be done if neither eD2k nor Kad is available"
+msgstr "Kademlia paieška negalima, jei nepaleista Kademlia tarnyba"
+
+#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "eD2k paieška negalima, jei eD2k tarnyba neužmezgė ryšio"
+
+#: src/SearchList.cpp
+msgid "All search: no usable Kad keyword; continuing with eD2k."
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6834,6 +6844,10 @@ msgstr "Nėra raktažodžio Kad paieškai – nutraukiama"
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Vykdant Kademlia paiešką įvyko netikėta klaida: "
+
+#: src/SearchList.cpp
+msgid "All search: Kad component could not start: "
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6889,6 +6903,39 @@ msgstr "Atšaukta"
 msgid "New"
 msgstr "Nauja"
 
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: Current server"
+msgstr "eD2k serverių sąrašas (server.met)"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: All servers"
+msgstr "Pašalinti visus serverius"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "All networks"
+msgstr "Jokio tinklo"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the connected eD2k server."
+msgstr "Dabartinis serveris."
+
+#: src/SearchModeIcons.h
+msgid "Search the connected eD2k server and other servers in the server list."
+msgstr ""
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the Kad network."
+msgstr "Prisijungti prie tinklo."
+
+#: src/SearchModeIcons.h
+msgid "Search eD2k servers and Kad, using whichever networks are available."
+msgstr ""
+
 #: src/SearchProgressReport.cpp
 #, fuzzy
 msgid "running"
@@ -6929,6 +6976,40 @@ msgstr "Paieškos eiga nepasiekiama"
 #: src/SearchProgressReport.cpp
 msgid "No search to report on.\n"
 msgstr ""
+
+#: src/SearchSourceFormat.h
+#, c-format
+msgid "Estimated availability: %u"
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "eD2k sources: %u"
+msgstr "Failo šaltiniai:"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Kad sources: %u"
+msgstr "Rasta šaltinių: %s"
+
+#: src/SearchSourceFormat.h
+msgid "Network counts may overlap; they are not added together."
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy
+msgid "Network breakdown unavailable."
+msgstr "Yra nauja versija"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Complete sources: %u"
+msgstr "Pilni šaltiniai"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Direct client endpoints: %u"
+msgstr "Naujas kliento ID yra %u"
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
@@ -9519,6 +9600,12 @@ msgstr "Panašu, kad aMule veikia. Uždarykite ją ir vėl paleiskite šalinimo 
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Šalinami naudotojo duomenys iš $APPDATA\\aMule..."
+
+#~ msgid "Local"
+#~ msgstr "Vietinis"
+
+#~ msgid "Global"
+#~ msgstr "Globalus"
 
 #~ msgid ""
 #~ "The number of a file from the last search has to be given.\n"
