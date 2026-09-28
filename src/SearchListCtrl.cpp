@@ -44,6 +44,7 @@
 #include "CommentDialogLst.h" // Needed for CCommentDialogLst (Kad comments/ratings)
 #include "SearchDlg.h"        // Needed for CSearchDlg
 #include "SearchModeIcons.h"
+#include "SearchSourceFormat.h"
 #include "amuleDlg.h" // Needed for CamuleDlg
 #ifndef CLIENT_GUI
 #include "TransferWnd.h"      // Needed for CTransferWnd (download-list batching)
@@ -213,6 +214,39 @@ CSearchListCtrl::CSearchListCtrl(
 
 	InitColumnState();
 
+	// Generic data views receive mouse events on their inner client window.
+	auto *body = GetMainWindow();
+	body->Bind(wxEVT_MOTION, [this, body](wxMouseEvent &event) {
+		wxDataViewItem item;
+		wxDataViewColumn *column = nullptr;
+		HitTest(ScreenToClient(body->ClientToScreen(event.GetPosition())), item, column);
+		wxString tip;
+		if (item.IsOk() && column && column->GetModelColumn() == CSearchListModel::COL_SOURCES &&
+			!m_model->IsFolder(item)) {
+			const auto *file = CSearchListModel::ToFile(item);
+			tip = FormatSearchSourcesTooltip(file->GetSourceCount(),
+				file->GetCompleteSourceCount(),
+				file->GetClientsCount(),
+				file->GetNetworkSourceCounts());
+		}
+		if (tip != body->GetToolTipText()) {
+			if (tip.empty()) {
+				body->UnsetToolTip();
+			} else {
+				body->SetToolTip(tip);
+			}
+		}
+		event.Skip();
+	});
+	body->Bind(wxEVT_LEAVE_WINDOW, [body](wxMouseEvent &event) {
+		body->UnsetToolTip();
+		event.Skip();
+	});
+	body->Bind(wxEVT_MOUSEWHEEL, [body](wxMouseEvent &event) {
+		body->UnsetToolTip();
+		event.Skip();
+	});
+
 	s_lists.push_back(this);
 }
 
@@ -291,6 +325,7 @@ void CSearchListCtrl::UpdateResult(CSearchFile *toupdate)
 
 void CSearchListCtrl::ShowResults(wxUIntPtr ResultsID)
 {
+	GetMainWindow()->UnsetToolTip();
 	m_nResultsID = ResultsID;
 	// Different result set entirely; nothing kept for the old one applies.
 	m_userQueued.clear();

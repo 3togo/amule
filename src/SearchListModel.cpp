@@ -234,10 +234,7 @@ void CSearchListModel::GetValue(wxVariant &variant, const wxDataViewItem &item, 
 		break;
 
 	case COL_SOURCES: {
-		wxString temp = FormatSearchSources(file->GetSourceCount(),
-			file->GetCompleteSourceCount(),
-			file->GetClientsCount(),
-			file->GetNetworkSourceCounts());
+		wxString temp = FormatSearchSources(file->GetSourceCount(), file->GetNetworkSourceCounts());
 #if defined(__DEBUG__) && !defined(CLIENT_GUI)
 		if (file->GetKadPublishInfo() == 0) {
 			temp += " | -";
