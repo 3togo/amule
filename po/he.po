@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-28 11:32+0800\n"
-"PO-Revision-Date: 2026-09-26 19:22+0000\n"
+"POT-Creation-Date: 2026-09-29 02:18+0800\n"
+"PO-Revision-Date: 2026-09-28 17:24+0000\n"
 "Last-Translator: Peace Kramer <kpeace1@gmail.com>\n"
 "Language-Team: Hebrew\n"
 "Language: he\n"
@@ -4144,7 +4144,7 @@ msgstr "רווח באמצעות כיווץ"
 
 #: src/muuli_wdr.cpp
 msgid "Packages saved by I.C.H."
-msgstr "חבילות שנשמרו ע\"י I.C.H.·"
+msgstr "חבילות שנשמרו ע\"י I.C.H."
 
 #: src/muuli_wdr.cpp
 msgid "Sharing"
@@ -4300,7 +4300,7 @@ msgstr "מידע נוסף"
 
 #: src/muuli_wdr.cpp
 msgid "Userhash"
-msgstr "גיבוב משתשמ"
+msgstr "גיבוב משתמש"
 
 #: src/muuli_wdr.cpp src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Add"

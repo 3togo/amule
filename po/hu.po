@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-28 11:32+0800\n"
-"PO-Revision-Date: 2026-09-26 19:23+0000\n"
+"POT-Creation-Date: 2026-09-29 02:18+0800\n"
+"PO-Revision-Date: 2026-09-28 17:25+0000\n"
 "Last-Translator: Dévai Tamás <gonosztopi@amule.org>\n"
 "Language-Team: Hungarian <hu@li.org>\n"
 "Language: hu\n"
@@ -4060,7 +4060,7 @@ msgstr "met-fájl"
 
 #: src/muuli_wdr.cpp
 msgid "Hash"
-msgstr "Tördelőalgoritmus (hash)"
+msgstr "Hash"
 
 #: src/muuli_wdr.cpp
 msgid "Filesize"
@@ -4104,7 +4104,7 @@ msgstr "Aktív letöltési idő"
 
 #: src/muuli_wdr.cpp
 msgid "Completed Size"
-msgstr "Teljes méret"
+msgstr "Letöltött méret"
 
 #: src/muuli_wdr.cpp
 msgid "Intelligent Corruption Handling"
@@ -5168,7 +5168,7 @@ msgstr "Beállítási módosítások figyelmen kívül hagyása."
 
 #: src/muuli_wdr.cpp
 msgid "Incoming Dir"
-msgstr "Bejövő Mappa"
+msgstr "Bejövő mappa"
 
 #: src/muuli_wdr.cpp
 msgid "Change priority for new assigned files"

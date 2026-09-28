@@ -310,6 +310,34 @@ target_link_libraries (ClientVersionStringTest
 	mulecommon
 )
 
+# amulegui's preferences commit: only the fields the user changed reach the core, so values
+# another EC client set are not written back (#1659). EC tag types only, no app.
+add_executable (ECPrefsDiffTest
+	ECPrefsDiffTest.cpp
+	${CMAKE_SOURCE_DIR}/src/ECPrefsDiff.cpp
+	# See the note on CValueMapTest below.
+	${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp
+)
+
+add_test (NAME ECPrefsDiffTest
+	COMMAND ECPrefsDiffTest
+)
+
+target_include_directories (ECPrefsDiffTest
+	PRIVATE ${CMAKE_BINARY_DIR}
+	PRIVATE ${CMAKE_SOURCE_DIR}/src
+	PRIVATE ${CMAKE_SOURCE_DIR}/src/include
+	PRIVATE ${CMAKE_SOURCE_DIR}/src/libs
+	PRIVATE ${CMAKE_BINARY_DIR}/src/libs
+	PRIVATE ${CMAKE_BINARY_DIR}/src/libs/ec/cpp
+)
+
+target_link_libraries (ECPrefsDiffTest
+	muleunit
+	ec
+	mulecommon
+)
+
 add_executable (ECIdDiffTest
 	ECIdDiffTest.cpp
 	# See the note on CValueMapTest below: libec.a references DoECLogLine /
@@ -1831,6 +1859,16 @@ target_include_directories (AllSearchTypeTest PRIVATE
 	${CMAKE_BINARY_DIR}/src/libs/ec/cpp
 )
 target_link_libraries (AllSearchTypeTest muleunit mulecommon ec)
+
+# Where amule/amuled look for amuleweb and amuleapi before falling back to PATH.
+add_executable (HelperBinaryPathTest HelperBinaryPathTest.cpp)
+add_test (NAME HelperBinaryPathTest COMMAND HelperBinaryPathTest)
+target_include_directories (HelperBinaryPathTest PRIVATE
+	${CMAKE_BINARY_DIR}
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_SOURCE_DIR}/src/include
+)
+target_link_libraries (HelperBinaryPathTest muleunit mulecommon wxWidgets::BASE)
 
 # Linux only: the Windows and macOS autostart backends write the user's own registry and
 # LaunchAgents; the XDG one follows $XDG_CONFIG_HOME into a scratch directory.

@@ -17,8 +17,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-28 11:32+0800\n"
-"PO-Revision-Date: 2026-09-26 19:29+0000\n"
+"POT-Creation-Date: 2026-09-29 02:18+0800\n"
+"PO-Revision-Date: 2026-09-28 17:28+0000\n"
 "Last-Translator: Luís Picciochi Oliveira <Pitxyoki@Gmail.com>\n"
 "Language-Team: Portuguese <traduz@debianpt.org>\n"
 "Language: pt_PT\n"
@@ -4087,7 +4087,7 @@ msgstr "Nome completo"
 
 #: src/muuli_wdr.cpp
 msgid "met-File"
-msgstr "Ficheiro de servidores conhecidos"
+msgstr "Ficheiro met"
 
 #: src/muuli_wdr.cpp
 msgid "Hash"
@@ -4376,7 +4376,7 @@ msgstr "A transferir"
 
 #: src/muuli_wdr.cpp
 msgid "Current request"
-msgstr "Pedidos actuais"
+msgstr "Pedido actual"
 
 #: src/muuli_wdr.cpp
 msgid "Average upload rate"
@@ -4412,7 +4412,7 @@ msgstr "Identificação segura"
 
 #: src/muuli_wdr.cpp
 msgid "Queue rank"
-msgstr "Pontuação na fila de espera"
+msgstr "Posição na fila de espera"
 
 #: src/muuli_wdr.cpp
 msgid "Queue score"
@@ -5205,7 +5205,7 @@ msgstr "Pasta de completos"
 
 #: src/muuli_wdr.cpp
 msgid "Change priority for new assigned files"
-msgstr "Trocar prioridade nos novos ficheiros"
+msgstr "Alterar prioridade dos novos ficheiros"
 
 #: src/muuli_wdr.cpp
 msgid "Don't change"
@@ -5577,7 +5577,7 @@ msgstr "Tipo de proxy"
 
 #: src/muuli_wdr.cpp
 msgid "Proxy host"
-msgstr "Servidor"
+msgstr "Servidor proxy"
 
 #: src/muuli_wdr.cpp
 msgid "The proxy host name"

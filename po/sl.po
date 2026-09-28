@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-28 11:32+0800\n"
-"PO-Revision-Date: 2026-09-26 19:30+0000\n"
+"POT-Creation-Date: 2026-09-29 02:18+0800\n"
+"PO-Revision-Date: 2026-09-28 17:29+0000\n"
 "Last-Translator: Jure Repinc <jlp@holodeck1.com>\n"
 "Language-Team: Slovenian\n"
 "Language: sl\n"
@@ -4121,7 +4121,7 @@ msgstr "Splošno"
 
 #: src/muuli_wdr.cpp
 msgid "Full Name"
-msgstr "Polno Ime"
+msgstr "Polno ime"
 
 #: src/muuli_wdr.cpp
 msgid "met-File"
@@ -4281,7 +4281,7 @@ msgid ""
 "and if it's a fake, you can tell that to other users of aMule."
 msgstr ""
 "Za film lahko poveste njegovo dolžino, zgodbo, jezik ...\n"
-"in če je lažna, lahko to sporočite drugim uporabnikom."
+"in če je ponaredek, lahko to sporočite drugim uporabnikom aMule."
 
 #: src/muuli_wdr.cpp
 msgid "File Quality"

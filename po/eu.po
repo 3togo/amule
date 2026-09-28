@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-28 11:32+0800\n"
-"PO-Revision-Date: 2026-09-26 19:19+0000\n"
+"POT-Creation-Date: 2026-09-29 02:18+0800\n"
+"PO-Revision-Date: 2026-09-28 17:23+0000\n"
 "Last-Translator: Piarres Beobide <pi@beobide.net>\n"
 "Language-Team: Euskara <librezale@librezale.org>\n"
 "Language: eu\n"
@@ -4128,7 +4128,7 @@ msgstr "Deskarga aktibo denbora"
 
 #: src/muuli_wdr.cpp
 msgid "Completed Size"
-msgstr "Amaitua tamaina"
+msgstr "Amaitutako tamaina"
 
 #: src/muuli_wdr.cpp
 msgid "Intelligent Corruption Handling"
@@ -4144,7 +4144,7 @@ msgstr "Konpresioaz irabazitakoa"
 
 #: src/muuli_wdr.cpp
 msgid "Packages saved by I.C.H."
-msgstr "I.C.H. gordetako paketeak"
+msgstr "I.C.H.-k gordetako paketeak"
 
 #: src/muuli_wdr.cpp
 msgid "Sharing"
@@ -4235,8 +4235,8 @@ msgid ""
 "For a film you can say its length, its story, language ...\n"
 "and if it's a fake, you can tell that to other users of aMule."
 msgstr ""
-"Filma batentzat iraupena, istorioa, hizkuntza ...\n"
-"eta faltsua den esan dezakezu, aMule beste erabiltzaileei esan diezaiekezu."
+"Film baten iraupena, istorioa, hizkuntza ... esan ditzakezu\n"
+"eta faltsua bada, aMuleko beste erabiltzaileei esan diezaiekezu."
 
 #: src/muuli_wdr.cpp
 msgid "File Quality"
@@ -4348,7 +4348,7 @@ msgstr "Erabiltzaile ID-a"
 
 #: src/muuli_wdr.cpp
 msgid "Server IP"
-msgstr "Zerbitzaria IP-a"
+msgstr "Zerbitzariaren IP-a"
 
 #: src/muuli_wdr.cpp
 msgid "Server name"

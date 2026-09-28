@@ -56,6 +56,9 @@
 #include <wx/filename.h> // Needed for wxFileName (CA bundle lookup)
 #endif
 
+#include "AutostartManager.h" // Needed for GetCanonicalExecutablePath
+#include "HelperBinaryPath.h" // Needed for ResolveHelperBinary
+
 #if defined(__WXGTK__) && !defined(__APPLE__)
 #include <glib.h> // g_set_prgname() -- wl_app_id / WM_CLASS binding
 #endif
@@ -1298,10 +1301,8 @@ bool CamuleApp::OnInit()
 	// Run webserver?
 	if (thePrefs::GetWSIsEnabled()) {
 		wxString aMuleConfigFile = thePrefs::GetConfigDir() + m_configFile;
-		// Not a const&: the __WXMAC__ block below reassigns this. clang-tidy runs on Linux
-		// where that block is #ifdef'd out, so it cannot see the write.
-		// NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
-		wxString amulewebPath = thePrefs::GetWSPath();
+		wxString amulewebPath = ResolveHelperBinary(
+			thePrefs::GetWSPath(), AutostartManager::GetCanonicalExecutablePath());
 
 #if defined(__WXMAC__) && !defined(AMULE_DAEMON)
 		// For the Mac GUI application, look for amuleweb in the bundle
@@ -1359,10 +1360,8 @@ bool CamuleApp::OnInit()
 
 	// Run amuleapi?
 	if (thePrefs::GetAmuleApiIsEnabled()) {
-		// Not a const&: the __WXMAC__ block below reassigns this. clang-tidy runs on Linux
-		// where that block is #ifdef'd out, so it cannot see the write.
-		// NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
-		wxString amuleapiPath = thePrefs::GetAmuleApiPath();
+		wxString amuleapiPath = ResolveHelperBinary(
+			thePrefs::GetAmuleApiPath(), AutostartManager::GetCanonicalExecutablePath());
 
 #if defined(__WXMAC__) && !defined(AMULE_DAEMON)
 		// For the Mac GUI application, look for amuleapi in the bundle
@@ -1407,13 +1406,20 @@ bool CamuleApp::OnInit()
 		// No --amule-config-file here, unlike amuleweb above: amuleapi takes the ephemeral
 		// token written just now instead of reading the hashed EC password out of amule.conf.
 		// It finds the token through the config dir passed below, which is also where its
-		// admin and guest credentials live. The HTTP bind address and port are passed
-		// explicitly; a non-loopback bind requires an admin password or amuleapi refuses to
-		// start.
-		wxString cmd = QUOTE + amuleapiPath +
-			       QUOTE " " QUOTE "--config-dir=" + thePrefs::GetConfigDir() +
-			       QUOTE " " QUOTE "--bind=" + thePrefs::GetAmuleApiBindAddress() + QUOTE +
-			       wxString::Format(wxT(" --http-port=%u"), thePrefs::GetAmuleApiPort());
+		// admin and guest credentials live. The HTTP bind address and port, and where to reach
+		// our EC listener, are passed explicitly; a non-loopback bind requires an admin password
+		// or amuleapi refuses to start.
+		wxString ecIp;
+		uint16 ecPort = 0;
+		if (ECServerHandler) {
+			ECServerHandler->GetListenEndpoint(ecIp, ecPort);
+		}
+		const wxString cmd = AmuleApiCommand(amuleapiPath,
+			thePrefs::GetConfigDir(),
+			thePrefs::GetAmuleApiBindAddress(),
+			thePrefs::GetAmuleApiPort(),
+			ecIp,
+			ecPort);
 		CTerminationProcessAmuleApi *p = new CTerminationProcessAmuleApi(cmd, &amuleapi_pid);
 		amuleapi_pid = static_cast<int>(wxExecute(cmd, wxEXEC_ASYNC, p));
 		bool amuleapi_ok = amuleapi_pid > 0;
