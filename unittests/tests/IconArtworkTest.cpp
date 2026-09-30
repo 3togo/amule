@@ -57,9 +57,19 @@ int main(int argc, char **argv)
 				++menus;
 			for (double scale : { 1.0, 1.5, 2.0 }) {
 				wxBitmap b;
+				// wxMSW scales DIP into drawing coordinates before GetFlag;
+				// its logical bitmap dimensions are physical pixels. GTK/macOS
+				// instead use a backing scale with fixed logical dimensions.
+#ifdef __WXMSW__
+				const wxSize flagSize(wxRound(16 * scale), wxRound(12 * scale));
+				const double contentScale = 1.0;
+#else
+				const wxSize flagSize(16, 12);
+				const double contentScale = scale;
+#endif
 				if (flag)
 					b = cache.GetFlag(
-						wxString::FromUTF8(entry.name + 5), wxSize(16, 12), scale);
+						wxString::FromUTF8(entry.name + 5), flagSize, contentScale);
 				else {
 					const auto bundle = wxArtProvider::GetBitmapBundle(
 						wxString("amule:") + entry.name, wxART_MENU, wxSize(16, 16));
@@ -70,7 +80,7 @@ int main(int argc, char **argv)
 				require(b.IsOk(), "bitmap invalid");
 				require(b.GetWidth() == wxRound(16 * scale), "wrong pixel width");
 				if (flag)
-					require(b.GetLogicalSize() == wxSize(16, 12), "wrong logical size");
+					require(b.GetLogicalSize() == flagSize, "wrong logical size");
 				auto image = b.ConvertToImage();
 				if (output)
 					require(image.SaveFile(wxFileName(wxString::FromUTF8(output),

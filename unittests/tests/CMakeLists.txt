@@ -16,6 +16,12 @@ if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 	)
 	target_include_directories (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
 	target_link_libraries (IconArtworkTest wxWidgets::CORE)
+	if (WIN32)
+		# wx core imports Common Controls v6 entry points. Match the GUI's
+		# activation context and DPI awareness before the DLL loader runs.
+		target_sources (IconArtworkTest PRIVATE IconArtworkTest.rc)
+		target_include_directories (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR})
+	endif()
 	add_test (NAME IconArtworkTest COMMAND IconArtworkTest)
 	set_tests_properties (IconArtworkTest PROPERTIES SKIP_RETURN_CODE 77 LABELS "gui")
 endif()
