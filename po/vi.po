@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule GIT\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-26 17:32+0100\n"
-"PO-Revision-Date: 2026-09-28 19:10+0000\n"
+"POT-Creation-Date: 2026-09-30 13:09+0800\n"
+"PO-Revision-Date: 2026-09-29 10:15+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
 "Language: vi\n"
@@ -274,6 +274,7 @@ msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr "Đang buộc dừng tiến trình amuleweb với pid '%d' ... "
 
 #: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
+#: src/SharedFilesCtrl.cpp
 msgid "Failed"
 msgstr "Thất bại"
 
@@ -525,6 +526,11 @@ msgstr "Đã thông báo tên máy chủ"
 #: src/amule.cpp
 #, c-format
 msgid "Media metadata: probed file is no longer known, result discarded (%s)"
+msgstr ""
+
+#: src/amule.cpp
+#, c-format
+msgid "Verify Local Data: another file named '%s' in your shared folders has the same content as '%s' and may be an intact copy of it."
 msgstr ""
 
 #: src/amule.cpp
@@ -1102,6 +1108,10 @@ msgstr ""
 #: src/ServerListCtrl.cpp src/Statistics.cpp
 msgid "Unknown"
 msgstr "Không xác định"
+
+#: src/amule-remote-gui.cpp
+msgid "The connected daemon does not support All searches."
+msgstr ""
 
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
@@ -1742,7 +1752,7 @@ msgstr "Máy chủ cục bộ"
 msgid "Remote Server"
 msgstr "Máy chủ từ xa"
 
-#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchDlg.cpp
+#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchModeIcons.h
 #: src/TextClient.cpp
 msgid "Kad"
 msgstr "Kad"
@@ -3175,6 +3185,11 @@ msgstr "Người dùng Kad"
 
 #: src/KnownFile.cpp
 #, c-format
+msgid "Verify Local Data: %s is still downloading, so it was not checked."
+msgstr ""
+
+#: src/KnownFile.cpp
+#, c-format
 msgid "Kad note search for '%s' not started: Kad is not connected"
 msgstr "Tìm kiếm ghi chú Kad cho '%s' chưa bắt đầu: Kad chưa kết nối"
 
@@ -3864,13 +3879,10 @@ msgstr "Tìm kiếm"
 msgid "Type"
 msgstr "Loại"
 
-#: src/muuli_wdr.cpp src/SearchDlg.cpp src/SearchListCtrl.cpp
-msgid "Local"
-msgstr "Cục bộ"
-
 #: src/muuli_wdr.cpp
-msgid "Global"
-msgstr "Toàn cục"
+#, fuzzy
+msgid "Search network"
+msgstr "Lỗi tìm kiếm"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -5116,7 +5128,7 @@ msgstr "Đặt lại trang về mặc định"
 msgid "Reset the settings on the current page to their default values."
 msgstr "Đặt lại các cài đặt trên trang hiện tại về giá trị mặc định."
 
-#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#: src/muuli_wdr.cpp src/ServerWnd.cpp src/SharedFilesCtrl.cpp
 msgid "OK"
 msgstr "OK"
 
@@ -6700,8 +6712,17 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr ""
 
 #: src/SearchList.cpp
+#, fuzzy
+msgid "All search can't be done if neither eD2k nor Kad is available"
+msgstr "Không thể tìm kiếm trên Kad nếu Kad không chạy"
+
+#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "Không thể tìm kiếm eD2k nếu eD2k chưa được kết nối"
+
+#: src/SearchList.cpp
+msgid "All search: no usable Kad keyword; continuing with eD2k."
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6710,6 +6731,10 @@ msgstr "Không có từ khóa cho tìm kiếm Kad - đang hủy"
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Lỗi không mong muốn khi thử tìm kiếm Kad: "
+
+#: src/SearchList.cpp
+msgid "All search: Kad component could not start: "
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6764,6 +6789,39 @@ msgstr "Đã hủy"
 msgid "New"
 msgstr "Mới"
 
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: Current server"
+msgstr "Danh sách máy chủ eD2k (server.met)"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: All servers"
+msgstr "Xóa tất cả máy chủ"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "All networks"
+msgstr "Không có mạng"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the connected eD2k server."
+msgstr "Máy chủ đang kết nối hiện tại."
+
+#: src/SearchModeIcons.h
+msgid "Search the connected eD2k server and other servers in the server list."
+msgstr ""
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the Kad network."
+msgstr "Kết nối đến mạng."
+
+#: src/SearchModeIcons.h
+msgid "Search eD2k servers and Kad, using whichever networks are available."
+msgstr ""
+
 #: src/SearchProgressReport.cpp
 msgid "running"
 msgstr ""
@@ -6802,6 +6860,40 @@ msgstr "Không có tiến trình tìm kiếm"
 #: src/SearchProgressReport.cpp
 msgid "No search to report on.\n"
 msgstr ""
+
+#: src/SearchSourceFormat.h
+#, c-format
+msgid "Estimated availability: %u"
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "eD2k sources: %u"
+msgstr "Nguồn tệp:"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Kad sources: %u"
+msgstr "Nguồn đã tìm thấy: %s"
+
+#: src/SearchSourceFormat.h
+msgid "Network counts may overlap; they are not added together."
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy
+msgid "Network breakdown unavailable."
+msgstr "Có phiên bản mới"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Complete sources: %u"
+msgstr "Nguồn hoàn chỉnh"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Direct client endpoints: %u"
+msgstr "Client ID mới là %u"
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
@@ -7435,6 +7527,10 @@ msgstr ""
 msgid "Directory Path"
 msgstr "Đường dẫn thư mục"
 
+#: src/SharedFilesCtrl.cpp
+msgid "Verify Local Data"
+msgstr "Xác minh dữ liệu cục bộ"
+
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Tệp chia sẻ"
@@ -7450,10 +7546,6 @@ msgstr "Chỉnh sửa bình luận/đánh giá"
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"
 msgstr "Đổi tên"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Verify Local Data"
-msgstr "Xác minh dữ liệu cục bộ"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Re-extract &media metadata"
@@ -8489,11 +8581,6 @@ msgstr ""
 
 #: src/ThreadTasks.cpp
 #, c-format
-msgid "Verify Local Data: %s is still downloading, so it was not checked."
-msgstr ""
-
-#: src/ThreadTasks.cpp
-#, c-format
 msgid "Verify Local Data: could not read %s, so it was not checked."
 msgstr ""
 
@@ -9347,3 +9434,9 @@ msgstr "aMule dường như đang chạy. Vui lòng đóng nó và chạy lại 
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Đang xóa dữ liệu người dùng tại $APPDATA\\aMule..."
+
+#~ msgid "Local"
+#~ msgstr "Cục bộ"
+
+#~ msgid "Global"
+#~ msgstr "Toàn cục"

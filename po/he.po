@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-26 17:32+0100\n"
-"PO-Revision-Date: 2026-09-28 18:57+0000\n"
+"POT-Creation-Date: 2026-09-30 13:09+0800\n"
+"PO-Revision-Date: 2026-09-29 10:03+0000\n"
 "Last-Translator: Peace Kramer <kpeace1@gmail.com>\n"
 "Language-Team: Hebrew\n"
 "Language: he\n"
@@ -279,6 +279,7 @@ msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr "הורג מופע amuleweb עם pid '%d' ... "
 
 #: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
+#: src/SharedFilesCtrl.cpp
 msgid "Failed"
 msgstr "נכשל"
 
@@ -537,6 +538,11 @@ msgstr "שם שרת:"
 #: src/amule.cpp
 #, c-format
 msgid "Media metadata: probed file is no longer known, result discarded (%s)"
+msgstr ""
+
+#: src/amule.cpp
+#, c-format
+msgid "Verify Local Data: another file named '%s' in your shared folders has the same content as '%s' and may be an intact copy of it."
 msgstr ""
 
 #: src/amule.cpp
@@ -1117,6 +1123,10 @@ msgstr ""
 #: src/ServerListCtrl.cpp src/Statistics.cpp
 msgid "Unknown"
 msgstr "לא ידוע"
+
+#: src/amule-remote-gui.cpp
+msgid "The connected daemon does not support All searches."
+msgstr ""
 
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
@@ -1777,7 +1787,7 @@ msgstr "שרת מקומי"
 msgid "Remote Server"
 msgstr "שרת מרוחק"
 
-#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchDlg.cpp
+#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchModeIcons.h
 #: src/TextClient.cpp
 msgid "Kad"
 msgstr "קאד"
@@ -3222,6 +3232,11 @@ msgstr "משתמש Kad"
 
 #: src/KnownFile.cpp
 #, c-format
+msgid "Verify Local Data: %s is still downloading, so it was not checked."
+msgstr ""
+
+#: src/KnownFile.cpp
+#, c-format
 msgid "Kad note search for '%s' not started: Kad is not connected"
 msgstr "חיפוש הערות Kad עבור '%s' לא התחיל: Kad אינו מחובר"
 
@@ -3917,13 +3932,10 @@ msgstr "חיפוש"
 msgid "Type"
 msgstr "סוג/טיפוס"
 
-#: src/muuli_wdr.cpp src/SearchDlg.cpp src/SearchListCtrl.cpp
-msgid "Local"
-msgstr "מקומי"
-
 #: src/muuli_wdr.cpp
-msgid "Global"
-msgstr "גלובלי"
+#, fuzzy
+msgid "Search network"
+msgstr "שגיאת חיפוש"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -5178,7 +5190,7 @@ msgstr "אפס דף לברירות המחדל"
 msgid "Reset the settings on the current page to their default values."
 msgstr "אפס את ההגדרות בדף הנוכחי לערכי ברירת המחדל שלהן."
 
-#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#: src/muuli_wdr.cpp src/ServerWnd.cpp src/SharedFilesCtrl.cpp
 msgid "OK"
 msgstr "בסדר"
 
@@ -6783,8 +6795,17 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr ""
 
 #: src/SearchList.cpp
+#, fuzzy
+msgid "All search can't be done if neither eD2k nor Kad is available"
+msgstr "לא יכול להתבצע חיפוש באמצעות קאד אם קאד לא פועל"
+
+#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "לא ניתן לבצע חיפוש eD2k כאשר eD2k אינו מחובר"
+
+#: src/SearchList.cpp
+msgid "All search: no usable Kad keyword; continuing with eD2k."
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6793,6 +6814,10 @@ msgstr "אין מילת מפתח לחיפוש Kad - מבטל"
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "שגיאה לא צפויה בעת ניסיון ביצוע חיפוש ב קאד: "
+
+#: src/SearchList.cpp
+msgid "All search: Kad component could not start: "
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6847,6 +6872,39 @@ msgstr "בוטל"
 msgid "New"
 msgstr "חדש"
 
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: Current server"
+msgstr "רשימת שרתי eD2k (server.met)"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: All servers"
+msgstr "הסר את כל השרתים"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "All networks"
+msgstr "אין רשת"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the connected eD2k server."
+msgstr "שרת מחובר נוכחי."
+
+#: src/SearchModeIcons.h
+msgid "Search the connected eD2k server and other servers in the server list."
+msgstr ""
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the Kad network."
+msgstr "התחבר לרשת."
+
+#: src/SearchModeIcons.h
+msgid "Search eD2k servers and Kad, using whichever networks are available."
+msgstr ""
+
 #: src/SearchProgressReport.cpp
 #, fuzzy
 msgid "running"
@@ -6887,6 +6945,40 @@ msgstr "התקדמות החיפוש אינה זמינה"
 #: src/SearchProgressReport.cpp
 msgid "No search to report on.\n"
 msgstr ""
+
+#: src/SearchSourceFormat.h
+#, c-format
+msgid "Estimated availability: %u"
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "eD2k sources: %u"
+msgstr "מקורות קובץ:"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Kad sources: %u"
+msgstr "מקורות שנמצאו: %s"
+
+#: src/SearchSourceFormat.h
+msgid "Network counts may overlap; they are not added together."
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy
+msgid "Network breakdown unavailable."
+msgstr "גרסה חדשה זמינה"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Complete sources: %u"
+msgstr "מקורות שלמים"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Direct client endpoints: %u"
+msgstr "מ\"ז החדש ללקוח הוא %u"
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
@@ -7539,6 +7631,10 @@ msgstr "זמינות"
 msgid "Directory Path"
 msgstr "נתיב תיקייה"
 
+#: src/SharedFilesCtrl.cpp
+msgid "Verify Local Data"
+msgstr "אמת נתונים מקומיים"
+
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "קבצים משותפים"
@@ -7554,10 +7650,6 @@ msgstr "ערוך תגובה/דירוג"
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"
 msgstr "שנה שם"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Verify Local Data"
-msgstr "אמת נתונים מקומיים"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Re-extract &media metadata"
@@ -8602,11 +8694,6 @@ msgstr ""
 
 #: src/ThreadTasks.cpp
 #, c-format
-msgid "Verify Local Data: %s is still downloading, so it was not checked."
-msgstr ""
-
-#: src/ThreadTasks.cpp
-#, c-format
 msgid "Verify Local Data: could not read %s, so it was not checked."
 msgstr ""
 
@@ -9459,6 +9546,12 @@ msgstr "נראה כי aMule פועל. אנא סגור אותו והרץ מחדש
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "מסיר נתוני משתמש ב-$APPDATA\\aMule..."
+
+#~ msgid "Local"
+#~ msgstr "מקומי"
+
+#~ msgid "Global"
+#~ msgstr "גלובלי"
 
 #~ msgid ""
 #~ "The number of a file from the last search has to be given.\n"

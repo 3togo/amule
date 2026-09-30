@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-26 17:32+0100\n"
-"PO-Revision-Date: 2026-09-28 18:55+0000\n"
+"POT-Creation-Date: 2026-09-30 13:09+0800\n"
+"PO-Revision-Date: 2026-09-29 10:01+0000\n"
 "Last-Translator: Piarres Beobide <pi@beobide.net>\n"
 "Language-Team: Euskara <librezale@librezale.org>\n"
 "Language: eu\n"
@@ -281,6 +281,7 @@ msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr "'%d' pid-a duen amuleweb instantzia hiltzen ... "
 
 #: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
+#: src/SharedFilesCtrl.cpp
 msgid "Failed"
 msgstr "Huts egin du"
 
@@ -538,6 +539,11 @@ msgstr "Zerbitzari ostalari-izena notifikatua"
 #: src/amule.cpp
 #, c-format
 msgid "Media metadata: probed file is no longer known, result discarded (%s)"
+msgstr ""
+
+#: src/amule.cpp
+#, c-format
+msgid "Verify Local Data: another file named '%s' in your shared folders has the same content as '%s' and may be an intact copy of it."
 msgstr ""
 
 #: src/amule.cpp
@@ -1118,6 +1124,10 @@ msgstr ""
 #: src/ServerListCtrl.cpp src/Statistics.cpp
 msgid "Unknown"
 msgstr "Ezezaguna"
+
+#: src/amule-remote-gui.cpp
+msgid "The connected daemon does not support All searches."
+msgstr ""
 
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
@@ -1777,7 +1787,7 @@ msgstr "Zerbitzari lokala"
 msgid "Remote Server"
 msgstr "Urruneko zerbitzaria"
 
-#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchDlg.cpp
+#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchModeIcons.h
 #: src/TextClient.cpp
 msgid "Kad"
 msgstr "Kad"
@@ -3222,6 +3232,11 @@ msgstr "Kad erabiltzailea"
 
 #: src/KnownFile.cpp
 #, c-format
+msgid "Verify Local Data: %s is still downloading, so it was not checked."
+msgstr ""
+
+#: src/KnownFile.cpp
+#, c-format
 msgid "Kad note search for '%s' not started: Kad is not connected"
 msgstr "'%s'(r)en Kad ohar-bilaketa ez da hasi: Kad ez dago konektatuta"
 
@@ -3917,13 +3932,10 @@ msgstr "Bilatu"
 msgid "Type"
 msgstr "Mota"
 
-#: src/muuli_wdr.cpp src/SearchDlg.cpp src/SearchListCtrl.cpp
-msgid "Local"
-msgstr "Lokala"
-
 #: src/muuli_wdr.cpp
-msgid "Global"
-msgstr "Orokorra"
+#, fuzzy
+msgid "Search network"
+msgstr "Bilaketa-errorea"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -5178,7 +5190,7 @@ msgstr "Berrezarri orria balio lehenetsietara"
 msgid "Reset the settings on the current page to their default values."
 msgstr "Berrezarri uneko orriko ezarpenak beren balio lehenetsietara."
 
-#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#: src/muuli_wdr.cpp src/ServerWnd.cpp src/SharedFilesCtrl.cpp
 msgid "OK"
 msgstr "Ados"
 
@@ -6789,8 +6801,17 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr "Okerreko sarrera fitxategi ezagunen zerrendako fitxategian, hondaturik egon liteke: "
 
 #: src/SearchList.cpp
+#, fuzzy
+msgid "All search can't be done if neither eD2k nor Kad is available"
+msgstr "Ezin da Kad bilaketarik egin Kad ez badago abiarazirik"
+
+#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "Ezin da eD2k bilaketarik egin eD2k ez badago konektaturik"
+
+#: src/SearchList.cpp
+msgid "All search: no usable Kad keyword; continuing with eD2k."
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6799,6 +6820,10 @@ msgstr "Ez dago gako-hitzik Kad bilaketarako - abortatzen"
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Espero gabeko errorea Kad bilaketa egitean: "
+
+#: src/SearchList.cpp
+msgid "All search: Kad component could not start: "
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6854,6 +6879,39 @@ msgstr "Utzia"
 msgid "New"
 msgstr "Berria"
 
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: Current server"
+msgstr "eD2k zerbitzari-zerrenda (server.met)"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: All servers"
+msgstr "Kendu zerbitzari guztiak"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "All networks"
+msgstr "Sarerik ez"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the connected eD2k server."
+msgstr "Une honetan konektaturiko zerbitzaria."
+
+#: src/SearchModeIcons.h
+msgid "Search the connected eD2k server and other servers in the server list."
+msgstr ""
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the Kad network."
+msgstr "Sarera konektatu."
+
+#: src/SearchModeIcons.h
+msgid "Search eD2k servers and Kad, using whichever networks are available."
+msgstr ""
+
 #: src/SearchProgressReport.cpp
 #, fuzzy
 msgid "running"
@@ -6894,6 +6952,40 @@ msgstr "Bilaketa aurrerapena ez dago eskuragarri"
 #: src/SearchProgressReport.cpp
 msgid "No search to report on.\n"
 msgstr ""
+
+#: src/SearchSourceFormat.h
+#, c-format
+msgid "Estimated availability: %u"
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "eD2k sources: %u"
+msgstr "Fitxategiaren iturburua:"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Kad sources: %u"
+msgstr "Aurkituriko iturburuak: %s"
+
+#: src/SearchSourceFormat.h
+msgid "Network counts may overlap; they are not added together."
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy
+msgid "Network breakdown unavailable."
+msgstr "Bertsio berria eskuragarri"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Complete sources: %u"
+msgstr "Jatorri osoak"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Direct client endpoints: %u"
+msgstr "Bezero id berria: %u"
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
@@ -7545,6 +7637,10 @@ msgstr "Eskuragarritasuna"
 msgid "Directory Path"
 msgstr "Karpeta bidea"
 
+#: src/SharedFilesCtrl.cpp
+msgid "Verify Local Data"
+msgstr "Egiaztatu datu lokalak"
+
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Partekatutako fitxategiak"
@@ -7560,10 +7656,6 @@ msgstr "Iruzkina/Kalifikazioa editatu"
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"
 msgstr "Izena aldatu"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Verify Local Data"
-msgstr "Egiaztatu datu lokalak"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Re-extract &media metadata"
@@ -8608,11 +8700,6 @@ msgstr ""
 
 #: src/ThreadTasks.cpp
 #, c-format
-msgid "Verify Local Data: %s is still downloading, so it was not checked."
-msgstr ""
-
-#: src/ThreadTasks.cpp
-#, c-format
 msgid "Verify Local Data: could not read %s, so it was not checked."
 msgstr ""
 
@@ -9466,6 +9553,12 @@ msgstr "Badirudi aMule exekutatzen ari dela. Mesedez, itxi eta exekutatu berriro
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Erabiltzailearen datuak kentzen $APPDATA\\aMule(e)n..."
+
+#~ msgid "Local"
+#~ msgstr "Lokala"
+
+#~ msgid "Global"
+#~ msgstr "Orokorra"
 
 #~ msgid ""
 #~ "The number of a file from the last search has to be given.\n"

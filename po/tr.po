@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-26 17:32+0100\n"
-"PO-Revision-Date: 2026-09-28 19:06+0000\n"
+"POT-Creation-Date: 2026-09-30 13:09+0800\n"
+"PO-Revision-Date: 2026-09-29 10:11+0000\n"
 "Last-Translator: \n"
 "Language-Team: Turkish <li@li.org>\n"
 "Language: tr\n"
@@ -286,6 +286,7 @@ msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr "pid `%d' ile ilişkili amuleweb oturumu öldürülüyor… "
 
 #: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
+#: src/SharedFilesCtrl.cpp
 msgid "Failed"
 msgstr "Başarısız"
 
@@ -541,6 +542,11 @@ msgstr "Sunucu makine adı uyarıldı"
 #, c-format
 msgid "Media metadata: probed file is no longer known, result discarded (%s)"
 msgstr "Ortam üst verileri: incelenen dosya artık bilinmiyor, sonuç görmezden gelindi (%s)"
+
+#: src/amule.cpp
+#, c-format
+msgid "Verify Local Data: another file named '%s' in your shared folders has the same content as '%s' and may be an intact copy of it."
+msgstr ""
 
 #: src/amule.cpp
 #, c-format
@@ -1117,6 +1123,10 @@ msgstr "Uzaktaki çekirdek \"%s\" için tutarsız veri gönderdi (kısmi durum %
 #: src/ServerListCtrl.cpp src/Statistics.cpp
 msgid "Unknown"
 msgstr "Bilinmiyor"
+
+#: src/amule-remote-gui.cpp
+msgid "The connected daemon does not support All searches."
+msgstr ""
 
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
@@ -1768,7 +1778,7 @@ msgstr "Sunucu"
 msgid "Remote Server"
 msgstr "Uzak Sunucu"
 
-#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchDlg.cpp
+#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchModeIcons.h
 #: src/TextClient.cpp
 msgid "Kad"
 msgstr "Kad"
@@ -3208,6 +3218,11 @@ msgstr "Kad kullanıcısı"
 
 #: src/KnownFile.cpp
 #, c-format
+msgid "Verify Local Data: %s is still downloading, so it was not checked."
+msgstr ""
+
+#: src/KnownFile.cpp
+#, c-format
 msgid "Kad note search for '%s' not started: Kad is not connected"
 msgstr "'%s' için Kad not araması başlatılmadı: Kad bağlı değil"
 
@@ -3901,13 +3916,10 @@ msgstr "Ara"
 msgid "Type"
 msgstr "Tür"
 
-#: src/muuli_wdr.cpp src/SearchDlg.cpp src/SearchListCtrl.cpp
-msgid "Local"
-msgstr "Sunucu"
-
 #: src/muuli_wdr.cpp
-msgid "Global"
-msgstr "Genel"
+#, fuzzy
+msgid "Search network"
+msgstr "Arama hatası"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -5157,7 +5169,7 @@ msgstr "Sayfayı varsayılan değerlere sıfırla"
 msgid "Reset the settings on the current page to their default values."
 msgstr "Güncel sayfadaki ayarları varsayılan değerlerine sıfırla."
 
-#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#: src/muuli_wdr.cpp src/ServerWnd.cpp src/SharedFilesCtrl.cpp
 msgid "OK"
 msgstr "Tamam"
 
@@ -6757,8 +6769,17 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr "Kaydedilmiş arama listesinde geçersiz girdi bulundu, dosya bozuk olabilir"
 
 #: src/SearchList.cpp
+#, fuzzy
+msgid "All search can't be done if neither eD2k nor Kad is available"
+msgstr "Kad çalışmıyorsa, Kad. araması yapılamaz."
+
+#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "eD2k ağına bağlanılmamışsa eD2k araması yapılamaz"
+
+#: src/SearchList.cpp
+msgid "All search: no usable Kad keyword; continuing with eD2k."
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6767,6 +6788,10 @@ msgstr "Kad araması için anahtar kelime yok - iptal ediliyor"
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Kad araması sırasında beklenilmeyen hata oluştu. "
+
+#: src/SearchList.cpp
+msgid "All search: Kad component could not start: "
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6821,6 +6846,39 @@ msgstr "İptal edildi"
 msgid "New"
 msgstr "Yeni"
 
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: Current server"
+msgstr "eD2k sunucu listesi (server.met)"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: All servers"
+msgstr "Bütün sunucuları kaldır"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "All networks"
+msgstr "Ağ yok"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the connected eD2k server."
+msgstr "Şu an bağlanılan sunucu."
+
+#: src/SearchModeIcons.h
+msgid "Search the connected eD2k server and other servers in the server list."
+msgstr ""
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the Kad network."
+msgstr "Ağa bağlan."
+
+#: src/SearchModeIcons.h
+msgid "Search eD2k servers and Kad, using whichever networks are available."
+msgstr ""
+
 #: src/SearchProgressReport.cpp
 msgid "running"
 msgstr "çalışıyor"
@@ -6859,6 +6917,40 @@ msgstr "Arama süreci görüntülenemiyor"
 #: src/SearchProgressReport.cpp
 msgid "No search to report on.\n"
 msgstr "Rapor edilecek hiçbir arama yok.\n"
+
+#: src/SearchSourceFormat.h
+#, c-format
+msgid "Estimated availability: %u"
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "eD2k sources: %u"
+msgstr "Dosya kaynakları:"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Kad sources: %u"
+msgstr "Bulunan Kaynaklar: %s"
+
+#: src/SearchSourceFormat.h
+msgid "Network counts may overlap; they are not added together."
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy
+msgid "Network breakdown unavailable."
+msgstr "Yeni bir sürüm mevcuttur"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Complete sources: %u"
+msgstr "Tamamlandı"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Direct client endpoints: %u"
+msgstr "Yeni kullanıcı kimliğiniz %u"
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
@@ -7503,6 +7595,10 @@ msgstr "Kaynak Mevcudiyeti"
 msgid "Directory Path"
 msgstr "Dizin Konumu"
 
+#: src/SharedFilesCtrl.cpp
+msgid "Verify Local Data"
+msgstr "Yerel Verileri Kontrol Et"
+
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Paylaşılan Dosyalar"
@@ -7518,10 +7614,6 @@ msgstr "Yorum/Puanlama Düzenle"
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"
 msgstr "Yeniden Adlandır"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Verify Local Data"
-msgstr "Yerel Verileri Kontrol Et"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Re-extract &media metadata"
@@ -8564,11 +8656,6 @@ msgstr ""
 
 #: src/ThreadTasks.cpp
 #, c-format
-msgid "Verify Local Data: %s is still downloading, so it was not checked."
-msgstr ""
-
-#: src/ThreadTasks.cpp
-#, c-format
 msgid "Verify Local Data: could not read %s, so it was not checked."
 msgstr ""
 
@@ -9428,6 +9515,12 @@ msgstr "aMule çalışmakta gibi görünüyor. Lütfen onu kapatıp kurulum prog
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Kullanıcı verileri $APPDATA\\aMule konumunda kaldırılıyor…"
+
+#~ msgid "Local"
+#~ msgstr "Sunucu"
+
+#~ msgid "Global"
+#~ msgstr "Genel"
 
 #~ msgid ""
 #~ "The number of a file from the last search has to be given.\n"

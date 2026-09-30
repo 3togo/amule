@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-26 17:32+0100\n"
-"PO-Revision-Date: 2026-09-28 18:58+0000\n"
+"POT-Creation-Date: 2026-09-30 13:09+0800\n"
+"PO-Revision-Date: 2026-09-29 10:03+0000\n"
 "Last-Translator: Sebastiano Pistore <sebastiano.pistore.info@aol.com>\n"
 "Language-Team: https://github.com/amule-org/amule <forum@aMule.org>\n"
 "Language: hr\n"
@@ -271,6 +271,7 @@ msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr ""
 
 #: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
+#: src/SharedFilesCtrl.cpp
 msgid "Failed"
 msgstr "Neuspjesno"
 
@@ -521,6 +522,11 @@ msgstr "Ime servera :"
 #: src/amule.cpp
 #, c-format
 msgid "Media metadata: probed file is no longer known, result discarded (%s)"
+msgstr ""
+
+#: src/amule.cpp
+#, c-format
+msgid "Verify Local Data: another file named '%s' in your shared folders has the same content as '%s' and may be an intact copy of it."
 msgstr ""
 
 #: src/amule.cpp
@@ -1100,6 +1106,10 @@ msgstr ""
 #: src/ServerListCtrl.cpp src/Statistics.cpp
 msgid "Unknown"
 msgstr "Nepoznat"
+
+#: src/amule-remote-gui.cpp
+msgid "The connected daemon does not support All searches."
+msgstr ""
 
 #: src/BaseClient.cpp
 #, fuzzy
@@ -1770,7 +1780,7 @@ msgstr ""
 msgid "Remote Server"
 msgstr ""
 
-#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchDlg.cpp
+#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchModeIcons.h
 #: src/TextClient.cpp
 msgid "Kad"
 msgstr "Kad"
@@ -3186,6 +3196,11 @@ msgstr ""
 
 #: src/KnownFile.cpp
 #, c-format
+msgid "Verify Local Data: %s is still downloading, so it was not checked."
+msgstr ""
+
+#: src/KnownFile.cpp
+#, c-format
 msgid "Kad note search for '%s' not started: Kad is not connected"
 msgstr ""
 
@@ -3893,13 +3908,10 @@ msgstr "Pretraga"
 msgid "Type"
 msgstr "Tip"
 
-#: src/muuli_wdr.cpp src/SearchDlg.cpp src/SearchListCtrl.cpp
-msgid "Local"
-msgstr ""
-
 #: src/muuli_wdr.cpp
-msgid "Global"
-msgstr ""
+#, fuzzy
+msgid "Search network"
+msgstr "Pretrage"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -5173,7 +5185,7 @@ msgstr "Standard sistema"
 msgid "Reset the settings on the current page to their default values."
 msgstr ""
 
-#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#: src/muuli_wdr.cpp src/ServerWnd.cpp src/SharedFilesCtrl.cpp
 msgid "OK"
 msgstr "OK"
 
@@ -6779,7 +6791,15 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr ""
 
 #: src/SearchList.cpp
+msgid "All search can't be done if neither eD2k nor Kad is available"
+msgstr ""
+
+#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
+msgstr ""
+
+#: src/SearchList.cpp
+msgid "All search: no usable Kad keyword; continuing with eD2k."
 msgstr ""
 
 #: src/SearchList.cpp
@@ -6788,6 +6808,10 @@ msgstr ""
 
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
+msgstr ""
+
+#: src/SearchList.cpp
+msgid "All search: Kad component could not start: "
 msgstr ""
 
 #: src/SearchList.cpp
@@ -6845,6 +6869,36 @@ msgstr "Otkaz"
 msgid "New"
 msgstr "Novo"
 
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: Current server"
+msgstr "%i servera pronadjeno u server.met"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: All servers"
+msgstr "Odstrani sve servere"
+
+#: src/SearchModeIcons.h
+msgid "All networks"
+msgstr ""
+
+#: src/SearchModeIcons.h
+msgid "Search the connected eD2k server."
+msgstr ""
+
+#: src/SearchModeIcons.h
+msgid "Search the connected eD2k server and other servers in the server list."
+msgstr ""
+
+#: src/SearchModeIcons.h
+msgid "Search the Kad network."
+msgstr ""
+
+#: src/SearchModeIcons.h
+msgid "Search eD2k servers and Kad, using whichever networks are available."
+msgstr ""
+
 #: src/SearchProgressReport.cpp
 #, fuzzy
 msgid "running"
@@ -6886,6 +6940,40 @@ msgstr "%s Nije dostupan"
 #: src/SearchProgressReport.cpp
 msgid "No search to report on.\n"
 msgstr ""
+
+#: src/SearchSourceFormat.h
+#, c-format
+msgid "Estimated availability: %u"
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "eD2k sources: %u"
+msgstr "Nadjeni izvori :"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Kad sources: %u"
+msgstr "Nadjeni izvori :"
+
+#: src/SearchSourceFormat.h
+msgid "Network counts may overlap; they are not added together."
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy
+msgid "Network breakdown unavailable."
+msgstr "Nije dostupno"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Complete sources: %u"
+msgstr "Nadjeni izvori :"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Direct client endpoints: %u"
+msgstr "Novi klientID je %u"
 
 #: src/ServerConnect.cpp
 #, fuzzy
@@ -7565,6 +7653,10 @@ msgstr "Dostupnost"
 msgid "Directory Path"
 msgstr ""
 
+#: src/SharedFilesCtrl.cpp
+msgid "Verify Local Data"
+msgstr ""
+
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Dijeljeni fajlovi"
@@ -7580,10 +7672,6 @@ msgstr ""
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"
 msgstr "Preimenovanje"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Verify Local Data"
-msgstr ""
 
 #: src/SharedFilesCtrl.cpp
 msgid "Re-extract &media metadata"
@@ -8583,11 +8671,6 @@ msgstr ""
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data: file %s was removed before it could be checked."
-msgstr ""
-
-#: src/ThreadTasks.cpp
-#, c-format
-msgid "Verify Local Data: %s is still downloading, so it was not checked."
 msgstr ""
 
 #: src/ThreadTasks.cpp
