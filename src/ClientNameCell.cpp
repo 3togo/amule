@@ -195,10 +195,10 @@ void DrawClientNameCell(const ClientNameCell &cell, const wxRect &rect, wxDC *dc
 		const wxBitmap flag = theApp->GetCountryFlags()->GetFlag(
 			cell.countryCode, dc->FromDIP(wxSize(16, 12)), dc->GetContentScaleFactor());
 		if (flag.IsOk()) {
-			const int flagY =
-				point.y + (rect.GetHeight() - flag.GetLogicalHeight()) / 2 + 1 /* floor() */;
+			const wxSize flagSize = flag.GetLogicalSize();
+			const int flagY = point.y + (rect.GetHeight() - flagSize.y) / 2 + 1 /* floor() */;
 			dc->DrawBitmap(flag, point.x, flagY, true);
-			point.x += flag.GetLogicalWidth() + dc->FromDIP(2);
+			point.x += flagSize.x + dc->FromDIP(2);
 		}
 	}
 #endif // GEOIP_GUI
