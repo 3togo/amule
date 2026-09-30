@@ -5,6 +5,21 @@ add_test (NAME QuicCMakeConfigTest
 		-P ${CMAKE_CURRENT_SOURCE_DIR}/QuicCMakeConfigTest.cmake
 )
 
+# Native icon rendering needs wx core and a display (skipped if unavailable).
+if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
+	add_executable (IconArtworkTest
+		IconArtworkTest.cpp
+		${CMAKE_SOURCE_DIR}/src/CamuleArtProvider.cpp
+		${CMAKE_SOURCE_DIR}/src/CountryFlags.cpp
+		${CMAKE_SOURCE_DIR}/src/MenuIcons.cpp
+		${CMAKE_SOURCE_DIR}/src/icons/icon_data.c
+	)
+	target_include_directories (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	target_link_libraries (IconArtworkTest wxWidgets::CORE)
+	add_test (NAME IconArtworkTest COMMAND IconArtworkTest)
+	set_tests_properties (IconArtworkTest PROPERTIES SKIP_RETURN_CODE 77 LABELS "gui")
+endif()
+
 # The checked-in lexer and native IPv6 rule store, without the application.
 add_executable (IPFilterIPv6Test
 	IPFilterIPv6Test.cpp
