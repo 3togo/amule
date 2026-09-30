@@ -35,18 +35,33 @@ virtual environment and install `rsvg-convert` (librsvg), then run:
 
 ```sh
 python src/icons/regenerate_artwork.py
+python src/icons/test_regenerate_artwork.py
 python src/icons/embed_icons.py src/icons src/icons/icon_data.c
 ```
 
-Conversion resolves SVG use elements, transforms, clipping, strokes and even-odd
-fills into paths that wxWidgets' NanoSVG renderer understands. It fails on
-unsupported content rather than dropping it. The US/UM star markers are expanded
+Conversion expands SVG use references but preserves supported shapes, strokes,
+transforms and fill rules. Flags needing clipping and menu artwork use the full
+picosvg compatibility pass; unsupported elements are passed to that converter
+for validation rather than silently discarded. Converted flag paths use compact
+relative coordinates when shorter, retaining the full pass's three-decimal
+precision. Arc flags always have explicit separators for wx 3.2's NanoSVG.
+The US/UM star markers are expanded
 explicitly, with checks that reject changes to the expected marker layout.
 The generated menu SVGs are 16×16;
 flag SVGs and PNG fallbacks are 16×12. The rectangular 4:3 artwork is preserved,
 not stretched to the former 16×11 flag size. PNG fallbacks are rendered from
 the same normalized SVGs. Review representative flags with emblems, clipping,
 stars and fine detail when updating the source set or converter.
+
+Do not run every flag through full path conversion: expanding strokes and
+transforms inflated the flag SVG payload from about 1.65 MB of original artwork
+to 7.83 MB. Selective conversion and compact serialization keep all 251 flags
+as vectors within a 3.5 MB maintenance-test budget, without a runtime decompressor.
+This budget concerns embedded SVG bytes, not the generated C file's hexadecimal
+notation or compressed distribution size. Keep vendored originals and license
+notices unchanged. When changing conversion, compare native wxWidgets renders
+against the originals rendered with librsvg, including detailed flags and
+transparent edges at 1x, 1.5x, 2x, 3x and 4x.
 
 Menu SVGs use `#212529` as a replacement token: the art provider substitutes the
 system menu text colour at menu creation and recolours PNG fallbacks while

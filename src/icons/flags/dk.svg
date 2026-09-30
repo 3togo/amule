@@ -1,1 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-dk" viewBox="0 0 640 480" width="16" height="12"><defs/><path fill="#c8102e" d="M0,0 L640.1,0 L640.1,480 L0,480 Z"/><path fill="#fff" d="M205.7,0 L274.3,0 L274.3,480 L205.7,480 Z"/><path fill="#fff" d="M0,205.7 L640.1,205.7 L640.1,274.3 L0,274.3 Z"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-dk" viewBox="0 0 640 480" width="16" height="12"><path fill="#c8102e" d="M0,0h640.1v480H0z"/><path fill="#fff" d="M205.7,0h68.6v480h-68.6z"/><path fill="#fff" d="M0,205.7h640.1v68.6H0z"/></svg>
