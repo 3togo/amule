@@ -23,7 +23,7 @@
   },
   "flag-icons": {
     "version": "7.5.0",
-    "commit": "50a8bff005239b0d2d661254094dedb9c75dbef3",
+    "commit": "7aa5b2bdddd570ece62c812c0cb588ccdc099e2e",
     "url": "https://github.com/lipis/flag-icons",
     "source_directory": "flags/4x3",
     "license": "MIT",
@@ -280,6 +280,8 @@
       "za.svg": "1755a5e16f1c9f5120e4871e8454bdee663beb4fb4827012bcd02cb9044249c2",
       "zm.svg": "2753554062cd3761e53a180c3c8f8e245af622fb6ecf1c02020c79db0ff2d644",
       "zw.svg": "e27fcdcc882d7175cc4c07542779911043dc56262fe43b42f39bdaca09b762d5"
-    }
+    },
+    "tag": "v7.5.0",
+    "tag_object": "50a8bff005239b0d2d661254094dedb9c75dbef3"
   }
 }

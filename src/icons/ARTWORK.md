@@ -7,8 +7,10 @@ native menu behavior. PNGs are compatibility fallbacks.
 Menu artwork is from [Bootstrap Icons](https://github.com/twbs/icons), version
 1.13.1, commit `ce0e49dd063243118a115f17ad1fe1fe7576d552` (MIT).
 Country flags are from [flag-icons](https://github.com/lipis/flag-icons), version
-7.5.0, commit `50a8bff005239b0d2d661254094dedb9c75dbef3` (MIT), the `flags/4x3`
-directory. The individual copyright notices and complete licenses are retained
+7.5.0, commit `7aa5b2bdddd570ece62c812c0cb588ccdc099e2e` (MIT), the `flags/4x3`
+directory. The manifest records both the annotated `v7.5.0` tag object and its
+peeled commit; use the commit for raw-file URLs and source verification.
+The individual copyright notices and complete licenses are retained
 beside the original SVGs in `vendor/` and in the installed
 [`docs/THIRDPARTY.md`](../../docs/THIRDPARTY.md).
 

@@ -202,7 +202,7 @@ THE SOFTWARE.
 
 ## Country flags — flag-icons
 
-SVGs from flag-icons 7.5.0, commit `50a8bff005239b0d2d661254094dedb9c75dbef3`.
+SVGs from flag-icons 7.5.0, commit `7aa5b2bdddd570ece62c812c0cb588ccdc099e2e`.
 Source: https://github.com/lipis/flag-icons, `flags/4x3`. Normalized to paths
 (including resolved clipping and use elements) for NanoSVG and rasterized to
 16×12 PNG fallbacks. Original SVGs are retained in `src/icons/vendor/flag-icons/`.

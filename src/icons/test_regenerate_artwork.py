@@ -3,6 +3,8 @@
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import hashlib
+import json
 import unittest
 
 from lxml import etree
@@ -17,6 +19,17 @@ class ArtworkConversionTest(unittest.TestCase):
         return normalize_svg(
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480">'
             + content + '</svg>', 16, 12)
+
+    def test_vendored_checksums_and_distributed_licenses(self):
+        manifest = json.loads((ROOT / 'vendor/manifest.json').read_text())
+        notices = (ROOT.parent.parent / 'docs/THIRDPARTY.md').read_text()
+        for project, source in manifest.items():
+            for name, expected in source['files'].items():
+                with self.subTest(project=project, file=name):
+                    data = (ROOT / 'vendor' / project / name).read_bytes()
+                    self.assertEqual(hashlib.sha256(data).hexdigest(), expected)
+            license_text = (ROOT / 'vendor' / project / 'LICENSE').read_text().strip()
+            self.assertIn(license_text, notices, project)
 
     def test_preserves_supported_geometry(self):
         result = self.normalize(
