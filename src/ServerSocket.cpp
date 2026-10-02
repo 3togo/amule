@@ -701,6 +701,9 @@ bool CServerSocket::PacketReceived(CPacket *packet)
 
 	if (packet->GetProtocol() == OP_PACKEDPROT) {
 		if (!packet->UnPackPacket(250000)) {
+			if (packet->GetOpCode() == OP_SERVERIDENT && connectionstate == CS_CONNECTED) {
+				m_offerFilesPolicy.RejectAdvertisement();
+			}
 			AddDebugLogLineN(logZLib,
 				CFormat("Failed to decompress server TCP packet: protocol=0x%02x  "
 					"opcode=0x%02x  size=%u") %
@@ -761,8 +764,14 @@ void CServerSocket::SetConnectionState(sint8 newstate)
 
 void CServerSocket::SendPacket(CPacket *packet, bool delpacket, bool controlpacket, uint32 actualPayloadSize)
 {
+	TrySendPacket(packet, delpacket, controlpacket, actualPayloadSize);
+}
+
+bool CServerSocket::TrySendPacket(
+	CPacket *packet, bool delpacket, bool controlpacket, uint32 actualPayloadSize)
+{
 	m_dwLastTransmission = GetTickCount64();
-	CEMSocket::SendPacket(packet, delpacket, controlpacket, actualPayloadSize);
+	return CEMSocket::TrySendPacket(packet, delpacket, controlpacket, actualPayloadSize);
 }
 
 void CServerSocket::OnHostnameResolved(uint32 ip)

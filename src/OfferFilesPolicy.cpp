@@ -85,11 +85,18 @@ uint32_t COfferFilesAdvertisement::IntervalMs() const
 
 bool COfferFilesConnectionPolicy::BeginAdvertisement()
 {
-	m_pending = !m_seen;
+	const bool first = !m_seen;
+	RejectAdvertisement();
+	m_pending = first;
+	return first;
+}
+
+void COfferFilesConnectionPolicy::RejectAdvertisement()
+{
 	m_seen = true;
+	m_pending = false;
 	m_valid = false;
 	m_snapshot = COfferFilesAdvertisement();
-	return m_pending;
 }
 
 void COfferFilesConnectionPolicy::Commit(const COfferFilesAdvertisement &advertisement)

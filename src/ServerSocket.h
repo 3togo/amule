@@ -62,6 +62,10 @@ public:
 		bool delpacket = true,
 		bool controlpacket = true,
 		uint32 actualPayloadSize = 0) override;
+	bool TrySendPacket(CPacket *packet,
+		bool delpacket = true,
+		bool controlpacket = true,
+		uint32 actualPayloadSize = 0);
 	bool IsSolving() const { return m_IsSolving; };
 	void OnHostnameResolved(uint32 ip);
 	CServer *GetServerConnected() const { return serverconnect->GetCurrentServer(); }

@@ -56,6 +56,7 @@ class COfferFilesConnectionPolicy
 {
 public:
 	bool BeginAdvertisement();
+	void RejectAdvertisement();
 	void Commit(const COfferFilesAdvertisement &advertisement);
 	void Reset() { *this = COfferFilesConnectionPolicy(); }
 	const COfferFilesAdvertisement *Get() const { return m_valid ? &m_snapshot : nullptr; }

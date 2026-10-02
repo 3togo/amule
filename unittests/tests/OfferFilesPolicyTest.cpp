@@ -188,6 +188,31 @@ TEST(OfferFilesPolicy, ConnectionSnapshotFailsClosedAndResets)
 	ASSERT_TRUE(state.Get() == nullptr);
 }
 
+TEST(OfferFilesPolicy, UndecodableAdvertisementInvalidatesAndCannotBeRepaired)
+{
+	COfferFilesConnectionPolicy state;
+	ASSERT_TRUE(state.BeginAdvertisement());
+	state.Commit(Valid());
+	ASSERT_TRUE(state.Get() != nullptr);
+	state.RejectAdvertisement(); // Failed decompression of a repeat SERVERIDENT.
+	ASSERT_TRUE(state.Get() == nullptr);
+	state.Commit(Valid());
+	ASSERT_TRUE(state.Get() == nullptr);
+	ASSERT_FALSE(state.BeginAdvertisement());
+	state.Commit(Valid());
+	ASSERT_TRUE(state.Get() == nullptr);
+
+	state.Reset();
+	state.RejectAdvertisement(); // Even an undecodable first packet consumes negotiation.
+	ASSERT_FALSE(state.BeginAdvertisement());
+	state.Commit(Valid());
+	ASSERT_TRUE(state.Get() == nullptr);
+	state.Reset();
+	ASSERT_TRUE(state.BeginAdvertisement());
+	state.Commit(Valid());
+	ASSERT_TRUE(state.Get() != nullptr);
+}
+
 TEST(OfferFilesPolicy, TruncatedWireCannotCommitPartialAdvertisement)
 {
 	CMemFile complete;

@@ -341,8 +341,7 @@ bool CServerConnect::SendPacket(CPacket *packet, bool delpacket, CServerSocket *
 {
 	if (!to) {
 		if (connected) {
-			connectedsocket->SendPacket(packet, delpacket, true);
-			return true;
+			return connectedsocket->TrySendPacket(packet, delpacket, true);
 		} else {
 			if (delpacket) {
 				delete packet;
@@ -351,8 +350,7 @@ bool CServerConnect::SendPacket(CPacket *packet, bool delpacket, CServerSocket *
 			return false;
 		}
 	} else {
-		to->SendPacket(packet, delpacket, true);
-		return true;
+		return to->TrySendPacket(packet, delpacket, true);
 	}
 }
 
