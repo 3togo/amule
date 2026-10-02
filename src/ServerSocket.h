@@ -30,6 +30,7 @@
 
 #include "EMSocket.h" // Needed for CEMSocket
 #include "ServerConnect.h"
+#include "OfferFilesPolicy.h"
 
 // CServerSocket
 
@@ -66,6 +67,10 @@ public:
 	CServer *GetServerConnected() const { return serverconnect->GetCurrentServer(); }
 
 	uint32 GetServerIP() const;
+	const COfferFilesAdvertisement *GetOfferFilesAdvertisement() const
+	{
+		return m_offerFilesPolicy.Get();
+	}
 
 private:
 	bool ProcessPacket(const uint8_t *packet, uint32 size, int8 opcode);
@@ -83,6 +88,7 @@ private:
 	uint64 m_dwLastTransmission;
 
 	bool m_IsSolving;
+	COfferFilesConnectionPolicy m_offerFilesPolicy;
 };
 
 #endif // SERVERSOCKET_H
