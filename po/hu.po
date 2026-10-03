@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-30 19:39+0800\n"
-"PO-Revision-Date: 2026-10-01 13:18+0000\n"
+"POT-Creation-Date: 2026-10-03 11:27+0100\n"
+"PO-Revision-Date: 2026-10-02 00:47+0000\n"
 "Last-Translator: Dévai Tamás <gonosztopi@amule.org>\n"
 "Language-Team: Hungarian <hu@li.org>\n"
 "Language: hu\n"
@@ -333,8 +333,8 @@ msgstr "Az amuleweb instancia - melynek a pid-je '%d' - bezárása ... "
 msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr "Az amuleweb instancia - melynek a pid-je '%d' - kivégzése ... "
 
-#: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
-#: src/SharedFilesCtrl.cpp
+#: src/amule.cpp src/ClientRef.cpp src/FileDetailDialog.cpp src/SearchDlg.cpp
+#: src/ServerListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Failed"
 msgstr "Sikertelen"
 
@@ -695,6 +695,10 @@ msgstr "Kapcsolódva ehhez %s %s"
 #, c-format
 msgid "Connecting to %s"
 msgstr "Kapcsolódás %s-hez"
+
+#: src/amule.cpp src/amule-remote-gui.cpp
+msgid "Connecting..."
+msgstr "Kapcsolódás..."
 
 #: src/amule.cpp
 msgid "Disconnected from eD2k"
@@ -1068,10 +1072,6 @@ msgid "Going to event loop..."
 msgstr "Esemény ciklus megkezdése..."
 
 #: src/amule-remote-gui.cpp
-msgid "Connecting..."
-msgstr "Kapcsolódás..."
-
-#: src/amule-remote-gui.cpp
 msgid "Connection failed. Please check the host, port, and password."
 msgstr "Kapcsolat sikertelen. Kerém ellenőrizze a host, port és jelszó értékeket."
 
@@ -1177,6 +1177,10 @@ msgstr ""
 #: src/ServerListCtrl.cpp src/Statistics.cpp
 msgid "Unknown"
 msgstr "Ismeretlen"
+
+#: src/amule-remote-gui.cpp
+msgid "The connected daemon does not support All searches."
+msgstr ""
 
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
@@ -1549,7 +1553,7 @@ msgstr "Rossz fiú"
 msgid "Verified - OK"
 msgstr "Hitelesítés - OK"
 
-#: src/ClientRef.cpp src/muuli_wdr.cpp
+#: src/ClientRef.cpp src/FileDetailDialog.cpp src/muuli_wdr.cpp
 msgid "N/A"
 msgstr "N/A"
 
@@ -1826,7 +1830,7 @@ msgstr "Helyi kiszolgáló"
 msgid "Remote Server"
 msgstr "Távoli kiszolgáló"
 
-#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchDlg.cpp
+#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchModeIcons.h
 #: src/TextClient.cpp
 msgid "Kad"
 msgstr "Kad"
@@ -1932,7 +1936,8 @@ msgstr "Források"
 msgid "Priority"
 msgstr "Prioritás"
 
-#: src/DownloadListCtrl.cpp src/PartFile.cpp src/SearchListCtrl.cpp
+#: src/DownloadListCtrl.cpp src/muuli_wdr.cpp src/PartFile.cpp
+#: src/SearchListCtrl.cpp
 msgid "Status"
 msgstr "Állapot"
 
@@ -2696,6 +2701,11 @@ msgstr "%.1f%% kész"
 #, c-format
 msgid "%.2f KiB/s"
 msgstr ""
+
+#: src/FileDetailDialog.cpp src/muuli_wdr.cpp src/ServerWnd.cpp
+#: src/SharedFilesCtrl.cpp
+msgid "OK"
+msgstr "OK"
 
 #: src/FileLaunch.cpp
 msgid "File preview"
@@ -3965,13 +3975,10 @@ msgstr "Keresés"
 msgid "Type"
 msgstr "Típus"
 
-#: src/muuli_wdr.cpp src/SearchDlg.cpp src/SearchListCtrl.cpp
-msgid "Local"
-msgstr "Helyi"
-
 #: src/muuli_wdr.cpp
-msgid "Global"
-msgstr "Globális"
+#, fuzzy
+msgid "Search network"
+msgstr "Keresési hiba"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -4252,6 +4259,10 @@ msgstr ""
 #: src/muuli_wdr.cpp src/SearchListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Title"
 msgstr "Cím"
+
+#: src/muuli_wdr.cpp src/SharedFilesCtrl.cpp
+msgid "Verify Local Data"
+msgstr "Helyi adatok ellenőrzése"
 
 #: src/muuli_wdr.cpp
 msgid "File Names"
@@ -5255,10 +5266,6 @@ msgstr "Oldal visszaállítása alapértelmezettre"
 #: src/muuli_wdr.cpp
 msgid "Reset the settings on the current page to their default values."
 msgstr "A jelenlegi oldal beállításainak visszaállítása alapértelmezett értékükre."
-
-#: src/muuli_wdr.cpp src/ServerWnd.cpp src/SharedFilesCtrl.cpp
-msgid "OK"
-msgstr "OK"
 
 #: src/muuli_wdr.cpp
 msgid "Click here to apply any changes made to the preferences."
@@ -6856,8 +6863,17 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr "Érvénytelen bejegyzés az ismert fájlok listájában, hiba lehet a fájlban: "
 
 #: src/SearchList.cpp
+#, fuzzy
+msgid "All search can't be done if neither eD2k nor Kad is available"
+msgstr "Kad keresést nem lehet végrehajtani ha a Kad nem fut"
+
+#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "eD2k keresést nem lehet végrehajtani, ha nincs kapcsolódva az eD2k-hoz"
+
+#: src/SearchList.cpp
+msgid "All search: no usable Kad keyword; continuing with eD2k."
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6866,6 +6882,10 @@ msgstr "A Kad kereséshez nincs kulcsszó - megszakítva"
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Nem várt hiba amíg a Kad kereséssel próbálkoztam: "
+
+#: src/SearchList.cpp
+msgid "All search: Kad component could not start: "
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6921,6 +6941,39 @@ msgstr "Megszakítva"
 msgid "New"
 msgstr "Új"
 
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: Current server"
+msgstr "eD2k szerver lista (server.met)"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: All servers"
+msgstr "Összes kiszolgáló eltávolítása"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "All networks"
+msgstr "Nincs hálózat"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the connected eD2k server."
+msgstr "Jelenleg csatlakozott kiszolgáló."
+
+#: src/SearchModeIcons.h
+msgid "Search the connected eD2k server and other servers in the server list."
+msgstr ""
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the Kad network."
+msgstr "Kapcsolódás a hálózathoz."
+
+#: src/SearchModeIcons.h
+msgid "Search eD2k servers and Kad, using whichever networks are available."
+msgstr ""
+
 #: src/SearchProgressReport.cpp
 #, fuzzy
 msgid "running"
@@ -6962,6 +7015,40 @@ msgstr "Keresés haladása nem elérhető"
 msgid "No search to report on.\n"
 msgstr ""
 
+#: src/SearchSourceFormat.h
+#, c-format
+msgid "Estimated availability: %u"
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "eD2k sources: %u"
+msgstr "Fájl források:"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Kad sources: %u"
+msgstr "Forrás találatok: %s"
+
+#: src/SearchSourceFormat.h
+msgid "Network counts may overlap; they are not added together."
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy
+msgid "Network breakdown unavailable."
+msgstr "Új verzió érhető el"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Complete sources: %u"
+msgstr "Teljes források"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Direct client endpoints: %u"
+msgstr "Az új ügyfélazonosító %u"
+
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
 msgstr "Nem sikerült csatlakozni az összes felsorolt zavart statikus kiszolgálóhoz. Újabb próbálkozás zavarás nélkül."
@@ -6995,13 +7082,18 @@ msgid "No valid servers to which to connect found in server list"
 msgstr "A kiszolgáló listában nem található érvényes kiszolgáló, amelyhez csatlakozni lehetne."
 
 #: src/ServerConnect.cpp
-#, c-format
-msgid "Connected to %s (%s:%i)"
+#, fuzzy, c-format
+msgid "Connected to %s (%s:%i), sending login request"
 msgstr "Kapcsolódva %s-hez (%s:%i)"
 
 #: src/ServerConnect.cpp
-#, c-format
-msgid "Connection established on: %s"
+#, fuzzy, c-format
+msgid "Obfuscated connection established on: %s (%s:%i)"
+msgstr "Kapcsolat létrejött a %s-vel"
+
+#: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection established on: %s (%s:%i)"
 msgstr "Kapcsolat létrejött a %s-vel"
 
 #: src/ServerConnect.cpp
@@ -7601,10 +7693,6 @@ msgstr "Elérhetőség"
 msgid "Directory Path"
 msgstr "Könyvtár útvonal"
 
-#: src/SharedFilesCtrl.cpp
-msgid "Verify Local Data"
-msgstr "Helyi adatok ellenőrzése"
-
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Megosztott fájlok"
@@ -8058,6 +8146,10 @@ msgstr "Érvénytelen szám\n"
 msgid "Not a valid hash (length should be exactly 32 chars)\n"
 msgstr "Nem érvényes hash (a hossza pontosan 32 karakter kell legyen)\n"
 
+#: src/TextClient.cpp
+msgid "The connected daemon does not support All searches.\n"
+msgstr ""
+
 #. TRANSLATORS:
 #. 'help search' is a command to the program, do not translate it.
 #: src/TextClient.cpp
@@ -8456,11 +8548,13 @@ msgid "Execute a search."
 msgstr "Keresés végrehajtása."
 
 #: src/TextClient.cpp
+#, fuzzy
 msgid ""
 "A search type has to be specified by giving the type:\n"
 "    GLOBAL\n"
 "    LOCAL\n"
 "    KAD\n"
+"    ALL: All networks (requires daemon support)\n"
 "Example: 'search kad file' will execute a kad search for \"file\".\n"
 "\n"
 "Optional filters can be added before, after, or interleaved with\n"
@@ -8499,6 +8593,11 @@ msgstr "Helyi keresés végrehajtása."
 
 #: src/TextClient.cpp
 msgid "Execute a kad search"
+msgstr "Kad hálózaton való keresés végrehajtása."
+
+#: src/TextClient.cpp
+#, fuzzy
+msgid "Execute an eD2k and Kad search"
 msgstr "Kad hálózaton való keresés végrehajtása."
 
 #: src/TextClient.cpp
@@ -9512,6 +9611,12 @@ msgstr "Úgy tűnik, az aMule fut. Zárd be, majd futtasd újra az eltávolító
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Felhasználói adatok eltávolítása innen: $APPDATA\\aMule..."
+
+#~ msgid "Local"
+#~ msgstr "Helyi"
+
+#~ msgid "Global"
+#~ msgstr "Globális"
 
 #~ msgid ""
 #~ "The number of a file from the last search has to be given.\n"

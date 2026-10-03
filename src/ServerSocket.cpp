@@ -812,6 +812,7 @@ void CServerSocket::OnHostnameResolved(uint32 ip)
 			}
 
 			addr.Service(nPort);
+			m_connectPort = nPort;
 
 			AddLogLineN(CFormat(_("Connecting to %s (%s - %s:%i) %s")) %
 				    cur_server->GetListName() % cur_server->GetAddress() %

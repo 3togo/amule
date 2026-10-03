@@ -17,8 +17,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-30 19:39+0800\n"
-"PO-Revision-Date: 2026-10-01 13:20+0000\n"
+"POT-Creation-Date: 2026-10-03 11:27+0100\n"
+"PO-Revision-Date: 2026-10-02 00:49+0000\n"
 "Last-Translator: Luís Picciochi Oliveira <Pitxyoki@Gmail.com>\n"
 "Language-Team: Portuguese <traduz@debianpt.org>\n"
 "Language: pt_PT\n"
@@ -342,8 +342,8 @@ msgstr "A terminar instância do amuleweb com o pid '%d' ... "
 msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr "A matar instância do amuleweb com o pid '%d' ... "
 
-#: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
-#: src/SharedFilesCtrl.cpp
+#: src/amule.cpp src/ClientRef.cpp src/FileDetailDialog.cpp src/SearchDlg.cpp
+#: src/ServerListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Failed"
 msgstr "Falhas"
 
@@ -704,6 +704,10 @@ msgstr "Ligado a %s %s"
 #, c-format
 msgid "Connecting to %s"
 msgstr "A ligar a %s"
+
+#: src/amule.cpp src/amule-remote-gui.cpp
+msgid "Connecting..."
+msgstr "A Ligar..."
 
 #: src/amule.cpp
 msgid "Disconnected from eD2k"
@@ -1077,10 +1081,6 @@ msgid "Going to event loop..."
 msgstr "A ir para o ciclo de eventos..."
 
 #: src/amule-remote-gui.cpp
-msgid "Connecting..."
-msgstr "A Ligar..."
-
-#: src/amule-remote-gui.cpp
 msgid "Connection failed. Please check the host, port, and password."
 msgstr "Falha na ligação. Verifique a máquina, o porto e a palavra-passe."
 
@@ -1186,6 +1186,10 @@ msgstr ""
 #: src/ServerListCtrl.cpp src/Statistics.cpp
 msgid "Unknown"
 msgstr "Desconhecido"
+
+#: src/amule-remote-gui.cpp
+msgid "The connected daemon does not support All searches."
+msgstr ""
 
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
@@ -1567,7 +1571,7 @@ msgstr "Pessoa Maldosa"
 msgid "Verified - OK"
 msgstr "Verificado - OK"
 
-#: src/ClientRef.cpp src/muuli_wdr.cpp
+#: src/ClientRef.cpp src/FileDetailDialog.cpp src/muuli_wdr.cpp
 msgid "N/A"
 msgstr "N/D"
 
@@ -1846,7 +1850,7 @@ msgstr "Servidor Local"
 msgid "Remote Server"
 msgstr "Servidor Remoto"
 
-#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchDlg.cpp
+#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchModeIcons.h
 #: src/TextClient.cpp
 msgid "Kad"
 msgstr "Kad"
@@ -1952,7 +1956,8 @@ msgstr "Fontes"
 msgid "Priority"
 msgstr "Prioridade"
 
-#: src/DownloadListCtrl.cpp src/PartFile.cpp src/SearchListCtrl.cpp
+#: src/DownloadListCtrl.cpp src/muuli_wdr.cpp src/PartFile.cpp
+#: src/SearchListCtrl.cpp
 msgid "Status"
 msgstr "Estado"
 
@@ -2718,6 +2723,11 @@ msgstr "%.1f%% concluído"
 #, c-format
 msgid "%.2f KiB/s"
 msgstr ""
+
+#: src/FileDetailDialog.cpp src/muuli_wdr.cpp src/ServerWnd.cpp
+#: src/SharedFilesCtrl.cpp
+msgid "OK"
+msgstr "OK"
 
 #: src/FileLaunch.cpp
 msgid "File preview"
@@ -3996,13 +4006,10 @@ msgstr "Pesquisar"
 msgid "Type"
 msgstr "Tipo"
 
-#: src/muuli_wdr.cpp src/SearchDlg.cpp src/SearchListCtrl.cpp
-msgid "Local"
-msgstr "Local"
-
 #: src/muuli_wdr.cpp
-msgid "Global"
-msgstr "Global"
+#, fuzzy
+msgid "Search network"
+msgstr "Erro de pesquisa"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -4283,6 +4290,10 @@ msgstr ""
 #: src/muuli_wdr.cpp src/SearchListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Title"
 msgstr "Título"
+
+#: src/muuli_wdr.cpp src/SharedFilesCtrl.cpp
+msgid "Verify Local Data"
+msgstr "Verificar Dados Locais"
 
 #: src/muuli_wdr.cpp
 msgid "File Names"
@@ -5288,10 +5299,6 @@ msgstr "Repor página para as predefinições"
 #: src/muuli_wdr.cpp
 msgid "Reset the settings on the current page to their default values."
 msgstr "Repõe as definições da página atual para os seus valores predefinidos."
-
-#: src/muuli_wdr.cpp src/ServerWnd.cpp src/SharedFilesCtrl.cpp
-msgid "OK"
-msgstr "OK"
 
 #: src/muuli_wdr.cpp
 msgid "Click here to apply any changes made to the preferences."
@@ -6900,8 +6907,17 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr "Entrada inválida na lista de ficheiros conhecidos, o ficheiro pode estar corrompido"
 
 #: src/SearchList.cpp
+#, fuzzy
+msgid "All search can't be done if neither eD2k nor Kad is available"
+msgstr "Não é possível pesquisar na Kad se não estiver ligado à rede Kad"
+
+#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "Não é possível pesquisar na eD2k se não estiver ligado à rede eD2k"
+
+#: src/SearchList.cpp
+msgid "All search: no usable Kad keyword; continuing with eD2k."
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6910,6 +6926,10 @@ msgstr "Sem palavra-chave para a pesquisa Kad - a cancelar"
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Erro inesperado enquanto tentava pesquisar na Kad: "
+
+#: src/SearchList.cpp
+msgid "All search: Kad component could not start: "
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6965,6 +6985,39 @@ msgstr "Cancelado"
 msgid "New"
 msgstr "Novo"
 
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: Current server"
+msgstr "Lista de servidores eD2k (server.met)"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: All servers"
+msgstr "Remover todos os servidores"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "All networks"
+msgstr "Sem rede"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the connected eD2k server."
+msgstr "Servidor a que está ligado."
+
+#: src/SearchModeIcons.h
+msgid "Search the connected eD2k server and other servers in the server list."
+msgstr ""
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the Kad network."
+msgstr "Religar à rede."
+
+#: src/SearchModeIcons.h
+msgid "Search eD2k servers and Kad, using whichever networks are available."
+msgstr ""
+
 #: src/SearchProgressReport.cpp
 #, fuzzy
 msgid "running"
@@ -7006,6 +7059,40 @@ msgstr "Progresso da pesquisa indisponível"
 msgid "No search to report on.\n"
 msgstr ""
 
+#: src/SearchSourceFormat.h
+#, c-format
+msgid "Estimated availability: %u"
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "eD2k sources: %u"
+msgstr "Fontes de ficheiros:"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Kad sources: %u"
+msgstr "Fontes Encontradas: %s"
+
+#: src/SearchSourceFormat.h
+msgid "Network counts may overlap; they are not added together."
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy
+msgid "Network breakdown unavailable."
+msgstr "Nova versão disponível"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Complete sources: %u"
+msgstr "Fontes completas"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Direct client endpoints: %u"
+msgstr "O novo identificador de cliente é %u"
+
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
 msgstr "Falha ao ligar a todos os servidores estáticos ofuscados listados. A tentar novamente sem ofuscação."
@@ -7040,13 +7127,18 @@ msgid "No valid servers to which to connect found in server list"
 msgstr "Não há servidores válidos para ligar na lista de servidores"
 
 #: src/ServerConnect.cpp
-#, c-format
-msgid "Connected to %s (%s:%i)"
+#, fuzzy, c-format
+msgid "Connected to %s (%s:%i), sending login request"
 msgstr "Ligado a %s (%s:%i)"
 
 #: src/ServerConnect.cpp
-#, c-format
-msgid "Connection established on: %s"
+#, fuzzy, c-format
+msgid "Obfuscated connection established on: %s (%s:%i)"
+msgstr "Ligação estabelecida a: %s"
+
+#: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection established on: %s (%s:%i)"
 msgstr "Ligação estabelecida a: %s"
 
 #: src/ServerConnect.cpp
@@ -7656,10 +7748,6 @@ msgstr "Disponibilidade"
 msgid "Directory Path"
 msgstr "Caminho da Pasta"
 
-#: src/SharedFilesCtrl.cpp
-msgid "Verify Local Data"
-msgstr "Verificar Dados Locais"
-
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Ficheiros Partilhados"
@@ -8120,6 +8208,10 @@ msgstr "Número inválido\n"
 msgid "Not a valid hash (length should be exactly 32 chars)\n"
 msgstr "Não é uma chave válida (o comprimento deveria ser de 32 caracteres)\n"
 
+#: src/TextClient.cpp
+msgid "The connected daemon does not support All searches.\n"
+msgstr ""
+
 #. TRANSLATORS:
 #. 'help search' is a command to the program, do not translate it.
 #: src/TextClient.cpp
@@ -8517,11 +8609,13 @@ msgid "Execute a search."
 msgstr "Faz uma pesquisa."
 
 #: src/TextClient.cpp
+#, fuzzy
 msgid ""
 "A search type has to be specified by giving the type:\n"
 "    GLOBAL\n"
 "    LOCAL\n"
 "    KAD\n"
+"    ALL: All networks (requires daemon support)\n"
 "Example: 'search kad file' will execute a kad search for \"file\".\n"
 "\n"
 "Optional filters can be added before, after, or interleaved with\n"
@@ -8560,6 +8654,11 @@ msgstr "Faz uma pesquisa local"
 
 #: src/TextClient.cpp
 msgid "Execute a kad search"
+msgstr "Faz uma pesquisa na Kad"
+
+#: src/TextClient.cpp
+#, fuzzy
+msgid "Execute an eD2k and Kad search"
 msgstr "Faz uma pesquisa na Kad"
 
 #: src/TextClient.cpp
@@ -9573,6 +9672,12 @@ msgstr "O aMule parece estar em execução. Feche-o e execute novamente o desins
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "A remover os dados do utilizador em $APPDATA\\aMule..."
+
+#~ msgid "Local"
+#~ msgstr "Local"
+
+#~ msgid "Global"
+#~ msgstr "Global"
 
 #~ msgid ""
 #~ "The number of a file from the last search has to be given.\n"

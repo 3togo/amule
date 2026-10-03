@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule GIT\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-09-30 19:39+0800\n"
-"PO-Revision-Date: 2026-10-01 13:23+0000\n"
+"POT-Creation-Date: 2026-10-03 11:27+0100\n"
+"PO-Revision-Date: 2026-10-02 00:52+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
 "Language: bn\n"
@@ -330,8 +330,8 @@ msgstr "pid '%d' সহ amuleweb ইনস্ট্যান্স বন্ধ 
 msgid "Killing amuleweb instance with pid '%d' ... "
 msgstr "pid '%d' সহ amuleweb ইনস্ট্যান্স কিল করা হচ্ছে ... "
 
-#: src/amule.cpp src/ClientRef.cpp src/SearchDlg.cpp src/ServerListCtrl.cpp
-#: src/SharedFilesCtrl.cpp
+#: src/amule.cpp src/ClientRef.cpp src/FileDetailDialog.cpp src/SearchDlg.cpp
+#: src/ServerListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Failed"
 msgstr "ব্যর্থ"
 
@@ -686,6 +686,10 @@ msgstr "%s %s-এ সংযুক্ত"
 #, c-format
 msgid "Connecting to %s"
 msgstr "%s-এ সংযোগ করা হচ্ছে"
+
+#: src/amule.cpp src/amule-remote-gui.cpp
+msgid "Connecting..."
+msgstr "সংযোগ করা হচ্ছে…"
 
 #: src/amule.cpp
 msgid "Disconnected from eD2k"
@@ -1056,10 +1060,6 @@ msgid "Going to event loop..."
 msgstr "ইভেন্ট লুপে যাওয়া হচ্ছে…"
 
 #: src/amule-remote-gui.cpp
-msgid "Connecting..."
-msgstr "সংযোগ করা হচ্ছে…"
-
-#: src/amule-remote-gui.cpp
 msgid "Connection failed. Please check the host, port, and password."
 msgstr "সংযোগ ব্যর্থ হয়েছে। অনুগ্রহ করে হোস্ট, পোর্ট এবং পাসওয়ার্ড পরীক্ষা করুন।"
 
@@ -1165,6 +1165,10 @@ msgstr ""
 #: src/ServerListCtrl.cpp src/Statistics.cpp
 msgid "Unknown"
 msgstr "অজানা"
+
+#: src/amule-remote-gui.cpp
+msgid "The connected daemon does not support All searches."
+msgstr ""
 
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
@@ -1539,7 +1543,7 @@ msgstr "খারাপ ব্যবহারকারী"
 msgid "Verified - OK"
 msgstr "যাচাইকৃত - ঠিক আছে"
 
-#: src/ClientRef.cpp src/muuli_wdr.cpp
+#: src/ClientRef.cpp src/FileDetailDialog.cpp src/muuli_wdr.cpp
 msgid "N/A"
 msgstr "প্রযোজ্য নয়"
 
@@ -1815,7 +1819,7 @@ msgstr "স্থানীয় সার্ভার"
 msgid "Remote Server"
 msgstr "রিমোট সার্ভার"
 
-#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchDlg.cpp
+#: src/DataToText.cpp src/KadDlg.cpp src/muuli_wdr.cpp src/SearchModeIcons.h
 #: src/TextClient.cpp
 msgid "Kad"
 msgstr "Kad"
@@ -1921,7 +1925,8 @@ msgstr "সোর্স"
 msgid "Priority"
 msgstr "অগ্রাধিকার"
 
-#: src/DownloadListCtrl.cpp src/PartFile.cpp src/SearchListCtrl.cpp
+#: src/DownloadListCtrl.cpp src/muuli_wdr.cpp src/PartFile.cpp
+#: src/SearchListCtrl.cpp
 msgid "Status"
 msgstr "অবস্থা"
 
@@ -2682,6 +2687,11 @@ msgstr "%.1f%% সম্পন্ন"
 #, c-format
 msgid "%.2f KiB/s"
 msgstr ""
+
+#: src/FileDetailDialog.cpp src/muuli_wdr.cpp src/ServerWnd.cpp
+#: src/SharedFilesCtrl.cpp
+msgid "OK"
+msgstr "ঠিক আছে"
 
 #: src/FileLaunch.cpp
 msgid "File preview"
@@ -3958,13 +3968,10 @@ msgstr "অনুসন্ধান"
 msgid "Type"
 msgstr "ধরন"
 
-#: src/muuli_wdr.cpp src/SearchDlg.cpp src/SearchListCtrl.cpp
-msgid "Local"
-msgstr "স্থানীয়"
-
 #: src/muuli_wdr.cpp
-msgid "Global"
-msgstr "বৈশ্বিক"
+#, fuzzy
+msgid "Search network"
+msgstr "অনুসন্ধান ত্রুটি"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -4241,6 +4248,10 @@ msgstr ""
 #: src/muuli_wdr.cpp src/SearchListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Title"
 msgstr ""
+
+#: src/muuli_wdr.cpp src/SharedFilesCtrl.cpp
+msgid "Verify Local Data"
+msgstr "স্থানীয় ডেটা যাচাই করুন"
 
 #: src/muuli_wdr.cpp
 msgid "File Names"
@@ -5240,10 +5251,6 @@ msgstr "পেজ ডিফল্টে রিসেট করুন"
 #: src/muuli_wdr.cpp
 msgid "Reset the settings on the current page to their default values."
 msgstr "বর্তমান পেজের সেটিংস তাদের ডিফল্ট মানে রিসেট করুন।"
-
-#: src/muuli_wdr.cpp src/ServerWnd.cpp src/SharedFilesCtrl.cpp
-msgid "OK"
-msgstr "ঠিক আছে"
 
 #: src/muuli_wdr.cpp
 msgid "Click here to apply any changes made to the preferences."
@@ -6836,8 +6843,17 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr ""
 
 #: src/SearchList.cpp
+#, fuzzy
+msgid "All search can't be done if neither eD2k nor Kad is available"
+msgstr "Kad চলমান না থাকলে Kad অনুসন্ধান করা যাবে না"
+
+#: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
 msgstr "eD2k সংযুক্ত না থাকলে eD2k অনুসন্ধান করা যাবে না"
+
+#: src/SearchList.cpp
+msgid "All search: no usable Kad keyword; continuing with eD2k."
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6846,6 +6862,10 @@ msgstr "Kad অনুসন্ধানের জন্য কোনো কী�
 #: src/SearchList.cpp
 msgid "Unexpected error while attempting Kad search: "
 msgstr "Kad অনুসন্ধানের চেষ্টাকালে অপ্রত্যাশিত ত্রুটি: "
+
+#: src/SearchList.cpp
+msgid "All search: Kad component could not start: "
+msgstr ""
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6900,6 +6920,39 @@ msgstr "বাতিল করা হয়েছে"
 msgid "New"
 msgstr "নতুন"
 
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: Current server"
+msgstr "eD2k সার্ভার তালিকা (server.met)"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "eD2k: All servers"
+msgstr "সব সার্ভার সরান"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "All networks"
+msgstr "কোনো নেটওয়ার্ক নেই"
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the connected eD2k server."
+msgstr "বর্তমানে সংযুক্ত সার্ভার।"
+
+#: src/SearchModeIcons.h
+msgid "Search the connected eD2k server and other servers in the server list."
+msgstr ""
+
+#: src/SearchModeIcons.h
+#, fuzzy
+msgid "Search the Kad network."
+msgstr "নেটওয়ার্কে সংযোগ করুন।"
+
+#: src/SearchModeIcons.h
+msgid "Search eD2k servers and Kad, using whichever networks are available."
+msgstr ""
+
 #: src/SearchProgressReport.cpp
 msgid "running"
 msgstr ""
@@ -6939,6 +6992,40 @@ msgstr "অনুসন্ধান অগ্রগতি উপলব্ধ ন
 msgid "No search to report on.\n"
 msgstr ""
 
+#: src/SearchSourceFormat.h
+#, c-format
+msgid "Estimated availability: %u"
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "eD2k sources: %u"
+msgstr "ফাইল সোর্স:"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Kad sources: %u"
+msgstr "প্রাপ্ত সোর্স: %s"
+
+#: src/SearchSourceFormat.h
+msgid "Network counts may overlap; they are not added together."
+msgstr ""
+
+#: src/SearchSourceFormat.h
+#, fuzzy
+msgid "Network breakdown unavailable."
+msgstr "নতুন সংস্করণ উপলব্ধ"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Complete sources: %u"
+msgstr "সম্পূর্ণ সোর্স"
+
+#: src/SearchSourceFormat.h
+#, fuzzy, c-format
+msgid "Direct client endpoints: %u"
+msgstr "নতুন ক্লায়েন্ট ID হলো %u"
+
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
 msgstr "তালিকাভুক্ত সমস্ত অস্পষ্টীকৃত স্ট্যাটিক সার্ভারের সাথে সংযোগ ব্যর্থ হয়েছে। অস্পষ্টীকরণ ছাড়া আরেকবার চেষ্টা করা হচ্ছে।"
@@ -6971,13 +7058,18 @@ msgid "No valid servers to which to connect found in server list"
 msgstr "সার্ভার তালিকায় সংযোগের জন্য কোনো বৈধ সার্ভার পাওয়া যায়নি"
 
 #: src/ServerConnect.cpp
-#, c-format
-msgid "Connected to %s (%s:%i)"
+#, fuzzy, c-format
+msgid "Connected to %s (%s:%i), sending login request"
 msgstr "%s (%s:%i) এর সাথে সংযুক্ত"
 
 #: src/ServerConnect.cpp
-#, c-format
-msgid "Connection established on: %s"
+#, fuzzy, c-format
+msgid "Obfuscated connection established on: %s (%s:%i)"
+msgstr "সংযোগ স্থাপিত হয়েছে: %s"
+
+#: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection established on: %s (%s:%i)"
 msgstr "সংযোগ স্থাপিত হয়েছে: %s"
 
 #: src/ServerConnect.cpp
@@ -7582,10 +7674,6 @@ msgstr ""
 msgid "Directory Path"
 msgstr "ডিরেক্টরি পথ"
 
-#: src/SharedFilesCtrl.cpp
-msgid "Verify Local Data"
-msgstr "স্থানীয় ডেটা যাচাই করুন"
-
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "শেয়ার করা ফাইল"
@@ -8044,6 +8132,10 @@ msgstr "একটি বৈধ সংখ্যা নয়\n"
 msgid "Not a valid hash (length should be exactly 32 chars)\n"
 msgstr "একটি বৈধ হ্যাশ নয় (দৈর্ঘ্য অবশ্যই ঠিক ৩২ অক্ষর হতে হবে)\n"
 
+#: src/TextClient.cpp
+msgid "The connected daemon does not support All searches.\n"
+msgstr ""
+
 #. TRANSLATORS:
 #. 'help search' is a command to the program, do not translate it.
 #: src/TextClient.cpp
@@ -8440,11 +8532,13 @@ msgid "Execute a search."
 msgstr "একটি অনুসন্ধান নির্বাহ করুন।"
 
 #: src/TextClient.cpp
+#, fuzzy
 msgid ""
 "A search type has to be specified by giving the type:\n"
 "    GLOBAL\n"
 "    LOCAL\n"
 "    KAD\n"
+"    ALL: All networks (requires daemon support)\n"
 "Example: 'search kad file' will execute a kad search for \"file\".\n"
 "\n"
 "Optional filters can be added before, after, or interleaved with\n"
@@ -8483,6 +8577,11 @@ msgstr "একটি স্থানীয় অনুসন্ধান নি
 
 #: src/TextClient.cpp
 msgid "Execute a kad search"
+msgstr "একটি kad অনুসন্ধান নির্বাহ করুন"
+
+#: src/TextClient.cpp
+#, fuzzy
+msgid "Execute an eD2k and Kad search"
 msgstr "একটি kad অনুসন্ধান নির্বাহ করুন"
 
 #: src/TextClient.cpp
@@ -9496,3 +9595,9 @@ msgstr "aMule চলছে বলে মনে হচ্ছে। অনুগ�
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "$APPDATA\\aMule-এ ব্যবহারকারীর ডেটা অপসারণ করা হচ্ছে…"
+
+#~ msgid "Local"
+#~ msgstr "স্থানীয়"
+
+#~ msgid "Global"
+#~ msgstr "বৈশ্বিক"

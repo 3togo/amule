@@ -75,6 +75,9 @@ public:
 	{
 		return m_offerFilesPolicy.Get();
 	}
+	// The port ConnectToServer() dialed: the obfuscation port, or GetConnPort(), which can be an
+	// aux port rather than the advertised one.
+	uint16 GetConnectPort() const { return m_connectPort; }
 
 private:
 	bool ProcessPacket(const uint8_t *packet, uint32 size, int8 opcode);
@@ -93,6 +96,7 @@ private:
 
 	bool m_IsSolving;
 	COfferFilesConnectionPolicy m_offerFilesPolicy;
+	uint16 m_connectPort = 0;
 };
 
 #endif // SERVERSOCKET_H
