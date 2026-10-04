@@ -68,6 +68,22 @@ namespace
 const int kFilterDebounceMs = 250;
 const int ID_FILTER_DEBOUNCE_TIMER = wxID_HIGHEST + 1301;
 
+wxString GetSearchTypeTag(SearchType type)
+{
+	switch (type) {
+	case LocalSearch:
+		return wxT("[T] ");
+	case GlobalSearch:
+		return wxT("[TU] ");
+	case KadSearch:
+		return wxT("[K] ");
+	case AllSearch:
+		return wxT("[TUK] ");
+	default:
+		return wxT("");
+	}
+}
+
 } // namespace
 
 wxBEGIN_EVENT_TABLE(CSearchDlg, wxPanel)
@@ -902,12 +918,13 @@ void CSearchDlg::OnSearchAdded(wxUIntPtr searchID, const wxString &name, uint32 
 	// it must not pull the selection away from what the user is doing. Synchronous, matching its
 	// mirror Search_Removed -> CloseSearchTab: both run from wherever the core changed the
 	// search set, including inside EC packet handling.
-	CreateNewTab(((kind == KadSearch || kind == AllSearch) ? "!" : "") + name + " (0)",
+	CreateNewTab(((kind == KadSearch || kind == AllSearch) ? "!" : "") +
+			     GetSearchTypeTag(static_cast<SearchType>(kind)) + name + " (0)",
 		searchID,
 		false,
 		static_cast<SearchType>(kind));
 	if (CSearchListCtrl *page = GetSearchList(searchID)) {
-		page->SetSearchTabLabel(name);
+		page->SetSearchTabLabel(GetSearchTypeTag(static_cast<SearchType>(kind)) + name);
 		page->SetSearchRunning(kind == KadSearch || kind == AllSearch);
 	}
 }
@@ -1544,13 +1561,13 @@ void CSearchDlg::StartNewSearch()
 		OnStartRejected(real_id, error);
 	} else {
 		CreateNewTab(((search_type == KadSearch || search_type == AllSearch) ? "!" : "") +
-				     params.searchString + " (0)",
+				     GetSearchTypeTag(search_type) + params.searchString + " (0)",
 			real_id,
 			true,
 			search_type);
 		if (CSearchListCtrl *page = GetSearchList(real_id)) {
 			page->SetSearchRequest(request);
-			page->SetSearchTabLabel(params.searchString);
+			page->SetSearchTabLabel(GetSearchTypeTag(search_type) + params.searchString);
 			page->SetSearchRunning(search_type == KadSearch || search_type == AllSearch);
 		}
 	}
