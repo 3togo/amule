@@ -2141,7 +2141,9 @@ if (TARGET amuled)
 endif()
 
 if (TARGET wxWidgets::CORE)
- add_executable(KadLookupViewTest KadLookupViewTest.cpp)
+ add_executable(KadLookupViewTest KadLookupViewTest.cpp
+  # EC Debug logging needs the same standalone logger as the other EC tests.
+  ${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp)
  if (WIN32)
   target_sources(KadLookupViewTest PRIVATE DialogLayoutTest.rc)
  endif()
