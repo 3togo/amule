@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-06 19:09+0200\n"
-"PO-Revision-Date: 2026-10-07 13:45+0000\n"
+"PO-Revision-Date: 2026-10-07 16:29+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
 "Language: ru\n"
@@ -4783,11 +4783,11 @@ msgstr "Переподключать при обрыве связи"
 
 #: src/muuli_wdr.cpp
 msgid "File repair hashes over Kad"
-msgstr ""
+msgstr "Хеши восстановления файлов через Kad"
 
 #: src/muuli_wdr.cpp
 msgid "Share and use file repair hashes (AICH) over Kad"
-msgstr ""
+msgstr "Публиковать и использовать хеши восстановления файлов (AICH) через Kad"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -4799,10 +4799,17 @@ msgid ""
 "\n"
 "Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
+"Публиковать хеши восстановления файлов другим узлам Kad и получать их из поиска Kad. Эти хеши помогают aMule восстанавливать повреждённые данные загрузки без повторной загрузки целой части. aMule использует хеш для восстановления только после того, как его подтвердят достаточно независимых пиров.\n"
+"\n"
+"Очень старые клиенты Kad (до eMule 0.49b) могут пропускать результаты поиска, содержащие эти хеши. Если вы заметили пропажу результатов, попробуйте отключить эту опцию.\n"
+"\n"
+"Отключение этой опции удалит сохранённые в индексе Kad хеши восстановления при следующем сохранении. Повторное включение начнёт их сбор заново.\n"
+"\n"
+"Техническое описание: включение объявляет версию протокола Kad 0x0a и добавляет хеши AICH в результаты публикации и поиска по ключевым словам."
 
 #: src/muuli_wdr.cpp
 msgid "Ignore repair hashes from Kad nodes too old to support them"
-msgstr ""
+msgstr "Игнорировать хеши восстановления от слишком старых узлов Kad"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -4812,6 +4819,11 @@ msgid ""
 "\n"
 "Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
+"Применяется только когда включена публикация и использование хешей восстановления файлов через Kad. Игнорировать хеши, публикуемые узлами, которые сообщают слишком старую для их поддержки версию Kad.\n"
+"\n"
+"Сообщаемая узлом версия может быть устаревшей или неточной, поэтому это может отбрасывать действительные хеши и не делает принятые хеши надёжными. Узлы с неизвестной версией по-прежнему принимаются.\n"
+"\n"
+"Техническое описание: отклоняет теги публикации AICH от узлов, объявляющих версию протокола Kad ниже 0x09."
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"
