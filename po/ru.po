@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-06 19:09+0200\n"
-"PO-Revision-Date: 2026-10-06 18:41+0000\n"
+"PO-Revision-Date: 2026-10-07 13:45+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
 "Language: ru\n"
@@ -563,54 +563,54 @@ msgstr ""
 
 #: src/amule.cpp
 msgid "The P2P TCP port conflicts with the External Connections port. No sockets were changed.\n"
-msgstr ""
+msgstr "Порт TCP для P2P конфликтует с портом внешних соединений. Сокеты не изменялись.\n"
 
 #: src/amule.cpp
 msgid "The P2P TCP port is too high for its associated server UDP port. No sockets were changed.\n"
-msgstr ""
+msgstr "Порт TCP для P2P слишком высок для связанного с ним порта UDP сервера. Сокеты не изменялись.\n"
 
 #: src/amule.cpp
 msgid "The client UDP port conflicts with the server UDP port (TCP+3). No sockets were changed.\n"
-msgstr ""
+msgstr "Порт UDP клиента конфликтует с портом UDP сервера (TCP+3). Сокеты не изменялись.\n"
 
 #: src/amule.cpp
 #, c-format
 msgid "Could not rebind the server UDP port %u; no sockets were changed.\n"
-msgstr ""
+msgstr "Не удалось перепривязать порт UDP сервера %u; сокеты не изменялись.\n"
 
 #: src/amule.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not rebind the P2P TCP port %u. %s"
-msgstr "ОШИБКА: не удалось прослушать порт TCP."
+msgstr "Не удалось перепривязать порт TCP для P2P %u. %s"
 
 #: src/amule.cpp
 msgid "The previous listener and server UDP socket remain active.\n"
-msgstr ""
+msgstr "Прежний сокет прослушивания и сокет UDP сервера остаются активными.\n"
 
 #: src/amule.cpp
 msgid "The server UDP socket could not be restored; restart aMule.\n"
-msgstr ""
+msgstr "Не удалось восстановить сокет UDP сервера; перезапустите aMule.\n"
 
 #: src/amule.cpp
 msgid "The previous P2P listeners remain active.\n"
-msgstr ""
+msgstr "Прежние сокеты прослушивания P2P остаются активными.\n"
 
 #: src/amule.cpp
 msgid "The previous client UDP socket remains active.\n"
-msgstr ""
+msgstr "Прежний сокет UDP клиента остаётся активным.\n"
 
 #: src/amule.cpp
 msgid "Some previous P2P sockets could not be restored; restart aMule.\n"
-msgstr ""
+msgstr "Не удалось восстановить некоторые прежние сокеты P2P; перезапустите aMule.\n"
 
 #: src/amule.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not rebind the client UDP port %u. %s"
-msgstr "Не удалось удалить категорию: %s"
+msgstr "Не удалось перепривязать порт UDP клиента %u. %s"
 
 #: src/amule.cpp
 msgid "P2P listening sockets rebound; established peer connections were kept."
-msgstr ""
+msgstr "Сокеты прослушивания P2P перепривязаны; установленные соединения с пирами сохранены."
 
 #: src/amule.cpp
 msgid "Failed to create OnlineSig File"
@@ -1213,7 +1213,7 @@ msgstr "Все"
 
 #: src/amule-remote-gui.cpp
 msgid "The daemon could not apply the connection port changes."
-msgstr ""
+msgstr "Демон не смог применить изменения портов соединения."
 
 #: src/amule-remote-gui.cpp
 msgid "not readable"
@@ -4903,7 +4903,7 @@ msgstr "Разрежённые частичные файлы занимают м
 
 #: src/muuli_wdr.cpp
 msgid "Stop downloads when free disk space reaches "
-msgstr "Остановить загрузки, если на диске свободно менее "
+msgstr "Останавливать загрузки, если на диске свободно менее "
 
 #: src/muuli_wdr.cpp
 msgid "Select this if you want aMule to check your disk space"
@@ -4915,7 +4915,7 @@ msgstr "Введите здесь минимальный размер свобо
 
 #: src/muuli_wdr.cpp
 msgid "Save up to 10 HighID sources of rare files (20 or fewer sources) on exit"
-msgstr "Сохранять до 10 источников с Высоким ИД для редких файлов (≤20 источников) при выходе"
+msgstr "Сохранять до 10 источников с Высоким ИД для редких файлов (≤20 сидов) при выходе"
 
 #: src/muuli_wdr.cpp
 msgid "The saved sources are used again only if aMule restarts within 2 hours. LowID sources are not saved: a LowID only identifies a peer on the server that assigned it."
@@ -6531,9 +6531,8 @@ msgid "- Network interface binding changed.\n"
 msgstr "— Изменена привязка к сетевому интерфейсу.\n"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "- Local address binding changed.\n"
-msgstr "— Изменена привязка к сетевому интерфейсу.\n"
+msgstr "— Изменена привязка к локальному адресу.\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- TCP port changed.\n"

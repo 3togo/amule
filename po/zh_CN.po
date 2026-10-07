@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-06 19:09+0200\n"
-"PO-Revision-Date: 2026-10-06 18:43+0000\n"
+"PO-Revision-Date: 2026-10-07 13:47+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
 "Language: zh_CN\n"
@@ -559,54 +559,54 @@ msgstr ""
 
 #: src/amule.cpp
 msgid "The P2P TCP port conflicts with the External Connections port. No sockets were changed.\n"
-msgstr ""
+msgstr "P2P TCP 端口与外部连接端口冲突。未更改套接字。\n"
 
 #: src/amule.cpp
 msgid "The P2P TCP port is too high for its associated server UDP port. No sockets were changed.\n"
-msgstr ""
+msgstr "P2P TCP 端口对于其关联的服务器 UDP 端口而言太高。未更改套接字。\n"
 
 #: src/amule.cpp
 msgid "The client UDP port conflicts with the server UDP port (TCP+3). No sockets were changed.\n"
-msgstr ""
+msgstr "客户端 UDP 端口与服务器 UDP 端口冲突（TCP+3）。未更改套接字。\n"
 
 #: src/amule.cpp
 #, c-format
 msgid "Could not rebind the server UDP port %u; no sockets were changed.\n"
-msgstr ""
+msgstr "无法重新绑定服务器 UDP 端口 %u；未更改套接字。\n"
 
 #: src/amule.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not rebind the P2P TCP port %u. %s"
-msgstr "错误: 无法监听 TCP 端口。"
+msgstr "无法重新绑定 P2P TCP 端口 %u. %s"
 
 #: src/amule.cpp
 msgid "The previous listener and server UDP socket remain active.\n"
-msgstr ""
+msgstr "之前的监听器和服务器 UDP 套接字仍活跃。\n"
 
 #: src/amule.cpp
 msgid "The server UDP socket could not be restored; restart aMule.\n"
-msgstr ""
+msgstr "无法恢复服务器 UDP 套接字；重启 aMule。\n"
 
 #: src/amule.cpp
 msgid "The previous P2P listeners remain active.\n"
-msgstr ""
+msgstr "之前的 P2P 侦听器仍活跃。\n"
 
 #: src/amule.cpp
 msgid "The previous client UDP socket remains active.\n"
-msgstr ""
+msgstr "之前的客户端 UDP 套接字仍活跃。\n"
 
 #: src/amule.cpp
 msgid "Some previous P2P sockets could not be restored; restart aMule.\n"
-msgstr ""
+msgstr "无法恢复一些之前的 P2P 套接字；重启 aMule。\n"
 
 #: src/amule.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not rebind the client UDP port %u. %s"
-msgstr "无法删除分类：%s"
+msgstr "无法重新绑定客户端 UDP 端口 %u. %s"
 
 #: src/amule.cpp
 msgid "P2P listening sockets rebound; established peer connections were kept."
-msgstr ""
+msgstr "P2P 监听套接字反弹；已建立的对等连接被保留。"
 
 #: src/amule.cpp
 msgid "Failed to create OnlineSig File"
@@ -1205,7 +1205,7 @@ msgstr "全部"
 
 #: src/amule-remote-gui.cpp
 msgid "The daemon could not apply the connection port changes."
-msgstr ""
+msgstr "守护进程无法应用连接端口更改。"
 
 #: src/amule-remote-gui.cpp
 msgid "not readable"
@@ -4873,13 +4873,12 @@ msgid "Enter here the min disk space desired."
 msgstr "请输入最低硬盘空间。"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Save up to 10 HighID sources of rare files (20 or fewer sources) on exit"
-msgstr "保存稀有文件（少于20个源）的10个源"
+msgstr "退出时保存稀有文件（少于 20 个源）的最多 10 个 HighID 来源"
 
 #: src/muuli_wdr.cpp
 msgid "The saved sources are used again only if aMule restarts within 2 hours. LowID sources are not saved: a LowID only identifies a peer on the server that assigned it."
-msgstr ""
+msgstr "只有在当 aMule 在 2 小时内重启时才会再次使用已保存的来源。不保存 LowID 来源：LowID 只在分配它的服务器上识别对等方。"
 
 #: src/muuli_wdr.cpp src/Statistics.cpp
 msgid "Uploads"
@@ -6478,9 +6477,8 @@ msgid "- Network interface binding changed.\n"
 msgstr "- 更改了网络接口绑定.\n"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "- Local address binding changed.\n"
-msgstr "- 更改了网络接口绑定.\n"
+msgstr "- 更改了本地地址绑定。\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- TCP port changed.\n"
