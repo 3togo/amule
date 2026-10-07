@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2026-10-07 10:08-0400\n"
-"PO-Revision-Date: 2026-10-07 16:32+0000\n"
+"PO-Revision-Date: 2026-10-07 19:39+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
 "Language: ca\n"
@@ -105,15 +105,14 @@ msgstr "Llegeix la configuració de I<E<lt>pathE<gt>> en lloc del directori d'us
 
 #. type: TP
 #: amule.1.in amuled.1.in amulegui.1.in
-#, fuzzy, no-wrap
-#| msgid "B<[ --amule-config-file>=I<E<lt>pathE<gt>> B<]>"
+#, no-wrap
 msgid "B<[ --log-file>=I<E<lt>fileE<gt>> B<]>"
-msgstr "B<[ --amule-config-file>=I<E<lt>pathE<gt>> B<]>"
+msgstr "B<[ --log-file>=I<E<lt>fileE<gt>> B<]>"
 
 #. type: Plain text
 #: amule.1.in amuled.1.in
 msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<amule.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<logfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
-msgstr ""
+msgstr "Escriu els registres al fitxer indicat en lloc del fitxer de registre predeterminat.  Substitueix el paràmetre B<LogFilePath> de la secció B<[eMule]> del fitxer I<amule.conf> només per a aquesta execució.  Els camins relatius es resolen respecte al directori de configuració.  El directori pare ja ha d'existir i s'hi ha de poder escriure; no es crea automàticament.  Si el paràmetre de configuració és buit o no hi és, es fa servir I<logfile> al directori de configuració.  En iniciar-se, el registre anterior es desa com a còpia de seguretat al mateix camí amb I<.bak> afegit al final.  Si no es pot crear la còpia de seguretat, es registra un avís i la sessió actual s'afegeix al registre existent.  Els canvis de configuració tenen efecte després de reiniciar."
 
 #. type: TP
 #: amule.1.in amulegui.1.in
@@ -947,7 +946,7 @@ msgstr "B<amulegui> és un programa client i es pot connectar a amule o amuled p
 #. type: Plain text
 #: amulegui.1.in
 msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<remote.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<remotelogfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
-msgstr ""
+msgstr "Escriu els registres al fitxer indicat en lloc del fitxer de registre predeterminat.  Substitueix el paràmetre B<LogFilePath> de la secció B<[eMule]> del fitxer I<remote.conf> només per a aquesta execució.  Els camins relatius es resolen respecte al directori de configuració.  El directori pare ja ha d'existir i s'hi ha de poder escriure; no es crea automàticament.  Si el paràmetre de configuració és buit o no hi és, es fa servir I<remotelogfile> al directori de configuració.  En iniciar-se, el registre anterior es desa com a còpia de seguretat al mateix camí amb I<.bak> afegit al final.  Si no es pot crear la còpia de seguretat, es registra un avís i la sessió actual s'afegeix al registre existent.  Els canvis de configuració tenen efecte després de reiniciar."
 
 #. type: Plain text
 #: amulegui.1.in

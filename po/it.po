@@ -20,7 +20,7 @@ msgstr ""
 "Project-Id-Version: aMule 2.3.3\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-06 19:09+0200\n"
-"PO-Revision-Date: 2026-10-07 16:26+0000\n"
+"PO-Revision-Date: 2026-10-07 19:34+0000\n"
 "Last-Translator: got3nks <got3nks@users.noreply.github.com>\n"
 "Language-Team: SebastianoPistore.info@protonmail.ch\n"
 "Language: it\n"
@@ -4816,7 +4816,7 @@ msgstr "Aggiorna la lista server quando ti connetti ad un server"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when a client connects"
-msgstr "Aggiorna la lista server quando un client si connette"
+msgstr "Aggiorna la lista server quando ti connetti ad un client"
 
 #: src/muuli_wdr.cpp
 msgid "Use priority system"
