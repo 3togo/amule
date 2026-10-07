@@ -13,7 +13,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-06 19:09+0200\n"
-"PO-Revision-Date: 2026-10-07 13:44+0000\n"
+"PO-Revision-Date: 2026-10-07 16:27+0000\n"
 "Last-Translator: Marcel Pol <marcel@timelord.nl>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "Language: nl\n"
@@ -4743,11 +4743,11 @@ msgstr "Verbind opnieuw bij verbroken verbinding"
 
 #: src/muuli_wdr.cpp
 msgid "File repair hashes over Kad"
-msgstr ""
+msgstr "Bestandsreparatiehashes over Kad"
 
 #: src/muuli_wdr.cpp
 msgid "Share and use file repair hashes (AICH) over Kad"
-msgstr ""
+msgstr "Deel en gebruik bestandsreparatiehashes (AICH) over Kad"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -4759,10 +4759,17 @@ msgid ""
 "\n"
 "Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
+"Deel bestandsreparatiehashes met andere Kad nodes en leer over hen door Kad zoekopdrachten. Deze hashes kunnen aMule helpen om beschadigde downloadgegevens te repareren zonder het hele deel opnieuw te downloaden. aMule gebruikt alleen een hash voor reparatie als genoeg onafhankelijke peers dezelfde hash rapporteren.\n"
+"\n"
+"Hele oude Kad clients (voor eMule versie 0.49b) kunnen zoekresultaten die deze hashes bevatten missen. Als u ontbrekende zoekresultaten opmerkt, probeer dan deze optie uit te schakelen.\n"
+"\n"
+"Door deze optie uit te schakelen gooit u ook de reparatiehashes die zijn opgeslagen in uw Kad-index weg bij de volgende keer opslaan. Het opnieuw inschakelen laat het verzamelen opnieuw beginnen.\n"
+"\n"
+"Technisch detail: door dit in te schakelen adverteert Kad-protocolversie 0x0a en voegt het AICH-hashes toe aan sleutelwoordpublicaties en -zoekresultaten."
 
 #: src/muuli_wdr.cpp
 msgid "Ignore repair hashes from Kad nodes too old to support them"
-msgstr ""
+msgstr "Negeer reparatiehashes van Kad-nodes die te oud zijn om ze te ondersteunen"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -4772,6 +4779,11 @@ msgid ""
 "\n"
 "Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
+"Is alleen van toepassing als delen en gebruik van bestandsreparatiehashes over Kad is ingeschakeld. Negeer hashes die gepubliceerd zijn door nodes die een Kad-versie rapporteren die te oud zijn om de hashes te ondersteunen.\n"
+"\n"
+"De gerapporteerde versie van een node kan verouderd of incorrect zijn dus dit kan ook geldige hashes negeren, en maakt geaccepteerde hashes ook niet betrouwbaar. Nodes waarvan de versie onbekend is worden nog wel geaccepteerd.\n"
+"\n"
+"Technisch detail: verwerpt AICH-publicatielabels van nodes die adverteren met Kad-protocolversies voor 0x09."
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"
