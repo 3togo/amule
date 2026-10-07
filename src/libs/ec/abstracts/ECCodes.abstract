@@ -207,6 +207,10 @@ EC_OP_REFRESH_MEDIA_METADATA        0x67
 ## Additive: the flip op is unchanged, so an older client is unaffected, and a
 ## core that does not know this one answers EC_OP_FAILED.
 EC_OP_PARTFILE_SET_A4AF_AUTO        0x68
+
+## User-triggered bounded Kad lookup snapshot. Reply uses EC_TAG_STRING.
+## Older cores return EC_OP_FAILED. No polling or capability negotiation.
+EC_OP_GET_KAD_LOOKUPS               0x69
 [/Section]
 
 [Section Content]

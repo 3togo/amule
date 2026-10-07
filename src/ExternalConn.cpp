@@ -3913,6 +3913,11 @@ CECPacket *CECServerSocket::ProcessRequest2(const CECPacket *request)
 		break;
 	}
 
+	case EC_OP_GET_KAD_LOOKUPS:
+		response = new CECPacket(EC_OP_GET_KAD_LOOKUPS);
+		response->AddTag(CECTag(EC_TAG_STRING, Kademlia::CSearchManager::GetLookupDiagnostics()));
+		break;
+
 	case EC_OP_SEARCH_PROGRESS: {
 		// Union form, decided before anything is allocated. A client that advertised
 		// EC_TAG_CAN_SEARCH_PROGRESS_UNION always gets the union shape: naming ids narrows

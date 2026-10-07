@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-07 02:46+0000\n"
 "PO-Revision-Date: 2026-10-06 18:35+0000\n"
 "Last-Translator: Sebastiano Pistore <SebastianoPistore.info@protonmail.ch>\n"
 "Language-Team: Bulgarian <dict@linux.zonebg.com>\n"
@@ -3259,6 +3259,18 @@ msgstr "Неуспешно преименуване на новия файл %s,
 #: src/IPFilter.cpp
 msgid "IP filter is ready"
 msgstr "IP филтърът е готов"
+
+#: src/KadDlg.cpp
+msgid "Kad lookup diagnostics"
+msgstr ""
+
+#: src/KadDlg.cpp
+msgid "The core does not support Kad lookup diagnostics."
+msgstr ""
+
+#: src/KadDlg.cpp
+msgid "Lookup diagnostics"
+msgstr ""
 
 #: src/KadDlg.cpp src/muuli_wdr.cpp src/StatisticsDlg.cpp
 msgid "Current"
@@ -7079,7 +7091,7 @@ msgstr ""
 msgid "running"
 msgstr ""
 
-#: src/SearchProgressReport.cpp
+#: src/SearchProgressReport.cpp src/kademlia/utils/LookupDiagnostics.cpp
 #, fuzzy
 msgid "finished"
 msgstr "фински"
@@ -9725,6 +9737,56 @@ msgstr "Изглежда aMule работи. Моля, затворете го �
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Премахване на потребителските данни в $APPDATA\\aMule..."
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, c-format
+msgid "Lookup %s (type %u, %s): %u peers, %u overdue routing requests, %u omitted records\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, fuzzy
+msgid "active"
+msgstr "Активен"
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, c-format
+msgid "  %s [%s]: %u routing requests, %u replies, last RTT %u ms, %u item requests, %u result packets, %u result records\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, c-format
+msgid "  +%u ms: %s referred %s (%s)\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+msgid "closer to target"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, fuzzy
+msgid "no closer to target"
+msgstr "(Неизвестно име)"
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+msgid ""
+"Overdue means a routing request unanswered for at least 3 seconds; late replies may still arrive. Result records are received records, not unique files. Only bounded recent history is retained.\n"
+"\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+msgid "Additional active lookups omitted.\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, fuzzy
+msgid "No Kad lookup history available."
+msgstr "няма налични опции"
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+msgid ""
+"\n"
+"Diagnostic output truncated.\n"
+msgstr ""
 
 #~ msgid "Local"
 #~ msgstr "Локално"

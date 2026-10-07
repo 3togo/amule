@@ -39,6 +39,7 @@ there client on the eMule forum..
 */
 
 #include "Search.h"
+#include "../../GetTickCount.h"
 
 #include <protocol/Protocols.h>
 #include <protocol/kad/Client2Client/UDP.h>
@@ -90,6 +91,7 @@ static_assert(
 CSearch::CSearch()
 {
 	m_created = time(NULL);
+	m_lookupStarted = ::GetTickCount64();
 	m_type = (uint32_t)-1;
 	m_answers = 0;
 	m_totalRequestAnswers = 0;
@@ -462,6 +464,8 @@ void CSearch::ProcessResponse(uint32_t fromIP, uint16_t fromPort, ContactList *r
 		return;
 	}
 
+	m_lookupTrace.Reply({ fromIP, fromPort }, ::GetTickCount64());
+
 	if (m_type == NODEFWCHECKUDP) {
 		m_answers++;
 		return;
@@ -534,6 +538,10 @@ void CSearch::ProcessResponse(uint32_t fromIP, uint16_t fromPort, ContactList *r
 				receivedSubnets[c->GetIPAddress() & 0xFFFFFF00] = 1;
 			}
 
+			m_lookupTrace.Referral({ c->GetIPAddress(), c->GetUDPPort() },
+				{ fromIP, fromPort },
+				::GetTickCount64(),
+				distance < fromDistance);
 			m_possible[distance] = c;
 
 			if (distance < fromDistance) {
@@ -1058,10 +1066,14 @@ void CSearch::StorePacket()
 		AddDebugLogLineN(logKadSearch, CFormat("Search result type: Unknown (%i)") % m_type);
 		break;
 	}
+	if (m_type == FILE || m_type == KEYWORD || m_type == NOTES) {
+		m_lookupTrace.ItemRequest({ from->GetIPAddress(), from->GetUDPPort() }, ::GetTickCount64());
+	}
 }
 
 void CSearch::ProcessResult(const CUInt128 &answer, TagPtrList *info, uint32_t fromIP, uint16_t fromPort)
 {
+	m_lookupTrace.Result({ fromIP, fromPort }, ::GetTickCount64());
 	wxString type = "Unknown";
 	switch (m_type) {
 	case FILE:
@@ -1449,6 +1461,11 @@ void CSearch::SendFindValue(CContact *contact, bool reaskMore)
 					NULL);
 				wxASSERT(contact->GetUDPKey() == CKadUDPKey(0));
 			}
+			CLookupTrace::ID traceID{};
+			contact->GetClientID().ToByteArray(traceID.data());
+			m_lookupTrace.Query({ contact->GetIPAddress(), contact->GetUDPPort() },
+				traceID,
+				::GetTickCount64());
 #ifdef __DEBUG__
 			switch (m_type) {
 			case NODE:

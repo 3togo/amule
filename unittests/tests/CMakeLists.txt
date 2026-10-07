@@ -2117,3 +2117,23 @@ if (ENABLE_UPNP)
 endif()
 target_link_libraries (AICHSearchResultTest muleunit mulecommon wxWidgets::BASE CRYPTOPP::CRYPTOPP)
 add_test (NAME AICHSearchResultTest COMMAND AICHSearchResultTest)
+
+add_executable(LookupTraceTest LookupTraceTest.cpp)
+add_test(NAME LookupTraceTest COMMAND LookupTraceTest)
+target_include_directories(LookupTraceTest PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(LookupTraceTest muleunit mulecommon)
+
+add_executable(LookupDiagnosticsTest LookupDiagnosticsTest.cpp
+ ${CMAKE_SOURCE_DIR}/src/kademlia/utils/LookupDiagnostics.cpp
+ ${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp)
+add_test(NAME LookupDiagnosticsTest COMMAND LookupDiagnosticsTest)
+target_include_directories(LookupDiagnosticsTest PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include)
+target_link_libraries(LookupDiagnosticsTest muleunit muleappcommon mulecommon)
+
+if (TARGET amuled)
+ find_package(Python3 QUIET COMPONENTS Interpreter)
+ if (Python3_Interpreter_FOUND)
+  add_test(NAME KadLookupECTest COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/KadLookupECTest.py $<TARGET_FILE:amuled>)
+  set_tests_properties(KadLookupECTest PROPERTIES TIMEOUT 180)
+ endif()
+endif()
