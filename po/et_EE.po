@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-07 02:46+0000\n"
+"POT-Creation-Date: 2026-10-07 00:28-0400\n"
 "PO-Revision-Date: 2026-10-06 18:37+0000\n"
 "Last-Translator: \n"
 "Language-Team: Estonian <kde-i18n-doc@kde.org>\n"
@@ -3266,15 +3266,11 @@ msgid "IP filter is ready"
 msgstr "IP filter on lähtestatud"
 
 #: src/KadDlg.cpp
-msgid "Kad lookup diagnostics"
-msgstr ""
-
-#: src/KadDlg.cpp
-msgid "The core does not support Kad lookup diagnostics."
-msgstr ""
-
-#: src/KadDlg.cpp
 msgid "Lookup diagnostics"
+msgstr ""
+
+#: src/KadDlg.cpp
+msgid "Requesting Kad lookup diagnostics…"
 msgstr ""
 
 #: src/KadDlg.cpp src/muuli_wdr.cpp src/StatisticsDlg.cpp
@@ -3321,6 +3317,18 @@ msgstr "Nii tehes eemaldad oma olemasolevad sõlmed ja taaskäivitad Kademlia ü
 #: src/KadDlg.cpp
 msgid "Continue?"
 msgstr "Kas jätkata?"
+
+#: src/KadLookupView.h
+msgid "Kad lookup diagnostics"
+msgstr ""
+
+#: src/KadLookupView.h
+msgid "The core does not support Kad lookup diagnostics."
+msgstr ""
+
+#: src/KadLookupView.h
+msgid "Connection lost. Reconnect and request lookup diagnostics again."
+msgstr ""
 
 #: src/kademlia/kademlia/SearchManager.cpp
 msgid "Kademlia: search keyword too short"

@@ -26,6 +26,7 @@
 #ifndef KADDLG_H
 #define KADDLG_H
 
+#include "KadLookupView.h"
 #include <wx/panel.h> // Needed for wxPanel
 
 class COScopeCtrl;
@@ -53,6 +54,7 @@ public:
 
 private:
 	COScopeCtrl *m_kad_scope;
+	wxWeakRef<CKadLookupView> m_lookupView;
 
 	// Event handlers
 	void OnBnClickedBootstrapClient(wxCommandEvent &evt);

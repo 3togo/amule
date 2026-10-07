@@ -24,8 +24,7 @@
 //
 
 #include "KadDlg.h"
-#include <wx/dialog.h>
-#include <wx/weakref.h>
+#include "KadLookupView.h"
 #ifdef CLIENT_GUI
 #include "libs/ec/cpp/RemoteConnect.h"
 #else
@@ -47,62 +46,6 @@
 #ifndef CLIENT_GUI
 #include "kademlia/kademlia/Kademlia.h"
 #endif
-
-namespace
-{
-void ShowLookupDiagnostics(wxWindow *parent, const wxString &text)
-{
-	wxDialog dialog(parent,
-		wxID_ANY,
-		_("Kad lookup diagnostics"),
-		wxDefaultPosition,
-		wxSize(850, 500),
-		wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
-	auto *sizer = new wxBoxSizer(wxVERTICAL);
-	auto *view = new wxTextCtrl(&dialog,
-		wxID_ANY,
-		text,
-		wxDefaultPosition,
-		wxDefaultSize,
-		wxTE_MULTILINE | wxTE_READONLY | wxHSCROLL);
-	sizer->Add(view, 1, wxEXPAND | wxALL, 8);
-	sizer->Add(dialog.CreateButtonSizer(wxOK), 0, wxEXPAND | wxALL, 8);
-	dialog.SetSizer(sizer);
-	dialog.ShowModal();
-}
-#ifdef CLIENT_GUI
-class LookupReply final : public CECPacketHandlerBase
-{
-	wxWeakRef<wxWindow> m_parent;
-	wxWeakRef<wxButton> m_button;
-
-public:
-	LookupReply(wxWindow *parent, wxButton *button)
-	: m_parent(parent)
-	, m_button(button)
-	{
-	}
-	~LookupReply() override
-	{
-		if (m_button) {
-			m_button->Enable();
-		}
-	}
-	void HandlePacket(const CECPacket *packet) override
-	{
-		const auto *tag = packet->GetTagByName(EC_TAG_STRING);
-		if (m_parent) {
-			ShowLookupDiagnostics(m_parent.get(),
-				packet->GetOpCode() == EC_OP_GET_KAD_LOOKUPS && tag && tag->IsString()
-					? tag->GetStringData()
-					: _("The core does not support Kad lookup diagnostics."));
-		}
-		delete this;
-	}
-	void AbortPendingRequest() override { delete this; }
-};
-#endif
-} // namespace
 
 wxBEGIN_EVENT_TABLE(CKadDlg, wxPanel)
 	EVT_TEXT(ID_NODE_IP, CKadDlg::OnFieldsChange)
@@ -134,17 +77,23 @@ void CKadDlg::Init()
 	auto *diagnostics = new wxButton(this, wxID_ANY, _("Lookup diagnostics"));
 	GetSizer()->Add(diagnostics, 0, wxALL, 5);
 	diagnostics->Bind(wxEVT_BUTTON, [this](wxCommandEvent &event) {
+		if (!m_lookupView) {
+			m_lookupView = new CKadLookupView(this);
+		}
+		m_lookupView->Show();
+		m_lookupView->Raise();
 #ifdef CLIENT_GUI
 		auto *button = static_cast<wxButton *>(event.GetEventObject());
 		if (!button->IsEnabled()) {
 			return;
 		}
 		button->Disable();
+		m_lookupView->SetSnapshot(_("Requesting Kad lookup diagnostics…"));
 		CECPacket request(EC_OP_GET_KAD_LOOKUPS);
-		theApp->m_connect->SendRequest(new LookupReply(this, button), &request);
+		theApp->m_connect->SendRequest(new CKadLookupReply(m_lookupView.get(), button), &request);
 #else
   (void)event;
-  ShowLookupDiagnostics(this, Kademlia::CSearchManager::GetLookupDiagnostics());
+  m_lookupView->SetSnapshot(Kademlia::CSearchManager::GetLookupDiagnostics());
 #endif
 	});
 	Layout();

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule GIT\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-07 02:46+0000\n"
+"POT-Creation-Date: 2026-10-07 00:28-0400\n"
 "PO-Revision-Date: 2026-10-06 18:44+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
@@ -3154,15 +3154,11 @@ msgid "IP filter is ready"
 msgstr ""
 
 #: src/KadDlg.cpp
-msgid "Kad lookup diagnostics"
-msgstr ""
-
-#: src/KadDlg.cpp
-msgid "The core does not support Kad lookup diagnostics."
-msgstr ""
-
-#: src/KadDlg.cpp
 msgid "Lookup diagnostics"
+msgstr ""
+
+#: src/KadDlg.cpp
+msgid "Requesting Kad lookup diagnostics…"
 msgstr ""
 
 #: src/KadDlg.cpp src/muuli_wdr.cpp src/StatisticsDlg.cpp
@@ -3208,6 +3204,18 @@ msgstr ""
 
 #: src/KadDlg.cpp
 msgid "Continue?"
+msgstr ""
+
+#: src/KadLookupView.h
+msgid "Kad lookup diagnostics"
+msgstr ""
+
+#: src/KadLookupView.h
+msgid "The core does not support Kad lookup diagnostics."
+msgstr ""
+
+#: src/KadLookupView.h
+msgid "Connection lost. Reconnect and request lookup diagnostics again."
 msgstr ""
 
 #: src/kademlia/kademlia/SearchManager.cpp
