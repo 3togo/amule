@@ -4741,44 +4741,36 @@ msgid "Reconnect on loss"
 msgstr "断线后自动重连"
 
 #: src/muuli_wdr.cpp
-msgid "Kad protocol version"
-msgstr "Kad 协议版本"
+msgid "File repair hashes over Kad"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
-msgstr "通告 Kad 协议 0x0a（AICH 关键词存储）"
+msgid "Share and use file repair hashes (AICH) over Kad"
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
+"Share file repair hashes with other Kad nodes and learn them from Kad searches. These hashes can help aMule repair damaged download data without downloading an entire part again. aMule uses a hash for repair only once enough independent peers report the same one.\n"
 "\n"
-"WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
+"Very old Kad clients (before eMule 0.49b) may miss search results containing these hashes. If you notice missing results, try turning this option off.\n"
 "\n"
-"Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
+"Turning this option off discards the repair hashes stored in your Kad index on the next save. Turning it back on starts collecting them again.\n"
 "\n"
-"Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
+"Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
-"启用后，aMule 通告 Kad 协议版本 0x0a 并处理关键词发布/搜素结果中的 AICH 哈希值。\n"
-"\n"
-"警告：启用此选项可能导致无法解析 AICH 结果标签的较老的 Kad 客户端 (0.49b 之前) 丢弃搜索结果。多数当前客户端支持它，但如果遇到搜素结果缺失问题，尝试禁用该选项。\n"
-"\n"
-"禁用此选项在下次保存时丢弃存储的 AICH 关键词索引数据。重新启用它需要再次收集此数据。\n"
-"\n"
-"从 Kad 搜索结果学到的哈希值在下载来源确证它们前不受信任。仅有报告的发布者计数永远不授权 AICH 恢复。"
 
 #: src/muuli_wdr.cpp
-msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
-msgstr "拒绝来自旧 Kad 对等方（< 0x09）的 AICH 发布标签"
+msgid "Ignore repair hashes from Kad nodes too old to support them"
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+"Only applies when sharing and using file repair hashes over Kad is enabled. Ignore hashes published by nodes that report a Kad version too old to support them.\n"
 "\n"
-"WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+"A node's reported version may be out of date or inaccurate, so this can discard valid hashes and does not make accepted hashes trustworthy. Nodes whose version is unknown are still accepted.\n"
+"\n"
+"Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
-"启用后将拒绝来自通告的 Kad 版本低于 0x09 的节点的 AICH 发布标签 ，因为这些版本不支持 AICH 关键词存储。通告的版本不是发布者值得信赖的证明。\n"
-"\n"
-"警告：这可能会拒绝路由表版本陈旧的真实发布者，降低 AICH 哈希覆盖。版本未知的节点仍被接受。不论该设置是否启用，从 Kad 搜索结果学到的哈希值都要求下载来源确证。"
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"
@@ -9700,6 +9692,41 @@ msgstr "aMule 似乎正在运行。请将其关闭并重新运行卸载程序。
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "正在删除 $APPDATA\\aMule 中的用户数据..."
+
+#~ msgid "Kad protocol version"
+#~ msgstr "Kad 协议版本"
+
+#~ msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
+#~ msgstr "通告 Kad 协议 0x0a（AICH 关键词存储）"
+
+#~ msgid ""
+#~ "When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
+#~ "\n"
+#~ "WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
+#~ "\n"
+#~ "Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
+#~ "\n"
+#~ "Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
+#~ msgstr ""
+#~ "启用后，aMule 通告 Kad 协议版本 0x0a 并处理关键词发布/搜素结果中的 AICH 哈希值。\n"
+#~ "\n"
+#~ "警告：启用此选项可能导致无法解析 AICH 结果标签的较老的 Kad 客户端 (0.49b 之前) 丢弃搜索结果。多数当前客户端支持它，但如果遇到搜素结果缺失问题，尝试禁用该选项。\n"
+#~ "\n"
+#~ "禁用此选项在下次保存时丢弃存储的 AICH 关键词索引数据。重新启用它需要再次收集此数据。\n"
+#~ "\n"
+#~ "从 Kad 搜索结果学到的哈希值在下载来源确证它们前不受信任。仅有报告的发布者计数永远不授权 AICH 恢复。"
+
+#~ msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
+#~ msgstr "拒绝来自旧 Kad 对等方（< 0x09）的 AICH 发布标签"
+
+#~ msgid ""
+#~ "When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+#~ "\n"
+#~ "WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+#~ msgstr ""
+#~ "启用后将拒绝来自通告的 Kad 版本低于 0x09 的节点的 AICH 发布标签 ，因为这些版本不支持 AICH 关键词存储。通告的版本不是发布者值得信赖的证明。\n"
+#~ "\n"
+#~ "警告：这可能会拒绝路由表版本陈旧的真实发布者，降低 AICH 哈希覆盖。版本未知的节点仍被接受。不论该设置是否启用，从 Kad 搜索结果学到的哈希值都要求下载来源确证。"
 
 #~ msgid "Local"
 #~ msgstr "本地"

@@ -4755,34 +4755,35 @@ msgid "Reconnect on loss"
 msgstr "Atkārtoti pieslēgties, kad zaudēts savienojums"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
-msgid "Kad protocol version"
-msgstr "Nederīga protokola versija."
+msgid "File repair hashes over Kad"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
+msgid "Share and use file repair hashes (AICH) over Kad"
 msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
+"Share file repair hashes with other Kad nodes and learn them from Kad searches. These hashes can help aMule repair damaged download data without downloading an entire part again. aMule uses a hash for repair only once enough independent peers report the same one.\n"
 "\n"
-"WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
+"Very old Kad clients (before eMule 0.49b) may miss search results containing these hashes. If you notice missing results, try turning this option off.\n"
 "\n"
-"Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
+"Turning this option off discards the repair hashes stored in your Kad index on the next save. Turning it back on starts collecting them again.\n"
 "\n"
-"Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
+"Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
+msgid "Ignore repair hashes from Kad nodes too old to support them"
 msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+"Only applies when sharing and using file repair hashes over Kad is enabled. Ignore hashes published by nodes that report a Kad version too old to support them.\n"
 "\n"
-"WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+"A node's reported version may be out of date or inaccurate, so this can discard valid hashes and does not make accepted hashes trustworthy. Nodes whose version is unknown are still accepted.\n"
+"\n"
+"Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
 
 #: src/muuli_wdr.cpp
@@ -9739,6 +9740,10 @@ msgstr "Izskatās, ka aMule darbojas. Lūdzu, aizveriet to un vēlreiz palaidiet
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Dzēš lietotāja datus, kas atrodas $APPDATA\\aMule mapē…"
+
+#, fuzzy
+#~ msgid "Kad protocol version"
+#~ msgstr "Nederīga protokola versija."
 
 #~ msgid "Local"
 #~ msgstr "Lokāls"

@@ -1634,35 +1634,36 @@ wxSizer *PreferencesConnectionTab( wxWindow *parent, bool call_fit, bool set_siz
     item33->Add( item38, wxSizerFlags().Expand().Border(wxLEFT|wxRIGHT, 5) );
     item0->Add( item33, wxSizerFlags().Expand().CenterVertical().Border(wxALL, 0) );
 
-    wxStaticBox *kadProtoBox = new wxStaticBox( parent, -1, _("Kad protocol version") );
+    wxStaticBox *kadProtoBox = new wxStaticBox( parent, -1, _("File repair hashes over Kad") );
     wxStaticBoxSizer *kadProtoSizer = new wxStaticBoxSizer( kadProtoBox, wxVERTICAL );
 
     wxCheckBox *kadProtoChk = new wxCheckBox( kadProtoBox, IDC_KADPROTOCOL10,
-        _("Advertise Kad protocol 0x0a (AICH keyword storage)"), wxDefaultPosition, wxDefaultSize, 0 );
-    kadProtoChk->SetValue( FALSE );
+        _("Share and use file repair hashes (AICH) over Kad"), wxDefaultPosition, wxDefaultSize, 0 );
+    kadProtoChk->SetValue( TRUE );
     kadProtoChk->SetToolTip(
-        _("When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes "
-          "in keyword publish/search results.\n\n"
-          "WARNING: Enabling this may cause search results to be dropped by older Kad clients "
-          "(pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, "
-          "but if you experience missing search results, try disabling this option.\n\n"
-          "Disabling this option discards stored AICH keyword-index data on the next save; "
-          "re-enabling it requires collecting that data again.\n\n"
-          "Hashes learned from Kad search results remain untrusted until download sources "
-          "corroborate them. Reported publisher counts alone never authorize AICH recovery.") );
+        _("Share file repair hashes with other Kad nodes and learn them from Kad searches. "
+          "These hashes can help aMule repair damaged download data without downloading an "
+          "entire part again. aMule uses a hash for repair only once enough independent peers "
+          "report the same one.\n\n"
+          "Very old Kad clients (before eMule 0.49b) may miss search results containing these "
+          "hashes. If you notice missing results, try turning this option off.\n\n"
+          "Turning this option off discards the repair hashes stored in your Kad index on the "
+          "next save. Turning it back on starts collecting them again.\n\n"
+          "Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH "
+          "hashes to keyword publish and search results.") );
     kadProtoSizer->Add( kadProtoChk, wxSizerFlags().CenterVertical().Border(wxLEFT|wxRIGHT|wxBOTTOM, 5) );
 
     wxCheckBox *strictAichChk = new wxCheckBox( kadProtoBox, IDC_KADSTRICTAICHPUBLISHERS,
-        _("Reject AICH publish tags from legacy Kad peers (< 0x09)"), wxDefaultPosition, wxDefaultSize, 0 );
+        _("Ignore repair hashes from Kad nodes too old to support them"), wxDefaultPosition, wxDefaultSize, 0 );
     strictAichChk->SetValue( FALSE );
     strictAichChk->SetToolTip(
-        _("When enabled, AICH keyword publish tags from nodes advertising a Kad version below "
-          "0x09 are rejected because these versions do not support AICH keyword storage. "
-          "Advertised versions are not proof that a publisher is trustworthy.\n\n"
-          "WARNING: This may reject legitimate publishers whose routing-table version is stale, "
-          "reducing AICH hash coverage. Nodes with unknown version are still accepted. "
-          "Hashes learned from Kad search results require download-source corroboration "
-          "regardless of this setting.") );
+        _("Only applies when sharing and using file repair hashes over Kad is enabled. "
+          "Ignore hashes published by nodes that report a Kad version too old to support them.\n\n"
+          "A node's reported version may be out of date or inaccurate, so this can discard "
+          "valid hashes and does not make accepted hashes trustworthy. Nodes whose version "
+          "is unknown are still accepted.\n\n"
+          "Technical detail: rejects AICH publish tags from nodes advertising Kad protocol "
+          "versions below 0x09.") );
     kadProtoSizer->Add( strictAichChk, wxSizerFlags().CenterVertical().Border(wxLEFT|wxRIGHT|wxBOTTOM, 5) );
 
     item0->Add( kadProtoSizer, wxSizerFlags().Expand().CenterVertical().Border(wxTOP, 5) );
