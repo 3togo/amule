@@ -188,9 +188,9 @@ unsigned int CLogger::GetDebugCategoryCount()
 	return categoryCount;
 }
 
-bool CLogger::OpenLogfile(const wxString &name)
+bool CLogger::OpenLogfile(const wxString &name, bool append)
 {
-	applog = new wxFFileOutputStream(name);
+	applog = new wxFFileOutputStream(name, append ? "ab" : "wb");
 	bool ret = applog->Ok();
 	if (ret) {
 		FlushApplog();

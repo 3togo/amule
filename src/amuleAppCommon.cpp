@@ -26,6 +26,11 @@
 // use theApp, thePrefs), so this file is compiled separately for each app.
 
 #include <signal.h> // Needed for raise(), SIGABRT
+#if defined(AMULE_DAEMON) && !defined(__WINDOWS__)
+#include <cerrno>
+#include <cstring>
+#include <unistd.h>
+#endif
 
 #include <wx/wx.h>
 #include <wx/cmdline.h>  // Needed for wxCmdLineParser
@@ -65,6 +70,54 @@
 #ifndef CLIENT_GUI
 #include "DownloadQueue.h"
 #endif
+
+#if defined(AMULE_DAEMON) && !defined(__WINDOWS__)
+static int daemonStartupFd = -1;
+#endif
+
+void CamuleAppCommon::SetDaemonStartupFd(int fd)
+{
+#if defined(AMULE_DAEMON) && !defined(__WINDOWS__)
+	daemonStartupFd = fd;
+#else
+	(void)fd;
+#endif
+}
+
+void CamuleAppCommon::ReportDaemonStartup(bool success, const char *error)
+{
+#if defined(AMULE_DAEMON) && !defined(__WINDOWS__)
+	if (daemonStartupFd < 0) {
+		return;
+	}
+	// One status byte, followed by a diagnostic on failure. Closing the pipe lets
+	// the parent finish reading an error without waiting for wx teardown.
+	const char status = success ? 'S' : 'E';
+	const char *parts[] = { &status, error ? error : "", "\n" };
+	const size_t lengths[] = { 1, success || !error ? 0 : strlen(error), success ? 0u : 1u };
+	for (size_t part = 0; part < 3; ++part) {
+		size_t sent = 0;
+		while (sent < lengths[part]) {
+			const ssize_t result =
+				write(daemonStartupFd, parts[part] + sent, lengths[part] - sent);
+			if (result < 0 && errno == EINTR) {
+				continue;
+			}
+			if (result <= 0) {
+				close(daemonStartupFd);
+				daemonStartupFd = -1;
+				return;
+			}
+			sent += result;
+		}
+	}
+	close(daemonStartupFd);
+	daemonStartupFd = -1;
+#else
+	(void)success;
+	(void)error;
+#endif
+}
 
 bool CamuleAppCommon::ReportAssertFailure(const wxChar *file,
 	int line,
@@ -446,6 +499,7 @@ bool CamuleAppCommon::InitCommon(int argc, wxChar **argv)
 	cmdline.AddSwitch("v", "version", "Displays the current version number.");
 	cmdline.AddSwitch("h", "help", "Displays this information.");
 	cmdline.AddOption("c", "config-dir", "read config from <dir> instead of home");
+	cmdline.AddOption("", "log-file", "Write logs to <file> instead of the default log file.");
 	// One-shot autostart toggle, called by the Windows installer's Components page and by the
 	// Preferences UI. Lives in AutostartManager so the OS-specific store stays hidden from
 	// callers.
@@ -903,15 +957,46 @@ bool CamuleAppCommon::InitCommon(int argc, wxChar **argv)
 	}
 	RestrictToOwner(CPath(thePrefs::GetConfigDir() + m_configFile + ".bak"));
 
-	CPath logfileName = CPath(thePrefs::GetConfigDir() + m_logFile);
-	if (logfileName.FileExists()) {
-		CPath::BackupFile(logfileName, ".bak");
-	}
-
-	if (!theLogger.OpenLogfile(logfileName.GetRaw())) {
-		fputs("ERROR: unable to open log file\n", stderr);
+	// Logging starts before the general preferences are loaded. Keep this startup-only
+	// setting in the local config, including remote.conf for amulegui. A CLI override
+	// applies to this run only and must not replace the saved value.
+	const auto logStartupError = [](const wxString &message) {
+		fprintf(stderr, "%s\n", (const char *)message.utf8_str());
+		ReportDaemonStartup(false, (const char *)message.utf8_str());
 		return false;
+	};
+	wxString configuredLogPath;
+	wxConfigBase::Get()->Read("/eMule/LogFilePath", &configuredLogPath, wxEmptyString);
+	wxConfigBase::Get()->Write("/eMule/LogFilePath", configuredLogPath);
+	wxString logPath = configuredLogPath;
+	const bool logPathOverride = cmdline.Found("log-file", &logPath);
+	if (!logPathOverride && logPath.IsEmpty()) {
+		logPath = m_logFile;
 	}
+	wxFileName logFile(logPath);
+	if (logPath.IsEmpty() || logFile.GetFullName().IsEmpty() ||
+		!logFile.MakeAbsolute(thePrefs::GetConfigDir()) || wxDirExists(logFile.GetFullPath())) {
+		return logStartupError(
+			CFormat("ERROR: invalid log file path '%s': expected a filename") % logPath);
+	}
+	m_logFile = logFile.GetFullPath();
+	CPath logfileName(m_logFile);
+	// A failed backup must not truncate the old log or stop the daemon on a
+	// nearly full RAM disk. Keep the original and append the current session.
+	const bool append = logfileName.FileExists() && !CPath::BackupFile(logfileName, ".bak");
+	if (append) {
+		const wxString warning =
+			CFormat("WARNING: unable to back up log file '%s'; appending to the existing log") %
+			m_logFile;
+		fprintf(stderr, "%s\n", (const char *)warning.utf8_str());
+		AddLogLineN(warning);
+	}
+	if (!theLogger.OpenLogfile(m_logFile, append)) {
+		return logStartupError(CFormat("ERROR: unable to open log file '%s': ensure its parent "
+					       "directory exists and is writable") %
+				       m_logFile);
+	}
+	ReportDaemonStartup(true);
 
 	// Send the abort backtrace to the logfile, which is where EmergencyLog() already puts the
 	// SIGSEGV report, so both crash kinds land in the same place. Not conditional on

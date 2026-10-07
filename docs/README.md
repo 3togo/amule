@@ -25,6 +25,34 @@ under `~/.aMule/`:
 Pick `amule` if you're not sure which to use — it's the all-in-one.
 
 
+## Log file location
+
+By default, `amule` and `amuled` write `logfile` in the configuration directory.
+To store logs separately, stop aMule and set a full filename in `amule.conf`:
+
+```ini
+[eMule]
+LogFilePath=/var/log/amule/logfile
+```
+
+Create the parent directory first and make it writable by the user running aMule.
+You can use a directory on a RAM-backed filesystem while keeping the configuration
+and other persistent data in their usual location.
+
+For a single run, use `amuled --log-file=/var/log/amule/logfile` (also supported
+by `amule` and `amulegui`). The command-line value overrides the saved setting
+without changing it. Relative paths are resolved against the configuration
+directory, including when using `--config-dir`.
+
+An empty or absent `LogFilePath` keeps the default location. Changes take effect
+after restart. On startup, the previous log is backed up beside the selected file
+with `.bak` appended. If that backup fails, aMule logs a warning and appends
+to the existing log instead of truncating it or stopping startup. Remote log viewing
+and reset use the selected file too.
+For `amulegui`, the setting is in `remote.conf` and controls its local log, whose
+default filename is `remotelogfile`.
+
+
 ## First-run checklist
 
 aMule ships with reasonable defaults and is usable as-is. Three

@@ -2894,7 +2894,8 @@ void CamuleApp::SetPublicIP(const uint32 dwIP)
 wxString CamuleApp::GetLog(bool reset)
 {
 	wxFile logfile;
-	logfile.Open(thePrefs::GetConfigDir() + "logfile");
+	const wxString logfileName = m_logFile;
+	logfile.Open(logfileName);
 	if (!logfile.IsOpened()) {
 		return _("ERROR: can't open logfile");
 	}
@@ -2916,7 +2917,7 @@ wxString CamuleApp::GetLog(bool reset)
 	delete[] tmp_buffer;
 	if (reset) {
 		theLogger.CloseLogfile();
-		if (theLogger.OpenLogfile(thePrefs::GetConfigDir() + "logfile")) {
+		if (theLogger.OpenLogfile(logfileName)) {
 			AddLogLineN(_("Log has been reset"));
 		}
 		ECServerHandler->ResetAllLogs();

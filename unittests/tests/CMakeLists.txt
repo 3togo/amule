@@ -2087,6 +2087,10 @@ option (ENABLE_INTEGRATION_TESTS
 if (ENABLE_INTEGRATION_TESTS AND BUILD_DAEMON AND UNIX AND NOT APPLE)
 	find_package (Python3 QUIET COMPONENTS Interpreter)
 	if (Python3_Interpreter_FOUND)
+		add_test (NAME LogfilePathIntegrationTest
+			COMMAND ${Python3_EXECUTABLE}
+				${CMAKE_CURRENT_SOURCE_DIR}/LogfilePathIntegrationTest.py $<TARGET_FILE:amuled>
+		)
 		add_test (NAME AllSearchIntegrationTest
 			COMMAND ${Python3_EXECUTABLE}
 				${CMAKE_CURRENT_SOURCE_DIR}/AllSearchIntegrationTest.py $<TARGET_FILE:amuled>

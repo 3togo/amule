@@ -211,7 +211,7 @@ public:
 	unsigned int GetDebugCategoryCount();
 
 	/// Opens the logfile; true on success.
-	bool OpenLogfile(const wxString &name);
+	bool OpenLogfile(const wxString &name, bool append = false);
 
 	/// Closes the logfile.
 	void CloseLogfile();
