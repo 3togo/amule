@@ -67,6 +67,9 @@ TEST(LookupTrace, UnsolicitedResultsAndClockRegression)
 	trace.Query({ 1, 1 }, {}, 100);
 	ASSERT_EQUALS(size_t(0), trace.Overdue(0, 3000));
 	trace.Result({ 1, 1 }, 101);
+	ASSERT_EQUALS(0u, trace.Peers().begin()->second.results);
+	trace.ItemRequest({ 1, 1 }, 102);
+	trace.Result({ 1, 1 }, 103);
 	ASSERT_EQUALS(1u, trace.Peers().begin()->second.results);
 	ASSERT_TRUE(trace.Peers().begin()->second.pending);
 }
@@ -86,4 +89,24 @@ TEST(LookupTrace, EmptyAndMultipartItemResponses)
 	ASSERT_EQUALS(1u, trace.Peers().begin()->second.itemRequests);
 	ASSERT_EQUALS(2u, trace.Peers().begin()->second.itemReplies);
 	ASSERT_EQUALS(1u, trace.Peers().begin()->second.results);
+}
+
+TEST(LookupTrace, SustainedMixedTrafficStaysBounded)
+{
+	CLookupTrace trace;
+	for (uint64_t tick = 1; tick <= 100000; ++tick) {
+		const CLookupTrace::Address peer{ static_cast<uint32_t>(tick % 128 + 1), 4665 };
+		trace.Query(peer, {}, tick);
+		trace.Reply(peer, tick + 1);
+		trace.ItemRequest(peer, tick + 2);
+		trace.Result(peer, tick + 3);
+		trace.ItemReply(peer, tick + 4);
+		trace.Referral({ 0x01020304, 4665 }, peer, tick + 5, tick % 2 == 0);
+	}
+	ASSERT_EQUALS(size_t(128), trace.Peers().size());
+	ASSERT_EQUALS(size_t(256), trace.Events().size());
+	ASSERT_EQUALS(599744u, trace.Omitted());
+	ASSERT_EQUALS(size_t(0), trace.Overdue(200000, 3000));
+	ASSERT_EQUALS(uint64_t(1), trace.Peers().begin()->second.roundTrip);
+	ASSERT_EQUALS(100005ull, static_cast<unsigned long long>(trace.Events().back().tick));
 }

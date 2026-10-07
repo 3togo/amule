@@ -74,11 +74,19 @@ void ShowLookupDiagnostics(wxWindow *parent, const wxString &text)
 class LookupReply final : public CECPacketHandlerBase
 {
 	wxWeakRef<wxWindow> m_parent;
+	wxWeakRef<wxButton> m_button;
 
 public:
-	explicit LookupReply(wxWindow *parent)
+	LookupReply(wxWindow *parent, wxButton *button)
 	: m_parent(parent)
+	, m_button(button)
 	{
+	}
+	~LookupReply() override
+	{
+		if (m_button) {
+			m_button->Enable();
+		}
 	}
 	void HandlePacket(const CECPacket *packet) override
 	{
@@ -125,11 +133,17 @@ void CKadDlg::Init()
 	UpdateConnectButton();
 	auto *diagnostics = new wxButton(this, wxID_ANY, _("Lookup diagnostics"));
 	GetSizer()->Add(diagnostics, 0, wxALL, 5);
-	diagnostics->Bind(wxEVT_BUTTON, [this](wxCommandEvent &) {
+	diagnostics->Bind(wxEVT_BUTTON, [this](wxCommandEvent &event) {
 #ifdef CLIENT_GUI
+		auto *button = static_cast<wxButton *>(event.GetEventObject());
+		if (!button->IsEnabled()) {
+			return;
+		}
+		button->Disable();
 		CECPacket request(EC_OP_GET_KAD_LOOKUPS);
-		theApp->m_connect->SendRequest(new LookupReply(this), &request);
+		theApp->m_connect->SendRequest(new LookupReply(this, button), &request);
 #else
+  (void)event;
   ShowLookupDiagnostics(this, Kademlia::CSearchManager::GetLookupDiagnostics());
 #endif
 	});

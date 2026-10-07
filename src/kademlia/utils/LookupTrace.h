@@ -124,7 +124,7 @@ public:
 	void Result(Address peer, uint64_t tick)
 	{
 		auto it = m_peers.find(peer);
-		if (it == m_peers.end()) {
+		if (it == m_peers.end() || it->second.itemRequests == 0) {
 			return;
 		}
 		++it->second.results;
