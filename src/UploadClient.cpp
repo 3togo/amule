@@ -327,6 +327,21 @@ void CUpDownClient::AddReqBlock(Requested_Block_Struct *reqblock, bool bSignalIO
 		return;
 	}
 
+	// A block in a part a check found corrupt. Peers are told we lack those parts, so this is a
+	// stale part status or a misbehaving client: end the session and send the current status.
+	if (!srcfile->IsPartFile() &&
+		srcfile->GetVerifyResult().IsRangeCorrupt(reqblock->StartOffset, reqblock->EndOffset - 1)) {
+		AddDebugLogLineN(logRemoteClient,
+			CFormat("AddReqBlock: Requested block is in a corrupt part (%llu - %llu), ending the "
+				"upload session") %
+				reqblock->StartOffset % (reqblock->EndOffset - 1));
+		delete reqblock;
+		if (theApp->uploadqueue->RemoveFromUploadQueue(this)) {
+			EndUploadSessionWithStatus(srcfile);
+		}
+		return;
+	}
+
 	if (!theApp->uploadqueue->IsDownloading(this)) {
 		AddDebugLogLineN(logRemoteClient, "AddReqBlock: Client not in upload list");
 		delete reqblock;
@@ -506,6 +521,36 @@ void CUpDownClient::SendOutOfPartReqsAndAddToWaitingQueue()
 	SendPacket(pPacket, true, true);
 
 	theApp->uploadqueue->AddClientToQueue(this);
+}
+
+void CUpDownClient::EndUploadSessionWithStatus(CKnownFile *file)
+{
+	// A downloader still connected to us is accepted again without asking for the file status,
+	// and would keep requesting parts we no longer advertise. Peers process an unsolicited
+	// OP_FILESTATUS like an answer; it goes first so it arrives before any new accept.
+	CMemFile data(16 + 16);
+	data.WriteHash(file->GetFileHash());
+	file->WritePartStatus(&data);
+	CPacket *packet = new CPacket(data, OP_EDONKEYPROT, OP_FILESTATUS);
+	theStats::AddUpOverheadFileRequest(packet->GetPacketSize());
+	AddDebugLogLineN(logLocalClient, "Local Client: OP_FILESTATUS to " + GetFullIP());
+	SendPacket(packet, true, true);
+
+	SendOutOfPartReqsAndAddToWaitingQueue();
+}
+
+bool CUpDownClient::HasQueuedBlockInCorruptPart(const CKnownFile *file)
+{
+	// Only blocks not read yet: the disk I/O thread moves a block to m_DoneBlocks_list once its
+	// data is on the way.
+	wxMutexLocker lock(m_blockListLock);
+	for (const Requested_Block_Struct *block : m_BlockRequests_queue) {
+		if (md4cmp(block->FileID, file->GetFileHash().GetHash()) == 0 &&
+			file->GetVerifyResult().IsRangeCorrupt(block->StartOffset, block->EndOffset - 1)) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
