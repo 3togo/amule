@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2026-10-07 10:08-0400\n"
-"PO-Revision-Date: 2026-10-07 16:32+0000\n"
+"PO-Revision-Date: 2026-10-07 19:40+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
 "Language: nl\n"
@@ -105,10 +105,9 @@ msgstr "Lees configuratiebestand vanuit I<E<lt>padE<gt>> in plaats van de thuisl
 
 #. type: TP
 #: amule.1.in amuled.1.in amulegui.1.in
-#, fuzzy, no-wrap
-#| msgid "B<[ --amule-config-file>=I<E<lt>pathE<gt>> B<]>"
+#, no-wrap
 msgid "B<[ --log-file>=I<E<lt>fileE<gt>> B<]>"
-msgstr "B<[ --amule-config-file>=I<E<lt>padE<gt>> B<]>"
+msgstr "B<[ --log-bestand>=I<E<lt>bestandE<gt>> B<]>"
 
 #. type: Plain text
 #: amule.1.in amuled.1.in
