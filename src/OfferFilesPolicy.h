@@ -26,6 +26,8 @@
 #ifndef OFFERFILESPOLICY_H
 #define OFFERFILESPOLICY_H
 
+#include "MD4Hash.h"
+#include <set>
 #include <array>
 #include <cstdint>
 class CTag;
@@ -40,7 +42,7 @@ public:
 	uint32_t AdvertisedIntervalMs() const { return m_values[2]; }
 	uint32_t SoftLimit() const { return m_values[3]; }
 	uint32_t HardLimit() const { return m_values[4]; }
-	uint32_t BatchLimit(uint32_t alreadyOffered) const;
+	uint32_t BatchLimit(uint32_t alreadyOffered, uint32_t liveSoft = 0, uint32_t liveHard = 0) const;
 	uint32_t IntervalMs() const;
 
 private:
@@ -49,9 +51,30 @@ private:
 	bool m_invalid = false;
 };
 
+// Counts distinct candidates, including legacy offers before negotiation. Socket-owned.
+class COfferFilesPublication
+{
+public:
+	void Record(const CMD4Hash &hash) { m_offered.insert(hash); }
+	bool Contains(const CMD4Hash &hash) const { return m_offered.count(hash) != 0; }
+	uint32_t Count() const { return static_cast<uint32_t>(m_offered.size()); }
+	bool Due(uint64_t now, uint32_t interval) const { return !m_sent || now - m_lastSent >= interval; }
+	void Sent(uint64_t now)
+	{
+		m_sent = true;
+		m_lastSent = now;
+	}
+	void Reset() { *this = COfferFilesPublication(); }
+
+private:
+	std::set<CMD4Hash> m_offered;
+	uint64_t m_lastSent = 0;
+	bool m_sent = false;
+};
+
 // Socket-owned snapshot. Begin before decoding so truncation cannot preserve
 // an earlier policy. Duplicate SERVERIDENT packets invalidate the snapshot.
-// A valid snapshot is diagnostic only until the accelerated publisher is wired.
+// Publication also requires the disabled-by-default experimental preference.
 class COfferFilesConnectionPolicy
 {
 public:
@@ -60,6 +83,10 @@ public:
 	void Commit(const COfferFilesAdvertisement &advertisement);
 	void Reset() { *this = COfferFilesConnectionPolicy(); }
 	const COfferFilesAdvertisement *Get() const { return m_valid ? &m_snapshot : nullptr; }
+	const COfferFilesAdvertisement *GetForPublication(bool enabled) const
+	{
+		return enabled ? Get() : nullptr;
+	}
 
 private:
 	COfferFilesAdvertisement m_snapshot;

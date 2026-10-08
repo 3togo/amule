@@ -43,12 +43,13 @@
 #include "MediaProbeThread.h" // Needed for CMediaProbeThread (media probe queue)
 #include "OtherFunctions.h"   // Needed for GetED2KFileTypeID / ED2KFT_* (MaybeScheduleMediaProbe)
 #include "ThreadScheduler.h"  // Needed for CThreadScheduler::GetPendingCount (bulk probe logging)
-#include "Preferences.h"      // Needed for thePrefs
-#include "DownloadQueue.h"    // Needed for CDownloadQueue
-#include "amule.h"            // Needed for theApp
-#include "PartFile.h"         // Needed for PartFile
-#include "Server.h"           // Needed for CServer
-#include "Statistics.h"       // Needed for theStats
+#include "ServerSocket.h"
+#include "Preferences.h"   // Needed for thePrefs
+#include "DownloadQueue.h" // Needed for CDownloadQueue
+#include "amule.h"         // Needed for theApp
+#include "PartFile.h"      // Needed for PartFile
+#include "Server.h"        // Needed for CServer
+#include "Statistics.h"    // Needed for theStats
 #include "Logger.h"
 #include <common/Format.h>
 #include <common/FileFunctions.h>
@@ -1487,6 +1488,15 @@ void CSharedFileList::SendListToServer()
 	if (!server || !theApp->IsConnectedED2K()) {
 		return;
 	}
+	CServerSocket *socket = theApp->serverconnect->GetConnectedSocket();
+	if (!socket) {
+		return;
+	}
+	auto &publication = socket->GetOfferFilesPublication();
+	const auto *policy = socket->GetOfferFilesAdvertisement(thePrefs::GetExperimentalED2KPublication());
+	if (policy && !publication.Due(GetTickCount64(), policy->IntervalMs())) {
+		return;
+	}
 	std::vector<CKnownFile *> SortedList;
 
 	{
@@ -1501,7 +1511,8 @@ void CSharedFileList::SendListToServer()
 
 		CKnownFileMap::iterator it = m_Files_map.begin();
 		for (; it != m_Files_map.end(); ++it) {
-			if (!it->second->GetPublishedED2K() &&
+			if ((!policy || !publication.Contains(it->second->GetFileHash())) &&
+				!it->second->GetPublishedED2K() &&
 				(!it->second->IsLargeFile() || server->SupportsLargeFilesTCP())) {
 				SortedList.push_back(it->second);
 			}
@@ -1517,6 +1528,13 @@ void CSharedFileList::SendListToServer()
 		limit = 200;
 	}
 
+	if (policy) {
+		limit = policy->BatchLimit(
+			publication.Count(), server->GetSoftFiles(), server->GetHardFiles());
+		if (!limit) {
+			return;
+		}
+	}
 	if ((uint32)SortedList.size() < limit) {
 		limit = SortedList.size();
 		if (limit == 0) {
@@ -1571,8 +1589,10 @@ void CSharedFileList::SendListToServer()
 	theStats::AddUpOverheadServer(packet->GetPacketSize());
 	// Published means offered to the connection, not acknowledged as indexed.
 	// Only mark records when ServerConnect accepts the packet for this connection.
-	if (theApp->serverconnect->SendPacket(packet, true)) {
+	if (theApp->serverconnect->SendPacket(packet, true, socket)) {
+		publication.Sent(GetTickCount64());
 		for (CKnownFile *file : offered) {
+			publication.Record(file->GetFileHash());
 			file->SetPublishedED2K(true);
 		}
 	}
@@ -1609,7 +1629,12 @@ void CSharedFileList::Process()
 	}
 
 	Publish();
-	if (!m_lastPublishED2KFlag || (::GetTickCount64() - m_lastPublishED2K < ED2KREPUBLISHTIME)) {
+	CServerSocket *socket = theApp->serverconnect->GetConnectedSocket();
+	const auto *policy =
+		socket ? socket->GetOfferFilesAdvertisement(thePrefs::GetExperimentalED2KPublication())
+		       : nullptr;
+	const uint32 interval = policy ? policy->IntervalMs() : ED2KREPUBLISHTIME;
+	if (!m_lastPublishED2KFlag || (::GetTickCount64() - m_lastPublishED2K < interval)) {
 		return;
 	}
 	SendListToServer();

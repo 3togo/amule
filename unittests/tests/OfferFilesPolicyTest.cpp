@@ -236,3 +236,72 @@ TEST(OfferFilesPolicy, TruncatedWireCannotCommitPartialAdvertisement)
 	state.Commit(Valid());
 	ASSERT_TRUE(state.Get() == nullptr);
 }
+
+TEST(OfferFilesPolicy, LegacyCandidatesConsumeNegotiatedBudgetOnlyOnce)
+{
+	COfferFilesPublication publication;
+	unsigned char bytes[16] = {};
+	bytes[0] = 1;
+	const CMD4Hash first(bytes);
+	bytes[0] = 2;
+	const CMD4Hash second(bytes);
+	publication.Record(first); // Legacy packet queued before SERVERIDENT.
+	publication.Record(first); // A refresh does not consume another distinct slot.
+	ASSERT_EQUALS(uint32(1), publication.Count());
+	ASSERT_TRUE(publication.Contains(first));
+	ASSERT_FALSE(publication.Contains(second));
+	const auto policy = Valid(2);
+	ASSERT_EQUALS(uint32(1), policy.BatchLimit(publication.Count()));
+	publication.Record(second);
+	ASSERT_EQUALS(uint32(0), policy.BatchLimit(publication.Count()));
+	publication.Reset(); // Another socket must start with an empty budget.
+	ASSERT_EQUALS(uint32(0), publication.Count());
+	ASSERT_FALSE(publication.Contains(first));
+}
+
+TEST(OfferFilesPolicy, PacingIncludesLegacyOffersAndNeverAccumulatesBursts)
+{
+	COfferFilesPublication publication;
+	ASSERT_TRUE(publication.Due(0, 500));
+	publication.Sent(1000); // Legacy offer before negotiation.
+	ASSERT_FALSE(publication.Due(1499, 500));
+	ASSERT_TRUE(publication.Due(1500, 500));
+	publication.Sent(10000); // A late tick grants one packet, no catch-up entitlement.
+	ASSERT_FALSE(publication.Due(10000, 500));
+	ASSERT_FALSE(publication.Due(10499, 500));
+	ASSERT_TRUE(publication.Due(10500, 500));
+	ASSERT_FALSE(publication.Due(10500, 60000)); // Opt-out restores legacy delay.
+	publication.Reset();
+	ASSERT_TRUE(publication.Due(10500, 60000));
+}
+
+TEST(OfferFilesPolicy, LiveLimitsRestrictWithoutExpandingNegotiatedBudget)
+{
+	const auto policy = Valid(300, 1000, 200, 500);
+	ASSERT_EQUALS(uint32(200), policy.BatchLimit(0, 0, 0));
+	ASSERT_EQUALS(uint32(3), policy.BatchLimit(297, 1000, 2000));
+	ASSERT_EQUALS(uint32(10), policy.BatchLimit(100, 110, 1000));
+	ASSERT_EQUALS(uint32(0), policy.BatchLimit(100, 99, 1000));
+	ASSERT_EQUALS(uint32(0), policy.BatchLimit(100, 100, 1000));
+	ASSERT_EQUALS(uint32(4), policy.BatchLimit(0, 300, 5));
+	ASSERT_EQUALS(uint32(0), policy.BatchLimit(0, 300, 1));
+}
+
+TEST(OfferFilesPolicy, OptInRequiresValidSupportOnThisConnection)
+{
+	COfferFilesConnectionPolicy state;
+	ASSERT_TRUE(state.GetForPublication(true) == nullptr); // Enabled, support unknown.
+	ASSERT_TRUE(state.BeginAdvertisement());
+	state.Commit(COfferFilesAdvertisement()); // Legacy or incomplete advertisement.
+	ASSERT_TRUE(state.GetForPublication(true) == nullptr);
+	state.Reset();
+	ASSERT_TRUE(state.BeginAdvertisement());
+	state.Commit(Valid());
+	ASSERT_TRUE(state.GetForPublication(false) == nullptr); // Supported, option disabled.
+	ASSERT_TRUE(state.GetForPublication(true) != nullptr);  // Both conditions satisfied.
+	ASSERT_TRUE(state.GetForPublication(false) == nullptr); // Turning off takes effect immediately.
+	state.RejectAdvertisement();
+	ASSERT_TRUE(state.GetForPublication(true) == nullptr); // Broken renegotiation cannot activate.
+	state.Reset();
+	ASSERT_TRUE(state.GetForPublication(true) == nullptr); // Support cannot carry to a new socket.
+}

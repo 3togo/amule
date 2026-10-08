@@ -515,11 +515,16 @@ bool CServerSocket::ProcessPacket(const uint8_t *packet, uint32 size, int8 opcod
 						CFormat("OFFERFILES v1: soft=%u hard=%u advertised batch=%u "
 							"interval=%u ms; "
 							"bounded batch=%u interval=%u ms; acceleration "
-							"disabled") %
+							"%s") %
 							offerFiles.SoftLimit() % offerFiles.HardLimit() %
 							offerFiles.AdvertisedBatchLimit() %
 							offerFiles.AdvertisedIntervalMs() %
-							offerFiles.BatchLimit(0) % offerFiles.IntervalMs());
+							offerFiles.BatchLimit(
+								m_offerFilesPublication.Count()) %
+							offerFiles.IntervalMs() %
+							(thePrefs::GetExperimentalED2KPublication()
+									? "enabled (experimental)"
+									: "disabled"));
 				} else {
 					AddDebugLogLineN(logServer,
 						"OFFERFILES: legacy pacing (absent, invalid, or repeated "
@@ -751,6 +756,7 @@ void CServerSocket::SetConnectionState(sint8 newstate)
 {
 	if (newstate != CS_CONNECTED) {
 		m_offerFilesPolicy.Reset();
+		m_offerFilesPublication.Reset();
 	}
 	connectionstate = newstate;
 	if (newstate < CS_CONNECTING) {

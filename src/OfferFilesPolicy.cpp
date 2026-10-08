@@ -69,12 +69,22 @@ bool COfferFilesAdvertisement::IsValid() const
 	       SoftLimit() > 0 && HardLimit() > m_values[1];
 }
 
-uint32_t COfferFilesAdvertisement::BatchLimit(uint32_t alreadyOffered) const
+uint32_t COfferFilesAdvertisement::BatchLimit(
+	uint32_t alreadyOffered, uint32_t liveSoft, uint32_t liveHard) const
 {
 	if (!IsValid() || alreadyOffered >= SoftLimit()) {
 		return 0;
 	}
-	return std::min({ SoftLimit() - alreadyOffered, m_values[1], HardLimit() - 1, uint32_t(200) });
+	uint32_t limit =
+		std::min({ SoftLimit() - alreadyOffered, m_values[1], HardLimit() - 1, uint32_t(200) });
+	// Live limits can restrict but never expand the negotiated snapshot.
+	if (liveSoft) {
+		limit = std::min(limit, alreadyOffered >= liveSoft ? 0u : liveSoft - alreadyOffered);
+	}
+	if (liveHard) {
+		limit = std::min(limit, liveHard - 1);
+	}
+	return limit;
 }
 
 uint32_t COfferFilesAdvertisement::IntervalMs() const

@@ -1,10 +1,28 @@
 # ED2K extension conventions: OFFERFILES v1 draft
 
-This client draft recognizes and validates the agreed OFFERFILES advertisement.
-**Accelerated publication is not enabled.** Publication continues to use the
-existing legacy batch heuristic (at most 200 records) and one-minute interval.
-The validated policy is a socket-owned diagnostic snapshot, not a persisted
-server property. It is not wired into the publication scheduler yet.
+Accelerated publication is experimental and **disabled by default**. Normal users
+are discouraged from testing it: interoperability and server-load testing are
+incomplete, and accelerated offers may cause server disconnections.
+
+For controlled testing with a compatible server, enable **Advanced → Experimental
+→ Enable experimental ED2K accelerated file publication**. Daemon users can set
+`ExperimentalED2KPublication=1` in the `[eMule]` section of `amule.conf`; the remote
+GUI does not configure this option. Resetting Advanced preferences disables it.
+
+The setting permits acceleration only after a valid v1 advertisement on the
+current connection. Missing, malformed or repeated advertisements retain legacy
+pacing. Disabling the setting restores the existing batch heuristic (at most 200
+records) and one-minute pacing. No server identity or manual rate override enables
+acceleration.
+
+Publication uses the existing approximately one-second monotonic processing loop.
+Intervals shorter than that are limited by the loop, with no catch-up bursts.
+Distinct candidate hashes are counted only after socket queue acceptance,
+including legacy offers before negotiation, and reset on disconnect. Queue
+acceptance does not confirm transmission or indexing. Already offered hashes are
+skipped during accelerated publication; the soft budget is not replenished by
+removing local files. Live nonzero soft/hard limits can further restrict the
+advertised snapshot. Negotiated pacing is never persisted in `server.met`.
 
 The contract was confirmed by the companion server maintainer in
 [ed2k-server #19](https://github.com/andrey23127/ed2k-server/issues/19#issuecomment-5930455238).
@@ -48,22 +66,17 @@ indexing budget, while the hard value is a per-packet boundary. It is not a
 global server capacity. To accommodate historical plain/compressed differences,
 every negotiated batch must be strictly smaller than the hard value.
 
-The policy calculation bounds a future batch by the remaining soft candidate
-budget, advertised batch, hard minus one, and local cap of 200. The future
+The policy calculation bounds a batch by the remaining soft candidate
+budget, advertised batch, hard minus one, and local cap of 200. The
 interval is at least the advertised interval and 500 ms. This gives at most
 400 records/second without a burst entitlement. These are experimental local
 ceilings, not a production load recommendation.
 
-## Remaining before enabling acceleration
-
-Wire the validated snapshot into a monotonic, sub-second scheduler; count
-actual distinct candidate records sent throughout the connection, including
-legacy batches sent before SERVERIDENT. Reset that accounting with the socket.
-Update live soft/hard limits consistently without persisting pacing capability
-state. Add detailed fallback and budget-exhaustion diagnostics.
+## Remaining validation
 
 Run interoperability tests against the companion server implementation,
 including coalesced TCP frames, disconnects, overload backpressure, concurrent
 publishers, and reconnect waves. The companion capability was agreed but not
-implemented at the time of this draft. Acknowledgements and dynamic policy
-updates remain separate extensions.
+implemented at the time of the original draft. This opt-in does not establish
+production readiness. Acknowledgements, automatic retries after indexing
+failures, and dynamic policy renegotiation remain separate extensions.
