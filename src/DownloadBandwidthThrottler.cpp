@@ -14,6 +14,7 @@
 #include "EMSocket.h" // Needed for CEMSocket::WakeIfPaused
 
 #include <climits>
+#include <algorithm>
 
 CDownloadBandwidthThrottler &CDownloadBandwidthThrottler::Get()
 {
@@ -21,13 +22,13 @@ CDownloadBandwidthThrottler &CDownloadBandwidthThrottler::Get()
 	return s_instance;
 }
 
-void CDownloadBandwidthThrottler::RefillBudget(uint32 maxDownloadKBps, uint32 tickPeriodMs)
+void CDownloadBandwidthThrottler::RefillBudget(uint32 maxDownloadKBps, uint32 tickPeriodMs, uint64 memoryHeadroom)
 {
 	if (maxDownloadKBps == 0) {
 		// MaxDownload=0 means literally unlimited. Saturate the bucket so even a Reserve()
 		// that raced past the m_unlimited check still returns the full request.
-		m_unlimited.store(true, std::memory_order_release);
-		m_bytesAvailable.store(INT64_MAX, std::memory_order_release);
+		m_unlimited.store(memoryHeadroom == UINT64_MAX, std::memory_order_release);
+        m_bytesAvailable.store(static_cast<int64_t>(std::min<uint64>(memoryHeadroom, INT64_MAX)), std::memory_order_release);
 		return;
 	}
 
@@ -47,12 +48,13 @@ void CDownloadBandwidthThrottler::RefillBudget(uint32 maxDownloadKBps, uint32 ti
 	if (current < 0) {
 		current = 0;
 	}
-	int64_t newBudget = current + budget;
+	int64_t newBudget = current >= budget ? budget * 2 : current + budget;
 	const int64_t cap = budget * 2;
 	if (newBudget > cap) {
 		newBudget = cap;
 	}
-	m_bytesAvailable.store(newBudget, std::memory_order_release);
+	m_bytesAvailable.store(std::min<int64_t>(newBudget,
+        static_cast<int64_t>(std::min<uint64>(memoryHeadroom, INT64_MAX))), std::memory_order_release);
 }
 
 uint32 CDownloadBandwidthThrottler::Reserve(uint32 wantBytes)

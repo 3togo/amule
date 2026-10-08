@@ -40,7 +40,7 @@ public:
 	// unlimited mode, where Reserve returns the full request. Leftover from the previous tick
 	// is discarded: the cap is strict, not burst-friendly, since an accumulating bucket would
 	// let a quiet period bank capacity and overshoot MaxDownload once data resumes.
-	void RefillBudget(uint32 maxDownloadKBps, uint32 tickPeriodMs);
+	void RefillBudget(uint32 maxDownloadKBps, uint32 tickPeriodMs, uint64 memoryHeadroom = UINT64_MAX);
 
 	// Reserve up to wantBytes from the shared budget, returning how many bytes the caller may
 	// read this round, in [0, wantBytes]. Returning 0 means the bucket is exhausted; the caller

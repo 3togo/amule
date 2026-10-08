@@ -23,7 +23,9 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
-#include "DownloadQueue.h" // Interface declarations
+#include "DownloadQueue.h"
+#include "DownloadBufferPolicy.h"
+#include <wx/utils.h> // Interface declarations
 
 #include <protocol/Protocols.h>
 #include <protocol/kad/Constants.h>
@@ -429,6 +431,12 @@ bool CDownloadQueue::IsFileExisting(const CMD4Hash &fileid, const wxString &requ
 #define NORMALITY_FACTOR 2 // <50%
 // x > NORMALITY_FACTOR -> High availability.
 
+uint64 CDownloadQueue::GetDownloadBufferThreshold(uint64 current) const
+{
+    return DownloadBufferPolicy::FileThreshold(thePrefs::GetFileBufferSize(),
+        m_downloadBufferBudget, m_downloadBufferedBytes, current, m_bufferedFileCount);
+}
+
 void CDownloadQueue::Process()
 {
 	ProcessLocalRequests();
@@ -446,7 +454,37 @@ void CDownloadQueue::Process()
 	// the peers we are downloading from, so a socket parked mid-packet -- the browse or chat
 	// answer this wake exists for -- finds an empty bucket every tick and never finishes
 	// reading.
-	CDownloadBandwidthThrottler::Get().RefillBudget(thePrefs::GetMaxDownload(), CORE_TIMER_PERIOD);
+    static uint64 lastMemoryProbe = 0;
+    static uint64 availableMemory = 0;
+    if (!lastMemoryProbe || curTick - lastMemoryProbe >= 5000) {
+        lastMemoryProbe = curTick;
+        const auto memory = wxGetFreeMemory();
+        availableMemory = memory > 0 ? static_cast<uint64>(memory.GetValue()) : 0;
+    }
+    m_downloadBufferBudget = DownloadBufferPolicy::Budget(thePrefs::GetGlobalDownloadBufferMiB(), availableMemory);
+    m_downloadBufferedBytes = 0;
+    m_bufferedFileCount = 0;
+    CPartFile *largest = nullptr;
+    {
+        wxMutexLocker lock(m_mutex);
+        for (auto *file : m_filelist) {
+            const uint64 buffered = file->GetBufferedBytes();
+            m_downloadBufferedBytes += buffered;
+            if (buffered) ++m_bufferedFileCount;
+            if (file->GetStatus() != PS_INSUFFICIENT && file->GetStatus() != PS_ERROR
+                && buffered && (!largest || buffered > largest->GetBufferedBytes())) largest = file;
+        }
+    }
+    if (m_downloadBufferBudget && m_downloadBufferedBytes >= m_downloadBufferBudget && largest) {
+        const uint64 before = largest->GetBufferedBytes();
+        largest->FlushBuffer();
+        m_downloadBufferedBytes -= before - largest->GetBufferedBytes();
+    }
+    // PB_PENDING bytes remain in GetBufferedBytes until the core harvests the
+    // writer's completion. Exhaustion therefore also backpressures slow disks.
+    const uint64 headroom = m_downloadBufferBudget
+        ? DownloadBufferPolicy::Headroom(m_downloadBufferBudget, m_downloadBufferedBytes) : UINT64_MAX;
+	CDownloadBandwidthThrottler::Get().RefillBudget(thePrefs::GetMaxDownload(), CORE_TIMER_PERIOD, headroom);
 	// Outside the lock on purpose: this re-enters CEMSocket::OnReceive(),
 	// which parses packets and can reach back into the download queue.
 	CDownloadBandwidthThrottler::Get().WakePaused();

@@ -173,6 +173,7 @@ wxString CPreferences::s_VideoPlayer;
 bool CPreferences::s_msgonlyfriends;
 bool CPreferences::s_msgsecure;
 uint8 CPreferences::s_filterlevel;
+uint32 CPreferences::s_globalDownloadBufferMiB;
 uint8 CPreferences::s_iFileBufferSize;
 uint8 CPreferences::s_iQueueSize;
 wxString CPreferences::s_sWebPath;
@@ -1381,6 +1382,7 @@ void CPreferences::BuildItemList(const wxString &appdir)
 			false)));
 
 	/** The following does not have an associated widget or section */
+    s_MiscList.push_back(MkCfg_Int("/eMule/GlobalDownloadBufferMiB", s_globalDownloadBufferMiB, 64));
 	s_MiscList.push_back(new Cfg_Str("/eMule/Language", s_languageID));
 	s_MiscList.push_back(new Cfg_Str("/eMule/YourHostname", s_yourHostname, ""));
 

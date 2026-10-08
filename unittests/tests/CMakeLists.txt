@@ -2160,3 +2160,8 @@ if (ENABLE_UPNP)
 endif()
 target_link_libraries (AICHSearchResultTest muleunit mulecommon wxWidgets::BASE CRYPTOPP::CRYPTOPP)
 add_test (NAME AICHSearchResultTest COMMAND AICHSearchResultTest)
+
+add_executable(DownloadBufferPolicyTest DownloadBufferPolicyTest.cpp ${CMAKE_SOURCE_DIR}/src/DownloadBandwidthThrottler.cpp)
+target_include_directories(DownloadBufferPolicyTest PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include)
+target_link_libraries(DownloadBufferPolicyTest muleunit mulecommon)
+add_test(NAME DownloadBufferPolicyTest COMMAND DownloadBufferPolicyTest)

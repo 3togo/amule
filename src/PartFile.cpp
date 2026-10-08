@@ -1600,7 +1600,7 @@ uint32 CPartFile::Process(uint8 m_icounter)
 	// Flush on buffer-full, time-limit, or pending hash drain. The HasPendingHashWork()
 	// bypass drains Phase 3 at Process()-tick rate (~100 ms) instead of every 60 s when the
 	// file is idle.
-	if ((m_nTotalBufferData > thePrefs::GetFileBufferSize()) ||
+	if ((m_nTotalBufferData >= theApp->downloadqueue->GetDownloadBufferThreshold(m_nTotalBufferData)) ||
 		(dwCurTick > (m_nLastBufferFlushTime + BUFFER_TIME_LIMIT)) || HasPendingHashWork()) {
 		FlushBuffer();
 	}

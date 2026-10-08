@@ -222,6 +222,7 @@ public:
 		uint64 end,
 		Requested_Block_Struct *block,
 		const CUpDownClient *client);
+    uint64 GetBufferedBytes() const { return m_nTotalBufferData; }
 	void FlushBuffer(bool fromAICHRecoveryDataAvailable = false);
 
 	// True when m_aChangedPart has dirty entries and the write thread is idle. CDownloadQueue
