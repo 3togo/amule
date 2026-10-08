@@ -24,6 +24,8 @@
 //
 
 #include "SharedFileList.h" // Interface declarations  // Do_not_auto_remove
+#include "kademlia/utils/KeywordPublishPolicy.h"
+#include <limits>
 #include "SharedDirWatcher.h"
 
 #include <map>
@@ -151,19 +153,18 @@ public:
 		KnownFileArray::iterator it = std::find(m_aFiles.begin(), m_aFiles.end(), pFile);
 		if (it != m_aFiles.end()) {
 			m_aFiles.erase(it);
+			m_lastPublishRound.erase(pFile);
 		}
 		return m_aFiles.size();
 	}
 
-	void RemoveAllReferences() { m_aFiles.clear(); }
-
-	void RotateReferences(unsigned iRotateSize)
+	void RemoveAllReferences()
 	{
-		wxCHECK_RET(m_aFiles.size(), "RotateReferences: Rotating empty array");
-
-		unsigned shift = (iRotateSize % m_aFiles.size());
-		std::rotate(m_aFiles.begin(), m_aFiles.begin() + shift, m_aFiles.end());
+		m_aFiles.clear();
+		m_lastPublishRound.clear();
 	}
+
+	void SelectPublishFiles(KnownFileArray &selected);
 
 protected:
 	wxString m_strKeyword;
@@ -171,6 +172,8 @@ protected:
 	uint32 m_tNextPublishTime;
 	uint32 m_uPublishedCount;
 	KnownFileArray m_aFiles;
+	std::map<const CKnownFile *, uint64_t> m_lastPublishRound;
+	uint64_t m_publishRound = 0;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1476,6 +1479,36 @@ static uint8 GetRealPrio(uint8 in)
 	return 0;
 }
 
+void CPublishKeyword::SelectPublishFiles(KnownFileArray &selected)
+{
+	selected.clear();
+	std::vector<Kademlia::KeywordPublishCandidate> candidates;
+	candidates.reserve(m_aFiles.size());
+	for (size_t i = 0; i < m_aFiles.size(); ++i) {
+		const CKnownFile *file = m_aFiles[i];
+		// Only complete files advertise keyword metadata.
+		if (file->IsPartFile())
+			continue;
+		const auto last = m_lastPublishRound.find(file);
+		candidates.push_back({ i,
+			last == m_lastPublishRound.end() ? 0 : last->second,
+			GetRealPrio(file->GetUpPriority()),
+			file->statistic.GetAllTimeTransferred(),
+			file->GetFileSize() });
+	}
+	Kademlia::SelectKeywordCandidates(candidates);
+	if (m_publishRound == std::numeric_limits<uint64_t>::max()) {
+		m_lastPublishRound.clear();
+		m_publishRound = 0;
+	}
+	++m_publishRound;
+	for (const auto &candidate : candidates) {
+		CKnownFile *file = m_aFiles[candidate.index];
+		selected.push_back(file);
+		m_lastPublishRound[file] = m_publishRound;
+	}
+}
+
 static bool SortFunc(const CKnownFile *fileA, const CKnownFile *fileB)
 {
 	return GetRealPrio(fileA->GetUpPriority()) < GetRealPrio(fileB->GetUpPriority());
@@ -1661,32 +1694,12 @@ void CSharedFileList::Publish()
 							// can show it in the gui.
 							pSearch->SetFileName(pPubKw->GetKeyword());
 
-							// Add all file IDs which relate to the current
-							// keyword to be published
-							const KnownFileArray &aFiles =
-								pPubKw->GetReferences();
-							uint32 count = 0;
-							for (unsigned int f = 0; f < aFiles.size(); ++f) {
-
-								// Only publish complete files: someone else
-								// should have the full file to publish these
-								// keywords. As a side effect this may help
-								// reduce people finding incomplete files on
-								// the network.
-								if (!aFiles[f]->IsPartFile()) {
-									count++;
-									pSearch->AddFileID(Kademlia::CUInt128(
-										aFiles[f]
-											->GetFileHash()
-											.GetHash()));
-									if (count > 150) {
-										// Publish up to 150 files per
-										// keyword publish, then
-										// rotate the list.
-										pPubKw->RotateReferences(f);
-										break;
-									}
-								}
+							KnownFileArray selected;
+							pPubKw->SelectPublishFiles(selected);
+							const uint32 count = selected.size();
+							for (const CKnownFile *file : selected) {
+								pSearch->AddFileID(Kademlia::CUInt128(
+									file->GetFileHash().GetHash()));
 							}
 
 							if (count) {

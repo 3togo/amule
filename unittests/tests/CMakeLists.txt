@@ -1401,6 +1401,11 @@ target_link_libraries (StaticFsTest
 
 # amuleapi shared-file content endpoint: path containment against the
 # share-root list, Range parsing, and the Content-Disposition builder.
+add_executable(KadKeywordPublishTest KadKeywordPublishTest.cpp)
+target_include_directories(KadKeywordPublishTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(KadKeywordPublishTest muleunit mulecommon)
+add_test(NAME KadKeywordPublishTest COMMAND KadKeywordPublishTest)
+
 # SharedContent.cpp is plain std/POSIX (no wx, Beast or EC), same as
 # StaticFs.cpp, so it links standalone here.
 add_executable (SharedContentTest
