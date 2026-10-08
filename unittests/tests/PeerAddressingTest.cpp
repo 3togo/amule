@@ -125,7 +125,19 @@ TEST(PeerAddressing, FilterMatchingRejectsUnknownAndUnspecifiedHosts)
 	ASSERT_FALSE(MatchesFilterPrefix(host, CNetworkAddress::FromString("0.0.0.0"), 0));
 }
 
-TEST(PeerAddressing, TcpAdmissionAllowsNativeIPv6ButUtpRemainsIpv4Only)
+TEST(PeerAddressing, ParanoidHelloSkipsOnlyNativeIPv6)
+{
+	const auto ipv4 = CNetworkAddress::FromString("192.0.2.1");
+	ASSERT_FALSE(ParanoidHelloMismatch(ipv4, false, 0x010200c0u));
+	ASSERT_FALSE(ParanoidHelloMismatch(ipv4, true, 0x010200c0u));
+	ASSERT_TRUE(ParanoidHelloMismatch(ipv4, false, 0x020200c0u));
+	ASSERT_FALSE(ParanoidHelloMismatch(ipv4, true, 0x020200c0u));
+	ASSERT_FALSE(ParanoidHelloMismatch(CNetworkAddress::FromString("2001:db8::1"), false, 0));
+	// An absent address keeps the old fail-closed result: 0 never matches a HighID claim.
+	ASSERT_TRUE(ParanoidHelloMismatch(CNetworkAddress::Absent(), false, 0x010200c0u));
+}
+
+TEST(PeerAddressing, TcpAdmissionAllowsNativeIPv6ButUtpRemainsIPv4Only)
 {
 	ASSERT_TRUE(CanAdmitTcpPeer(CNetworkAddress::FromString("2001:db8::1")));
 	ASSERT_FALSE(CanAdmitUtpPeer(CNetworkAddress::FromString("2001:db8::1")));
