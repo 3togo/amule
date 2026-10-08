@@ -350,8 +350,8 @@ public:
 
 	static const wxString &GetVideoPlayer() { return s_VideoPlayer; }
 
-    static bool GetStructuredDiagnosticsEnabled() { return s_structuredDiagnosticsEnabled; }
-    static uint32 GetStructuredDiagnosticsMaxMiB() { return s_structuredDiagnosticsMaxMiB; }
+	static bool GetStructuredDiagnosticsEnabled() { return s_structuredDiagnosticsEnabled; }
+	static uint32 GetStructuredDiagnosticsMaxMiB() { return s_structuredDiagnosticsMaxMiB; }
 	static uint32 GetFileBufferSize() { return s_iFileBufferSize * 15000; }
 	static void SetFileBufferSize(uint32 val) { s_iFileBufferSize = val / 15000; }
 	static uint32 GetQueueSize() { return s_iQueueSize * 100; }
@@ -1027,8 +1027,8 @@ protected:
 	static bool s_msgonlyfriends;
 	static bool s_msgsecure;
 
-    static bool s_structuredDiagnosticsEnabled;
-    static uint32 s_structuredDiagnosticsMaxMiB;
+	static bool s_structuredDiagnosticsEnabled;
+	static uint32 s_structuredDiagnosticsMaxMiB;
 	static uint8 s_iFileBufferSize;
 	static uint8 s_iQueueSize;
 

@@ -24,3 +24,8 @@ body schema is not a claim of full trace interchangeability.
 
 Validated with the daemon build and StructuredDiagnosticsTest, including disabled
 logging, JSON escaping/parsing, concurrent writes, and bounded rotation.
+
+If the existing active log exceeds a newly selected size limit, initialization
+fails without truncating it. Archive that log before re-enabling diagnostics.
+Configuration or rotation failures disable the sink; I/O error cases are covered
+by the unit test.

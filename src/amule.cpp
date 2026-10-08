@@ -663,18 +663,23 @@ bool CamuleApp::OnInit()
 	const wxLongLong prefsStart = wxGetUTCTimeMillis();
 #endif
 	glob_prefs = new CPreferences();
-    if (thePrefs::GetStructuredDiagnosticsEnabled()) {
+	if (thePrefs::GetStructuredDiagnosticsEnabled()) {
 #ifdef __WINDOWS__
-        const std::filesystem::path path((thePrefs::GetConfigDir() + "diagnostics.jsonl").ToStdWstring());
+		const std::filesystem::path path(
+			(thePrefs::GetConfigDir() + "diagnostics.jsonl").ToStdWstring());
 #else
-        const std::filesystem::path path(std::string((thePrefs::GetConfigDir() + "diagnostics.jsonl").utf8_str()));
+		const std::filesystem::path path(
+			std::string((thePrefs::GetConfigDir() + "diagnostics.jsonl").utf8_str()));
 #endif
-        const uint64 limit = std::max<uint32>(1, std::min<uint32>(64, thePrefs::GetStructuredDiagnosticsMaxMiB())) * 1024ull * 1024ull;
-        if (!CStructuredDiagnostics::Get().Configure(path, limit)) {
-            AddLogLineC(_("Unable to open structured diagnostic log."));
-        }
-        CStructuredDiagnostics::Get().Write("lifecycle", "startup", "info");
-    }
+		const uint64 limit =
+			std::max<uint32>(
+				1, std::min<uint32>(64, thePrefs::GetStructuredDiagnosticsMaxMiB())) *
+			1024ull * 1024ull;
+		if (!CStructuredDiagnostics::Get().Configure(path, limit)) {
+			AddLogLineC(_("Unable to open structured diagnostic log."));
+		}
+		CStructuredDiagnostics::Get().Write("lifecycle", "startup", "info");
+	}
 #ifdef AMULE_SHOW_SPLASH
 	const wxLongLong prefsDoneAt = wxGetUTCTimeMillis();
 #endif
@@ -2180,10 +2185,14 @@ void CamuleApp::OnCoreTimer(CTimerEvent &WXUNUSED(evt))
 	theStats::CalculateRates();
 
 	if (msCur - msPrevHist > 1000) {
-        CStructuredDiagnostics::Get().Write("scheduler", "upload_slots", "info", 0, 0,
-            uploadqueue->GetUploadingList().size());
-        CStructuredDiagnostics::Get().Write("scheduler", "active_downloads", "info", 0, 0,
-            downloadqueue->GetDownloadingFileCount());
+		CStructuredDiagnostics::Get().Write(
+			"scheduler", "upload_slots", "info", 0, 0, uploadqueue->GetUploadingList().size());
+		CStructuredDiagnostics::Get().Write("scheduler",
+			"active_downloads",
+			"info",
+			0,
+			0,
+			downloadqueue->GetDownloadingFileCount());
 		// Unlike the other loop counters in this function this one will sometimes produce
 		// two calls in quick succession, if there was a gap of more than one second between
 		// calls to TimerProc. That is intentional: the history list then keeps an average of
@@ -2805,7 +2814,7 @@ void CamuleApp::OnNotifyEvent(CMuleGUIEvent &evt)
 
 void CamuleApp::ShutDown()
 {
-    CStructuredDiagnostics::Get().Write("lifecycle", "shutdown", "info");
+	CStructuredDiagnostics::Get().Write("lifecycle", "shutdown", "info");
 	// Just in case
 	PlatformSpecific::AllowSleepMode();
 

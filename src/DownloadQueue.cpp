@@ -1297,7 +1297,7 @@ void CDownloadQueue::CheckDiskspace(const CPath &path)
 	if (free == static_cast<uint64>(wxInvalidOffset)) {
 		return;
 	} else if (free < min) {
-        CStructuredDiagnostics::Get().Write("disk", "space_low", "warning", min, free);
+		CStructuredDiagnostics::Get().Write("disk", "space_low", "warning", min, free);
 		CUserEvents::ProcessEvent(CUserEvents::OutOfDiskSpace, "Temporary partition");
 	}
 

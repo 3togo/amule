@@ -306,8 +306,11 @@ void CEMSocket::OnReceive(int nErrorCode)
 					return;
 				}
 
-                CStructuredDiagnostics::Get().Write("ed2k_tcp", "receive", "info",
-                    packet->GetOpCode(), packet->GetPacketSize());
+				CStructuredDiagnostics::Get().Write("ed2k_tcp",
+					"receive",
+					"info",
+					packet->GetOpCode(),
+					packet->GetPacketSize());
 				PacketReceived(packet.get());
 			}
 		} else {

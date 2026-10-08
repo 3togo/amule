@@ -731,7 +731,7 @@ void CClientList::AddBannedClient(const CNetworkAddress &address)
 	// Ban() with no IsBanned() check, so a client banned for aggressiveness and later flagged
 	// as a spammer counted twice while UnBan() gave back one.
 	if (m_bannedList.Ban(address, ::GetTickCount64())) {
-        CStructuredDiagnostics::Get().Write("peer", "ban", "warning");
+		CStructuredDiagnostics::Get().Write("peer", "ban", "warning");
 		theStats::AddBannedClient();
 	}
 }

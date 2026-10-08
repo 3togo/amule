@@ -2238,8 +2238,11 @@ bool CClientTCPSocket::PacketReceived(CPacket *packet)
 	}
 
 	if (!exception.IsEmpty()) {
-        CStructuredDiagnostics::Get().Write("ed2k_tcp", "parse_rejected", "warning",
-            packet->GetOpCode(), packet->GetPacketSize());
+		CStructuredDiagnostics::Get().Write("ed2k_tcp",
+			"parse_rejected",
+			"warning",
+			packet->GetOpCode(),
+			packet->GetPacketSize());
 		AddDebugLogLineN(logPacketErrors,
 			CFormat("Caught %s\nOn packet with protocol %x, opcode %x, size %u\tClientData: "
 				"%s\n") %
