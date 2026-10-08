@@ -98,8 +98,8 @@
 #include <arpa/inet.h>   // htonl
 #include <unistd.h>      // close() for the startup bind probe
 #include <ifaddrs.h>
-#include <cstring>       // strlen() for SO_BINDTODEVICE
-#include <cerrno>        // errno / EPERM
+#include <cstring> // strlen() for SO_BINDTODEVICE
+#include <cerrno>  // errno / EPERM
 #endif
 
 using namespace boost::asio;
@@ -304,28 +304,32 @@ static std::atomic<bool> s_bindFailing{ false };
 
 unsigned int SocketBindInterfaceIndex(const wxString &iface)
 {
-    const unsigned int index = ResolveBindInterfaceIndex(iface);
-    if (!index) return 0;
+	const unsigned int index = ResolveBindInterfaceIndex(iface);
+	if (!index)
+		return 0;
 #ifdef __WINDOWS__
-    for (const auto &candidate : DetectNetworkInterfaces()) {
-        if (candidate.index == index) return index;
-    }
+	for (const auto &candidate : DetectNetworkInterfaces()) {
+		if (candidate.index == index)
+			return index;
+	}
 #else
-    struct ifaddrs *interfaces = nullptr;
-    if (getifaddrs(&interfaces) != 0) return 0;
-    bool available = false;
-    for (auto *entry = interfaces; entry; entry = entry->ifa_next) {
-        if (entry->ifa_addr && (entry->ifa_flags & IFF_UP)
-            && if_nametoindex(entry->ifa_name) == index
-            && (entry->ifa_addr->sa_family == AF_INET || entry->ifa_addr->sa_family == AF_INET6)) {
-            available = true;
-            break;
-        }
-    }
-    freeifaddrs(interfaces);
-    if (available) return index;
+	struct ifaddrs *interfaces = nullptr;
+	if (getifaddrs(&interfaces) != 0)
+		return 0;
+	bool available = false;
+	for (auto *entry = interfaces; entry; entry = entry->ifa_next) {
+		if (entry->ifa_addr && (entry->ifa_flags & IFF_UP) &&
+			if_nametoindex(entry->ifa_name) == index &&
+			(entry->ifa_addr->sa_family == AF_INET || entry->ifa_addr->sa_family == AF_INET6)) {
+			available = true;
+			break;
+		}
+	}
+	freeifaddrs(interfaces);
+	if (available)
+		return index;
 #endif
-    return 0;
+	return 0;
 }
 
 // Per-socket egress bind (reads the interface pushed in by the core). Kept on the debug
@@ -342,16 +346,16 @@ template <typename Handle> static bool SetBoundInterface(Handle native, const wx
 		s_bindFailing = false;
 		AddDebugLogLineF(logAsio, CFormat("Bind-to-interface: bound socket to '%s'") % ifname);
 	} else if (!s_bindFailing.exchange(true)) {
-		AddLogLineC(
-			CFormat(notFound ? _("Network interface '%s' is gone; socket creation blocked.")
-					 : _("Could not bind to network interface '%s'; socket creation blocked.")) %
-			ifname);
+		AddLogLineC(CFormat(notFound ? _("Network interface '%s' is gone; socket creation blocked.")
+					     : _("Could not bind to network interface '%s'; socket creation "
+						 "blocked.")) %
+			    ifname);
 	} else {
 		AddDebugLogLineN(logAsio,
 			CFormat("Bind-to-interface: could not bind socket to '%s' (%s)") % ifname %
 				(notFound ? "no such interface" : "error"));
 	}
-    return err == 0;
+	return err == 0;
 }
 
 // Bind an already-open raw socket (e.g. libcurl's HTTP socket) to the
@@ -539,14 +543,18 @@ public:
 			if (!m_socket->is_open()) {
 				m_socket->open(ip::tcp::v4(), openEc);
 			}
-            if (openEc || !SetBoundInterface(m_socket->native_handle(), s_bindToInterface, false)) {
-                error_code ignored;
-                m_socket->close(ignored);
-                m_ErrorCode = openEc ? openEc.value() : static_cast<int>(boost::asio::error::access_denied);
-                m_closed = true;
-                if (m_notify) HandleConnect(error_code(m_ErrorCode, boost::system::system_category()));
-                return false;
-            }
+			if (openEc ||
+				!SetBoundInterface(m_socket->native_handle(), s_bindToInterface, false)) {
+				error_code ignored;
+				m_socket->close(ignored);
+				m_ErrorCode = openEc ? openEc.value()
+						     : static_cast<int>(boost::asio::error::access_denied);
+				m_closed = true;
+				if (m_notify)
+					HandleConnect(
+						error_code(m_ErrorCode, boost::system::system_category()));
+				return false;
+			}
 		}
 
 		if (wait || m_sync) {
@@ -1515,12 +1523,13 @@ public:
 			// When an explicit per-server interface is set (EC listener), use it verbatim --
 			// empty means "any", NOT a fall-back to the global P2P pin. Otherwise inherit the
 			// global bind-to-interface setting.
-            if (!SetBoundInterface(native_handle(),
-                m_bindInterfaceOverride ? m_bindInterface : s_bindToInterface, false)) {
-                error_code ignored;
-                close(ignored);
-                throw system_error(boost::asio::error::access_denied);
-            }
+			if (!SetBoundInterface(native_handle(),
+				    m_bindInterfaceOverride ? m_bindInterface : s_bindToInterface,
+				    false)) {
+				error_code ignored;
+				close(ignored);
+				throw system_error(boost::asio::error::access_denied);
+			}
 			// A replacement listener must fail if another process already owns the
 			// requested port. On Windows SO_REUSEADDR can otherwise allow both binds.
 #ifdef __WXMSW__
@@ -2027,9 +2036,9 @@ private:
 			SetCloexecOnSocket(m_socket->native_handle());
 			// Pin this UDP socket (ed2k client/server + Kad all funnel
 			// through here) to the configured interface (#173).
-            if (!SetBoundInterface(m_socket->native_handle(), s_bindToInterface, false)) {
-                throw system_error(boost::asio::error::access_denied);
-            }
+			if (!SetBoundInterface(m_socket->native_handle(), s_bindToInterface, false)) {
+				throw system_error(boost::asio::error::access_denied);
+			}
 			m_socket->bind(endpoint);
 			AddDebugLogLineN(logAsio,
 				CFormat("Created UDP socket %s %d") % m_address.IPAddress() %
@@ -2038,7 +2047,7 @@ private:
 		} catch (const system_error &err) {
 			AddLogLineC(CFormat(_("Error creating UDP socket %s %d : %s")) %
 				    m_address.IPAddress() % m_address.Service() % err.code().message());
-            delete m_socket;
+			delete m_socket;
 			m_socket = NULL;
 			m_OK = false;
 		}

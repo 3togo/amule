@@ -675,16 +675,17 @@ bool CamuleApp::OnInit()
 	// route.
 	const wxString &bindInterface = thePrefs::GetNetworkInterface();
 	SetSocketBindInterface(bindInterface);
-    const auto bindStatus = TestSocketBindInterface(bindInterface);
-    if (!bindInterface.IsEmpty() && bindStatus != BindIface_OK) {
-        AddLogLineC(CFormat(_("Cannot bind to configured network interface '%s'; startup blocked.")) % bindInterface);
-        return false;
-    }
-    g_monitoredBindInterface = bindInterface;
-    g_monitoredBindIndex = SocketBindInterfaceIndex(bindInterface);
-    if (!bindInterface.IsEmpty()) {
-        AddLogLineN(CFormat(_("Strict network interface binding enabled: %s")) % bindInterface);
-    }
+	const auto bindStatus = TestSocketBindInterface(bindInterface);
+	if (!bindInterface.IsEmpty() && bindStatus != BindIface_OK) {
+		AddLogLineC(CFormat(_("Cannot bind to configured network interface '%s'; startup blocked.")) %
+			    bindInterface);
+		return false;
+	}
+	g_monitoredBindInterface = bindInterface;
+	g_monitoredBindIndex = SocketBindInterfaceIndex(bindInterface);
+	if (!bindInterface.IsEmpty()) {
+		AddLogLineN(CFormat(_("Strict network interface binding enabled: %s")) % bindInterface);
+	}
 
 	// The temp / incoming directories are validated and created further down, after the
 	// first-run wizard has had a chance to point them somewhere else.
@@ -2085,15 +2086,16 @@ void CamuleApp::OnCoreTimer(CTimerEvent &WXUNUSED(evt))
 		return;
 	}
 
-    static uint64 lastBindCheck = 0;
-    if (!g_monitoredBindInterface.IsEmpty() && msCur - lastBindCheck >= 1000) {
-        lastBindCheck = msCur;
-        if (SocketBindInterfaceIndex(g_monitoredBindInterface) != g_monitoredBindIndex
-            || TestSocketBindInterface(g_monitoredBindInterface) != BindIface_OK) {
-            AddLogLineC(_("Configured network interface was lost; shutting down to protect the binding."));
-            g_shutdownSignal = true;
-        }
-    }
+	static uint64 lastBindCheck = 0;
+	if (!g_monitoredBindInterface.IsEmpty() && msCur - lastBindCheck >= 1000) {
+		lastBindCheck = msCur;
+		if (SocketBindInterfaceIndex(g_monitoredBindInterface) != g_monitoredBindIndex ||
+			TestSocketBindInterface(g_monitoredBindInterface) != BindIface_OK) {
+			AddLogLineC(_("Configured network interface was lost; shutting down to protect the "
+				      "binding."));
+			g_shutdownSignal = true;
+		}
+	}
 
 	// Check if we should terminate the app. OnShutdownSignal only sets the flag; the actual
 	// exit trigger runs from here (normal context) every CORE_TIMER_PERIOD ms.

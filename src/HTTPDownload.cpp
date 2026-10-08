@@ -321,16 +321,16 @@ wxWebRequest CreateAmuleWebRequest(wxEvtHandler *handler, const wxString &url)
 	// The proxy is applied when the session is first handed out, not here:
 	// setting it per request asserts on WinHTTP once a request has been made.
 	wxWebSession &session = GetAmuleWebSession(isCurlBackend);
-    // A backend without a native bind callback cannot honor explicit confinement.
+	// A backend without a native bind callback cannot honor explicit confinement.
 #if defined(AMULE_HAVE_LIBCURL) && defined(AMULE_HTTP_CURL_BIND)
-    const bool canBind = isCurlBackend;
+	const bool canBind = isCurlBackend;
 #else
-    const bool canBind = false;
+	const bool canBind = false;
 #endif
-    if (!thePrefs::GetNetworkInterface().IsEmpty() && !canBind) {
-        AddLogLineC(_("HTTP request blocked: this backend cannot bind to the configured interface."));
-        return wxWebRequest();
-    }
+	if (!thePrefs::GetNetworkInterface().IsEmpty() && !canBind) {
+		AddLogLineC(_("HTTP request blocked: this backend cannot bind to the configured interface."));
+		return wxWebRequest();
+	}
 	wxWebRequest request = session.CreateRequest(handler, url);
 	if (request.IsOk() && isCurlBackend) {
 		CustomizeCurlRequest(request);

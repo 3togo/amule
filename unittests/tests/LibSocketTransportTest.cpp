@@ -212,17 +212,24 @@ TEST(LibSocketTransport, AnUnattachedSocketStillAnswersForItself)
 
 // File_checked_for_headers
 
-TEST(LibSocketTransport, ExplicitMissingInterfaceBlocksSockets) {
-    const wxString missing = "amule-no-such-interface";
-    ASSERT_TRUE(TestSocketBindInterface(missing) == BindIface_NotFound);
-    SetSocketBindInterface(missing);
-    amuleIPV4Address address;
-    address.Hostname("127.0.0.1"); address.Service(9);
-    CLibSocket client;
-    client.Notify(false);
-    ASSERT_FALSE(client.Connect(address, true));
-    ASSERT_FALSE(client.IsConnected());
-    CLibSocketServer server(address, 0);
-    ASSERT_FALSE(server.IsOk());
-    SetSocketBindInterface(wxEmptyString);
+TEST(LibSocketTransport, ExplicitMissingInterfaceBlocksSockets)
+{
+	const wxString missing = "amule-no-such-interface";
+	ASSERT_TRUE(TestSocketBindInterface(missing) == BindIface_NotFound);
+	struct ResetBinding
+	{
+		~ResetBinding() { SetSocketBindInterface(wxEmptyString); }
+	} reset;
+	SetSocketBindInterface(missing);
+	amuleIPV4Address address;
+	address.Hostname("127.0.0.1");
+	address.Service(9);
+	CLibSocket client;
+	client.Notify(false);
+	ASSERT_FALSE(client.Connect(address, true));
+	ASSERT_FALSE(client.IsConnected());
+	CLibSocketServer server(address, 0);
+	ASSERT_FALSE(server.IsOk());
+	CLibUDPSocket datagram(address, 0);
+	ASSERT_FALSE(datagram.IsOk());
 }

@@ -15,5 +15,6 @@ callback (including the Windows WinHTTP backend) blocks HTTP updates when an
 interface is selected. Local EC listeners retain their explicit interface override.
 
 Validation: `amuled` and `LibSocketTransportTest`, including TCP connect/listen
-rejection for a nonexistent interface. Runtime interface removal and Windows/macOS
+and UDP rejection for a nonexistent interface. StrictBindingSmoke verifies
+that the daemon exits before opening listeners when the interface is missing. Runtime interface removal and Windows/macOS
 native binding still require platform integration tests.

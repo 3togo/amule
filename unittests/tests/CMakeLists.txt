@@ -2160,3 +2160,13 @@ if (ENABLE_UPNP)
 endif()
 target_link_libraries (AICHSearchResultTest muleunit mulecommon wxWidgets::BASE CRYPTOPP::CRYPTOPP)
 add_test (NAME AICHSearchResultTest COMMAND AICHSearchResultTest)
+
+if(BUILD_DAEMON)
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND)
+        add_test(NAME StrictBindingSmoke COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_SOURCE_DIR}/unittests/integration/strict_binding_smoke.py
+            --amuled $<TARGET_FILE:amuled>)
+        set_tests_properties(StrictBindingSmoke PROPERTIES TIMEOUT 20)
+    endif()
+endif()
