@@ -42,14 +42,20 @@
 #include "ClientList.h"
 #include "Preferences.h"
 
-CMuleUDPSocket::CMuleUDPSocket(
-	const wxString &name, int id, const amuleIPV4Address &address, const CProxyData *ProxyData)
+CMuleUDPSocket::CMuleUDPSocket(const wxString &name,
+	int id,
+	const amuleIPV4Address &address,
+	const CProxyData *ProxyData,
+	size_t packetLimit,
+	size_t byteLimit)
 : m_busy(false)
 , m_name(name)
 , m_id(id)
 , m_addr(address)
 , m_proxy(ProxyData)
 , m_socket(NULL)
+, m_packetLimit(packetLimit)
+, m_byteLimit(byteLimit)
 {
 }
 
@@ -248,6 +254,7 @@ void CMuleUDPSocket::SendPacket(CPacket *packet,
 	uint32 nReceiverVerifyKey)
 {
 	wxCHECK_RET(packet, "Invalid packet.");
+	std::unique_ptr<CPacket> ownedPacket(packet);
 	/*wxCHECK_RET(port, "Invalid port.");
 	wxCHECK_RET(IP, "Invalid IP.");
 	*/
@@ -261,7 +268,6 @@ void CMuleUDPSocket::SendPacket(CPacket *packet,
 			(m_name + ": Packet discarded, socket not Ok (")
 				<< Uint32_16toStringIP_Port(IP, port) << "): " << packet->GetPacketSize()
 				<< "b");
-		delete packet;
 
 		return;
 	}
@@ -273,7 +279,7 @@ void CMuleUDPSocket::SendPacket(CPacket *packet,
 	UDPPack newpending;
 	newpending.IP = IP;
 	newpending.port = port;
-	newpending.packet = packet;
+	newpending.packet = std::move(ownedPacket);
 	newpending.time = GetTickCount64();
 	newpending.bEncrypt = bEncrypt &&
 			      (pachTargetClientHashORKadID != NULL || (bKad && nReceiverVerifyKey != 0)) &&
@@ -288,7 +294,24 @@ void CMuleUDPSocket::SendPacket(CPacket *packet,
 
 	{
 		wxMutexLocker lock(m_mutex);
-		m_queue.push_back(newpending);
+		// Reclaim stale work before deciding whether this packet fits.
+		const uint64 now = GetTickCount64();
+		while (!m_queue.empty() &&
+			UdpQueuePolicy::Expired(m_queue.front().time, now, UDPMAXQUEUETIME)) {
+			m_queuedBytes -=
+				m_queue.front().packet->GetPacketSize() + UdpQueuePolicy::kPacketOverhead;
+			m_queue.pop_front();
+		}
+		if (!UdpQueuePolicy::CanAccept(m_queue.size(),
+			    m_queuedBytes,
+			    packet->GetPacketSize(),
+			    m_packetLimit,
+			    m_byteLimit)) {
+			AddDebugLogLineN(logMuleUDP, m_name + ": Outgoing UDP queue limit reached");
+			return;
+		}
+		m_queue.push_back(std::move(newpending));
+		m_queuedBytes += packet->GetPacketSize() + UdpQueuePolicy::kPacketOverhead;
 	}
 
 	theApp->uploadBandwidthThrottler->QueueForSendingControlPacket(this);
@@ -306,9 +329,9 @@ SocketSentBytes CMuleUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend, u
 	wxMutexLocker lock(m_mutex);
 	uint32 sentBytes = 0;
 	while (!m_queue.empty() && !m_busy && (sentBytes < maxNumberOfBytesToSend)) {
-		UDPPack item = m_queue.front();
-		CPacket *packet = item.packet;
-		if (GetTickCount64() - item.time < UDPMAXQUEUETIME) {
+		const UDPPack &item = m_queue.front();
+		CPacket *packet = item.packet.get();
+		if (!UdpQueuePolicy::Expired(item.time, GetTickCount64(), UDPMAXQUEUETIME)) {
 			uint32_t len = packet->GetPacketSize() + 2;
 			uint8_t *sendbuffer = new uint8_t[len];
 			memcpy(sendbuffer, packet->GetUDPHeader(), 2);
@@ -325,8 +348,8 @@ SocketSentBytes CMuleUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend, u
 
 			if (SendTo(sendbuffer, len, item.IP, item.port)) {
 				sentBytes += len;
+				m_queuedBytes -= packet->GetPacketSize() + UdpQueuePolicy::kPacketOverhead;
 				m_queue.pop_front();
-				delete packet;
 				delete[] sendbuffer;
 			} else {
 				// TODO: Needs better error handling, see SentTo
@@ -334,8 +357,8 @@ SocketSentBytes CMuleUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend, u
 				break;
 			}
 		} else {
+			m_queuedBytes -= packet->GetPacketSize() + UdpQueuePolicy::kPacketOverhead;
 			m_queue.pop_front();
-			delete packet;
 		}
 	}
 	if (!m_busy && !m_queue.empty()) {

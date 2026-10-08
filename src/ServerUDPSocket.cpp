@@ -51,7 +51,12 @@
 // (TCP+3) UDP socket
 
 CServerUDPSocket::CServerUDPSocket(amuleIPV4Address &address, const CProxyData *ProxyData)
-: CMuleUDPSocket("Server UDP-Socket", ID_SERVERUDPSOCKET_EVENT, address, ProxyData)
+: CMuleUDPSocket("Server UDP-Socket",
+	  ID_SERVERUDPSOCKET_EVENT,
+	  address,
+	  ProxyData,
+	  UdpQueuePolicy::kServerPackets,
+	  UdpQueuePolicy::kServerBytes)
 {
 	Open();
 }

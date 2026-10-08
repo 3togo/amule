@@ -139,6 +139,11 @@ target_include_directories (NatRendezvousProtocolTest PRIVATE
 )
 target_link_libraries (NatRendezvousProtocolTest muleunit ${Boost_LIBRARIES})
 
+add_executable(UdpQueuePolicyTest UdpQueuePolicyTest.cpp)
+target_include_directories(UdpQueuePolicyTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(UdpQueuePolicyTest muleunit mulecommon)
+add_test(NAME UdpQueuePolicyTest COMMAND UdpQueuePolicyTest)
+
 # The buffering between libutp and the eD2k stack: the would-block contract
 # CEMSocket depends on, and the close that must happen exactly once. Header-only
 # and free of libutp, so it is compiled and run in every build rather than only

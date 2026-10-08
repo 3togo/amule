@@ -31,6 +31,9 @@
 #include "NetworkAddress.h"   // Needed for typed packet source addresses
 #include "Logger.h"           // Needed for DebugType
 
+#include "UdpQueuePolicy.h"
+#include <memory>
+
 #include <wx/thread.h> // Needed for wxMutex
 
 class CEncryptedDatagramSocket;
@@ -62,7 +65,9 @@ public:
 	CMuleUDPSocket(const wxString &name,
 		int id,
 		const amuleIPV4Address &address,
-		const CProxyData *ProxyData = NULL);
+		const CProxyData *ProxyData = NULL,
+		size_t packetLimit = UdpQueuePolicy::kClientPackets,
+		size_t byteLimit = UdpQueuePolicy::kClientBytes);
 
 	/**
 	 * Safely closes the socket if opened.
@@ -180,7 +185,7 @@ private:
 	struct UDPPack
 	{
 		//! The packet, which at this point is owned by CMuleUDPSocket.
-		CPacket *packet;
+		std::unique_ptr<CPacket> packet;
 		//! The timestamp of when the packet was queued.
 		uint64 time;
 		//! Target IP address.
@@ -199,6 +204,9 @@ private:
 
 	//! The queue of packets waiting to be sent.
 	std::list<UDPPack> m_queue;
+	size_t m_queuedBytes = 0;
+	const size_t m_packetLimit;
+	const size_t m_byteLimit;
 };
 
 #endif // CLIENTUDPSOCKET_H
