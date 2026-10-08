@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 11:45+0900\n"
 "PO-Revision-Date: 2026-10-07 16:27+0000\n"
 "Last-Translator: Dovydas Sankauskas <laisve@gmail.com>\n"
 "Language-Team: Lithuanian <komp_lt@konf.lt>\n"
@@ -361,6 +361,10 @@ msgstr "aMule išjungimas baigtas."
 #: src/amule.cpp
 msgid "Memory debug results for aMule exit:"
 msgstr "Atminties derinimo rezultatai išjungiant aMule:"
+
+#: src/amule.cpp
+msgid "Unable to open structured diagnostic log."
+msgstr ""
 
 #: src/amule.cpp
 #, c-format

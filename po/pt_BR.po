@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 11:45+0900\n"
 "PO-Revision-Date: 2026-10-07 16:28+0000\n"
 "Last-Translator: Marcelo Jimenez <mroberto@users.sourceforge.com>\n"
 "Language-Team: Português (Brasileiro) <pt@li.org>\n"
@@ -389,6 +389,10 @@ msgstr "Encerramento do aMule completo."
 #: src/amule.cpp
 msgid "Memory debug results for aMule exit:"
 msgstr "Resultados da depuração da memória para a saída do aMule:"
+
+#: src/amule.cpp
+msgid "Unable to open structured diagnostic log."
+msgstr ""
 
 #: src/amule.cpp
 #, c-format

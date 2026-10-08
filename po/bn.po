@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule GIT\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 11:45+0900\n"
 "PO-Revision-Date: 2026-10-07 16:31+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
@@ -356,6 +356,10 @@ msgstr "aMule শাটডাউন সম্পন্ন হয়েছে।"
 #: src/amule.cpp
 msgid "Memory debug results for aMule exit:"
 msgstr "aMule প্রস্থানের জন্য মেমরি ডিবাগ ফলাফল:"
+
+#: src/amule.cpp
+msgid "Unable to open structured diagnostic log."
+msgstr ""
 
 #: src/amule.cpp
 #, c-format
