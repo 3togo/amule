@@ -124,6 +124,10 @@ void CUploadQueue::SortGetBestClient(CClientRef *bestClient)
 		CClientRefList::iterator it2 = it++;
 		CUpDownClient *cur_client = it2->GetClient();
 		cur_client->SetUploadQueueWaitingPosition(rank++);
+		if (cur_client->m_uploadRetryAfter > GetTickCount64()) {
+			cur_client->m_bAddNextConnect = false;
+			continue;
+		}
 		if (bestClientFound) {
 			// There's a better high id client
 			cur_client->m_bAddNextConnect = false;
@@ -184,7 +188,8 @@ void CUploadQueue::AddUpNextClient(CUpDownClient *directadd)
 	} else {
 		// Check if requested file is suspended or not shared (maybe deleted recently)
 
-		if (IsSuspended(directadd->GetUploadFileID()) ||
+		if (directadd->m_uploadRetryAfter > GetTickCount64() ||
+			IsSuspended(directadd->GetUploadFileID()) ||
 			!theApp->sharedfiles->GetFileByID(directadd->GetUploadFileID())) {
 			return;
 		} else {
@@ -232,6 +237,9 @@ void CUploadQueue::AddUpNextClient(CUpDownClient *directadd)
 
 void CUploadQueue::Process()
 {
+	m_uploadUtilization.Update(GetTickCount64(),
+		static_cast<uint64>(thePrefs::GetMaxUpload()) * 1024,
+		theStats::GetUploadRate());
 	// Check if someone's waiting, if there is a slot for him,
 	// or if we should try to free a slot for him
 	uint64 tick = GetTickCount64();
@@ -257,6 +265,19 @@ void CUploadQueue::Process()
 		m_allowKicking = true;
 	}
 
+	bool replacement = false;
+	if (m_uploadUtilization.Sustained(tick))
+		for (const auto &ref : m_waitinglist) {
+			CUpDownClient *c = ref.GetClient();
+			if (c->m_uploadRetryAfter <= tick && c->GetUploadState() != US_BANNED &&
+				!IsSuspended(c->GetUploadFileID()) &&
+				theApp->sharedfiles->GetFileByID(c->GetUploadFileID()) &&
+				(!c->HasLowID() || c->IsConnected())) {
+				replacement = true;
+				break;
+			}
+		}
+	bool recovered = false;
 	// The loop that feeds the upload slots with data.
 	CClientRefList::iterator it = m_uploadinglist.begin();
 	while (it != m_uploadinglist.end()) {
@@ -274,7 +295,25 @@ void CUploadQueue::Process()
 			// Disk I/O thread signaled an error for this client
 			RemoveFromUploadQueue(cur_client);
 		} else {
+			CClientRef guard = CCLIENTREF(cur_client, "upload stall recovery");
 			cur_client->SendBlockData();
+			if (cur_client->IsDownloading()) {
+				const CKnownFile *file = cur_client->GetUploadFile();
+				const bool eligible = replacement && !recovered && m_allowKicking &&
+						      tick - m_nLastStartUpload >= 1000 &&
+						      !theApp->listensocket->TooManySockets() &&
+						      m_uploadUtilization.Sustained(tick) &&
+						      !cur_client->GetFriendSlot() && file &&
+						      file->GetUpPriority() != PR_POWERSHARE;
+				if (m_stallProgress[cur_client].Recycle(
+					    tick, cur_client->GetUploadBacklog(), eligible)) {
+					cur_client->m_uploadRetryAfter = tick + 60000;
+					RemoveFromUploadQueue(cur_client);
+					cur_client->SendOutOfPartReqsAndAddToWaitingQueue();
+					recovered = true;
+					m_allowKicking = false;
+				}
+			}
 		}
 	}
 
@@ -535,8 +574,9 @@ void CUploadQueue::AddClientToQueue(CUpDownClient *client)
 	uint64 tick = GetTickCount64();
 	client->ClearWaitStartTime();
 	// if possible start upload right away
-	if (m_waitinglist.empty() && tick - m_nLastStartUpload >= 1000 &&
-		m_uploadinglist.size() < GetMaxSlots() && !theApp->listensocket->TooManySockets()) {
+	if (client->m_uploadRetryAfter <= tick && m_waitinglist.empty() &&
+		tick - m_nLastStartUpload >= 1000 && m_uploadinglist.size() < GetMaxSlots() &&
+		!theApp->listensocket->TooManySockets()) {
 		AddUpNextClient(client);
 		m_nLastStartUpload = tick;
 	} else {
@@ -567,6 +607,7 @@ bool CUploadQueue::RemoveFromUploadQueue(CUpDownClient *client)
 	}
 
 	if (found) {
+		m_stallProgress.erase(client);
 		m_allUploadingKnownFile->RemoveUploadingClient(client);
 		theStats::RemoveUploadingClient();
 		if (client->GetTransferredUp()) {

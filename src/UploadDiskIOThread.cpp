@@ -24,6 +24,7 @@
 //
 
 #include "UploadDiskIOThread.h"
+#include <memory>
 
 #include "updownclient.h"    // Needed for CUpDownClient
 #include "UploadQueue.h"     // Needed for CUploadQueue
@@ -98,6 +99,12 @@ void CUploadDiskIOThread::SocketNeedsMoreData()
 	wxMutexLocker lock(m_mutex);
 	m_bSocketNeedsPending = true;
 	m_condition.Signal();
+}
+
+ReadRequest_Struct::~ReadRequest_Struct()
+{
+	if (counted)
+		pendingReads->fetch_sub(1, std::memory_order_relaxed);
 }
 
 // eMule ref: CUploadDiskIOThread::RunInternal()
@@ -256,7 +263,10 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(CUpDownClient *client)
 
 			// CFileArea::ReadAt() in place of eMule's ReadFile(OVERLAPPED). The read is
 			// synchronous on this thread, so it goes straight to m_listFinishedIO.
-			ReadRequest_Struct *req = new ReadRequest_Struct;
+			std::unique_ptr<ReadRequest_Struct> req(new ReadRequest_Struct);
+			req->pendingReads = client->m_pendingUploadReads;
+			req->pendingReads->fetch_add(1, std::memory_order_relaxed);
+			req->counted = true;
 			req->pFileStruct = pFileStruct;
 			req->pClient = client;
 			req->uStartOffset = currentblock->StartOffset;
@@ -266,7 +276,6 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(CUpDownClient *client)
 			if (srcPartFile) {
 				if (!srcPartFile->IsComplete(
 					    currentblock->StartOffset, currentblock->EndOffset - 1)) {
-					delete req;
 					throw wxString(CFormat("Asked for incomplete block (%d - %d)") %
 						       currentblock->StartOffset %
 						       (currentblock->EndOffset - 1));
@@ -276,7 +285,6 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(CUpDownClient *client)
 					    currentblock->StartOffset,
 					    (uint32)togo,
 					    &handleClosed)) {
-					delete req;
 					// A closed handle means PerformFileComplete got there
 					// first: the download finished and the file is on its way
 					// to Incoming. That is not this client's fault, and
@@ -304,19 +312,18 @@ void CUploadDiskIOThread::StartCreateNextBlockPackage(CUpDownClient *client)
 							      "of shared files.")) %
 						    srcfile->GetFileName());
 					theApp->sharedfiles->RemoveFile(srcfile);
-					delete req;
 					throw wxString("Failed to open requested file");
 				}
 				req->area.ReadAt(file, currentblock->StartOffset, (uint32)togo);
 			}
 			req->area.CheckError();
 
-			pFileStruct->nInUse++;
-
 			// Mirrors eMule's SetUploadFileID call in the main thread path.
 			client->SetUploadFileID(srcfile);
 
-			m_listFinishedIO.push_back(req);
+			m_listFinishedIO.push_back(req.get());
+			pFileStruct->nInUse++;
+			req.release();
 
 			addedPayloadQueueSession += togo;
 			client->m_addedPayloadQueueSession += togo;
@@ -391,9 +398,10 @@ void CUploadDiskIOThread::ReadCompletionRoutine(ReadRequest_Struct *req)
 							MAX_FINISHED_REQUESTS_COMPRESSION &&
 						theStats::GetUploadRate() > SLOT_COMPRESSIONCHECK_DATARATE) {
 						client->m_bDisableCompression = true;
-					} else if (client->GetUploadDatarate() >
+					} else if (client->GetUploadBacklog(true).rate >
 							   SLOT_COMPRESSIONCHECK_DATARATE &&
-						   pSocket != NULL && !pSocket->HasQueues(true) &&
+						   pSocket != NULL &&
+						   !pSocket->GetFileQueueSnapshot().hasData &&
 						   !pSocket->IsBusyQuickCheck()) {
 						client->m_bDisableCompression = true;
 					} else {
@@ -404,7 +412,7 @@ void CUploadDiskIOThread::ReadCompletionRoutine(ReadRequest_Struct *req)
 				// Build packets into a local list, then send them out. The file ID was
 				// set in StartCreateNextBlockPackage when srcfile was resolved.
 				CPacketList packetList;
-				uint32 data_rate = client->GetUploadDatarate();
+				uint32 data_rate = client->GetUploadBacklog(true).rate;
 				if (bUseCompression) {
 					CreatePackedPackets(req->area.GetBuffer(),
 						req->uStartOffset,

@@ -41,6 +41,9 @@
 #include "ClientRef.h"        // Needed for debug defines
 #include "PeerCapabilities.h" // Needed for CPeerCapabilities
 
+#include "UploadBacklog.h"
+#include <atomic>
+#include <memory>
 #include <map>
 #include <wx/thread.h> // Needed for wxMutex
 
@@ -354,6 +357,7 @@ public:
 	uint64 GetTransferredUp() const { return m_nTransferredUp; }
 	uint64 GetSessionUp() const { return m_nTransferredUp - m_nCurSessionUp; }
 	void ResetSessionUp();
+	UploadBacklog GetUploadBacklog(bool waitForDisk = false);
 	uint32 GetUploadDatarate() const { return m_nUpDatarate; }
 
 	uint64 GetUpStartTimeDelay() const { return ::GetTickCount64() - m_dwUploadTime; }
@@ -859,6 +863,12 @@ private:
 				 // m_addedPayloadQueueSession
 	bool m_bDisableCompression = false;
 	bool m_bIOError = false;
+	// Read requests retain only this counter, never a client reference: client
+	// reference counting and deletion belong to the main thread.
+	std::shared_ptr<std::atomic<uint32_t>> m_pendingUploadReads =
+		std::make_shared<std::atomic<uint32_t>>(0);
+	uint64 m_uploadRetryAfter = 0;
+	friend struct ReadRequest_Struct;
 
 	friend class CUploadDiskIOThread; // disk I/O thread needs direct access to block queues and session
 					  // counters
