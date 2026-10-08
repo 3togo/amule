@@ -858,6 +858,12 @@ target_link_libraries (SafeKadTest
 	mulecommon
 )
 
+
+add_executable (UploadReadAheadPolicyTest UploadReadAheadPolicyTest.cpp)
+target_include_directories (UploadReadAheadPolicyTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (UploadReadAheadPolicyTest muleunit mulecommon)
+add_test (NAME UploadReadAheadPolicyTest COMMAND UploadReadAheadPolicyTest)
+
 add_executable (FileDataIOTest
 	FileDataIOTest.cpp
 	${CMAKE_SOURCE_DIR}/src/SafeFile.cpp

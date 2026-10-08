@@ -81,6 +81,12 @@ public:
 	uint64 GetSentBytesPartFileSinceLastCallAndReset();
 	uint64 GetSentBytesControlPacketSinceLastCallAndReset();
 	uint64 GetSentPayloadSinceLastCallAndReset();
+	struct FileQueueSnapshot
+	{
+		uint64 sentPayload;
+		bool hasData;
+	};
+	FileQueueSnapshot GetFileQueueSnapshot();
 	uint64 PeekSentPayload(); // Non-resetting peek -- for disk I/O thread buffer check
 	void TruncateQueues();
 

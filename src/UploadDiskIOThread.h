@@ -32,6 +32,7 @@
 
 #include <wx/thread.h>
 
+#include <memory>
 #include "Types.h"
 #include "FileArea.h" // Needed for CFileArea
 
@@ -55,6 +56,9 @@ struct Requested_Block_Struct;
 // OVERLAPPED removed -- reads are synchronous on this thread via CFileArea.
 struct ReadRequest_Struct
 {
+	~ReadRequest_Struct();
+	std::shared_ptr<std::atomic<uint32_t>> pendingReads;
+	bool counted = false;
 	OpenFile_Struct *pFileStruct;
 	CUpDownClient *pClient;
 	uint64 uStartOffset;
@@ -108,6 +112,9 @@ private:
 	void ReadCompletionRoutine(ReadRequest_Struct *req);     // eMule ref: line 369
 	bool ReleaseOpenFile(OpenFile_Struct *pFileStruct);      // eMule ref: line 498
 
+	uint64 m_readAheadQueuedBytes = 0;
+	uint64 m_readAheadSlots = 0;
+	uint64 m_readAheadFirst = 0;
 	std::atomic<bool> m_bRun{ false }; // eMule ref: m_bRun (line 77)
 	bool m_bSignalThrottler;           // eMule ref: m_bSignalThrottler (line 78)
 

@@ -45,6 +45,7 @@
 #include "ScopedPtr.h"          // Needed for CScopedArray
 #include "GuiEvents.h"          // Needed for Notify_*
 #include "FileArea.h"           // Needed for CFileArea
+#include "UploadSnapshotLock.h"
 #include "UploadDiskIOThread.h" // Needed for CUploadDiskIOThread
 
 //	members of CUpDownClient
@@ -61,6 +62,7 @@ void CUpDownClient::SetUploadState(uint8 eNewState)
 			m_uploadingfile->MarkECChanged();
 		}
 		if (m_nUploadState == US_UPLOADING) {
+			wxMutexLocker blockLock(m_blockListLock);
 			m_nUpDatarate = 0;
 			m_nSumForAvgUpDataRate = 0;
 			m_AvarageUDR_list.clear();
@@ -425,6 +427,7 @@ void CUpDownClient::ClearWaitStartTime()
 
 void CUpDownClient::ResetSessionUp()
 {
+	wxMutexLocker blockLock(m_blockListLock);
 	m_nCurSessionUp = m_nTransferredUp;
 	m_addedPayloadQueueSession = 0;
 	m_nCurQueueSessionPayloadUp = 0;
@@ -456,8 +459,13 @@ uint32 CUpDownClient::SendBlockData()
 			GetUserAddress(),
 			theApp->CryptoAvailable());
 
-		sentBytesPayload = s->GetSentPayloadSinceLastCallAndReset();
-		m_nCurQueueSessionPayloadUp += sentBytesPayload;
+		{
+			UploadSnapshotLock blockLock(m_blockListLock);
+			if (blockLock) {
+				sentBytesPayload = s->GetSentPayloadSinceLastCallAndReset();
+				m_nCurQueueSessionPayloadUp += sentBytesPayload;
+			}
+		}
 
 		// Wake the disk I/O thread so it re-checks its buffer condition against the freshly
 		// updated m_nCurQueueSessionPayloadUp, rather than waiting out its 100 ms timeout
@@ -487,13 +495,19 @@ uint32 CUpDownClient::SendBlockData()
 		m_AvarageUDR_list.pop_front();
 	}
 
-	if ((!m_AvarageUDR_list.empty()) && (curTick - m_AvarageUDR_list.front().timestamp) > 0 &&
-		GetUpStartTimeDelay() > 2 * 1000) {
-		m_nUpDatarate = ((uint64)m_nSumForAvgUpDataRate * 1000) /
-				(curTick - m_AvarageUDR_list.front().timestamp);
-	} else {
-		// not enough values to calculate trustworthy speed. Use -1 to tell this
-		m_nUpDatarate = 0; //-1;
+	{
+		UploadSnapshotLock blockLock(m_blockListLock);
+		if (blockLock) {
+			if ((!m_AvarageUDR_list.empty()) &&
+				(curTick - m_AvarageUDR_list.front().timestamp) > 0 &&
+				GetUpStartTimeDelay() > 2 * 1000) {
+				m_nUpDatarate = ((uint64)m_nSumForAvgUpDataRate * 1000) /
+						(curTick - m_AvarageUDR_list.front().timestamp);
+			} else {
+				// not enough values to calculate trustworthy speed. Use -1 to tell this
+				m_nUpDatarate = 0; //-1;
+			}
+		}
 	}
 
 	m_cSendblock++;
@@ -787,4 +801,26 @@ void CUpDownClient::ProcessRequestPartsPacket(const uint8_t *pachPacket, uint32 
 	}
 }
 
+UploadBacklog CUpDownClient::GetUploadBacklog(bool waitForDisk)
+{
+	// Callers hold the upload-list lock or run on the main thread, so the client
+	// and socket cannot disappear. Lock order matches the disk worker.
+	UploadSnapshotLock blockLock(m_blockListLock, waitForDisk);
+	if (!blockLock) {
+		UploadBacklog busy;
+		busy.snapshotBusy = true;
+		busy.pendingReads = m_pendingUploadReads->load(std::memory_order_relaxed);
+		return busy;
+	}
+	CEMSocket::FileQueueSnapshot socket = { 0, false };
+	if (m_socket)
+		socket = m_socket->GetFileQueueSnapshot();
+	UploadBacklog result = BuildUploadBacklog(
+		m_addedPayloadQueueSession, m_nCurQueueSessionPayloadUp, socket.sentPayload);
+	result.requestedBlocks = m_BlockRequests_queue.size();
+	result.pendingReads = m_pendingUploadReads->load(std::memory_order_relaxed);
+	result.rate = m_nUpDatarate;
+	result.socketHasData = socket.hasData;
+	return result;
+}
 // File_checked_for_headers

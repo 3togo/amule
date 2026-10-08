@@ -417,6 +417,13 @@ uint64 CEMSocket::PeekSentPayload()
 	return m_actualPayloadSizeSent;
 }
 
+CEMSocket::FileQueueSnapshot CEMSocket::GetFileQueueSnapshot()
+{
+	std::lock_guard<std::mutex> lock(m_sendLocker);
+	return { m_actualPayloadSizeSent,
+		(sendbuffer != NULL && !m_currentPacket_is_controlpacket) || !m_standard_queue.empty() };
+}
+
 bool CEMSocket::HasQueues(bool bOnlyStandardPackets) const
 {
 	return sendbuffer != NULL || !m_standard_queue.empty() ||
