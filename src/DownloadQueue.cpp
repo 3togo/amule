@@ -24,6 +24,7 @@
 //
 
 #include "DownloadQueue.h" // Interface declarations
+#include "SourceSearchPolicy.h"
 
 #include <protocol/Protocols.h>
 #include <protocol/kad/Constants.h>
@@ -461,6 +462,7 @@ void CDownloadQueue::Process()
 
 		std::list<int> m_sourcecountlist;
 
+		SelectNextKadSourceSearch(curTick);
 		bool mustPreventSleep = false;
 
 		for (FileQueue::size_type i = 0; i < m_filelist.size(); i++) {
@@ -1079,8 +1081,9 @@ void CDownloadQueue::ProcessLocalRequests()
 		const int iMaxFilesPerTcpFrame = 15;
 		int iFiles = 0;
 		while (!m_localServerReqQueue.empty() && iFiles < iMaxFilesPerTcpFrame) {
-			// find the file with the longest waitingtime
-			uint64 dwBestWaitTime = 0xFFFFFFFFFFFFFFFF;
+			// Prefer usable-source scarcity, with an aging escape for waiting files.
+			const uint64 now = ::GetTickCount64();
+			SourceSearchPolicy::Candidate best = {};
 
 			std::list<CPartFile *>::iterator posNextRequest = m_localServerReqQueue.end();
 			std::list<CPartFile *>::iterator it = m_localServerReqQueue.begin();
@@ -1093,10 +1096,16 @@ void CDownloadQueue::ProcessLocalRequests()
 						nPriority = PR_HIGH;
 					}
 
-					if (cur_file->GetLastSearchTime() + (PR_HIGH - nPriority) <
-						dwBestWaitTime) {
-						dwBestWaitTime =
-							cur_file->GetLastSearchTime() + (PR_HIGH - nPriority);
+					const uint64 lastSearch = cur_file->GetLastSearchTime();
+					const SourceSearchPolicy::Candidate candidate = {
+						cur_file->GetValidSourcesCount(),
+						cur_file->GetSourceCount(),
+						lastSearch ? lastSearch + SERVERREASKTIME : 0,
+						nPriority
+					};
+					if (posNextRequest == m_localServerReqQueue.end() ||
+						SourceSearchPolicy::Better(candidate, best, now)) {
+						best = candidate;
 						posNextRequest = it;
 					}
 
@@ -1737,5 +1746,34 @@ CPartFile *CDownloadQueue::GetFileByKadFileSearchID(uint32 id) const
 bool CDownloadQueue::DoKademliaFileRequest()
 {
 	return ((::GetTickCount64() - lastkademliafilerequest) > KADEMLIAASKTIME);
+}
+
+void CDownloadQueue::SelectNextKadSourceSearch(uint64 now)
+{
+	// Called once per processing tick under m_mutex, rather than scanning the
+	// queue once per file. The chosen pointer is used only for identity checks.
+	m_nextKadSourceSearch = nullptr;
+	if (!DoKademliaFileRequest() || !Kademlia::CKademlia::IsConnected() || !theApp->IsConnected() ||
+		Kademlia::CKademlia::GetTotalFile() >= thePrefs::GetKadMaxSourceSearches()) {
+		return;
+	}
+	const CPartFile *bestFile = nullptr;
+	SourceSearchPolicy::Candidate best = {};
+	for (const CPartFile *file : m_filelist) {
+		if ((file->GetStatus() != PS_READY && file->GetStatus() != PS_EMPTY) || file->IsStopped() ||
+			file->GetKadFileSearchID() ||
+			file->GetSourceCount() >= file->GetMaxSourcePerFileUDP() ||
+			now <= file->GetNextKadSourceSearchTime())
+			continue;
+		const SourceSearchPolicy::Candidate current = { file->GetValidSourcesCount(),
+			file->GetSourceCount(),
+			file->GetNextKadSourceSearchTime(),
+			file->GetDownPriority() };
+		if (!bestFile || SourceSearchPolicy::Better(current, best, now)) {
+			best = current;
+			bestFile = file;
+		}
+	}
+	m_nextKadSourceSearch = bestFile;
 }
 // File_checked_for_headers

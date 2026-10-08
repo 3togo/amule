@@ -215,6 +215,10 @@ public:
 	CPartFile *GetFileByKadFileSearchID(uint32 id) const;
 
 	bool DoKademliaFileRequest();
+	bool IsBestKademliaFileRequestCandidate(const CPartFile *candidate) const
+	{
+		return candidate == m_nextKadSourceSearch;
+	}
 
 	void SetLastKademliaFileRequest() { lastkademliafilerequest = ::GetTickCount64(); }
 
@@ -282,6 +286,8 @@ private:
 
 	typedef std::deque<CPartFile *> FileQueue;
 	FileQueue m_filelist;
+	const CPartFile *m_nextKadSourceSearch = nullptr;
+	void SelectNextKadSourceSearch(uint64 now);
 	// See GetListGeneration(). Bumped under m_mutex wherever m_filelist OR m_completedDownloads
 	// gains or loses an entry -- CopyFileList draws from both when includeCompleted is set,
 	// which is how the EC reconcile calls it.

@@ -1762,7 +1762,8 @@ uint32 CPartFile::Process(uint8 m_icounter)
 			if (theApp->downloadqueue->DoKademliaFileRequest() &&
 				(Kademlia::CKademlia::GetTotalFile() < thePrefs::GetKadMaxSourceSearches()) &&
 				(dwCurTick > m_LastSearchTimeKad) && Kademlia::CKademlia::IsConnected() &&
-				theApp->IsConnected() && !IsStopped()) {
+				theApp->IsConnected() && !IsStopped() &&
+				theApp->downloadqueue->IsBestKademliaFileRequestCandidate(this)) {
 				// Kademlia
 				theApp->downloadqueue->SetLastKademliaFileRequest();
 

@@ -67,6 +67,11 @@ target_include_directories (ClientMetaTrailerTest PRIVATE
 )
 target_link_libraries (ClientMetaTrailerTest muleunit mulecommon)
 
+add_executable(SourceSearchPolicyTest SourceSearchPolicyTest.cpp)
+target_include_directories(SourceSearchPolicyTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(SourceSearchPolicyTest muleunit mulecommon)
+add_test(NAME SourceSearchPolicyTest COMMAND SourceSearchPolicyTest)
+
 # Tracked endpoint history is independent of live clients and the application clock.
 add_executable (TrackedClientRecordTest TrackedClientRecordTest.cpp)
 add_test (NAME TrackedClientRecordTest COMMAND TrackedClientRecordTest)
