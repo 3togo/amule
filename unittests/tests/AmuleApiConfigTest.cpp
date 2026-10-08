@@ -72,7 +72,7 @@ TEST(AmuleApiConfig, FreshLoadCreatesAllThreeFiles)
 	const wxString dir = MakeTmpDir("fresh");
 	CAmuleApiConfig cfg;
 	ASSERT_TRUE(cfg.Load(dir));
-    ASSERT_FALSE(cfg.ServerCfg().qbit_compat);
+	ASSERT_FALSE(cfg.ServerCfg().qbit_compat);
 
 	ASSERT_TRUE(::wxFileExists(dir + "/amuleapi.conf"));
 	ASSERT_TRUE(::wxFileExists(dir + "/amuleapi-jwt-secret"));
@@ -419,4 +419,17 @@ TEST(AmuleApiConfig, InvalidBasePathFailsLoad)
 	CAmuleApiConfig cfg;
 	ASSERT_TRUE(!LoadHandWrittenConf("base-bad", "BasePath=/amule;Domain=evil", cfg));
 	ASSERT_TRUE(cfg.LastError().find("BasePath") != std::string::npos);
+}
+
+TEST(AmuleApiConfig, CompatibilityIsExplicitAndResetsOnReload)
+{
+	CAmuleApiConfig cfg;
+	ASSERT_TRUE(LoadHandWrittenConf("qbit-on", "QBitCompatibility=1", cfg));
+	ASSERT_TRUE(cfg.ServerCfg().qbit_compat);
+	ASSERT_TRUE(LoadHandWrittenConf("qbit-off", "QBitCompatibility=0", cfg));
+	ASSERT_FALSE(cfg.ServerCfg().qbit_compat);
+	ASSERT_TRUE(LoadHandWrittenConf("qbit-on-again", "QBitCompatibility=1", cfg));
+	ASSERT_TRUE(cfg.ServerCfg().qbit_compat);
+	ASSERT_TRUE(LoadHandWrittenConf("qbit-missing", "", cfg));
+	ASSERT_FALSE(cfg.ServerCfg().qbit_compat);
 }

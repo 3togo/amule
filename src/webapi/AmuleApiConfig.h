@@ -59,7 +59,7 @@ public:
 	{
 		std::string bind_address = "127.0.0.1";
 		unsigned port = 4713;
-        bool qbit_compat = false;
+		bool qbit_compat = false;
 		bool allow_cors = false;
 		std::vector<std::string> cors_origin_allowlist;
 		// Filesystem root of a bundled web frontend. Empty (the default) means an API-only

@@ -24,6 +24,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--amuled', required=True)
     parser.add_argument('--amuleapi', required=True)
+    parser.add_argument('--basepath', default='')
+    parser.add_argument('--sdk-smoke', action='store_true')
     args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix='amule-qbit-test-') as directory:
         root = Path(directory)
@@ -56,6 +58,7 @@ Enabled=0
 BindAddress=127.0.0.1
 Port={http_port}
 QBitCompatibility=1
+BasePath={args.basepath}
 [EC]
 Host=127.0.0.1
 Port={ec}
@@ -81,7 +84,7 @@ Password={ec_password}
             processes.append(subprocess.Popen([args.amuleapi, '--config-dir', directory], stdout=logs, stderr=logs))
             jar = http.cookiejar.CookieJar()
             opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), urllib.request.HTTPCookieProcessor(jar))
-            base = f'http://127.0.0.1:{http_port}/api/v2/'
+            base = f'http://127.0.0.1:{http_port}{args.basepath}/api/v2/'
 
             def request(route, data=None, expected=200, client=opener, headers=None):
                 body = urllib.parse.urlencode(data).encode() if data is not None else None
@@ -104,10 +107,10 @@ Password={ec_password}
                     time.sleep(.1)
             request('app/webapiversion', expected=403, headers={'Origin': 'https://untrusted.example'})
             request('app/version', expected=401)
-            assert request('auth/login', {'username': 'admin', 'password': 'disposable-admin'}) == 'Ok.'
+            assert request('auth/login', {'username': 'admin', 'password': 'disposable-admin'}, headers={'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'}) == 'Ok.'
             cookies = list(jar)
-            assert len(cookies) == 1 and cookies[0].name == 'SID' and cookies[0].path == '/api/v2'
-            assert request('app/version') == 'v5.0.0-amule'
+            assert len(cookies) == 1 and cookies[0].name == 'SID' and cookies[0].path == args.basepath + '/api/v2'
+            assert request('app/version') == 'v5.0.0+amule'
             # The first EC snapshot may still be in flight.
             deadline = time.monotonic() + 20
             while True:
@@ -128,6 +131,8 @@ Password={ec_password}
             link = f'ed2k://|file|qbit-test.bin|1024|{h}|/'
             request('torrents/add', {'urls': 'magnet:?xt=test'}, expected=400)
             request('torrents/add', {'urls': link, 'paused': 'true'}, expected=501)
+            request('torrents/add', {'urls': link, 'rename': 'unexpected'}, expected=501)
+            request('torrents/add', {'urls': link, 'paused': '1'}, expected=400)
             request('torrents/add', {'urls': link, 'category': 'QBit test'})
             deadline = time.monotonic() + 10
             while not json.loads(request('torrents/info')):
@@ -146,8 +151,37 @@ Password={ec_password}
             request('auth/logout', {})
             request('app/version', expected=401)
             assert request('auth/login', {'username': 'guest', 'password': 'disposable-guest'}) == 'Ok.'
+            request('torrents/info', {})
+            request('torrents/createCategory', {'category': 'guest-must-not-create'}, expected=403)
             request('torrents/add', {'urls': link}, expected=403)
             request('auth/logout', {})
+            if args.sdk_smoke:
+                import qbittorrentapi
+                from packaging.version import Version
+                sdk = qbittorrentapi.Client(host=f'http://127.0.0.1:{http_port}{args.basepath}',
+                    username='admin', password='disposable-admin',
+                    REQUESTS_ARGS={'timeout': 5, 'proxies': {'http': '', 'https': ''}})
+                sdk.auth_log_in()
+                assert Version(sdk.app_version()) >= Version('5.0.0')
+                assert sdk.app_web_api_version() == '2.11.0'
+                assert 'QBit test' in sdk.torrents_categories()
+                sdk.torrents_create_category(name='SDK test', save_path=str(incoming))
+                sdk_hash = 'abcdef0123456789abcdef0123456789'
+                sdk_link = f'ed2k://|file|sdk-test.bin|1024|{sdk_hash}|/'
+                assert sdk.torrents_add(urls=sdk_link, category='QBit test') == 'Ok.'
+                deadline = time.monotonic() + 10
+                while not sdk.torrents_info(torrent_hashes=sdk_hash):
+                    assert time.monotonic() < deadline
+                    time.sleep(.1)
+                assert sdk.torrents_properties(torrent_hash=sdk_hash)['total_size'] == 1024
+                assert len(sdk.torrents_files(torrent_hash=sdk_hash)) == 1
+                sdk.torrents_stop(torrent_hashes=sdk_hash)
+                sdk.torrents_start(torrent_hashes=sdk_hash)
+                sdk.torrents_top_priority(torrent_hashes=sdk_hash)
+                sdk.torrents_set_category(torrent_hashes=sdk_hash, category='')
+                sdk.torrents_delete(delete_files=True, torrent_hashes=sdk_hash)
+                sdk.auth_log_out()
+                print('qbittorrent-api SDK smoke test passed')
             print('qBittorrent compatibility smoke test passed')
         except Exception:
             logs.flush()

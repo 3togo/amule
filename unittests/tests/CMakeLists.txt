@@ -2172,6 +2172,9 @@ if(BUILD_DAEMON AND BUILD_AMULEAPI)
         add_test(NAME QBitCompatSmoke COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_SOURCE_DIR}/unittests/integration/qbit_compat_smoke.py
             --amuled $<TARGET_FILE:amuled> --amuleapi $<TARGET_FILE:amuleapi>)
-        set_tests_properties(QBitCompatSmoke PROPERTIES TIMEOUT 90)
+        add_test(NAME QBitCompatBasePathSmoke COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_SOURCE_DIR}/unittests/integration/qbit_compat_smoke.py
+            --amuled $<TARGET_FILE:amuled> --amuleapi $<TARGET_FILE:amuleapi> --basepath /amule)
+        set_tests_properties(QBitCompatSmoke QBitCompatBasePathSmoke PROPERTIES TIMEOUT 90)
     endif()
 endif()

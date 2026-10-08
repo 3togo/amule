@@ -205,7 +205,9 @@ bool CAmuleApiConfig::LoadAmuleapiConf(const wxString &path)
 	wxString s;
 	long n = 0;
 
-	if (cfg.Read("/Server/QBitCompatibility", &n)) m_server.qbit_compat = n != 0;
+	m_server.qbit_compat = false;
+	if (cfg.Read("/Server/QBitCompatibility", &n))
+		m_server.qbit_compat = n != 0;
 	if (cfg.Read("/Server/BindAddress", &s) && !s.IsEmpty()) {
 		m_server.bind_address = std::string(s.utf8_str());
 	}
