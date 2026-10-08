@@ -47,6 +47,7 @@
 #include "VerifyLocalDataResult.h" // Needed for CVerifyLocalDataResult
 
 class CFileDataIO;
+class CMemFile;
 class CPacket;
 class CTag;
 class CUpDownClient;
@@ -315,6 +316,12 @@ public:
 	uint32 GetUploadDatarate() const;          // sum of per-client upload speed (B/s)
 	uint16 GetTransferringClientCount() const; // clients currently US_UPLOADING
 	void VerifyLocalData() const;
+	// The part status sent to peers: count 0 means "every part", else a bitmap. A complete file
+	// withholds the parts a check found corrupt; CPartFile sends the parts it has.
+	virtual void WritePartStatus(CMemFile *file);
+	// Ends the upload sessions of this file that have blocks queued in a corrupt part, and sends
+	// those peers the current part status. The others keep their slot.
+	void EndCorruptUploadSessions();
 #endif
 
 	// Timestamp of the last time data was uploaded for this file, and when the file was

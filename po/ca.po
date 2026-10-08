@@ -14,8 +14,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-08 13:27+0900\n"
-"PO-Revision-Date: 2026-10-02 00:44+0000\n"
+"POT-Creation-Date: 2026-10-08 13:42+0900\n"
+"PO-Revision-Date: 2026-10-07 19:28+0000\n"
 "Last-Translator: minterior <minterior@gmail.com>\n"
 "Language-Team: Català\n"
 "Language: ca\n"
@@ -210,11 +210,16 @@ msgid ""
 "\n"
 "The file is deleted and no longer shared. This cannot be undone."
 msgstr ""
+"Esteu segur que voleu esborrar «%s» del disc?\n"
+"\n"
+"Fitxer: %s\n"
+"\n"
+"El fitxer s'esborrarà i deixarà de compartir-se. Això no es pot desfer."
 
 #: src/GuiEvents.cpp
 #, c-format
 msgid "... and %i more"
-msgstr ""
+msgstr "... i %i més"
 
 #: src/GuiEvents.cpp
 #, c-format
@@ -224,26 +229,29 @@ msgid ""
 "%s\n"
 "The files are deleted and no longer shared. This cannot be undone."
 msgstr ""
+"Esteu segur que voleu esborrar del disc els %i fitxers seleccionats?\n"
+"\n"
+"%s\n"
+"Els fitxers s'esborraran i deixaran de compartir-se. Això no es pot desfer."
 
 #: src/GuiEvents.cpp
-#, fuzzy
 msgid "Delete from disk"
-msgstr "Obtén de Kad"
+msgstr "Esborra del disc"
 
 #: src/GuiEvents.cpp
 #, c-format
 msgid "Skipped deleting '%s': the selected file has changed."
-msgstr ""
+msgstr "S'ha omès l'esborrat de «%s»: el fitxer seleccionat ha canviat."
 
 #: src/GuiEvents.cpp
 #, c-format
 msgid "Deleted '%s' from disk."
-msgstr ""
+msgstr "S'ha esborrat «%s» del disc."
 
 #: src/GuiEvents.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not delete '%s' from disk."
-msgstr "No s'ha pogut suprimir la categoria: %s"
+msgstr "No s'ha pogut esborrar «%s» del disc."
 
 #: src/GuiEvents.cpp
 #, c-format
@@ -256,6 +264,13 @@ msgid ""
 "Yes: stop sharing and remove the list entries. A later share scan may share the files again.\n"
 "No: keep the files shared and listed."
 msgstr ""
+"No s'han pogut esborrar aquests fitxers del disc:\n"
+"\n"
+"%s\n"
+"Voleu treure'ls igualment dels compartits i de la llista de transferències completades?\n"
+"\n"
+"Sí: deixar de compartir-los i treure'n les entrades de la llista. Un examen posterior dels compartits podria tornar a compartir els fitxers.\n"
+"No: mantenir els fitxers compartits i a la llista."
 
 #: src/amuleAppCommon.cpp
 msgid "Failed to open ED2KLinks file."
@@ -544,6 +559,57 @@ msgstr ""
 "Comproveu la configuració de la xarxa per a assegurar-vos que el port està obert."
 
 #: src/amule.cpp
+msgid "The P2P TCP port conflicts with the External Connections port. No sockets were changed.\n"
+msgstr "El port TCP P2P entra en conflicte amb el port de connexions externes. No s'ha canviat cap sòcol.\n"
+
+#: src/amule.cpp
+msgid "The P2P TCP port is too high for its associated server UDP port. No sockets were changed.\n"
+msgstr "El port TCP P2P és massa alt per al seu port UDP del servidor associat. No s'ha canviat cap sòcol.\n"
+
+#: src/amule.cpp
+msgid "The client UDP port conflicts with the server UDP port (TCP+3). No sockets were changed.\n"
+msgstr "El port UDP del client entra en conflicte amb el port UDP del servidor (TCP+3). No s'ha canviat cap sòcol.\n"
+
+#: src/amule.cpp
+#, c-format
+msgid "Could not rebind the server UDP port %u; no sockets were changed.\n"
+msgstr "No s'ha pogut tornar a vincular el port UDP del servidor %u; no s'ha canviat cap sòcol.\n"
+
+#: src/amule.cpp
+#, c-format
+msgid "Could not rebind the P2P TCP port %u. %s"
+msgstr "No s'ha pogut tornar a vincular el port TCP P2P %u. %s"
+
+#: src/amule.cpp
+msgid "The previous listener and server UDP socket remain active.\n"
+msgstr "El sòcol d'escolta anterior i el sòcol UDP del servidor continuen actius.\n"
+
+#: src/amule.cpp
+msgid "The server UDP socket could not be restored; restart aMule.\n"
+msgstr "No s'ha pogut restaurar el sòcol UDP del servidor; reinicieu l'aMule.\n"
+
+#: src/amule.cpp
+msgid "The previous P2P listeners remain active.\n"
+msgstr "Els sòcols d'escolta P2P anteriors continuen actius.\n"
+
+#: src/amule.cpp
+msgid "The previous client UDP socket remains active.\n"
+msgstr "El sòcol UDP del client anterior continua actiu.\n"
+
+#: src/amule.cpp
+msgid "Some previous P2P sockets could not be restored; restart aMule.\n"
+msgstr "No s'han pogut restaurar alguns sòcols P2P anteriors; reinicieu l'aMule.\n"
+
+#: src/amule.cpp
+#, c-format
+msgid "Could not rebind the client UDP port %u. %s"
+msgstr "No s'ha pogut tornar a vincular el port UDP del client %u. %s"
+
+#: src/amule.cpp
+msgid "P2P listening sockets rebound; established peer connections were kept."
+msgstr "S'han tornat a vincular els sòcols d'escolta P2P; s'han mantingut les connexions establertes amb altres clients."
+
+#: src/amule.cpp
 msgid "Failed to create OnlineSig File"
 msgstr "No s'ha pogut crear el fitxer de la signatura en línia"
 
@@ -604,7 +670,7 @@ msgstr "Metadades multimèdia: el fitxer analitzat ja no es coneix; s'ha descart
 #: src/amule.cpp
 #, c-format
 msgid "Verify Local Data: another file named '%s' in your shared folders has the same content as '%s' and may be an intact copy of it."
-msgstr ""
+msgstr "Verificació de dades locals: un altre fitxer anomenat «%s» de les vostres carpetes compartides té el mateix contingut que «%s» i en podria ser una còpia intacta."
 
 #: src/amule.cpp
 #, c-format
@@ -1139,6 +1205,10 @@ msgid "All"
 msgstr "Tots"
 
 #: src/amule-remote-gui.cpp
+msgid "The daemon could not apply the connection port changes."
+msgstr "El dimoni no ha pogut aplicar els canvis als ports de connexió."
+
+#: src/amule-remote-gui.cpp
 msgid "not readable"
 msgstr "no llegible"
 
@@ -1184,7 +1254,7 @@ msgstr "Desconegut"
 
 #: src/amule-remote-gui.cpp
 msgid "The connected daemon does not support All searches."
-msgstr ""
+msgstr "El dimoni connectat no admet la cerca a totes les xarxes."
 
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
@@ -1985,9 +2055,8 @@ msgid "C&lear completed"
 msgstr "&Neteja els completats"
 
 #: src/DownloadListCtrl.cpp src/SharedFilesCtrl.cpp
-#, fuzzy
 msgid "Delete file from &disk"
-msgstr "S'està esborrant el fitxer: %s"
+msgstr "Esborra el fitxer del &disc"
 
 #: src/DownloadListCtrl.cpp
 msgid "Swap every A4AF to this file now"
@@ -3985,9 +4054,8 @@ msgid "Type"
 msgstr "Tipus"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Search network"
-msgstr "Error en la cerca"
+msgstr "Xarxa de cerca"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -4674,35 +4742,48 @@ msgid "Reconnect on loss"
 msgstr "Reconnecta en perdre la connexió"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
-msgid "Kad protocol version"
-msgstr "Versió del protocol invàlida."
+msgid "File repair hashes over Kad"
+msgstr "Hashes de reparació de fitxers a Kad"
 
 #: src/muuli_wdr.cpp
-msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
-msgstr ""
-
-#: src/muuli_wdr.cpp
-msgid ""
-"When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
-"\n"
-"WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
-"\n"
-"Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
-"\n"
-"Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
-msgstr ""
-
-#: src/muuli_wdr.cpp
-msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
-msgstr ""
+msgid "Share and use file repair hashes (AICH) over Kad"
+msgstr "Comparteix i utilitza hashes de reparació de fitxers (AICH) a Kad"
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+"Share file repair hashes with other Kad nodes and learn them from Kad searches. These hashes can help aMule repair damaged download data without downloading an entire part again. aMule uses a hash for repair only once enough independent peers report the same one.\n"
 "\n"
-"WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+"Very old Kad clients (before eMule 0.49b) may miss search results containing these hashes. If you notice missing results, try turning this option off.\n"
+"\n"
+"Turning this option off discards the repair hashes stored in your Kad index on the next save. Turning it back on starts collecting them again.\n"
+"\n"
+"Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
+"Comparteix els hashes de reparació de fitxers amb altres nodes Kad i n'obté de les cerques a Kad. Aquests hashes poden ajudar l'aMule a reparar dades de baixada malmeses sense haver de tornar a baixar una part sencera. L'aMule només fa servir un hash per reparar quan prou clients independents comuniquen el mateix hash.\n"
+"\n"
+"Els clients Kad molt antics (anteriors a l'eMule 0.49b) poden perdre resultats de cerca que continguin aquests hashes. Si noteu que falten resultats, proveu de desactivar aquesta opció.\n"
+"\n"
+"En desactivar aquesta opció, els hashes de reparació emmagatzemats al vostre índex Kad es descarten en el següent desament. Si la torneu a activar, es tornen a recollir.\n"
+"\n"
+"Detall tècnic: en activar-la s'anuncia la versió 0x0a del protocol Kad i s'afegeixen hashes AICH a la publicació de paraules clau i als resultats de cerca."
+
+#: src/muuli_wdr.cpp
+msgid "Ignore repair hashes from Kad nodes too old to support them"
+msgstr "Ignora els hashes de reparació dels nodes Kad massa antics per admetre'ls"
+
+#: src/muuli_wdr.cpp
+msgid ""
+"Only applies when sharing and using file repair hashes over Kad is enabled. Ignore hashes published by nodes that report a Kad version too old to support them.\n"
+"\n"
+"A node's reported version may be out of date or inaccurate, so this can discard valid hashes and does not make accepted hashes trustworthy. Nodes whose version is unknown are still accepted.\n"
+"\n"
+"Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
+msgstr ""
+"Només s'aplica si està activada l'opció de compartir i utilitzar hashes de reparació de fitxers a Kad. Ignora els hashes publicats per nodes que declaren una versió de Kad massa antiga per admetre'ls.\n"
+"\n"
+"La versió que declara un node pot estar desactualitzada o ser inexacta, de manera que això pot descartar hashes vàlids i no fa que els hashes acceptats siguin fiables. Els nodes amb una versió desconeguda s'accepten igualment.\n"
+"\n"
+"Detall tècnic: rebutja les etiquetes de publicació AICH dels nodes que anuncien versions del protocol Kad inferiors a 0x09."
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"
@@ -4805,8 +4886,12 @@ msgid "Enter here the min disk space desired."
 msgstr "Poseu l'espai mínim de disc desitjat."
 
 #: src/muuli_wdr.cpp
-msgid "Save 10 sources on rare files (< 20 sources)"
-msgstr "Recorda 10 fonts dels fitxers rars (amb < 20 fonts)"
+msgid "Save up to 10 HighID sources of rare files (20 or fewer sources) on exit"
+msgstr "Desa fins a 10 fonts amb ID Alta dels fitxers rars (20 fonts o menys) en sortir"
+
+#: src/muuli_wdr.cpp
+msgid "The saved sources are used again only if aMule restarts within 2 hours. LowID sources are not saved: a LowID only identifies a peer on the server that assigned it."
+msgstr "Les fonts desades només es tornen a fer servir si l'aMule es reinicia en menys de 2 hores. Les fonts amb ID Baixa no es desen: una ID Baixa només identifica un client al servidor que l'ha assignada."
 
 #: src/muuli_wdr.cpp src/Statistics.cpp
 msgid "Uploads"
@@ -6420,16 +6505,20 @@ msgstr ""
 "\n"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid "- Network interface binding changed.\n"
+msgstr "- S'ha canviat la vinculació a la interfície de xarxa.\n"
+
+#: src/PrefsUnifiedDlg.cpp
+msgid "- Local address binding changed.\n"
+msgstr "- S'ha canviat la vinculació de l'adreça local.\n"
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "- TCP port changed.\n"
 msgstr "- El port TCP ha canviat.\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- UDP port changed.\n"
 msgstr "- El port UDP ha canviat.\n"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "- Network interface binding changed.\n"
-msgstr "- S'ha canviat la vinculació a la interfície de xarxa.\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- External connect port changed.\n"
@@ -6883,9 +6972,8 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr "Entrada no vàlida a la llista de cerques desada; el fitxer podria estar malmès"
 
 #: src/SearchList.cpp
-#, fuzzy
 msgid "All search can't be done if neither eD2k nor Kad is available"
-msgstr "No es pot fer una cerca Kad si la xarxa Kad no està engegada"
+msgstr "No es pot fer una cerca a totes les xarxes si no hi ha disponible ni eD2k ni Kad"
 
 #: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
@@ -6893,7 +6981,7 @@ msgstr "No es pot executar una cerca eD2k si la xarxa eD2k no està connectada"
 
 #: src/SearchList.cpp
 msgid "All search: no usable Kad keyword; continuing with eD2k."
-msgstr ""
+msgstr "Cerca a totes les xarxes: no hi ha cap paraula clau utilitzable per a Kad; es continua amb eD2k."
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6905,7 +6993,7 @@ msgstr "Error inesperat mentre s'intentava fer una cerca Kad: "
 
 #: src/SearchList.cpp
 msgid "All search: Kad component could not start: "
-msgstr ""
+msgstr "Cerca a totes les xarxes: no s'ha pogut iniciar la part de Kad: "
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6961,37 +7049,32 @@ msgid "New"
 msgstr "Nou"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "eD2k: Current server"
-msgstr "Llista de servidors eD2k (server.met)"
+msgstr "eD2k: Servidor actual"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "eD2k: All servers"
-msgstr "Esborra tots els servidors"
+msgstr "eD2k: Tots els servidors"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "All networks"
-msgstr "Cap xarxa"
+msgstr "Totes les xarxes"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "Search the connected eD2k server."
-msgstr "Servidor connectat actualment."
+msgstr "Cerca al servidor eD2k connectat."
 
 #: src/SearchModeIcons.h
 msgid "Search the connected eD2k server and other servers in the server list."
-msgstr ""
+msgstr "Cerca al servidor eD2k connectat i als altres servidors de la llista de servidors."
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "Search the Kad network."
-msgstr "Connecta a la xarxa."
+msgstr "Cerca a la xarxa Kad."
 
 #: src/SearchModeIcons.h
 msgid "Search eD2k servers and Kad, using whichever networks are available."
-msgstr ""
+msgstr "Cerca als servidors eD2k i a Kad, amb les xarxes que estiguin disponibles."
 
 #: src/SearchProgressReport.cpp
 msgid "running"
@@ -7035,36 +7118,35 @@ msgstr "No hi ha cap cerca de la qual informar.\n"
 #: src/SearchSourceFormat.h
 #, c-format
 msgid "Estimated availability: %u"
-msgstr ""
+msgstr "Disponibilitat estimada: %u"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "eD2k sources: %u"
-msgstr "Fonts del fitxer:"
+msgstr "Fonts d'eD2k: %u"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "Kad sources: %u"
-msgstr "Fonts trobades: %s"
+msgstr "Fonts de Kad: %u"
 
 #: src/SearchSourceFormat.h
 msgid "Network counts may overlap; they are not added together."
-msgstr ""
+msgstr "Els recomptes de cada xarxa es poden solapar; no se sumen."
 
 #: src/SearchSourceFormat.h
-#, fuzzy
 msgid "Network breakdown unavailable."
-msgstr "Hi ha una versió nova disponible"
+msgstr "Desglossament per xarxa no disponible."
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "Complete sources: %u"
-msgstr "Fonts completes"
+msgstr "Fonts completes: %u"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "Direct client endpoints: %u"
-msgstr "La nova ID d'usuari és %u"
+msgstr "Adreces directes de clients: %u"
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
@@ -7098,19 +7180,19 @@ msgid "No valid servers to which to connect found in server list"
 msgstr "No s'han trobat a la llista servidors vàlids als que connectar"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connected to %s (%s:%i), sending login request"
-msgstr "Connectat a %s (%s:%i)"
+msgstr "Connectat a %s (%s:%i), s'està enviant la sol·licitud d'inici de sessió"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Obfuscated connection established on: %s (%s:%i)"
-msgstr "Connexió establerta amb: %s"
+msgstr "Connexió ofuscada establerta amb: %s (%s:%i)"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connection established on: %s (%s:%i)"
-msgstr "Connexió establerta amb: %s"
+msgstr "Connexió establerta amb: %s (%s:%i)"
 
 #: src/ServerConnect.cpp
 msgid "Fatal Error while trying to connect. Internet connection might be down"
@@ -8174,7 +8256,7 @@ msgstr "No és un resum vàlid (la longitud hauria de ser exactament de 32 carà
 
 #: src/TextClient.cpp
 msgid "The connected daemon does not support All searches.\n"
-msgstr ""
+msgstr "El dimoni connectat no admet la cerca a totes les xarxes.\n"
 
 #. TRANSLATORS:
 #. 'help search' is a command to the program, do not translate it.
@@ -8572,7 +8654,6 @@ msgid "Execute a search."
 msgstr "Realitza una cerca."
 
 #: src/TextClient.cpp
-#, fuzzy
 msgid ""
 "A search type has to be specified by giving the type:\n"
 "    GLOBAL\n"
@@ -8595,6 +8676,7 @@ msgstr ""
 "    GLOBAL\n"
 "    LOCAL\n"
 "    KAD\n"
+"    ALL: totes les xarxes (cal que el dimoni ho admeti)\n"
 "Exemple: «search kad fitxer» farà una cerca kad de «fitxer».\n"
 "\n"
 "Es poden afegir filtres opcionals abans, després o intercalats amb\n"
@@ -8620,9 +8702,8 @@ msgid "Execute a kad search"
 msgstr "Realitza una cerca kad"
 
 #: src/TextClient.cpp
-#, fuzzy
 msgid "Execute an eD2k and Kad search"
-msgstr "Realitza una cerca kad"
+msgstr "Realitza una cerca a eD2k i Kad"
 
 #: src/TextClient.cpp
 msgid "Show the results of a search."
@@ -9644,6 +9725,41 @@ msgstr "Sembla que l'aMule s'està executant. Tanqueu-lo i torneu a executar el 
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "S'estan eliminant les dades d'usuari a $APPDATA\\aMule..."
+
+#~ msgid "Kad protocol version"
+#~ msgstr "Versió del protocol Kad"
+
+#~ msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
+#~ msgstr "Anuncia el protocol Kad 0x0a (emmagatzematge AICH de paraules clau)"
+
+#~ msgid ""
+#~ "When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
+#~ "\n"
+#~ "WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
+#~ "\n"
+#~ "Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
+#~ "\n"
+#~ "Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
+#~ msgstr ""
+#~ "Quan s'activa, l'aMule anuncia la versió 0x0a del protocol Kad i processa els hash AICH dels resultats de publicació i cerca de paraules clau.\n"
+#~ "\n"
+#~ "AVÍS: Activar aquesta opció pot fer que els clients Kad antics (anteriors a la 0.49b), que no poden interpretar les etiquetes AICH dels resultats, descartin resultats de cerca. La majoria dels clients actuals ho admeten, però si observeu que falten resultats de cerca, proveu de desactivar aquesta opció.\n"
+#~ "\n"
+#~ "Desactivar aquesta opció descarta les dades AICH de l'índex de paraules clau desades en el següent desament; tornar-la a activar obliga a recollir aquestes dades de nou.\n"
+#~ "\n"
+#~ "Els hash obtinguts dels resultats de cerca de Kad no es consideren fiables fins que les fonts de baixada els corroboren. Els recomptes de publicadors notificats, per si sols, mai no autoritzen la recuperació AICH."
+
+#~ msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
+#~ msgstr "Rebutja les etiquetes de publicació AICH dels parells Kad antics (< 0x09)"
+
+#~ msgid ""
+#~ "When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+#~ "\n"
+#~ "WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+#~ msgstr ""
+#~ "Quan s'activa, es rebutgen les etiquetes de publicació de paraules clau AICH dels nodes que anuncien una versió de Kad inferior a 0x09, perquè aquestes versions no admeten l'emmagatzematge AICH de paraules clau. Les versions anunciades no demostren que un publicador sigui de confiança.\n"
+#~ "\n"
+#~ "AVÍS: Això pot rebutjar publicadors legítims la versió dels quals a la taula d'encaminament estigui desactualitzada, cosa que redueix la cobertura de hash AICH. Els nodes amb una versió desconeguda s'accepten igualment. Els hash obtinguts dels resultats de cerca de Kad requereixen la corroboració de fonts de baixada independentment d'aquest paràmetre."
 
 #~ msgid "Local"
 #~ msgstr "Local"

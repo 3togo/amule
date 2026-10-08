@@ -35,7 +35,10 @@
 #include "DownloadQueue.h"
 #include "PartFile.h"
 #include "Logger.h"
+#include "NetworkFunctions.h" // Needed for Uint32toStringIP
 #include <common/Format.h>
+
+#include <algorithm> // Needed for std::find_if
 
 // The limits are set very high for this version and may be lowered later: to make a hash
 // trustworthy, at least 10 unique IPs (255.255.128.0) must have sent it, and if we received more
@@ -450,9 +453,12 @@ bool CAICHHashTree::SetHash(CFileDataIO *fileInput, uint32 wHashIdent, sint8 nLe
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /// CAICHUntrustedHash
-bool CAICHUntrustedHash::AddSigningIP(uint32 dwIP)
+bool CAICHUntrustedHash::AddSigningIP(uint32 dwIP, bool testOnly)
 {
-	dwIP &= 0x00F0FFFF; // we use only the 20 most significant bytes for unique IPs
+	dwIP = SigningSubnet(dwIP);
+	if (testOnly) {
+		return m_adwIpsSigning.count(dwIP) == 0;
+	}
 	return m_adwIpsSigning.insert(dwIP).second;
 }
 
@@ -973,7 +979,7 @@ void CAICHHashSet::SetFileSize(uint64 nSize)
 	m_pHashTree.m_nBaseSize = (nSize <= PARTSIZE) ? EMBLOCKSIZE : PARTSIZE;
 }
 
-void CAICHHashSet::UntrustedHashReceived(const CAICHHash &Hash, uint32 dwFromIP)
+void CAICHHashSet::HashReceived(const CAICHHash &Hash, uint32 dwFromIP, bool fromKad)
 {
 	switch (GetStatus()) {
 	case AICH_EMPTY:
@@ -983,11 +989,41 @@ void CAICHHashSet::UntrustedHashReceived(const CAICHHash &Hash, uint32 dwFromIP)
 	default:
 		return;
 	}
+	const uint32 subnet = CAICHUntrustedHash::SigningSubnet(dwFromIP);
+	// One /20 may sign only one root for this file, so a contradiction cannot inflate the
+	// consensus denominator. Kad search results are replayed before any download source
+	// reports, so without the exception below a Kad responder would speak for its whole
+	// /20: a source there takes over a slot that only Kad evidence holds.
+	auto held = std::find_if(
+		m_aUntrustedHashs.begin(), m_aUntrustedHashs.end(), [&](CAICHUntrustedHash &entry) {
+			return entry.m_Hash != Hash && !entry.AddSigningIP(subnet, true);
+		});
+	if (held != m_aUntrustedHashs.end()) {
+		if (fromKad || held->m_kadSigning.count(subnet) == 0) {
+			if (m_pOwner) {
+				AddDebugLogLineN(logSHAHashSet,
+					CFormat("Received different AICH hashes for file %s from IP/20 %s, "
+						"ignored") %
+						m_pOwner->GetFileName() % Uint32toStringIP(dwFromIP));
+			}
+			return;
+		}
+		held->m_adwIpsSigning.erase(subnet);
+		held->m_kadSigning.erase(subnet);
+		if (held->m_adwIpsSigning.empty()) {
+			m_aUntrustedHashs.erase(held);
+		}
+	}
 	bool bFound = false;
 	bool bAdded = false;
-	for (uint32 i = 0; i < m_aUntrustedHashs.size(); ++i) {
-		if (m_aUntrustedHashs[i].m_Hash == Hash) {
-			bAdded = m_aUntrustedHashs[i].AddSigningIP(dwFromIP);
+	for (auto &entry : m_aUntrustedHashs) {
+		if (entry.m_Hash == Hash) {
+			bAdded = entry.AddSigningIP(subnet);
+			if (!fromKad) {
+				entry.m_kadSigning.erase(subnet); // a source now backs this slot
+			} else if (bAdded) {
+				entry.m_kadSigning.insert(subnet);
+			}
 			bFound = true;
 			break;
 		}
@@ -996,7 +1032,10 @@ void CAICHHashSet::UntrustedHashReceived(const CAICHHash &Hash, uint32 dwFromIP)
 		bAdded = true;
 		CAICHUntrustedHash uhToAdd;
 		uhToAdd.m_Hash = Hash;
-		uhToAdd.AddSigningIP(dwFromIP);
+		uhToAdd.AddSigningIP(subnet);
+		if (fromKad) {
+			uhToAdd.m_kadSigning.insert(subnet);
+		}
 		m_aUntrustedHashs.push_back(uhToAdd);
 	}
 

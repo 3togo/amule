@@ -1528,6 +1528,11 @@ bool CPreferencesRem::LoadRemote()
 	// rather than offering settings it cannot honour.
 	thePrefs::SetGeoIPSupported(false);
 #endif
+	// Likewise for the Kad repair-hash options, shown off until the core reports them: a
+	// pre-3.2 core does not, and runs Kad 0x08 without them.
+	thePrefs::SetKadProtocol10Supported(false);
+	thePrefs::SetKadProtocol10(false);
+	thePrefs::SetKadStrictAichPublishers(false);
 	// Override local settings with remote
 	CECPacket req(EC_OP_GET_PREFERENCES, EC_DETAIL_UPDATE);
 
@@ -1581,6 +1586,32 @@ void CPreferencesRem::ApplyRefresh(const CECPacket *packet)
 	}
 }
 
+class CPrefsSetHandler : public CECPacketHandlerBase
+{
+	void AbortPendingRequest() override { delete this; }
+
+	void HandlePacket(const CECPacket *packet) override
+	{
+		if (packet->GetOpCode() == EC_OP_FAILED) {
+			const CECTag *tag = packet->GetTagByName(EC_TAG_STRING);
+			const wxString message =
+				tag ? tag->GetStringData()
+				    : _("The daemon could not apply the connection port changes.");
+			// Refresh the optimistic remote preference view after the daemon rolls back
+			// failed port changes, then show the daemon's explanation on the GUI
+			// thread.
+			if (theApp->glob_prefs) {
+				theApp->glob_prefs->RefreshFromRemote([message]() {
+					wxTheApp->CallAfter([message]() {
+						wxMessageBox(message, _("ERROR"), wxOK | wxICON_ERROR);
+					});
+				});
+			}
+		}
+		delete this;
+	}
+};
+
 void CPreferencesRem::SendChangesToRemote()
 {
 	auto current = std::make_unique<CEC_Prefs_Packet>(
@@ -1588,7 +1619,7 @@ void CPreferencesRem::SendChangesToRemote()
 	if (m_remoteState) {
 		const std::unique_ptr<CECPacket> changes = MakePrefsDiffPacket(*m_remoteState, *current);
 		if (changes->GetTagCount() > 0) {
-			m_conn->SendPacket(changes.get());
+			m_conn->SendRequest(new CPrefsSetHandler(), changes.get());
 		}
 	}
 	m_remoteState = std::move(current);

@@ -15,8 +15,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-08 13:27+0900\n"
-"PO-Revision-Date: 2026-10-02 00:49+0000\n"
+"POT-Creation-Date: 2026-10-08 13:42+0900\n"
+"PO-Revision-Date: 2026-10-07 16:28+0000\n"
 "Last-Translator: Marcelo Jimenez <mroberto@users.sourceforge.com>\n"
 "Language-Team: Português (Brasileiro) <pt@li.org>\n"
 "Language: pt_BR\n"
@@ -559,6 +559,57 @@ msgstr ""
 "Isso quer dizer que você ficará com LOWID (ID baixa).\n"
 "\n"
 "Verifique sua rede para ver se essa porta está aberta para entrada e saída."
+
+#: src/amule.cpp
+msgid "The P2P TCP port conflicts with the External Connections port. No sockets were changed.\n"
+msgstr ""
+
+#: src/amule.cpp
+msgid "The P2P TCP port is too high for its associated server UDP port. No sockets were changed.\n"
+msgstr ""
+
+#: src/amule.cpp
+msgid "The client UDP port conflicts with the server UDP port (TCP+3). No sockets were changed.\n"
+msgstr ""
+
+#: src/amule.cpp
+#, c-format
+msgid "Could not rebind the server UDP port %u; no sockets were changed.\n"
+msgstr ""
+
+#: src/amule.cpp
+#, fuzzy, c-format
+msgid "Could not rebind the P2P TCP port %u. %s"
+msgstr "ERRO: Não pôde ouvir a porta TCP."
+
+#: src/amule.cpp
+msgid "The previous listener and server UDP socket remain active.\n"
+msgstr ""
+
+#: src/amule.cpp
+msgid "The server UDP socket could not be restored; restart aMule.\n"
+msgstr ""
+
+#: src/amule.cpp
+msgid "The previous P2P listeners remain active.\n"
+msgstr ""
+
+#: src/amule.cpp
+msgid "The previous client UDP socket remains active.\n"
+msgstr ""
+
+#: src/amule.cpp
+msgid "Some previous P2P sockets could not be restored; restart aMule.\n"
+msgstr ""
+
+#: src/amule.cpp
+#, fuzzy, c-format
+msgid "Could not rebind the client UDP port %u. %s"
+msgstr "Não foi possível excluir a categoria: %s"
+
+#: src/amule.cpp
+msgid "P2P listening sockets rebound; established peer connections were kept."
+msgstr ""
 
 #: src/amule.cpp
 msgid "Failed to create OnlineSig File"
@@ -1157,6 +1208,10 @@ msgid "All"
 msgstr "Tudo"
 
 #: src/amule-remote-gui.cpp
+msgid "The daemon could not apply the connection port changes."
+msgstr ""
+
+#: src/amule-remote-gui.cpp
 msgid "not readable"
 msgstr "não é possivel ler"
 
@@ -1202,7 +1257,7 @@ msgstr "Desconhecido"
 
 #: src/amule-remote-gui.cpp
 msgid "The connected daemon does not support All searches."
-msgstr ""
+msgstr "O daemon conectado não suporta \"Todas as buscas\"."
 
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
@@ -4002,9 +4057,8 @@ msgid "Type"
 msgstr "Tipo"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Search network"
-msgstr "Erro na busca"
+msgstr "Rede de busca"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -4691,44 +4745,36 @@ msgid "Reconnect on loss"
 msgstr "Reconectar ao ser desconectado"
 
 #: src/muuli_wdr.cpp
-msgid "Kad protocol version"
-msgstr "Versão do protocolo Kad"
+msgid "File repair hashes over Kad"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
-msgstr "Propaga o código de protocolo Kad 0x0a (AICH keyword storage)"
+msgid "Share and use file repair hashes (AICH) over Kad"
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
+"Share file repair hashes with other Kad nodes and learn them from Kad searches. These hashes can help aMule repair damaged download data without downloading an entire part again. aMule uses a hash for repair only once enough independent peers report the same one.\n"
 "\n"
-"WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
+"Very old Kad clients (before eMule 0.49b) may miss search results containing these hashes. If you notice missing results, try turning this option off.\n"
 "\n"
-"Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
+"Turning this option off discards the repair hashes stored in your Kad index on the next save. Turning it back on starts collecting them again.\n"
 "\n"
-"Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
+"Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
-"Quando habilitado, o aMule vai anunciar a o código de protocolo 0x0a e processar hashes AICH nos resultados de palavra chave/busca.\n"
-"\n"
-"AVISO: Habilitar isto pode causar a perda de resultados de busca por cliente Kad mais antigos (pre-0.49b) que não podem fazer parse das tags de resultado de AICH. A maioria dos clientes atuais a suporta, mas se você experimentar a falta de resultados de busca, tente desabilitar esta opção.\n"
-"\n"
-"Desabilitar esta opção descarta os dados guardados de índice/palavra-chave de AICH no próximo salvamento; re-habilitá-lo requer a coleta destes dados novamente.\n"
-"\n"
-"Hashes aprendidos dos resultados de buacas Kad permanecem não-confiáveis até que as fontes de download os corroborem. As contagens reportadas dos publicadores sozinhas nunca autorizam a recuperação por AICH."
 
 #: src/muuli_wdr.cpp
-msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
-msgstr "Rejeita a publicação de tags AICH vindas de pares Kad legados (< 0x09)"
+msgid "Ignore repair hashes from Kad nodes too old to support them"
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+"Only applies when sharing and using file repair hashes over Kad is enabled. Ignore hashes published by nodes that report a Kad version too old to support them.\n"
 "\n"
-"WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+"A node's reported version may be out of date or inaccurate, so this can discard valid hashes and does not make accepted hashes trustworthy. Nodes whose version is unknown are still accepted.\n"
+"\n"
+"Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
-"Quando habilitado, tags AICH de palavra chave publicadas de nós anunciando uma versão de Kad abaixo de 0x09 são rejeitadas porque estas versões não suportam o armazenamento de palavras chave por AICH. Versões anunciadas não são prova que um publicador seja confiável.\n"
-"\n"
-"AVISO: Isto pode rejeitar publicadores legítimos cujas versões de tabela de roteamento sejam antigas, reduzindo a cobertura do hash AICH. Nós com versão desconhecida ainda são aceitos. Hashes aprendidos de resultados de busca Kad requerem corroboração de fontes de download independente desta configuração."
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"
@@ -4831,8 +4877,13 @@ msgid "Enter here the min disk space desired."
 msgstr "Digite aqui o espaço min. de disco desejado."
 
 #: src/muuli_wdr.cpp
-msgid "Save 10 sources on rare files (< 20 sources)"
+#, fuzzy
+msgid "Save up to 10 HighID sources of rare files (20 or fewer sources) on exit"
 msgstr "Salvar 10 fontes em arquivos raros (< 20 fontes)"
+
+#: src/muuli_wdr.cpp
+msgid "The saved sources are used again only if aMule restarts within 2 hours. LowID sources are not saved: a LowID only identifies a peer on the server that assigned it."
+msgstr ""
 
 #: src/muuli_wdr.cpp src/Statistics.cpp
 msgid "Uploads"
@@ -6446,16 +6497,21 @@ msgstr ""
 "\n"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid "- Network interface binding changed.\n"
+msgstr "- Interface de conexão de rede modificada.\n"
+
+#: src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "- Local address binding changed.\n"
+msgstr "- Interface de conexão de rede modificada.\n"
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "- TCP port changed.\n"
 msgstr "-Porta TCP alterada.\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- UDP port changed.\n"
 msgstr "-Porta UDP alterada.\n"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "- Network interface binding changed.\n"
-msgstr "- Interface de conexão de rede modificada.\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- External connect port changed.\n"
@@ -6909,9 +6965,8 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr "Entrada inválida na lista de busca guardada, o arquivo pode estar corrompido"
 
 #: src/SearchList.cpp
-#, fuzzy
 msgid "All search can't be done if neither eD2k nor Kad is available"
-msgstr "A busca do Kad não pode ser feita se o Kad não estiver rodando"
+msgstr "\"Todas as buscas\" não pode ser feita se nem eD2k nem Kad estiverem disponíveis"
 
 #: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
@@ -6919,7 +6974,7 @@ msgstr "Procura eD2k não pode ser concluída se o eD2k não está conectado"
 
 #: src/SearchList.cpp
 msgid "All search: no usable Kad keyword; continuing with eD2k."
-msgstr ""
+msgstr "\"Todas as buscas\": nenhuma palavra chave Kad usável; continuando com eD2k."
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6931,7 +6986,7 @@ msgstr "Erro inesperado quando tentava fazer a busca do Kad: "
 
 #: src/SearchList.cpp
 msgid "All search: Kad component could not start: "
-msgstr ""
+msgstr "Todas as buscas: a componente Kad não pode iniciar. "
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6987,37 +7042,32 @@ msgid "New"
 msgstr "Novo"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "eD2k: Current server"
-msgstr "Lista de servidores eD2k (server.met)"
+msgstr "eD2k: Servidor atual"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "eD2k: All servers"
-msgstr "Remover todos os servidores"
+msgstr "eD2k: Todos os servidores"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "All networks"
-msgstr "Sem redes"
+msgstr "Todas as redes"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "Search the connected eD2k server."
-msgstr "Servidor atualmente conectado."
+msgstr "Buscar no servidor eD2k conectado."
 
 #: src/SearchModeIcons.h
 msgid "Search the connected eD2k server and other servers in the server list."
-msgstr ""
+msgstr "Buscar no servidor eD2k conectado e em outros servidores na lista de servidores."
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "Search the Kad network."
-msgstr "Conectar à rede."
+msgstr "Buscar na rede Kad."
 
 #: src/SearchModeIcons.h
 msgid "Search eD2k servers and Kad, using whichever networks are available."
-msgstr ""
+msgstr "Buscar nos servidores eD2k e na rede Kad, usando a rede que estiver disponível."
 
 #: src/SearchProgressReport.cpp
 msgid "running"
@@ -7061,36 +7111,35 @@ msgstr "Nenhuma busca para reportar sobre.\n"
 #: src/SearchSourceFormat.h
 #, c-format
 msgid "Estimated availability: %u"
-msgstr ""
+msgstr "Disponibilidade estimada: %u"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "eD2k sources: %u"
-msgstr "Fontes de arquivos:"
+msgstr "Fontes eD2k: %u"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "Kad sources: %u"
-msgstr "Fontes encontradas: %s"
+msgstr "Fontes Kad: %u"
 
 #: src/SearchSourceFormat.h
 msgid "Network counts may overlap; they are not added together."
-msgstr ""
+msgstr "As contagens de rede pode se sobrepor; elas não são somadas juntas."
 
 #: src/SearchSourceFormat.h
-#, fuzzy
 msgid "Network breakdown unavailable."
-msgstr "Uma versão mais nova está disponível"
+msgstr "Breakdown de rede indisponível."
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "Complete sources: %u"
-msgstr "Fontes completas"
+msgstr "Fontes completas: %u"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "Direct client endpoints: %u"
-msgstr "Novo ID do cliente é %u"
+msgstr "Pontos finais de clientes diretos: %u"
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
@@ -7124,19 +7173,19 @@ msgid "No valid servers to which to connect found in server list"
 msgstr "Nenhum servidor válido para o qual conectar na lista de servidor"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connected to %s (%s:%i), sending login request"
-msgstr "Conectado a %s (%s:%i)"
+msgstr "Conectado a %s (%s:%i), enviando o pedido de login"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Obfuscated connection established on: %s (%s:%i)"
-msgstr "Conexão estabelecida em: %s"
+msgstr "Conexão ofuscada estabelecida em: %s(%s:%i)"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connection established on: %s (%s:%i)"
-msgstr "Conexão estabelecida em: %s"
+msgstr "Conexão estabelecida em: %s (%s:%i)"
 
 #: src/ServerConnect.cpp
 msgid "Fatal Error while trying to connect. Internet connection might be down"
@@ -8200,7 +8249,7 @@ msgstr "Não é uma hash válida (precisa ter exatamente 32 caracteres)\n"
 
 #: src/TextClient.cpp
 msgid "The connected daemon does not support All searches.\n"
-msgstr ""
+msgstr "O daemon conectado não suporta \"Todas as buscas\".\n"
 
 #. TRANSLATORS:
 #. 'help search' is a command to the program, do not translate it.
@@ -8598,7 +8647,6 @@ msgid "Execute a search."
 msgstr "Faça uma pesquisa."
 
 #: src/TextClient.cpp
-#, fuzzy
 msgid ""
 "A search type has to be specified by giving the type:\n"
 "    GLOBAL\n"
@@ -8621,6 +8669,7 @@ msgstr ""
 "    GLOBAL\n"
 "    LOCAL\n"
 "    KAD\n"
+"    ALL: todas as redes (requer suporte do daemon)\n"
 "Exemplo: 'search kad file' executará uma busca kad por \"file\".\n"
 "\n"
 "Filtros opcionais podem ser adicionados antes, depois ou intercalados\n"
@@ -8646,9 +8695,8 @@ msgid "Execute a kad search"
 msgstr "Faça uma pesquisa no kad"
 
 #: src/TextClient.cpp
-#, fuzzy
 msgid "Execute an eD2k and Kad search"
-msgstr "Faça uma pesquisa no kad"
+msgstr "Faça uma busca nas redes eD2k e kad"
 
 #: src/TextClient.cpp
 msgid "Show the results of a search."
@@ -9670,6 +9718,41 @@ msgstr "O aMule parece estar rodando. Por favor, feche-o e rode o desinstalador 
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Removendo os dados do usuário em $APPDATA\\aMule..."
+
+#~ msgid "Kad protocol version"
+#~ msgstr "Versão do protocolo Kad"
+
+#~ msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
+#~ msgstr "Propaga o código de protocolo Kad 0x0a (AICH keyword storage)"
+
+#~ msgid ""
+#~ "When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
+#~ "\n"
+#~ "WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
+#~ "\n"
+#~ "Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
+#~ "\n"
+#~ "Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
+#~ msgstr ""
+#~ "Quando habilitado, o aMule vai anunciar a o código de protocolo 0x0a e processar hashes AICH nos resultados de palavra chave/busca.\n"
+#~ "\n"
+#~ "AVISO: Habilitar isto pode causar a perda de resultados de busca por cliente Kad mais antigos (pre-0.49b) que não podem fazer parse das tags de resultado de AICH. A maioria dos clientes atuais a suporta, mas se você experimentar a falta de resultados de busca, tente desabilitar esta opção.\n"
+#~ "\n"
+#~ "Desabilitar esta opção descarta os dados guardados de índice/palavra-chave de AICH no próximo salvamento; re-habilitá-lo requer a coleta destes dados novamente.\n"
+#~ "\n"
+#~ "Hashes aprendidos dos resultados de buacas Kad permanecem não-confiáveis até que as fontes de download os corroborem. As contagens reportadas dos publicadores sozinhas nunca autorizam a recuperação por AICH."
+
+#~ msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
+#~ msgstr "Rejeita a publicação de tags AICH vindas de pares Kad legados (< 0x09)"
+
+#~ msgid ""
+#~ "When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+#~ "\n"
+#~ "WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+#~ msgstr ""
+#~ "Quando habilitado, tags AICH de palavra chave publicadas de nós anunciando uma versão de Kad abaixo de 0x09 são rejeitadas porque estas versões não suportam o armazenamento de palavras chave por AICH. Versões anunciadas não são prova que um publicador seja confiável.\n"
+#~ "\n"
+#~ "AVISO: Isto pode rejeitar publicadores legítimos cujas versões de tabela de roteamento sejam antigas, reduzindo a cobertura do hash AICH. Nós com versão desconhecida ainda são aceitos. Hashes aprendidos de resultados de busca Kad requerem corroboração de fontes de download independente desta configuração."
 
 #~ msgid "Local"
 #~ msgstr "Local"

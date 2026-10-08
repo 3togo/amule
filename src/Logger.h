@@ -211,13 +211,16 @@ public:
 	unsigned int GetDebugCategoryCount();
 
 	/// Opens the logfile; true on success.
-	bool OpenLogfile(const wxString &name);
+	bool OpenLogfile(const wxString &name, bool append = false);
 
 	/// Closes the logfile.
 	void CloseLogfile();
 
 	/// Name of the logfile.
 	const wxString &GetLogfileName() const { return m_LogfileName; }
+
+	/// What was logged while no logfile was open, still waiting to be written.
+	const wxString &GetUnwrittenLog() const { return m_ApplogBuf; }
 
 	/// Descriptor reserved for the crash path, or -1 before the first open. Survives a
 	/// close-and-reopen of the logfile; see ReserveCrashFd().

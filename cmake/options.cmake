@@ -304,26 +304,13 @@ option (ENABLE_NATT_SERVER_COORDINATION "enable experimental server-coordinated 
 # Standalone / portable / AppImage builds and Windows/macOS want ON.
 option (ENABLE_VERSION_CHECK "compile in the in-app new-version check (startup notification + About 'Check for updates'); OFF for OS-package builds" ON)
 
-# Compile-time default for the Kad protocol 0x0a runtime preference.
-#
-# The AICH keyword-storage features 0x09 introduced are now controlled at runtime
-# by the KadProtocol10 preference (Preferences, EC, amuleapi). This compile-time
-# switch sets only the default value of that preference: ON means a fresh config
-# starts with KadProtocol10 enabled, OFF means it starts disabled for maximum
-# backward compatibility with older Kad peers.
-#
-# The compile definition is consumed by Preferences.cpp when constructing the
-# default preference. The AICH codec and trust-selection helper remain independent
-# of this build option.
-option (ENABLE_KAD_PROTOCOL_10 "set the compile-time default for the Kad protocol 0x0a runtime preference (AICH hashes on keyword storage)" OFF)
-
 # Master switch for the local Kad node-protection heuristics: the adaptive
 # request-timeout estimate (CFastKad) and the Kad identity protections
 # (CSafeKad).
 #
-# Deliberately NOT part of ENABLE_KAD_PROTOCOL_10, and deliberately not named
-# after a protocol version. Neither class defines a tag, an opcode or a packet
-# field: they consume what the Kad protocol already carries and decide only
+# Independent of the KadProtocol10 runtime preference, and deliberately not
+# named after a protocol version. Neither class defines a tag, an opcode or a
+# packet field: they consume what the Kad protocol already carries and decide only
 # what we do locally -- whether to admit a contact, whether to believe an
 # answer, how long to wait before treating a request as stalled. A peer cannot
 # observe whether we run them and has nothing to implement in response, so
@@ -352,7 +339,6 @@ option (ENABLE_KAD_NODE_PROTECTION "enable the local Kad node-protection heurist
 set (AMULE_EXPERIMENTAL_OPTIONS
 	ENABLE_NATT_SERVER_COORDINATION
 	ENABLE_IPV6
-	ENABLE_KAD_PROTOCOL_10
 	ENABLE_KAD_NODE_PROTECTION
 	ENABLE_UTP
 	ENABLE_QUIC

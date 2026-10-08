@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule GIT\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-08 13:27+0900\n"
-"PO-Revision-Date: 2026-10-02 00:52+0000\n"
+"POT-Creation-Date: 2026-10-08 13:42+0900\n"
+"PO-Revision-Date: 2026-10-07 16:31+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
 "Language: bn\n"
@@ -526,6 +526,57 @@ msgstr ""
 "এর অর্থ হলো আপনি LOWID হবেন।\n"
 "\n"
 "পোর্টটি ইনপুট ও আউটপুটের জন্য খোলা আছে কিনা তা নিশ্চিত করতে আপনার নেটওয়ার্ক পরীক্ষা করুন।"
+
+#: src/amule.cpp
+msgid "The P2P TCP port conflicts with the External Connections port. No sockets were changed.\n"
+msgstr ""
+
+#: src/amule.cpp
+msgid "The P2P TCP port is too high for its associated server UDP port. No sockets were changed.\n"
+msgstr ""
+
+#: src/amule.cpp
+msgid "The client UDP port conflicts with the server UDP port (TCP+3). No sockets were changed.\n"
+msgstr ""
+
+#: src/amule.cpp
+#, c-format
+msgid "Could not rebind the server UDP port %u; no sockets were changed.\n"
+msgstr ""
+
+#: src/amule.cpp
+#, fuzzy, c-format
+msgid "Could not rebind the P2P TCP port %u. %s"
+msgstr "ত্রুটি: TCP পোর্ট শোনা যায়নি।"
+
+#: src/amule.cpp
+msgid "The previous listener and server UDP socket remain active.\n"
+msgstr ""
+
+#: src/amule.cpp
+msgid "The server UDP socket could not be restored; restart aMule.\n"
+msgstr ""
+
+#: src/amule.cpp
+msgid "The previous P2P listeners remain active.\n"
+msgstr ""
+
+#: src/amule.cpp
+msgid "The previous client UDP socket remains active.\n"
+msgstr ""
+
+#: src/amule.cpp
+msgid "Some previous P2P sockets could not be restored; restart aMule.\n"
+msgstr ""
+
+#: src/amule.cpp
+#, fuzzy, c-format
+msgid "Could not rebind the client UDP port %u. %s"
+msgstr "amuleapi পাসওয়ার্ড সংরক্ষণ করা যায়নি: %s"
+
+#: src/amule.cpp
+msgid "P2P listening sockets rebound; established peer connections were kept."
+msgstr ""
 
 #: src/amule.cpp
 msgid "Failed to create OnlineSig File"
@@ -1121,6 +1172,10 @@ msgstr "প্রস্তুত"
 #: src/amule-remote-gui.cpp src/TransferWnd.cpp
 msgid "All"
 msgstr "সব"
+
+#: src/amule-remote-gui.cpp
+msgid "The daemon could not apply the connection port changes."
+msgstr ""
 
 #: src/amule-remote-gui.cpp
 msgid "not readable"
@@ -4658,34 +4713,35 @@ msgid "Reconnect on loss"
 msgstr "সংযোগ বিচ্ছিন্ন হলে পুনরায় সংযোগ"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
-msgid "Kad protocol version"
-msgstr "অবৈধ প্রোটোকল সংস্করণ।"
+msgid "File repair hashes over Kad"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
+msgid "Share and use file repair hashes (AICH) over Kad"
 msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
+"Share file repair hashes with other Kad nodes and learn them from Kad searches. These hashes can help aMule repair damaged download data without downloading an entire part again. aMule uses a hash for repair only once enough independent peers report the same one.\n"
 "\n"
-"WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
+"Very old Kad clients (before eMule 0.49b) may miss search results containing these hashes. If you notice missing results, try turning this option off.\n"
 "\n"
-"Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
+"Turning this option off discards the repair hashes stored in your Kad index on the next save. Turning it back on starts collecting them again.\n"
 "\n"
-"Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
+"Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
+msgid "Ignore repair hashes from Kad nodes too old to support them"
 msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+"Only applies when sharing and using file repair hashes over Kad is enabled. Ignore hashes published by nodes that report a Kad version too old to support them.\n"
 "\n"
-"WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+"A node's reported version may be out of date or inaccurate, so this can discard valid hashes and does not make accepted hashes trustworthy. Nodes whose version is unknown are still accepted.\n"
+"\n"
+"Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
 
 #: src/muuli_wdr.cpp
@@ -4789,8 +4845,13 @@ msgid "Enter here the min disk space desired."
 msgstr "এখানে কাঙ্ক্ষিত সর্বনিম্ন ডিস্ক স্পেস লিখুন।"
 
 #: src/muuli_wdr.cpp
-msgid "Save 10 sources on rare files (< 20 sources)"
+#, fuzzy
+msgid "Save up to 10 HighID sources of rare files (20 or fewer sources) on exit"
 msgstr "বিরল ফাইলে (< 20 সোর্স) 10টি সোর্স সংরক্ষণ করুন"
+
+#: src/muuli_wdr.cpp
+msgid "The saved sources are used again only if aMule restarts within 2 hours. LowID sources are not saved: a LowID only identifies a peer on the server that assigned it."
+msgstr ""
 
 #: src/muuli_wdr.cpp src/Statistics.cpp
 msgid "Uploads"
@@ -6404,16 +6465,21 @@ msgstr ""
 "\n"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid "- Network interface binding changed.\n"
+msgstr "- নেটওয়ার্ক ইন্টারফেস বাইন্ডিং পরিবর্তিত হয়েছে।\n"
+
+#: src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "- Local address binding changed.\n"
+msgstr "- নেটওয়ার্ক ইন্টারফেস বাইন্ডিং পরিবর্তিত হয়েছে।\n"
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "- TCP port changed.\n"
 msgstr "- TCP পোর্ট পরিবর্তিত হয়েছে।\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- UDP port changed.\n"
 msgstr "- UDP পোর্ট পরিবর্তিত হয়েছে।\n"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "- Network interface binding changed.\n"
-msgstr "- নেটওয়ার্ক ইন্টারফেস বাইন্ডিং পরিবর্তিত হয়েছে।\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- External connect port changed.\n"
@@ -9614,6 +9680,10 @@ msgstr "aMule চলছে বলে মনে হচ্ছে। অনুগ�
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "$APPDATA\\aMule-এ ব্যবহারকারীর ডেটা অপসারণ করা হচ্ছে…"
+
+#, fuzzy
+#~ msgid "Kad protocol version"
+#~ msgstr "অবৈধ প্রোটোকল সংস্করণ।"
 
 #~ msgid "Local"
 #~ msgstr "স্থানীয়"

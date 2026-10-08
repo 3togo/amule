@@ -72,6 +72,7 @@ public:
 	 * @param directory If from a client's shared files, the directory this file is in.
 	 * @param kademlia Whether this came from a kad search.
 	 * @param kadAICHResponderIP Actual responder in peer IP byte order; zero if unknown.
+	 * @param kadAICHKey Shared secret for this search; required for Kad evidence.
 	 */
 	CSearchFile(const CMemFile &data,
 		bool optUTF8,
@@ -80,7 +81,8 @@ public:
 		uint16_t serverPort = 0,
 		const wxString &directory = "",
 		bool kademlia = false,
-		uint32_t kadAICHResponderIP = 0);
+		uint32_t kadAICHResponderIP = 0,
+		const CKadAICHVotes::Key *kadAICHKey = nullptr);
 
 	/** Frees all children owned by this file. */
 	virtual ~CSearchFile();
@@ -219,12 +221,12 @@ public:
 		return ((GetClientID() && GetClientPort()) ? 1 : 0) + m_clients.size();
 	}
 
-	// Replay group-wide evidence even when this is a selected filename variant.
-	bool ApplyKadAICHVotes(CAICHHashSet &hashes) const;
+	// Apply the group's AICH evidence, even when this is a selected filename variant.
+	bool ApplyAICHEvidence(CAICHHashSet &hashes) const;
 
 	void SetKadPublishInfo(uint32_t val) noexcept { m_kadPublishInfo = val; }
 	uint32_t GetKadPublishInfo() const noexcept { return m_kadPublishInfo; }
-	const std::map<uint32_t, CAICHHash> &GetKadAICHVotes() const noexcept { return m_kadAICHVotes.Get(); }
+	std::map<uint32_t, CAICHHash> GetKadAICHVotes() const { return m_kadAICHVotes.Get(); }
 
 	const wxString &GetDirectory() const noexcept { return m_directory; }
 
@@ -288,6 +290,41 @@ private:
 	// Per-responder AICH evidence, copied and merged with the result. Not persisted:
 	// restored searches have no live responder and must not contribute a vote.
 	CKadAICHVotes m_kadAICHVotes;
+
+	// The AICH root an eD2k server (or browsed client) reported for this group, merged the
+	// way m_kadAICHVotes is. Two different roots are a sticky conflict, so arrival order
+	// cannot pick one.
+	struct CEd2kAICHRoot
+	{
+		enum class EState : uint8
+		{
+			None,
+			Set,
+			Conflict
+		};
+		EState state = EState::None;
+		CAICHHash root;
+		uint32_t sourceIP = 0; // the reporter, in peer byte order
+
+		void Merge(const CEd2kAICHRoot &other)
+		{
+			if (other.state == EState::None || state == EState::Conflict) {
+				return;
+			}
+			if (other.state == EState::Conflict || (state == EState::Set && root != other.root)) {
+				*this = CEd2kAICHRoot();
+				state = EState::Conflict;
+			} else if (state == EState::None) {
+				*this = other;
+			} else if (other.sourceIP != 0 && (sourceIP == 0 || other.sourceIP < sourceIP)) {
+				// Agreeing reporters: keep one deterministically, whatever the order.
+				sourceIP = other.sourceIP;
+			}
+		}
+	};
+	CEd2kAICHRoot m_ed2kAICHRoot;
+	// Read this row's own FT_AICH_HASH into m_ed2kAICHRoot. Kad rows contribute votes instead.
+	void InitEd2kAICHRoot();
 
 	friend class CSearchFileTestFixture;
 	friend class CPartFile;

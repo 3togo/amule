@@ -24,6 +24,7 @@
 //
 
 #include "SearchList.h" // Interface declarations.
+#include "SearchStartBookkeeping.h"
 
 #include "BrowseManager.h"
 
@@ -324,6 +325,7 @@ void CSearchList::RemoveResults(wxUIntPtr searchID)
 
 	// Drop any per-search tracking for this ID (bounded growth).
 	m_finishedKadSearches.erase(static_cast<uint32_t>(searchID));
+	m_kadAICHKeys.erase(static_cast<uint32_t>(searchID));
 	m_searchStartTimes.erase(static_cast<uint32_t>(searchID));
 	m_searchKinds.erase(static_cast<uint32_t>(searchID));
 	m_searchStrings.erase(static_cast<uint32_t>(searchID));
@@ -621,6 +623,8 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 		return error;
 	}
 
+	const CKadAICHVotes::Key evidenceKey = startKad ? CKadAICHVotes::GenerateKey() : CKadAICHVotes::Key{};
+
 	// The scalar m_searchType / m_currentSearch are the anchor for the single in-flight ed2k
 	// (local/global) search: its results arrive asynchronously for several seconds and are
 	// attributed via these scalars. A Kad search started ALONGSIDE an in-flight ed2k search has
@@ -628,6 +632,7 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 	// ed2k search's late hits get dropped (wrong type) or misfiled (wrong bucket). Every other
 	// start updates the anchor as before.
 	const bool preserveEd2kAnchor = (type == KadSearch) && m_searchInProgress;
+	CSearchStartBookkeeping pendingStart(m_searchType, m_searchStart, type, preserveEd2kAnchor);
 
 	// Legacy EC clients reuse the sentinel across networks. Ensure that no old
 	// Kad search can still deliver results to the bucket before reusing it.
@@ -643,7 +648,7 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 				params.strKeyword, data->GetLength(), data->GetRawBuffer(), *searchID);
 
 			*searchID = search->GetSearchID();
-
+			m_kadAICHKeys[*searchID] = evidenceKey;
 			// Do not repoint the ed2k result-attribution scalar when a Kad search runs alongside
 			// an in-flight ed2k search (see preserveEd2kAnchor above); the Kad search is tracked
 			// by its own ID regardless.
@@ -664,6 +669,7 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 				Kademlia::CSearch *search = Kademlia::CSearchManager::PrepareFindKeywords(
 					params.strKeyword, kadData->GetLength(), kadData->GetRawBuffer(), 0);
 				m_kadToEd2kSearchId[search->GetSearchID()] = *searchID;
+				m_kadAICHKeys[*searchID] = evidenceKey;
 			} catch (const wxString &what) {
 				if (!theApp->IsConnectedED2K()) {
 					return _("Unexpected error while attempting Kad search: ") + what;
@@ -701,18 +707,16 @@ wxString CSearchList::StartNewSearch(uint32 *searchID, SearchType type, CSearchP
 		}
 	}
 
-	// Publish the new anchor only after startup succeeds. A rejected Kad request
-	// must not change the kind or progress of the previous search.
-	if (!preserveEd2kAnchor) {
-		m_searchType = type;
-	}
-	m_searchStart = time(nullptr);
+	// Commit the anchor only after a successful start. Rejected Kad keywords,
+	// as well as key-generation failures, must not relabel the previous search.
+	const time_t searchStart = time(nullptr);
+	pendingStart.Commit(searchStart);
 
 	// Record this search's own start time so its (cosmetic Kad) progress ramp is computed from
 	// *its* age even after it is no longer the most-recently-started search -- otherwise a Kad
 	// search running in parallel with a later ed2k search would report a fixed near-full
 	// percent.
-	m_searchStartTimes[static_cast<uint32_t>(*searchID)] = m_searchStart;
+	m_searchStartTimes[static_cast<uint32_t>(*searchID)] = searchStart;
 	// Record this search's kind by id (same reason as the start time above): a later search of
 	// a different type must not make an older tab report the wrong kind. `type` is this
 	// search's real type regardless of the scalar anchor bookkeeping.
@@ -1918,6 +1922,19 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID,
 	// AllSearch maps the Kad search ID back to the ed2k tab's primary ID so results
 	// from both networks land in the same bucket.
 	const uint32_t effectiveSearchID = GetEffectiveSearchId(searchID);
+	// A late reply for a closed search must not recreate its bucket.
+	if (!m_searchStrings.count(effectiveSearchID)) {
+		return;
+	}
+	// StartNewSearch registers a key for every Kad keyword search. Should one ever be
+	// missing, still show the result, only without AICH evidence.
+	const auto key = m_kadAICHKeys.find(effectiveSearchID);
+	const bool sampled = key != m_kadAICHKeys.end();
+	if (!sampled) {
+		AddDebugLogLineC(logKadSearch,
+			CFormat("Kad search %u has no AICH sampling key; dropping its AICH evidence") %
+				effectiveSearchID);
+	}
 
 	CMemFile temp(250);
 	uint8_t fileid[16];
@@ -1958,8 +1975,15 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID,
 
 	temp.Seek(0, wxFromStart);
 
-	auto tempFile = std::make_unique<CSearchFile>(
-		temp, (eStrEncode == utf8strRaw), effectiveSearchID, 0, 0, "", true, kadAICHResponderIP);
+	auto tempFile = std::make_unique<CSearchFile>(temp,
+		(eStrEncode == utf8strRaw),
+		effectiveSearchID,
+		0,
+		0,
+		"",
+		true,
+		sampled ? kadAICHResponderIP : 0,
+		sampled ? &key->second : nullptr);
 	tempFile->SetKadPublishInfo(kadPublishInfo);
 
 	AddToList(std::move(tempFile));

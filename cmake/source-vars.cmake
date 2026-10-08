@@ -31,6 +31,7 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		FirstRunWizard.cpp
 		FriendList.cpp
 		IPFilter.cpp
+		KadAICHVotes.cpp
 		KnownFileList.cpp
 		ListenSocket.cpp
 		MuleUDPSocket.cpp
@@ -59,7 +60,7 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		list (APPEND CORE_SOURCES UtpLibraryAdapter.cpp UtpStreamAcceptor.cpp)
 	endif()
 	if (ENABLE_QUIC)
-		list (APPEND CORE_SOURCES QuicContext.cpp QuicLibraryAdapter.cpp QuicNgtcp2Adapter.cpp QuicSocketTransport.cpp)
+		list (APPEND CORE_SOURCES QuicContext.cpp QuicGnuTlsSession.cpp QuicNgtcp2Adapter.cpp QuicSocketTransport.cpp QuicStreamAcceptor.cpp)
 	endif()
 
 	# Only compiled in when the switch is on. Every call site is behind the

@@ -13,8 +13,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-08 13:27+0900\n"
-"PO-Revision-Date: 2026-10-02 00:51+0000\n"
+"POT-Creation-Date: 2026-10-08 13:42+0900\n"
+"PO-Revision-Date: 2026-10-07 16:31+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
 "Language: zh_CN\n"
@@ -556,6 +556,57 @@ msgstr ""
 "这意味着你会是 Low ID。\n"
 "\n"
 "请检测网络确保端口开启可用于输入输出。"
+
+#: src/amule.cpp
+msgid "The P2P TCP port conflicts with the External Connections port. No sockets were changed.\n"
+msgstr "P2P TCP 端口与外部连接端口冲突。未更改套接字。\n"
+
+#: src/amule.cpp
+msgid "The P2P TCP port is too high for its associated server UDP port. No sockets were changed.\n"
+msgstr "P2P TCP 端口对于其关联的服务器 UDP 端口而言太高。未更改套接字。\n"
+
+#: src/amule.cpp
+msgid "The client UDP port conflicts with the server UDP port (TCP+3). No sockets were changed.\n"
+msgstr "客户端 UDP 端口与服务器 UDP 端口冲突（TCP+3）。未更改套接字。\n"
+
+#: src/amule.cpp
+#, c-format
+msgid "Could not rebind the server UDP port %u; no sockets were changed.\n"
+msgstr "无法重新绑定服务器 UDP 端口 %u；未更改套接字。\n"
+
+#: src/amule.cpp
+#, c-format
+msgid "Could not rebind the P2P TCP port %u. %s"
+msgstr "无法重新绑定 P2P TCP 端口 %u. %s"
+
+#: src/amule.cpp
+msgid "The previous listener and server UDP socket remain active.\n"
+msgstr "之前的监听器和服务器 UDP 套接字仍活跃。\n"
+
+#: src/amule.cpp
+msgid "The server UDP socket could not be restored; restart aMule.\n"
+msgstr "无法恢复服务器 UDP 套接字；重启 aMule。\n"
+
+#: src/amule.cpp
+msgid "The previous P2P listeners remain active.\n"
+msgstr "之前的 P2P 侦听器仍活跃。\n"
+
+#: src/amule.cpp
+msgid "The previous client UDP socket remains active.\n"
+msgstr "之前的客户端 UDP 套接字仍活跃。\n"
+
+#: src/amule.cpp
+msgid "Some previous P2P sockets could not be restored; restart aMule.\n"
+msgstr "无法恢复一些之前的 P2P 套接字；重启 aMule。\n"
+
+#: src/amule.cpp
+#, c-format
+msgid "Could not rebind the client UDP port %u. %s"
+msgstr "无法重新绑定客户端 UDP 端口 %u. %s"
+
+#: src/amule.cpp
+msgid "P2P listening sockets rebound; established peer connections were kept."
+msgstr "P2P 监听套接字反弹；已建立的对等连接被保留。"
 
 #: src/amule.cpp
 msgid "Failed to create OnlineSig File"
@@ -1153,6 +1204,10 @@ msgid "All"
 msgstr "全部"
 
 #: src/amule-remote-gui.cpp
+msgid "The daemon could not apply the connection port changes."
+msgstr "守护进程无法应用连接端口更改。"
+
+#: src/amule-remote-gui.cpp
 msgid "not readable"
 msgstr "不可读"
 
@@ -1198,7 +1253,7 @@ msgstr "未知"
 
 #: src/amule-remote-gui.cpp
 msgid "The connected daemon does not support All searches."
-msgstr ""
+msgstr "已连接的 daemon 不支持 All 搜索类型。"
 
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
@@ -3998,9 +4053,8 @@ msgid "Type"
 msgstr "类型"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Search network"
-msgstr "搜索错误"
+msgstr "搜索网络"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -4687,44 +4741,36 @@ msgid "Reconnect on loss"
 msgstr "断线后自动重连"
 
 #: src/muuli_wdr.cpp
-msgid "Kad protocol version"
-msgstr "Kad 协议版本"
+msgid "File repair hashes over Kad"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
-msgstr "通告 Kad 协议 0x0a（AICH 关键词存储）"
+msgid "Share and use file repair hashes (AICH) over Kad"
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
+"Share file repair hashes with other Kad nodes and learn them from Kad searches. These hashes can help aMule repair damaged download data without downloading an entire part again. aMule uses a hash for repair only once enough independent peers report the same one.\n"
 "\n"
-"WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
+"Very old Kad clients (before eMule 0.49b) may miss search results containing these hashes. If you notice missing results, try turning this option off.\n"
 "\n"
-"Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
+"Turning this option off discards the repair hashes stored in your Kad index on the next save. Turning it back on starts collecting them again.\n"
 "\n"
-"Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
+"Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
-"启用后，aMule 通告 Kad 协议版本 0x0a 并处理关键词发布/搜素结果中的 AICH 哈希值。\n"
-"\n"
-"警告：启用此选项可能导致无法解析 AICH 结果标签的较老的 Kad 客户端 (0.49b 之前) 丢弃搜索结果。多数当前客户端支持它，但如果遇到搜素结果缺失问题，尝试禁用该选项。\n"
-"\n"
-"禁用此选项在下次保存时丢弃存储的 AICH 关键词索引数据。重新启用它需要再次收集此数据。\n"
-"\n"
-"从 Kad 搜索结果学到的哈希值在下载来源确证它们前不受信任。仅有报告的发布者计数永远不授权 AICH 恢复。"
 
 #: src/muuli_wdr.cpp
-msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
-msgstr "拒绝来自旧 Kad 对等方（< 0x09）的 AICH 发布标签"
+msgid "Ignore repair hashes from Kad nodes too old to support them"
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+"Only applies when sharing and using file repair hashes over Kad is enabled. Ignore hashes published by nodes that report a Kad version too old to support them.\n"
 "\n"
-"WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+"A node's reported version may be out of date or inaccurate, so this can discard valid hashes and does not make accepted hashes trustworthy. Nodes whose version is unknown are still accepted.\n"
+"\n"
+"Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
-"启用后将拒绝来自通告的 Kad 版本低于 0x09 的节点的 AICH 发布标签 ，因为这些版本不支持 AICH 关键词存储。通告的版本不是发布者值得信赖的证明。\n"
-"\n"
-"警告：这可能会拒绝路由表版本陈旧的真实发布者，降低 AICH 哈希覆盖。版本未知的节点仍被接受。不论该设置是否启用，从 Kad 搜索结果学到的哈希值都要求下载来源确证。"
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"
@@ -4827,8 +4873,12 @@ msgid "Enter here the min disk space desired."
 msgstr "请输入最低硬盘空间。"
 
 #: src/muuli_wdr.cpp
-msgid "Save 10 sources on rare files (< 20 sources)"
-msgstr "保存稀有文件（少于20个源）的10个源"
+msgid "Save up to 10 HighID sources of rare files (20 or fewer sources) on exit"
+msgstr "退出时保存稀有文件（少于 20 个源）的最多 10 个 HighID 来源"
+
+#: src/muuli_wdr.cpp
+msgid "The saved sources are used again only if aMule restarts within 2 hours. LowID sources are not saved: a LowID only identifies a peer on the server that assigned it."
+msgstr "只有在当 aMule 在 2 小时内重启时才会再次使用已保存的来源。不保存 LowID 来源：LowID 只在分配它的服务器上识别对等方。"
 
 #: src/muuli_wdr.cpp src/Statistics.cpp
 msgid "Uploads"
@@ -6442,16 +6492,20 @@ msgstr ""
 "\n"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid "- Network interface binding changed.\n"
+msgstr "- 更改了网络接口绑定.\n"
+
+#: src/PrefsUnifiedDlg.cpp
+msgid "- Local address binding changed.\n"
+msgstr "- 更改了本地地址绑定。\n"
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "- TCP port changed.\n"
 msgstr "- TCP端口已更改。\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- UDP port changed.\n"
 msgstr "- UDP端口已更改。\n"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "- Network interface binding changed.\n"
-msgstr "- 更改了网络接口绑定.\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- External connect port changed.\n"
@@ -6905,9 +6959,8 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr "存储的搜索列表包含无效条目，文件可能损坏："
 
 #: src/SearchList.cpp
-#, fuzzy
 msgid "All search can't be done if neither eD2k nor Kad is available"
-msgstr "Kad搜索不能使用，因为Kad没有连接"
+msgstr "如果 eD2k 和 Kad 均不可用则所有搜索均无法进行"
 
 #: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
@@ -6915,7 +6968,7 @@ msgstr "eD2k未连接时eD2k搜索无法进行"
 
 #: src/SearchList.cpp
 msgid "All search: no usable Kad keyword; continuing with eD2k."
-msgstr ""
+msgstr "All 搜索：无可用 Kad 关键词；继续用 eD2k 搜索."
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6927,7 +6980,7 @@ msgstr "尝试Kad搜索时出现未预料的错误： "
 
 #: src/SearchList.cpp
 msgid "All search: Kad component could not start: "
-msgstr ""
+msgstr "All 搜索: Kad 部件无法启动: "
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -6983,37 +7036,32 @@ msgid "New"
 msgstr "新建"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "eD2k: Current server"
-msgstr "eD2k 服务器列表 (server.met)"
+msgstr "eD2k：当前服务器"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "eD2k: All servers"
-msgstr "删除所有服务器"
+msgstr "eD2k：所有服务器"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "All networks"
-msgstr "无网络"
+msgstr "所有网络"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "Search the connected eD2k server."
-msgstr "现在已连接的服务器。"
+msgstr "搜索已连接的 eD2k 服务器。"
 
 #: src/SearchModeIcons.h
 msgid "Search the connected eD2k server and other servers in the server list."
-msgstr ""
+msgstr "搜索已连接的 eD2k 服务器和服务器列表中其他服务器。"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "Search the Kad network."
-msgstr "连接至网络。"
+msgstr "搜索 Kad 网络。"
 
 #: src/SearchModeIcons.h
 msgid "Search eD2k servers and Kad, using whichever networks are available."
-msgstr ""
+msgstr "搜索 eD2k 服务器和 Kad，哪个网络可用就用哪个。"
 
 #: src/SearchProgressReport.cpp
 msgid "running"
@@ -7057,36 +7105,35 @@ msgstr "没有可报告的搜索。\n"
 #: src/SearchSourceFormat.h
 #, c-format
 msgid "Estimated availability: %u"
-msgstr ""
+msgstr "预计的可用性：%u"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "eD2k sources: %u"
-msgstr "文件源:"
+msgstr "eD2k 源：%u"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "Kad sources: %u"
-msgstr "发现的源: %s"
+msgstr "Kad 源： %u"
 
 #: src/SearchSourceFormat.h
 msgid "Network counts may overlap; they are not added together."
-msgstr ""
+msgstr "网络计数可能重叠；不是把它们相加。"
 
 #: src/SearchSourceFormat.h
-#, fuzzy
 msgid "Network breakdown unavailable."
-msgstr "有新版"
+msgstr "网络分析不可用。"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "Complete sources: %u"
-msgstr "完成的源"
+msgstr "完成的源：%u"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "Direct client endpoints: %u"
-msgstr "新的用户编号是 %u"
+msgstr "直连客户端端点： %u"
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
@@ -7120,19 +7167,19 @@ msgid "No valid servers to which to connect found in server list"
 msgstr "服务器列表中没有可以连接的服务器"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connected to %s (%s:%i), sending login request"
-msgstr "已连接至 %s (%s:%i)"
+msgstr "已连接至 %s (%s:%i)，正发送登录请求"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Obfuscated connection established on: %s (%s:%i)"
-msgstr "已成功连接到：%s"
+msgstr "混淆连接已建立于：%s (%s:%i)"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connection established on: %s (%s:%i)"
-msgstr "已成功连接到：%s"
+msgstr "连接已建立于：%s (%s:%i)"
 
 #: src/ServerConnect.cpp
 msgid "Fatal Error while trying to connect. Internet connection might be down"
@@ -8196,7 +8243,7 @@ msgstr "无效的校验值（长度必须为32个字符）\n"
 
 #: src/TextClient.cpp
 msgid "The connected daemon does not support All searches.\n"
-msgstr ""
+msgstr "已连接的 daemon 不支持 All 搜索类型。\n"
 
 #. TRANSLATORS:
 #. 'help search' is a command to the program, do not translate it.
@@ -8593,7 +8640,6 @@ msgid "Execute a search."
 msgstr "执行搜索。"
 
 #: src/TextClient.cpp
-#, fuzzy
 msgid ""
 "A search type has to be specified by giving the type:\n"
 "    GLOBAL\n"
@@ -8616,6 +8662,7 @@ msgstr ""
 "    GLOBAL\n"
 "    LOCAL\n"
 "    KAD\n"
+"    ALL: 所有网络 (需要 daemon 支持)\n"
 "示例：'search kad file' 会执行 kad \"file\" 搜索。\n"
 "\n"
 "可在搜索词前、后、中间添加筛选器\n"
@@ -8641,9 +8688,8 @@ msgid "Execute a kad search"
 msgstr "执行 Kad 搜索"
 
 #: src/TextClient.cpp
-#, fuzzy
 msgid "Execute an eD2k and Kad search"
-msgstr "执行 Kad 搜索"
+msgstr "执行 eD2k 和 Kad 搜索"
 
 #: src/TextClient.cpp
 msgid "Show the results of a search."
@@ -9663,6 +9709,41 @@ msgstr "aMule 似乎正在运行。请将其关闭并重新运行卸载程序。
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "正在删除 $APPDATA\\aMule 中的用户数据..."
+
+#~ msgid "Kad protocol version"
+#~ msgstr "Kad 协议版本"
+
+#~ msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
+#~ msgstr "通告 Kad 协议 0x0a（AICH 关键词存储）"
+
+#~ msgid ""
+#~ "When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
+#~ "\n"
+#~ "WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
+#~ "\n"
+#~ "Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
+#~ "\n"
+#~ "Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
+#~ msgstr ""
+#~ "启用后，aMule 通告 Kad 协议版本 0x0a 并处理关键词发布/搜素结果中的 AICH 哈希值。\n"
+#~ "\n"
+#~ "警告：启用此选项可能导致无法解析 AICH 结果标签的较老的 Kad 客户端 (0.49b 之前) 丢弃搜索结果。多数当前客户端支持它，但如果遇到搜素结果缺失问题，尝试禁用该选项。\n"
+#~ "\n"
+#~ "禁用此选项在下次保存时丢弃存储的 AICH 关键词索引数据。重新启用它需要再次收集此数据。\n"
+#~ "\n"
+#~ "从 Kad 搜索结果学到的哈希值在下载来源确证它们前不受信任。仅有报告的发布者计数永远不授权 AICH 恢复。"
+
+#~ msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
+#~ msgstr "拒绝来自旧 Kad 对等方（< 0x09）的 AICH 发布标签"
+
+#~ msgid ""
+#~ "When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+#~ "\n"
+#~ "WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+#~ msgstr ""
+#~ "启用后将拒绝来自通告的 Kad 版本低于 0x09 的节点的 AICH 发布标签 ，因为这些版本不支持 AICH 关键词存储。通告的版本不是发布者值得信赖的证明。\n"
+#~ "\n"
+#~ "警告：这可能会拒绝路由表版本陈旧的真实发布者，降低 AICH 哈希覆盖。版本未知的节点仍被接受。不论该设置是否启用，从 Kad 搜索结果学到的哈希值都要求下载来源确证。"
 
 #~ msgid "Local"
 #~ msgstr "本地"

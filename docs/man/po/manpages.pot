@@ -5,7 +5,7 @@
 #
 #, fuzzy
 msgid ""
-msgstr "Project-Id-Version: PACKAGE VERSION\nPOT-Creation-Date: 2026-10-02 08:36+0800\nPO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\nLast-Translator: FULL NAME <EMAIL@ADDRESS>\nLanguage-Team: LANGUAGE <LL@li.org>\nLanguage: \nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+msgstr "Project-Id-Version: PACKAGE VERSION\nPOT-Creation-Date: 2026-10-07 10:14-0400\nPO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\nLast-Translator: FULL NAME <EMAIL@ADDRESS>\nLanguage-Team: LANGUAGE <LL@li.org>\nLanguage: \nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
 
 #. type: TH
 #: amule.1.in
@@ -92,6 +92,17 @@ msgstr ""
 #: amule.1.in amuled.1.in amulegui.1.in ed2k.1.in
 #: ../../src/utils/cas/docs/cas.1.in
 msgid "Read config from I<E<lt>pathE<gt>> instead of home"
+msgstr ""
+
+#. type: TP
+#: amule.1.in amuled.1.in amulegui.1.in
+#, no-wrap
+msgid "B<[ --log-file>=I<E<lt>fileE<gt>> B<]>"
+msgstr ""
+
+#. type: Plain text
+#: amule.1.in amuled.1.in
+msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<amule.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<logfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
 msgstr ""
 
 #. type: TP
@@ -921,6 +932,11 @@ msgstr ""
 #. type: Plain text
 #: amulegui.1.in
 msgid "B<amulegui> is a client program, and can be connected to amule or amuled via EC. You can manage your amule program with it. It provides almost the same functionalities as amule, even if the core works on another computer."
+msgstr ""
+
+#. type: Plain text
+#: amulegui.1.in
+msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<remote.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<remotelogfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
 msgstr ""
 
 #. type: Plain text

@@ -25,6 +25,9 @@
 
 #include "ClientUDPSocket.h" // Interface declarations
 
+#include <algorithm>
+#include <array>
+
 #include <protocol/Protocols.h>
 #include <protocol/ed2k/Client2Client/TCP.h> // Sometimes we reply with TCP packets.
 #include <protocol/ed2k/Client2Client/UDP.h>
@@ -53,15 +56,81 @@
 #include "UtpLibraryAdapter.h"
 #include "UtpStreamAcceptor.h"
 #endif
+#ifdef AMULE_QUIC_TRANSPORT
+#include "QuicTls.h"
+#include "QuicNgtcp2Adapter.h"
+#include "QuicNattProtocol.h"
+#include "NatRendezvousPolicy.h"
+#endif
 
 //
 // CClientUDPSocket -- Extended eMule UDP socket
 //
 
+#ifdef AMULE_QUIC_TRANSPORT
+namespace
+{
+//! What CQuicNgtcp2Factory asserts as "who we are" in the EAQN1 proof exchange
+//! (QuicNattProtocol.h) every inbound QUIC stream goes through before being handed off.
+std::array<uint8_t, 16> QuicLocalIdentityFromUserHash()
+{
+	std::array<uint8_t, 16> identity{};
+	std::copy_n(thePrefs::GetUserHash().GetHash(), identity.size(), identity.begin());
+	return identity;
+}
+
+//! Sends a QUIC datagram the same way SendUtpDatagram() sends a uTP one: wrapped as an
+//! OP_NATT_FRAME_QUIC reserved-protocol frame, unobfuscated. There is no established peer
+//! identity/hash to obfuscate with for a connection this socket did not dial -- every QUIC
+//! connection here is inbound -- and the datagram's own TLS 1.3 protection does not depend on
+//! aMule's separate ed2k UDP obfuscation layer either way.
+class CQuicUdpSink final : public IQuicDatagramSink
+{
+public:
+	explicit CQuicUdpSink(CClientUDPSocket &socket)
+	: m_socket(socket)
+	{
+	}
+
+	bool SendDatagram(
+		const uint8_t *payload, size_t length, const CNetworkAddress &address, uint16_t port) override
+	{
+		uint32_t ip = 0;
+		// Maximum IPv4 UDP payload, less the aMule envelope -- the same bound
+		// QueueUtpDatagram() enforces for the same reason.
+		if (!address.ToIPv4NetworkOrder(ip) || length > 65507 - 2 ||
+			(length != 0 && payload == nullptr)) {
+			return false;
+		}
+		auto packet = std::make_unique<CPacket>(
+			OP_NATT_FRAME_QUIC, static_cast<uint32_t>(length), OP_UDPRESERVEDPROT2);
+		if (length != 0) {
+			packet->CopyToDataBuffer(0, payload, static_cast<unsigned int>(length));
+		}
+		m_socket.SendPacket(packet.release(), ip, port, false, nullptr, false, 0);
+		return true;
+	}
+
+private:
+	CClientUDPSocket &m_socket;
+};
+} // namespace
+#endif
+
 CClientUDPSocket::CClientUDPSocket(const amuleIPV4Address &address, const CProxyData *ProxyData)
 : CMuleUDPSocket("Client UDP-Socket", ID_CLIENTUDPSOCKET_EVENT, address, ProxyData)
 #ifdef AMULE_UTP_TRANSPORT
 , m_utp(CreateUtpLibrary(), *this)
+#endif
+#ifdef AMULE_QUIC_TRANSPORT
+, m_quicCredentials(CreateProductionQuicCredentials())
+, m_quicSink(std::make_shared<CQuicUdpSink>(*this))
+, m_quicEngine(CreateProductionQuicNgtcp2Engine())
+, m_quicFactory(std::make_unique<CQuicNgtcp2Factory>(CQuicTlsPolicy{ m_quicCredentials.get() },
+	  m_quicSink,
+	  m_quicEngine,
+	  QuicLocalIdentityFromUserHash()))
+, m_quic(m_quicFactory.get())
 #endif
 {
 	if (!thePrefs::IsUDPDisabled()) {
@@ -72,6 +141,20 @@ CClientUDPSocket::CClientUDPSocket(const amuleIPV4Address &address, const CProxy
 	m_utp.Configure();
 	m_utp.SetAcceptor(&m_utpAcceptor);
 #endif
+#ifdef AMULE_QUIC_TRANSPORT
+	m_quicFactory->SetAcceptor(&m_quicAcceptor);
+#endif
+}
+
+bool CClientUDPSocket::Rebind(const amuleIPV4Address &address)
+{
+	// UDP can be disabled in preferences while the client socket object remains
+	// alive. Keep its future bind address up to date without opening a socket.
+	if (thePrefs::IsUDPDisabled()) {
+		Close();
+		return SetBindAddressIfClosed(address);
+	}
+	return CMuleUDPSocket::Rebind(address);
 }
 
 #ifdef AMULE_UTP_TRANSPORT
@@ -124,6 +207,14 @@ void CClientUDPSocket::SendUtpDatagram(const uint8_t *payload,
 	const std::uint64_t overhead = length + kUtpEnvelopeBytes + (encrypt ? kUtpCryptHeaderBytes : 0);
 	theStats::AddUpOverheadOther(overhead);
 	QueueUtpDatagram<CPacket>(*this, payload, length, ip, port, encrypt, userHash);
+}
+#endif
+
+#ifdef AMULE_QUIC_TRANSPORT
+void CClientUDPSocket::TickQuic()
+{
+	wxASSERT(wxIsMainThread());
+	m_quic.Tick(::GetTickCount64());
 }
 #endif
 
@@ -279,11 +370,8 @@ void CClientUDPSocket::ProcessReservedProt2Frame(
 		break;
 	}
 
-	// The registered types. Each is dropped in its own case rather than in a shared
-	// fallthrough, so the change that ships a transport replaces its own case and nothing else
-	// -- which is what the uTP case below now is. The other four belong to transports this
-	// build does not have, so a peer's attempt at one is a recognised frame aMule cannot serve
-	// rather than malformed traffic.
+	// Keep each registered type's handling in its own case: transports and capability
+	// negotiation are independently compile-gated, and unsupported types remain inert.
 	switch (classified.type) {
 	case OP_NATT_FRAME_UTP: {
 #ifdef AMULE_UTP_TRANSPORT
@@ -362,16 +450,53 @@ void CClientUDPSocket::ProcessReservedProt2Frame(
 		break;
 
 	case OP_NATT_FRAME_CAPS:
-	case OP_NATT_FRAME_CAPS_ACK:
-		// Answering the capability negotiation would claim a transport
-		// aMule does not have. Silence is the correct answer here.
+#ifdef AMULE_QUIC_TRANSPORT
+	{
+		QuicNatt::EaqcFrame request{};
+		const auto localHash = QuicLocalIdentityFromUserHash();
+		if (!QuicNatt::DecodeEaqcFrame(
+			    classified.payload, classified.payloadLength, localHash, request)) {
+			break;
+		}
+		const auto address = CNetworkAddress::FromIPv4NetworkOrderOrAbsent(ip);
+		const auto now = ::GetTickCount64();
+		if (!m_capsAckLimiter.Admit(address, now)) {
+			break;
+		}
+		const auto ack = QuicNatt::BuildEaqcCapsAck(request,
+			localHash,
+			(Kademlia::CPrefs::GetMyConnectOptions(false, true) & 0x08) != 0,
+#ifdef AMULE_UTP_TRANSPORT
+			true
+#else
+			false
+#endif
+		);
+		auto response = std::make_unique<CPacket>(
+			OP_NATT_FRAME_CAPS_ACK, static_cast<uint32>(ack.size()), OP_UDPRESERVEDPROT2);
+		response->CopyToDataBuffer(0, ack.data(), static_cast<unsigned int>(ack.size()));
+		SendPacket(response.release(), ip, port, false, nullptr, false, 0);
+	}
+#else
 		if (m_unservedFrameLog.ShouldLog(::GetTickCount64())) {
 			AddDebugLogLineN(logClientUDP,
-				CFormat("Ignoring NAT-T capability frame 0x%02X from %s:%u: nothing to "
-					"negotiate (%u further occurrences suppressed)") %
-					classified.type % Uint32toStringIP(ip) % port %
+				CFormat("Ignoring NAT-T CAPS from %s:%u: no QUIC transport in this "
+					"build (%u further occurrences suppressed)") %
+					Uint32toStringIP(ip) % port %
 					m_unservedFrameLog.TakeSuppressedCount());
 		}
+#endif
+	break;
+
+	case OP_NATT_FRAME_CAPS_ACK:
+		if (m_unservedFrameLog.ShouldLog(::GetTickCount64())) {
+			AddDebugLogLineN(logClientUDP,
+				CFormat("Ignoring NAT-T CAPS_ACK from %s:%u: aMule is responder-only "
+					"(%u further occurrences suppressed)") %
+					Uint32toStringIP(ip) % port %
+					m_unservedFrameLog.TakeSuppressedCount());
+		}
+		// ACKs are intentionally dropped and never answered.
 		break;
 
 	case OP_NATT_FRAME_KEY:
@@ -483,11 +608,7 @@ void CClientUDPSocket::ProcessPacket(uint8_t *packet, int16 size, int8 opcode, u
 
 				CMemFile data_out(128);
 				if (sender->GetUDPVersion() > 3) {
-					if (reqfile->IsPartFile()) {
-						static_cast<CPartFile *>(reqfile)->WritePartStatus(&data_out);
-					} else {
-						data_out.WriteUInt16(0);
-					}
+					reqfile->WritePartStatus(&data_out);
 				}
 
 				data_out.WriteUInt16(sender->GetUploadQueueWaitingPosition());

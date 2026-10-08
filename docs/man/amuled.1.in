@@ -6,6 +6,7 @@ amuled \- the all\-platform eMule p2p client \- daemonized version
 .SH SYNOPSIS
 .B_untranslated amuled
 .RB [ \-c " " \fI<path> ]
+.RB_untranslated [ \-\-log\-file " " \fI<file> ]
 .RB_untranslated [ \-f ]
 .RB [ \-p " " \fI<path> ]
 .RB_untranslated [ \-e ]
@@ -29,6 +30,16 @@ amuled \- the all\-platform eMule p2p client \- daemonized version
 .TP
 \fB[ \-c\fR \fI<path>\fR, \fB\-\-config\-dir\fR=\fI<path>\fR \fB]\fR
 Read config from \fI<path>\fR instead of home
+.TP
+\fB[ \-\-log\-file\fR=\fI<file>\fR \fB]\fR
+Write logs to the specified filename instead of the default log file.
+Overrides the \fBLogFilePath\fR setting under \fB[eMule]\fR in \fIamule.conf\fR for this run only.
+Relative paths are resolved against the configuration directory.
+The parent directory must already exist and be writable; it is not created automatically.
+An empty or absent configuration setting uses \fIlogfile\fR in the configuration directory.
+On startup, the previous log is backed up to the same path with \fI.bak\fR appended.
+If the backup cannot be created, a warning is logged and the current session is appended to the existing log.
+Configuration changes take effect after restart.
 .TP
 .B_untranslated [ \-f\fR, \fB\-\-full\-daemon ]\fR
 Forks to background.

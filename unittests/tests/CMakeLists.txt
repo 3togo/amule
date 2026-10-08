@@ -4,7 +4,6 @@ add_test (NAME QuicCMakeConfigTest
 		-DTEST_BINARY_DIR=${CMAKE_BINARY_DIR}/quic-cmake-contract
 		-P ${CMAKE_CURRENT_SOURCE_DIR}/QuicCMakeConfigTest.cmake
 )
-set_tests_properties (QuicCMakeConfigTest PROPERTIES TIMEOUT 120)
 
 # The checked-in lexer and native IPv6 rule store, without the application.
 add_executable (IPFilterIPv6Test
@@ -21,6 +20,15 @@ target_include_directories (IPFilterIPv6Test PRIVATE
 	${Boost_INCLUDE_DIR}
 )
 target_link_libraries (IPFilterIPv6Test muleunit mulecommon ${Boost_LIBRARIES})
+
+# The Kad firewall state across an hourly recheck, with the clock passed in.
+add_executable (KadFirewallRecheckTest KadFirewallRecheckTest.cpp)
+add_test (NAME KadFirewallRecheckTest COMMAND KadFirewallRecheckTest)
+target_include_directories (KadFirewallRecheckTest PRIVATE
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_SOURCE_DIR}/src/include
+)
+target_link_libraries (KadFirewallRecheckTest muleunit mulecommon)
 
 # Credit identity and wait ownership run without the application. The test supplies
 # a deterministic GetTickCount64; do not link the production clock into this target.
@@ -176,8 +184,10 @@ if (ENABLE_QUIC)
 		QuicNgtcp2AdapterTest.cpp
 		${CMAKE_SOURCE_DIR}/src/QuicNgtcp2Adapter.cpp
 		${CMAKE_SOURCE_DIR}/src/QuicContext.cpp
-		${CMAKE_SOURCE_DIR}/src/QuicLibraryAdapter.cpp
+		${CMAKE_SOURCE_DIR}/src/QuicGnuTlsSession.cpp
+		${CMAKE_SOURCE_DIR}/src/QuicSocketTransport.cpp
 		${CMAKE_SOURCE_DIR}/src/NetworkAddress.cpp
+		${CMAKE_SOURCE_DIR}/src/GetTickCount.cpp
 		${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
 		${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
 	)
@@ -190,21 +200,42 @@ if (ENABLE_QUIC)
 	)
 	target_link_libraries (QuicNgtcp2AdapterTest muleunit Quic::Ngtcp2 ${Boost_LIBRARIES})
 
-	add_executable (QuicLibraryAdapterTest
-		QuicLibraryAdapterTest.cpp
-		${CMAKE_SOURCE_DIR}/src/QuicLibraryAdapter.cpp
+	add_executable (QuicNgtcp2HandshakeTest
+		QuicNgtcp2HandshakeTest.cpp
+		${CMAKE_SOURCE_DIR}/src/QuicNgtcp2Adapter.cpp
+		${CMAKE_SOURCE_DIR}/src/QuicContext.cpp
+		${CMAKE_SOURCE_DIR}/src/QuicGnuTlsSession.cpp
+		${CMAKE_SOURCE_DIR}/src/QuicSocketTransport.cpp
+		${CMAKE_SOURCE_DIR}/src/NetworkAddress.cpp
+		${CMAKE_SOURCE_DIR}/src/GetTickCount.cpp
 		${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
 		${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
 	)
-	add_test (NAME QuicLibraryAdapterTest COMMAND QuicLibraryAdapterTest)
-	target_include_directories (QuicLibraryAdapterTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
-	target_link_libraries (QuicLibraryAdapterTest muleunit Quic::Ngtcp2)
+	add_test (NAME QuicNgtcp2HandshakeTest COMMAND QuicNgtcp2HandshakeTest)
+	target_include_directories (QuicNgtcp2HandshakeTest PRIVATE
+		${CMAKE_BINARY_DIR}
+		${CMAKE_SOURCE_DIR}/src
+		${CMAKE_SOURCE_DIR}/src/include
+		${Boost_INCLUDE_DIR}
+	)
+	target_link_libraries (QuicNgtcp2HandshakeTest muleunit Quic::Ngtcp2 ${Boost_LIBRARIES})
+
+	add_executable (QuicGnuTlsSessionTest
+		QuicGnuTlsSessionTest.cpp
+		${CMAKE_SOURCE_DIR}/src/QuicGnuTlsSession.cpp
+		${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
+		${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+	)
+	add_test (NAME QuicGnuTlsSessionTest COMMAND QuicGnuTlsSessionTest)
+	target_include_directories (QuicGnuTlsSessionTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	target_link_libraries (QuicGnuTlsSessionTest muleunit Quic::Ngtcp2)
 endif()
 
 add_executable (QuicSocketTransportTest
 	QuicSocketTransportTest.cpp
 	${CMAKE_SOURCE_DIR}/src/QuicSocketTransport.cpp
 	${CMAKE_SOURCE_DIR}/src/NetworkAddress.cpp
+	${CMAKE_SOURCE_DIR}/src/GetTickCount.cpp
 	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
 	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
 )
@@ -1662,6 +1693,35 @@ target_link_libraries (VerifyLocalDataResultTest
 	mulecommon
 )
 
+# The part status written to peers (OP_FILESTATUS, OP_REASKACK). Header-only for the same
+# reason as VerifyLocalDataResultTest above.
+add_executable (PartStatusWriterTest
+	PartStatusWriterTest.cpp
+	${CMAKE_SOURCE_DIR}/src/SafeFile.cpp
+	${CMAKE_SOURCE_DIR}/src/CFile.cpp
+	${CMAKE_SOURCE_DIR}/src/MemFile.cpp
+	${CMAKE_SOURCE_DIR}/src/kademlia/utils/UInt128.cpp
+	${CMAKE_SOURCE_DIR}/src/Tag.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Path.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+)
+
+add_test (NAME PartStatusWriterTest
+	COMMAND PartStatusWriterTest
+)
+
+target_include_directories (PartStatusWriterTest
+	PRIVATE ${CMAKE_BINARY_DIR}
+	PRIVATE ${CMAKE_SOURCE_DIR}/src
+	PRIVATE ${CMAKE_SOURCE_DIR}/src/include
+	PRIVATE ${CMAKE_SOURCE_DIR}/src/libs
+)
+
+target_link_libraries (PartStatusWriterTest
+	muleunit
+)
+
 # The browse ("View Files") state machine. Five separate defects have been the
 # same machine going wrong in a place only a peer of the right kind could reach
 # -- a flat browse that completes without ever being marked finished, a peer we
@@ -2019,12 +2079,18 @@ if (UNIX AND NOT APPLE)
 	target_link_libraries (AutostartManagerTest muleunit mulecommon)
 endif()
 
-# EC and eD2k loopback integration: isolated config, no public servers or Kad peers.
-# Opt in for CI/development; daemon timing assumptions must not affect package builds.
-option (ENABLE_ALL_SEARCH_INTEGRATION_TEST "Register daemon loopback AllSearch integration test" OFF)
-if (ENABLE_ALL_SEARCH_INTEGRATION_TEST AND BUILD_DAEMON AND UNIX AND NOT APPLE)
+# Integration tests use isolated configs, no public servers or Kad peers. Time limits live in
+# CI, not in TIMEOUT properties, which would also cap distro builds that run ctest with no limit.
+option (ENABLE_INTEGRATION_TESTS
+	"Register tests that run real aMule programs on loopback. Timing-sensitive, so off for package builds"
+	OFF)
+if (ENABLE_INTEGRATION_TESTS AND BUILD_DAEMON AND UNIX AND NOT APPLE)
 	find_package (Python3 QUIET COMPONENTS Interpreter)
 	if (Python3_Interpreter_FOUND)
+		add_test (NAME LogfilePathIntegrationTest
+			COMMAND ${Python3_EXECUTABLE}
+				${CMAKE_CURRENT_SOURCE_DIR}/LogfilePathIntegrationTest.py $<TARGET_FILE:amuled>
+		)
 		add_test (NAME AllSearchIntegrationTest
 			COMMAND ${Python3_EXECUTABLE}
 				${CMAKE_CURRENT_SOURCE_DIR}/AllSearchIntegrationTest.py $<TARGET_FILE:amuled>
@@ -2056,6 +2122,8 @@ endif()
 add_executable (AICHSearchResultTest
 	AICHSearchResultTest.cpp
 	AICHSearchResultStubs.cpp
+	${CMAKE_SOURCE_DIR}/src/KadAICHVotes.cpp
+	${CMAKE_SOURCE_DIR}/src/RandomFunctions.cpp
 	${CMAKE_SOURCE_DIR}/src/AbstractFile.cpp
 	${CMAKE_SOURCE_DIR}/src/SearchFile.cpp
 	${CMAKE_SOURCE_DIR}/src/MemFile.cpp
@@ -2082,6 +2150,14 @@ target_include_directories (AICHSearchResultTest PRIVATE
 	${CMAKE_SOURCE_DIR}/src/libs ${CMAKE_BINARY_DIR}/src/libs
 	${CMAKE_BINARY_DIR}/src/libs/ec/cpp
 )
+if (ENABLE_UPNP)
+	# AICHSearchResultStubs.cpp defines CamuleApp::~CamuleApp(), whose
+	# m_upnpMappings member (std::vector<CUPnPPortMapping>) needs the complete
+	# UPnPBase.h, which in turn includes <upnp.h> from libupnp. The test links
+	# mulecommon (not muleappcommon), so it does not inherit that include path.
+	target_include_directories (AICHSearchResultTest PRIVATE
+		$<TARGET_PROPERTY:UPNP::Shared,INTERFACE_INCLUDE_DIRECTORIES>)
+endif()
 target_link_libraries (AICHSearchResultTest muleunit mulecommon wxWidgets::BASE CRYPTOPP::CRYPTOPP)
 add_test (NAME AICHSearchResultTest COMMAND AICHSearchResultTest)
 
