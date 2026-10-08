@@ -58,8 +58,8 @@ stars and fine detail when updating the source set or converter.
 Do not run every flag through full path conversion: expanding strokes and
 transforms inflated the flag SVG payload from about 1.65 MB of original artwork
 to 7.83 MB. Selective conversion and compact serialization keep all 251 flags
-as vectors within a 3.5 MB maintenance-test budget, without a runtime decompressor.
-This budget concerns embedded SVG bytes, not the generated C file's hexadecimal
+as vectors within a 3.5 MB maintenance-test budget before compression.
+This budget concerns normalized SVG bytes, not the generated C file's hexadecimal
 notation or compressed distribution size. Keep vendored originals and license
 notices unchanged. When changing conversion, compare native wxWidgets renders
 against the originals rendered with librsvg, including detailed flags and
@@ -90,3 +90,25 @@ high-contrast themes, disabled commands, long translated labels, keyboard access
 and priority checkmarks. Moving a list between monitors should resize flags
 without blurring or shifting text. GTK may hide menu images according to the
 desktop setting; the text and command behavior must remain complete.
+
+## Embedded SVG compression
+
+`embed_icons.py` stores each normalized SVG as a zlib stream (level 9), along
+with its compressed and decoded lengths. PNGs remain unchanged. The shared C
+helper `amule_decode_icon_svg` decodes into a caller-owned buffer and rejects
+missing artwork, incorrect buffer lengths and damaged streams. It uses the
+existing zlib dependency; Python's standard library performs build-time
+compression. Builds without Python use the checked-in compressed table.
+
+The GUI decodes on demand before NanoSVG parsing and menu colour replacement;
+a decode failure follows the PNG fallback. Country flags retain their cached
+vector bundles, avoiding repeated decompression while drawing list rows.
+The API decodes before constructing its response, preserving ordinary SVG
+bodies, content types, ETags and HEAD behavior. Internal storage compression
+does not imply HTTP `Content-Encoding`.
+
+For this artwork set, SVG payload decreases from 3,189,897 to 929,668 bytes
+(70.9%), and generated C decreases from 20,363,109 to about 6,663,000 bytes.
+These are source/storage measurements, not executable-size measurements.
+`IconCompressionTest` verifies every decoded SVG byte against its source and
+checks damaged streams and invalid buffer lengths without requiring a display.

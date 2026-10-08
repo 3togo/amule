@@ -1019,6 +1019,9 @@ if (NEED_LIB_MULEAPPGUI)
 	)
 
 	target_link_libraries (muleappgui
+		# amule/amulegui also compile GUI_SOURCES, including icon_data.c.
+		# Propagate zlib's headers as well as its library on Windows.
+		PUBLIC ZLIB::ZLIB
 		PRIVATE wxWidgets::CORE
 	)
 

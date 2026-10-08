@@ -5,6 +5,18 @@ add_test (NAME QuicCMakeConfigTest
 		-P ${CMAKE_CURRENT_SOURCE_DIR}/QuicCMakeConfigTest.cmake
 )
 
+# Compression and HTTP artwork must work without a display, including on Windows.
+if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI OR BUILD_AMULEAPI)
+	add_executable (IconCompressionTest
+		IconCompressionTest.cpp
+		${CMAKE_SOURCE_DIR}/src/icons/icon_data.c
+	)
+	target_include_directories (IconCompressionTest PRIVATE
+		${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/icons)
+	target_link_libraries (IconCompressionTest PRIVATE ZLIB::ZLIB)
+	add_test (NAME IconCompressionTest COMMAND IconCompressionTest ${CMAKE_SOURCE_DIR}/src/icons)
+endif()
+
 # Native icon rendering needs wx core and a display (skipped if unavailable).
 if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 	add_executable (IconArtworkTest
@@ -15,7 +27,7 @@ if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 		${CMAKE_SOURCE_DIR}/src/icons/icon_data.c
 	)
 	target_include_directories (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
-	target_link_libraries (IconArtworkTest wxWidgets::CORE)
+	target_link_libraries (IconArtworkTest wxWidgets::CORE ZLIB::ZLIB)
 	if (WIN32)
 		# wx core imports Common Controls v6 entry points. Match the GUI's
 		# activation context and DPI awareness before the DLL loader runs.

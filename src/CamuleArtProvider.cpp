@@ -9,6 +9,7 @@
 #include <wx/image.h>
 #include <wx/mstream.h>
 #include <wx/settings.h>
+#include <vector>
 
 const wxString CamuleArtProvider::PREFIX = "amule:";
 
@@ -49,15 +50,19 @@ wxBitmapBundle SvgBundle(const struct AMuleIconEntry *entry, const wxSize &size)
 			sizeDef = probe.GetSize();
 		}
 		if (sizeDef != wxDefaultSize) {
+			std::vector<unsigned char> decoded(entry->svg_raw_len);
+			if (!amule_decode_icon_svg(entry, decoded.data(), decoded.size())) {
+				return wxBitmapBundle();
+			}
 			if (wxString::FromUTF8(entry->name).StartsWith("menu_")) {
 				wxString svg = wxString::FromUTF8(
-					reinterpret_cast<const char *>(entry->svg_data), entry->svg_len);
+					reinterpret_cast<const char *>(decoded.data()), decoded.size());
 				svg.Replace("#212529",
 					wxSystemSettings::GetColour(wxSYS_COLOUR_MENUTEXT)
 						.GetAsString(wxC2S_HTML_SYNTAX));
 				return wxBitmapBundle::FromSVG(svg.utf8_str(), sizeDef);
 			}
-			return wxBitmapBundle::FromSVG(entry->svg_data, entry->svg_len, sizeDef);
+			return wxBitmapBundle::FromSVG(decoded.data(), decoded.size(), sizeDef);
 		}
 	}
 #else

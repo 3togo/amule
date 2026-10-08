@@ -1769,7 +1769,15 @@ CHttpServer::Response CApiDispatcher::ServeCountryFlag(
 	r.content_type = svg ? "image/svg+xml" : "image/png";
 	// Dispatch() applies the ETag and 304 swap to every 200 GET/HEAD, and the
 	// transport writes a HEAD as headers only, so this handler just produces bytes.
-	r.body.assign(reinterpret_cast<const char *>(data), length);
+	if (svg) {
+		r.body.resize(icon->svg_raw_len);
+		if (!amule_decode_icon_svg(
+			    icon, reinterpret_cast<unsigned char *>(r.body.data()), icon->svg_raw_len)) {
+			return ErrorResponse(500, "internal_error", "could not decode flag");
+		}
+	} else {
+		r.body.assign(reinterpret_cast<const char *>(data), length);
+	}
 	// The artwork is compiled in and can only change with a new build, while a peer
 	// list is a page full of <img> tags pointing here. A day of freshness turns those
 	// into cache hits, while bounding how long an upgraded daemon serves stale art.
