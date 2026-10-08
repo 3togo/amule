@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2026-10-07 10:08-0400\n"
-"PO-Revision-Date: 2026-10-07 19:40+0000\n"
+"PO-Revision-Date: 2026-10-08 11:09+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
 "Language: nl\n"
@@ -112,7 +112,7 @@ msgstr "B<[ --log-bestand>=I<E<lt>bestandE<gt>> B<]>"
 #. type: Plain text
 #: amule.1.in amuled.1.in
 msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<amule.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<logfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
-msgstr ""
+msgstr "Schrijf logbestanden naar de gespecificeerde bestandsnaam in plaats van naar het standaard logbestand.  Overschrijft de B<LogBestandPad> instelling onder B<[eMule]> in I<amule.conf> voor alleen deze keer uitvoeren.  Relatieve paden worden opgelost in relatie tot de configuratiemap.  De oudermap moet al bestaan en schrijfbaar zijn; het wordt niet automatisch aangemaakt.  Een lege of afwezige configuratie-instelling gebruikt I<logbestand> in de configuratiemap.  Bij het opstarten wordt het vorige logbestand geback-upt op hetzelfde pad en wordt I<.bak> toegevoegd.  Als de back-up niet aangemaakt kan worden wordt een waarschuwing getoond en wordt de huidige sessie toegevoegd aan het bestaande logbestand.  Configuratieveranderingen treden in werking na opnieuw opstarten."
 
 #. type: TP
 #: amule.1.in amulegui.1.in
@@ -143,12 +143,12 @@ msgstr "Schakel het starten van aMule bij het aanmelden van de gebruiker in of u
 #. type: Plain text
 #: amule.1.in amuled.1.in amulegui.1.in
 msgid "Enable or disable aMule as the current user's default handler for ed2k:// and magnet: links, then exit.  I<E<lt>valueE<gt>> is B<on> or B<off> for both kinds of link, or B<ed2k:on>, B<ed2k:off>, B<magnet:on> or B<magnet:off> for one of them.  The OS-specific store is selected automatically: Windows registry, macOS LaunchServices, Linux XDG I<mimeapps.list>."
-msgstr "Schakel aMule in of uit als de standaard behandelaar van ed2:// en magnet:-koppelingen voor de huidige gebruiker, sluit dan af.  I<E<lt>waardeE<gt>> is B<aan> of B<uit> voor beide soorten koppelingen, of B<ed2k:aan>, B<ed2k:uit>, B<magnet:on> of B<magnet:uit> voor een enkele soort.  De OS-specifieke opslagruimte wordt automatisch geselecteerd: Windows registry, macOS LaunchService, Linux XDG I<mimeapps.list>."
+msgstr "Schakel aMule in of uit als de standaard afhandelaar van ed2:// en magnet:-koppelingen voor de huidige gebruiker, sluit dan af.  I<E<lt>waardeE<gt>> is B<aan> of B<uit> voor beide soorten koppelingen, of B<ed2k:aan>, B<ed2k:uit>, B<magnet:on> of B<magnet:uit> voor een enkele soort.  De OS-specifieke opslagruimte wordt automatisch geselecteerd: Windows registry, macOS LaunchService, Linux XDG I<mimeapps.list>."
 
 #. type: Plain text
 #: amule.1.in amuled.1.in amulegui.1.in
 msgid "Enable or disable aMule as the current user's handler for I<.emulecollection> files, then exit.  The OS-specific store is selected automatically: Windows registry, macOS LaunchServices, Linux XDG I<mimeapps.list>."
-msgstr "Schakel aMule in of uit als de standaard behandelaar van I<.emulecollection>-bestanden, sluit dan af.  De OS-specifieke opslagruimte wordt automatisch geselecteerd: Windows registry, macOS LaunchServices, Linux XDG I<mimeapps.list>."
+msgstr "Schakel aMule in of uit als de standaard afhandelaar van I<.emulecollection>-bestanden, sluit dan af.  De OS-specifieke opslagruimte wordt automatisch geselecteerd: Windows registry, macOS LaunchServices, Linux XDG I<mimeapps.list>."
 
 #. type: TP
 #: amule.1.in amuled.1.in
@@ -946,7 +946,7 @@ msgstr "B<amulegui> is een client-programma en kan verbonden worden met amule of
 #. type: Plain text
 #: amulegui.1.in
 msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<remote.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<remotelogfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
-msgstr ""
+msgstr "Schrijf logbestanden naar de gespecificeerde bestandsnaam in plaats van naar het standaard logbestand.  Overschrijft de B<LogBestandPad> instelling onder B<[eMule]> in I<amule.conf> voor alleen deze keer uitvoeren.  Relatieve paden worden opgelost in relatie tot de configuratiemap.  De oudermap moet al bestaan en schrijfbaar zijn; het wordt niet automatisch aangemaakt.  Een lege of afwezige configuratie-instelling gebruikt I<remotelogfile> in de configuratiemap.  Bij het opstarten wordt het vorige logbestand geback-upt op hetzelfde pad en wordt I<.bak> toegevoegd.  Als de back-up niet aangemaakt kan worden wordt een waarschuwing getoond en wordt de huidige sessie toegevoegd aan het bestaande logbestand.  Configuratieveranderingen treden in werking na opnieuw opstarten."
 
 #. type: Plain text
 #: amulegui.1.in
