@@ -37,6 +37,7 @@ there client on the eMule forum..
 */
 
 #include "Contact.h"
+#include "ContactQuality.h"
 
 #include <common/Macros.h>
 
@@ -68,6 +69,7 @@ CContact::CContact(const CUInt128 &clientID,
 , m_lastTypeSet(time(NULL))
 , m_expires(0)
 , m_created(m_lastTypeSet)
+, m_lastResponse(0)
 , m_inUse(0)
 , m_version(version)
 , m_ipVerified(ipVerified)
@@ -101,6 +103,7 @@ void CContact::CheckingType() noexcept
 void CContact::UpdateType() noexcept
 {
 	time_t now = time(NULL);
+	m_lastResponse = now;
 	uint32_t hours = (now - m_created) / HR2S(1);
 	switch (hours) {
 	case 0:
@@ -132,5 +135,11 @@ time_t CContact::GetLastSeen() const noexcept
 		}
 	}
 	return 0;
+}
+
+unsigned CContact::GetLocalQualityScore(time_t now) const noexcept
+{
+	return LocalContactQuality(
+		{ m_ipVerified, m_receivedHelloPacket, !m_udpKey.IsEmpty(), m_type, m_lastResponse }, now);
 }
 // File_checked_for_headers

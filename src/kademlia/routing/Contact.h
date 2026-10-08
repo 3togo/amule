@@ -80,6 +80,7 @@ public:
 	{
 		if (m_ip != ip) {
 			SetIPVerified(false);
+			m_lastResponse = 0;
 			m_ip = ip;
 		}
 	}
@@ -114,6 +115,7 @@ public:
 	time_t GetLastTypeSet() const noexcept { return m_lastTypeSet; }
 
 	time_t GetLastSeen() const noexcept;
+	unsigned GetLocalQualityScore(time_t now) const noexcept;
 
 	uint8_t GetVersion() const noexcept { return m_version; }
 	void SetVersion(uint8_t value) noexcept { m_version = value; }
@@ -137,6 +139,7 @@ private:
 	time_t m_lastTypeSet;
 	time_t m_expires;
 	time_t m_created;
+	time_t m_lastResponse;
 	uint32_t m_inUse;
 	uint8_t m_version;
 	bool m_ipVerified;

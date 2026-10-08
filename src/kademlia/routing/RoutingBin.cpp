@@ -37,6 +37,7 @@ there client on the eMule forum..
 */
 
 #include "RoutingBin.h"
+#include "ContactQuality.h"
 #include "../../Logger.h"
 #include "../../NetworkFunctions.h"
 #include "../../RandomFunctions.h"
@@ -424,3 +425,20 @@ bool CRoutingBin::HasOnlyLANNodes() const noexcept
 	}
 	return true;
 }
+
+CContact *CRoutingBin::GetNextProbeContact(time_t now) const noexcept
+{
+	CContact *best = nullptr;
+	for (CContact *contact : m_entries) {
+		if (!ContactProbeDue(contact->GetType(), contact->GetExpireTime(), now))
+			continue;
+		if (!best || BetterContactProbe(contact->GetLocalQualityScore(now),
+				     contact->GetExpireTime(),
+				     best->GetLocalQualityScore(now),
+				     best->GetExpireTime(),
+				     now))
+			best = contact;
+	}
+	return best;
+}
+// File_checked_for_headers

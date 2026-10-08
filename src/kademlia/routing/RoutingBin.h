@@ -71,6 +71,7 @@ public:
 	}
 	CContact *GetContact(const CUInt128 &id) const noexcept;
 	CContact *GetContact(uint32_t ip, uint16_t port, bool tcpPort) const noexcept;
+	CContact *GetNextProbeContact(time_t now) const noexcept;
 	CContact *GetOldest() const noexcept { return m_entries.size() ? m_entries.front() : NULL; }
 
 	uint32_t GetSize() const noexcept { return m_entries.size(); }

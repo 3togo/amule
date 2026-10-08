@@ -808,6 +808,11 @@ target_link_libraries (KadEntryTagListTest
 	mulecommon
 )
 
+add_executable(KadContactQualityTest KadContactQualityTest.cpp)
+target_include_directories(KadContactQualityTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(KadContactQualityTest muleunit mulecommon)
+add_test(NAME KadContactQualityTest COMMAND KadContactQualityTest)
+
 # The adaptive Kad response-time ceiling. CFastKad takes "now" as a parameter
 # rather than reading a clock, which is what lets the cold start, a known series
 # of samples, the eviction rule and the window bound all be pinned without

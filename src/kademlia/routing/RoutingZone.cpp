@@ -928,15 +928,14 @@ void CRoutingZone::OnSmallTimer()
 		}
 	}
 
-	c = m_bin->GetOldest();
-	if (c != NULL) {
-		if (c->GetExpireTime() >= now || c->GetType() == 4) {
-			m_bin->PushToBottom(c);
-			c = NULL;
-		}
-	}
+	// Spend the existing maintenance slot on a weak due contact, with aging
+	// ensuring healthy contacts also get checked. Admission and eviction stay
+	// governed by the existing routing rules, not this local score.
+	c = m_bin->GetNextProbeContact(now);
 
 	if (c != NULL) {
+		AddDebugLogLineN(logKadRouting,
+			CFormat("Kad maintenance probe: local quality %u") % c->GetLocalQualityScore(now));
 		c->CheckingType();
 		if (c->GetVersion() >= 6) {
 			DebugSend(Kad2HelloReq, c->GetIPAddress(), c->GetUDPPort());
