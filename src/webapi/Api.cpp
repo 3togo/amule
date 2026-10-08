@@ -23,6 +23,7 @@
 //
 
 #include "Api.h"
+#include "QBitCompat.h"
 #include "JsonDepthScan.h" // webapi::JsonNestingWithinLimit
 
 #include "ClientTagNames.h" // Needed for the shared client-tag token decoders
@@ -872,6 +873,14 @@ CHttpServer::Response CApiDispatcher::DispatchToHandler(const CHttpServer::Reque
 	if (path.compare(0, 5, "/api/") == 0) {
 		path = web_api_path::StripTrailingSlash(path);
 	}
+
+    if (path.compare(0, 8, "/api/v2/") == 0) {
+        if (!m_config.ServerCfg().qbit_compat) return ErrorResponse(404, "not_found", "compatibility API disabled");
+        auto response = HandleQBitCompat(req, path);
+        response.headers["Cache-Control"] = "private, no-store";
+        AppendHeaderToken(response.headers, "Vary", "Cookie");
+        return response;
+    }
 
 	if (path == "/api/v1/health") {
 		if (req.method != "GET" && req.method != "HEAD") {
@@ -11198,4 +11207,291 @@ void CApiDispatcher::DispatchEvents(const CHttpServer::Request &req,
 			}
 		}
 	}
+}
+
+
+CHttpServer::Response CApiDispatcher::HandleQBitCompat(const CHttpServer::Request &original, const std::string &path)
+{
+    auto text = [](unsigned status, const std::string &body) {
+        CHttpServer::Response r; r.status = status; r.content_type = "text/plain; charset=utf-8"; r.body = body; return r;
+    };
+    CHttpServer::Request req = original;
+    const auto origin = FindHeaderCaseInsensitive(req.headers, "Origin");
+    const auto host = FindHeaderCaseInsensitive(req.headers, "Host");
+    if (!origin.empty() && origin != "http://" + host && origin != "https://" + host
+        && !ResolveCorsOrigin(req, m_config).allowlisted) return text(403, "Origin is not allowed.");
+    // qBittorrent's SID carries the same signed, revocable session as the native API.
+    for (auto &header : req.headers) {
+        if (strcasecmp(header.first.c_str(), "Cookie") == 0) {
+            const auto sid = webapi::ExtractCookieValue(header.second, "SID");
+            if (!sid.empty()) header.second = std::string(kSessionCookieName) + "=" + sid;
+        }
+    }
+    qbit_compat::Fields fields;
+    if (req.method == "POST") {
+        const auto type = FindHeaderCaseInsensitive(req.headers, "Content-Type");
+        bool parsed = false;
+        if (type.compare(0, 33, "application/x-www-form-urlencoded") == 0 || type.empty()) {
+            parsed = qbit_compat::Form(req.body, fields);
+        } else if (type.compare(0, 19, "multipart/form-data") == 0) {
+            const auto at = type.find("boundary=");
+            if (at != std::string::npos) {
+                auto boundary = type.substr(at + 9);
+                if (boundary.size() >= 2 && boundary.front() == '"' && boundary.back() == '"')
+                    boundary = boundary.substr(1, boundary.size() - 2);
+                parsed = qbit_compat::Multipart(req.body, boundary, fields);
+            }
+        }
+        if (!parsed) return text(400, "Malformed form or unsupported torrent-file upload.");
+    } else if (req.method == "GET" || req.method == "HEAD") {
+        if (!qbit_compat::Form(QueryOf(req), fields)) return text(400, "Malformed query.");
+    } else return MethodNotAllowed("GET, HEAD, POST", "unsupported compatibility method");
+    const bool read = req.method == "GET" || req.method == "HEAD";
+    if (path == "/api/v2/auth/login") {
+        if (read) return MethodNotAllowed("POST", "login requires POST");
+        if (fields["username"] != "admin" && fields["username"] != "guest") return text(403, "Fails.");
+        CJsonWriter w; w.BeginObject(); w.Key("password"); w.ValueString(fields["password"].c_str()); w.EndObject();
+        req.body = w.GetBuffer();
+        auto response = HandleLogin(req);
+        if (response.status != 200) return response;
+        picojson::value session;
+        if (!picojson::parse(session, response.body).empty()
+            || session.get("role").to_str() != fields["username"]) return text(403, "Fails.");
+        auto &cookie = response.headers["Set-Cookie"];
+        cookie.replace(0, std::strlen(kSessionCookieName), "SID");
+        const auto cookiePath = cookie.find("; Path=");
+        if (cookiePath != std::string::npos) cookie.replace(cookiePath + 7,
+            m_config.ServerCfg().base_path.size() + 7, m_config.ServerCfg().base_path + "/api/v2");
+        response.content_type = "text/plain; charset=utf-8"; response.body = "Ok.";
+        return response;
+    }
+    // Version probing is the one anonymous read, matching the eMuleBB bridge.
+    if (path == "/api/v2/app/webapiversion") {
+        if (!read) return MethodNotAllowed("GET, HEAD", "version requires GET");
+        return text(200, "2.11.0");
+    }
+    const auto auth = Authenticate(req);
+    if (!auth.ok) return auth.rejection;
+    if (path == "/api/v2/auth/logout") {
+        if (read) return MethodNotAllowed("POST", "logout requires POST");
+        auto r = HandleLogout(req);
+        auto cookie = r.headers.find("Set-Cookie");
+        if (cookie != r.headers.end()) {
+            cookie->second.replace(0, std::strlen(kSessionCookieName), "SID");
+            const auto cookiePath = cookie->second.find("; Path=");
+            if (cookiePath != std::string::npos) cookie->second.replace(cookiePath + 7,
+                m_config.ServerCfg().base_path.size() + 7, m_config.ServerCfg().base_path + "/api/v2");
+        }
+        if (r.status == 204) r.status = 200;
+        r.content_type = "text/plain; charset=utf-8"; r.body.clear(); return r;
+    }
+    if (path == "/api/v2/app/version") {
+        if (!read) return MethodNotAllowed("GET, HEAD", "version requires GET");
+        return text(200, "v5.0.0-amule");
+    }
+    if (auto error = RequireSnapshot(m_state)) return *error;
+    const auto categories = CategoriesWithDefault(m_state);
+    auto category = [&](const std::string &name, uint32_t &index, std::string &directory) {
+        bool found = false;
+        for (const auto &c : categories) {
+            if ((name.empty() && c.index == 0) || (!name.empty() && c.name == name)) {
+                if (found) return false;
+                found = true; index = c.index; directory = c.path;
+            }
+        }
+        return found;
+    };
+    auto json = [](CJsonWriter &w) { CHttpServer::Response r; FinalizeJsonBody(w, r); return r; };
+    if (path == "/api/v2/app/preferences") {
+        if (!read) return MethodNotAllowed("GET, HEAD", "preferences requires GET");
+        CJsonWriter w; w.BeginObject(); w.Key("save_path"); w.ValueString(m_state.Preferences().directories.incoming_path.c_str());
+        w.Key("max_ratio_enabled"); w.ValueBool(false); w.Key("max_seeding_time_enabled"); w.ValueBool(false);
+        w.EndObject(); return json(w);
+    }
+    if (path == "/api/v2/torrents/categories") {
+        if (!read) return MethodNotAllowed("GET, HEAD", "categories requires GET");
+        CJsonWriter w; w.BeginObject();
+        for (const auto &c : categories) {
+            if (!c.index) continue;
+            w.Key(c.name.c_str()); w.BeginObject(); w.Key("name"); w.ValueString(c.name.c_str());
+            w.Key("savePath"); w.ValueString(c.path.c_str()); w.EndObject();
+        }
+        w.EndObject(); return json(w);
+    }
+    auto mutationResult = [&](CHttpServer::Response r) {
+        if (r.status == 207) { r.status = 409; return r; } // Never disguise partial failure as Ok.
+        if (r.status >= 300) return r;
+        return text(200, "Ok.");
+    };
+    if (path == "/api/v2/torrents/createcategory") {
+        if (read) return MethodNotAllowed("POST", "createcategory requires POST");
+        uint32_t index = 0; std::string directory;
+        if (fields["category"].empty()) return text(400, "Category name required.");
+        if (category(fields["category"], index, directory)) return text(409, "Category already exists.");
+        CJsonWriter w; w.BeginObject(); w.Key("name"); w.ValueString(fields["category"].c_str());
+        if (!fields["savePath"].empty()) { w.Key("save_path"); w.ValueString(fields["savePath"].c_str()); }
+        w.EndObject(); req.body = w.GetBuffer(); return mutationResult(HandleCategoryCreate(req));
+    }
+    auto categoryName = [&](uint32_t index) {
+        for (const auto &c : categories) if (c.index == index) return c.index ? c.name : std::string();
+        return std::string();
+    };
+    auto savePath = [&](const webapi::FileSnapshot &f) {
+        for (const auto &c : categories) if (c.index == f.download.category) return c.path;
+        return f.on_disk_dir;
+    };
+    auto writeFile = [&](CJsonWriter &w, const webapi::FileSnapshot &f) {
+        const uint64_t done = std::min(f.size, f.download.completed_bytes);
+        const bool complete = f.download.status == "completed";
+        w.BeginObject();
+        w.Key("hash"); w.ValueString(f.hash.c_str()); w.Key("name"); w.ValueString(f.name.c_str());
+        w.Key("size"); w.ValueUInt(f.size); w.Key("total_size"); w.ValueUInt(f.size);
+        w.Key("progress"); w.ValueDouble(complete ? 1 : f.size ? double(done) / f.size : 0);
+        w.Key("state"); w.ValueString(qbit_compat::State(f.download.status, f.download.speed_bytes_per_second));
+        w.Key("dlspeed"); w.ValueUInt(f.download.speed_bytes_per_second); w.Key("upspeed"); w.ValueUInt(0);
+        w.Key("downloaded"); w.ValueUInt(done); w.Key("uploaded"); w.ValueUInt(f.shared.uploaded_bytes_total);
+        w.Key("amount_left"); w.ValueUInt(complete ? 0 : f.size - done);
+        w.Key("eta"); w.ValueUInt(complete ? 0 : f.download.speed_bytes_per_second
+            ? (f.size - done) / f.download.speed_bytes_per_second : 8640000);
+        w.Key("ratio"); w.ValueDouble(f.size ? double(f.shared.uploaded_bytes_total) / f.size : 0);
+        w.Key("category"); w.ValueString(categoryName(f.download.category).c_str());
+        w.Key("save_path"); w.ValueString(savePath(f).c_str());
+        std::string leaf = complete ? f.name : f.part_met_basename;
+        if (!complete && leaf.size() >= 4 && leaf.compare(leaf.size() - 4, 4, ".met") == 0) leaf.resize(leaf.size() - 4);
+        w.Key("content_path"); w.ValueString(qbit_compat::Join(f.on_disk_dir, leaf).c_str());
+        w.Key("priority"); w.ValueUInt(f.download.priority_auto ? 0 : 1);
+        w.Key("added_on"); w.ValueUInt(0); w.Key("completion_on"); w.ValueUInt(0);
+        w.Key("ed2k_link"); w.ValueString(f.ed2k_link.c_str());
+        w.EndObject();
+    };
+    if (path == "/api/v2/torrents/info") {
+        if (!read) return MethodNotAllowed("GET, HEAD", "info requires GET");
+        std::vector<std::string> hashes;
+        if (fields.count("hashes") && !qbit_compat::Hashes(fields["hashes"], hashes)) return text(400, "Invalid hashes.");
+        const auto filter = fields["filter"];
+        if (!filter.empty() && filter != "all" && filter != "completed" && filter != "downloading"
+            && filter != "paused" && filter != "stopped" && filter != "active" && filter != "inactive"
+            && filter != "errored" && filter != "stalled") return text(400, "Unsupported filter.");
+        std::vector<webapi::FileSnapshot> files;
+        m_state.WithFiles([&](const webapi::FileMap &map) {
+            for (const auto &item : map) {
+                const auto &f = item.second;
+                if (!f.is_downloading || (!hashes.empty() && std::find(hashes.begin(), hashes.end(), f.hash) == hashes.end())) continue;
+                if (fields.count("category") && categoryName(f.download.category) != fields["category"]) continue;
+                const std::string state = qbit_compat::State(f.download.status, f.download.speed_bytes_per_second);
+                const bool complete = f.download.status == "completed";
+                const bool stopped = state == "stoppedDL" || state == "stoppedUP";
+                if ((filter == "completed" && !complete) || (filter == "downloading" && complete)
+                    || ((filter == "paused" || filter == "stopped") && !stopped)
+                    || (filter == "active" && !f.download.speed_bytes_per_second)
+                    || (filter == "inactive" && f.download.speed_bytes_per_second)
+                    || (filter == "errored" && state != "error") || (filter == "stalled" && state != "stalledDL")) continue;
+                files.push_back(f);
+            }
+        });
+        const auto sort = fields["sort"];
+        if (!sort.empty() && sort != "name" && sort != "size" && sort != "progress" && sort != "dlspeed") return text(400, "Unsupported sort.");
+        std::sort(files.begin(), files.end(), [&](const auto &a, const auto &b) {
+            if (sort == "size" && a.size != b.size) return a.size < b.size;
+            if (sort == "progress" && a.download.percent != b.download.percent) return a.download.percent < b.download.percent;
+            if (sort == "dlspeed" && a.download.speed_bytes_per_second != b.download.speed_bytes_per_second)
+                return a.download.speed_bytes_per_second < b.download.speed_bytes_per_second;
+            return a.name == b.name ? a.hash < b.hash : a.name < b.name;
+        });
+        if (fields["reverse"] == "true") std::reverse(files.begin(), files.end());
+        uint64_t offset = 0, limit = 0;
+        if ((fields.count("offset") && !web_api_path::ParseBoundedUint(fields["offset"], 0, UINT32_MAX, offset))
+            || (fields.count("limit") && !web_api_path::ParseBoundedUint(fields["limit"], 0, UINT32_MAX, limit))) return text(400, "Invalid pagination.");
+        CJsonWriter w; w.BeginArray();
+        for (size_t i = offset; i < files.size() && (!limit || i - offset < limit); ++i) writeFile(w, files[i]);
+        w.EndArray(); return json(w);
+    }
+    if (path == "/api/v2/torrents/properties" || path == "/api/v2/torrents/files") {
+        if (!read) return MethodNotAllowed("GET, HEAD", "detail requires GET");
+        std::vector<std::string> hashes;
+        if (!qbit_compat::Hashes(fields["hash"], hashes) || hashes.size() != 1) return text(400, "One hash required.");
+        webapi::FileSnapshot f;
+        if (!m_state.FindDownload(hashes.front(), f)) return text(404, "Not found");
+        CJsonWriter w;
+        if (path == "/api/v2/torrents/properties") {
+            w.BeginObject(); w.Key("total_size"); w.ValueUInt(f.size); w.Key("save_path"); w.ValueString(savePath(f).c_str());
+            w.Key("total_downloaded"); w.ValueUInt(f.download.transferred_bytes);
+            w.Key("total_uploaded"); w.ValueUInt(f.shared.uploaded_bytes_total);
+            w.Key("dl_speed"); w.ValueUInt(f.download.speed_bytes_per_second); w.Key("up_speed"); w.ValueUInt(0);
+            w.EndObject();
+        } else {
+            w.BeginArray(); w.BeginObject(); w.Key("index"); w.ValueUInt(0); w.Key("name"); w.ValueString(f.name.c_str());
+            w.Key("size"); w.ValueUInt(f.size); w.Key("progress"); w.ValueDouble(f.download.status == "completed" ? 1 : f.size ? double(std::min(f.size, f.download.completed_bytes)) / f.size : 0);
+            w.Key("priority"); w.ValueUInt(1); w.Key("is_seed"); w.ValueBool(f.download.status == "completed");
+            w.EndObject(); w.EndArray();
+        }
+        return json(w);
+    }
+    if (read) return text(404, "Not found");
+    if (auto rejection = RequireAdmin(auth)) return *rejection;
+    if (path == "/api/v2/torrents/add") {
+        uint32_t index = 0; std::string directory;
+        if (!category(fields["category"], index, directory)) return text(400, "Unknown or ambiguous category.");
+        if ((!fields["savepath"].empty() && fields["savepath"] != directory)
+            || fields["paused"] == "true" || fields["stopped"] == "true") return text(501, "Custom savepath and initially stopped adds are unsupported; use categories and pause after add.");
+        std::vector<std::string> links; std::istringstream input(fields["urls"]); std::string link;
+        while (std::getline(input, link)) {
+            if (!link.empty() && link.back() == '\r') link.pop_back();
+            if (link.empty()) continue;
+            if (link.compare(0, 13, "ed2k://|file|") != 0 || links.size() >= 100) return text(400, "Only eD2k file links are accepted (maximum 100).");
+            links.push_back(link);
+        }
+        if (links.empty()) return text(400, "eD2k urls required.");
+        CJsonWriter w; w.BeginObject(); w.Key("links"); w.BeginArray();
+        for (const auto &value : links) w.ValueString(value.c_str());
+        w.EndArray(); w.Key("category_index"); w.ValueUInt(index); w.EndObject();
+        req.body = w.GetBuffer(); return mutationResult(HandleDownloadAdd(req));
+    }
+    const bool remove = path == "/api/v2/torrents/delete";
+    const bool setCategory = path == "/api/v2/torrents/setcategory";
+    const bool top = path == "/api/v2/torrents/topPrio" || path == "/api/v2/torrents/topprio";
+    const bool pause = path == "/api/v2/torrents/pause" || path == "/api/v2/torrents/stop";
+    const bool resume = path == "/api/v2/torrents/resume" || path == "/api/v2/torrents/start";
+    const bool shareLimits = path == "/api/v2/torrents/setShareLimits" || path == "/api/v2/torrents/setsharelimits";
+    if (!remove && !setCategory && !top && !pause && !resume && !shareLimits) return text(501, "Unsupported compatibility operation.");
+    std::vector<std::string> hashes;
+    if (fields["hashes"] == "all") {
+        m_state.WithFiles([&](const webapi::FileMap &map) {
+            for (const auto &item : map) if (item.second.is_downloading) hashes.push_back(item.second.hash);
+        });
+        if (hashes.size() > 100) return text(413, "Mutation exceeds 100 files.");
+    } else if (!qbit_compat::Hashes(fields["hashes"], hashes)) return text(400, "Invalid hashes.");
+    uint32_t index = 0; std::string directory;
+    if (setCategory && !category(fields["category"], index, directory)) return text(400, "Unknown or ambiguous category.");
+    if (shareLimits) {
+        if (fields["ratioLimit"] != "-1" || fields["seedingTimeLimit"] != "-1"
+            || (fields.count("inactiveSeedingTimeLimit") && fields["inactiveSeedingTimeLimit"] != "-1"))
+            return text(501, "Only unlimited sharing limits are supported.");
+    }
+    // Validate the whole batch before making the first mutation.
+    for (const auto &hash : hashes) {
+        webapi::FileSnapshot f;
+        if (!m_state.FindDownload(hash, f)) return text(404, "Not found");
+        if (f.download.status == "completed" && (pause || resume || top || setCategory))
+            return text(409, "Completed notification entries cannot be modified.");
+        if (remove && ((f.download.status == "completed" && fields["deleteFiles"] != "false")
+            || (f.download.status != "completed" && fields["deleteFiles"] != "true")))
+            return text(409, "Completed files can only be cleared with deleteFiles=false; active cancellation requires deleteFiles=true.");
+    }
+    if (shareLimits) return text(200, "Ok.");
+    for (const auto &hash : hashes) {
+        CJsonWriter w; w.BeginObject();
+        if (pause || resume) { w.Key("action"); w.ValueString(pause ? "pause" : "resume"); }
+        if (setCategory) { w.Key("category_index"); w.ValueUInt(index); }
+        if (top) { w.Key("priority"); w.ValueString("high"); }
+        if (remove) { w.Key("hash"); w.ValueString(hash.c_str()); }
+        w.EndObject(); req.body = w.GetBuffer();
+        CHttpServer::Response r;
+        if (remove) {
+            webapi::FileSnapshot f; m_state.FindDownload(hash, f);
+            r = f.download.status == "completed" ? HandleDownloadsClearCompleted(req) : HandleDownloadDelete(req, hash);
+        } else r = HandleDownloadPatch(req, hash);
+        if (r.status >= 300 || r.status == 207) return mutationResult(r);
+    }
+    return text(200, "Ok.");
 }

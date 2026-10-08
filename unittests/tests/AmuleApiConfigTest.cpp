@@ -72,6 +72,7 @@ TEST(AmuleApiConfig, FreshLoadCreatesAllThreeFiles)
 	const wxString dir = MakeTmpDir("fresh");
 	CAmuleApiConfig cfg;
 	ASSERT_TRUE(cfg.Load(dir));
+    ASSERT_FALSE(cfg.ServerCfg().qbit_compat);
 
 	ASSERT_TRUE(::wxFileExists(dir + "/amuleapi.conf"));
 	ASSERT_TRUE(::wxFileExists(dir + "/amuleapi-jwt-secret"));

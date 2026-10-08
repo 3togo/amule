@@ -2160,3 +2160,18 @@ if (ENABLE_UPNP)
 endif()
 target_link_libraries (AICHSearchResultTest muleunit mulecommon wxWidgets::BASE CRYPTOPP::CRYPTOPP)
 add_test (NAME AICHSearchResultTest COMMAND AICHSearchResultTest)
+
+add_executable(QBitCompatTest QBitCompatTest.cpp)
+target_include_directories(QBitCompatTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(QBitCompatTest muleunit mulecommon)
+add_test(NAME QBitCompatTest COMMAND QBitCompatTest)
+
+if(BUILD_DAEMON AND BUILD_AMULEAPI)
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND)
+        add_test(NAME QBitCompatSmoke COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_SOURCE_DIR}/unittests/integration/qbit_compat_smoke.py
+            --amuled $<TARGET_FILE:amuled> --amuleapi $<TARGET_FILE:amuleapi>)
+        set_tests_properties(QBitCompatSmoke PROPERTIES TIMEOUT 90)
+    endif()
+endif()

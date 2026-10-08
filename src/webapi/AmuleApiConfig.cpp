@@ -161,6 +161,7 @@ bool CAmuleApiConfig::LoadAmuleapiConf(const wxString &path)
 			       // and no entries the echo is anonymous-only, and a cross-origin
 			       // client that logs in needs its origin listed here.
 			       "CorsOriginAllowlist=\n"
+			       "QBitCompatibility=0\n"
 			       "StaticRoot=\n"
 			       "BasePath=\n"
 			       "\n"
@@ -204,6 +205,7 @@ bool CAmuleApiConfig::LoadAmuleapiConf(const wxString &path)
 	wxString s;
 	long n = 0;
 
+	if (cfg.Read("/Server/QBitCompatibility", &n)) m_server.qbit_compat = n != 0;
 	if (cfg.Read("/Server/BindAddress", &s) && !s.IsEmpty()) {
 		m_server.bind_address = std::string(s.utf8_str());
 	}

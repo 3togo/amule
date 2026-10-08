@@ -101,6 +101,7 @@ public:
 	webapi::CRateLimiter &RateLimiter() { return m_rateLimiter; }
 
 private:
+    CHttpServer::Response HandleQBitCompat(const CHttpServer::Request &, const std::string &path);
 	CHttpServer::Response HandleVersion(const CHttpServer::Request &);
 	CHttpServer::Response HandleVersionCheck(const CHttpServer::Request &);
 	CHttpServer::Response HandleLogin(const CHttpServer::Request &);
