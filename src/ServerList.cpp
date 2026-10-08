@@ -25,6 +25,7 @@
 
 #include <wx/wx.h>
 
+#include "ProtocolBounds.h"
 #include "ServerList.h" // Interface declarations.
 
 #include <protocol/Protocols.h>
@@ -125,6 +126,9 @@ bool CServerList::LoadServerMet(const CPath &path)
 		}
 
 		uint32 fservercount = servermet.ReadUInt32();
+        if (!ProtocolBounds::Records(servermet.GetLength(), servermet.GetPosition(), fservercount, 10)) {
+            throw CInvalidPacket("Impossible server.met record count");
+        }
 
 		ServerMet_Struct sbuffer;
 		uint32 iAddCount = 0;
@@ -133,6 +137,9 @@ bool CServerList::LoadServerMet(const CPath &path)
 			sbuffer.ip = servermet.ReadUInt32();
 			sbuffer.port = servermet.ReadUInt16();
 			sbuffer.tagcount = servermet.ReadUInt32();
+            if (!ProtocolBounds::Records(servermet.GetLength(), servermet.GetPosition(), sbuffer.tagcount, 3)) {
+                throw CInvalidPacket("Impossible server.met tag count");
+            }
 
 			CServer *newserver = new CServer(&sbuffer);
 

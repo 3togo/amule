@@ -26,6 +26,7 @@
 //
 
 #include <algorithm>   // std::remove_if
+#include "ProtocolBounds.h"
 #include "KnownFile.h" // Do_not_auto_remove
 
 #include "CompleteSourcesThrottle.h" // CompleteSourcesNeedRecompute
@@ -546,6 +547,7 @@ bool CKnownFile::LoadHashsetFromFile(const CFileDataIO *file, bool checkhash)
 bool CKnownFile::LoadTagsFromFile(const CFileDataIO *file)
 {
 	uint32 tagcount = file->ReadUInt32();
+    if (!ProtocolBounds::Records(file->GetLength(), file->GetPosition(), tagcount, 3)) return false;
 	m_taglist.clear();
 	m_verifyResult = CVerifyLocalDataResult();
 	wxString verifyCorruptMD4, verifyCorruptAICH;

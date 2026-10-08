@@ -57,6 +57,7 @@ public:
 	uint8_t *GetPacket();
 	uint8_t *DetachPacket();
 	uint32 GetRealPacketSize() const { return size + 6; }
+    // Returns UINT32_MAX for a malformed length; zero is a valid opcode-only payload.
 	static uint32 GetPacketSizeFromHeader(const uint8_t *rawHeader);
 	bool IsSplitted() { return m_bSplitted; }
 	bool IsLastSplitted() { return m_bLastSplitted; }

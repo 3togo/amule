@@ -2160,3 +2160,8 @@ if (ENABLE_UPNP)
 endif()
 target_link_libraries (AICHSearchResultTest muleunit mulecommon wxWidgets::BASE CRYPTOPP::CRYPTOPP)
 add_test (NAME AICHSearchResultTest COMMAND AICHSearchResultTest)
+
+add_executable(ProtocolBoundsTest ProtocolBoundsTest.cpp ${CMAKE_SOURCE_DIR}/src/Packet.cpp ${CMAKE_SOURCE_DIR}/src/MemFile.cpp ${CMAKE_SOURCE_DIR}/src/SafeFile.cpp ${CMAKE_SOURCE_DIR}/src/Tag.cpp ${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp)
+target_include_directories(ProtocolBoundsTest PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include)
+target_link_libraries(ProtocolBoundsTest muleunit mulecommon ZLIB::ZLIB)
+add_test(NAME ProtocolBoundsTest COMMAND ProtocolBoundsTest)

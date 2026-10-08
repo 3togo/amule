@@ -1028,3 +1028,11 @@ TEST_M(CTag, AssignBoolArray, "Assign parsed BOOLARRAY metadata over an owned st
 {
 	CheckSkippedTagCopy(TAGTYPE_BOOLARRAY, true);
 }
+
+TEST(CTag, RejectsTruncatedBlobBeforeAllocation) {
+    const uint8_t bytes[] = { static_cast<uint8_t>(TAGTYPE_BLOB | 0x80), 1, 255, 255, 255, 255 };
+    CMemFile file(bytes, sizeof(bytes));
+    bool rejected = false;
+    try { CTag tag(file, true); } catch (const CInvalidPacket &) { rejected = true; }
+    ASSERT_TRUE(rejected);
+}

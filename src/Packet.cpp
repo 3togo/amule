@@ -25,6 +25,8 @@
 
 #include <zlib.h> // Needed for uLongf
 
+#include "SafeFile.h"
+#include "ProtocolBounds.h"
 #include "Packet.h" // Interface declarations
 
 #include <protocol/Protocols.h>
@@ -82,7 +84,8 @@ CPacket::CPacket(uint8_t *rawHeader, uint8_t *buf)
 {
 	memset(head, 0, sizeof head);
 	Header_Struct *header = reinterpret_cast<Header_Struct *>(rawHeader);
-	size = ENDIAN_SWAP_32(header->packetlength) - 1;
+	size = ProtocolBounds::TcpPayload(ENDIAN_SWAP_32(header->packetlength));
+    if (size == UINT32_MAX) throw CInvalidPacket("Invalid TCP packet length");
 	opcode = header->command;
 	prot = header->eDonkeyID;
 	m_bSplitted = false;
@@ -171,15 +174,14 @@ CPacket::~CPacket()
 uint32 CPacket::GetPacketSizeFromHeader(const uint8_t *rawHeader)
 {
 	const Header_Struct *header = reinterpret_cast<const Header_Struct *>(rawHeader);
-	uint32 size = ENDIAN_SWAP_32(header->packetlength);
-	if (size < 1 || size >= 0x7ffffff0u)
-		return 0;
-	return size - 1;
+    return ProtocolBounds::TcpPayload(ENDIAN_SWAP_32(header->packetlength));
 }
 
 void CPacket::CopyToDataBuffer(unsigned int offset, const uint8_t *data, unsigned int n)
 {
-	wxASSERT(offset + n <= size + 1);
+    if (!ProtocolBounds::Span(static_cast<uint64>(size) + 1, offset, n)) {
+        throw CInvalidPacket("Packet copy exceeds buffer");
+    }
 	memcpy(pBuffer + offset, data, n);
 }
 

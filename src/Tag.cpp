@@ -23,6 +23,7 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "ProtocolBounds.h"
 #include "Tag.h" // Interface declarations
 
 #include <common/Format.h> // Needed for WXLONGLONGFMTSPEC
@@ -159,7 +160,7 @@ CTag::CTag(const CFileDataIO &data, bool bOptUTF8)
 
 			// Since the length is 32b, this check is needed to avoid
 			// huge allocations in case of bad tags.
-			if (m_nSize > data.GetLength() - data.GetPosition()) {
+			if (!ProtocolBounds::Span(data.GetLength(), data.GetPosition(), m_nSize)) {
 				throw CInvalidPacket("Malformed tag");
 			}
 
