@@ -2160,3 +2160,8 @@ if (ENABLE_UPNP)
 endif()
 target_link_libraries (AICHSearchResultTest muleunit mulecommon wxWidgets::BASE CRYPTOPP::CRYPTOPP)
 add_test (NAME AICHSearchResultTest COMMAND AICHSearchResultTest)
+
+add_executable(DiskSpaceBudgetTest DiskSpaceBudgetTest.cpp)
+target_include_directories(DiskSpaceBudgetTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(DiskSpaceBudgetTest muleunit mulecommon)
+add_test(NAME DiskSpaceBudgetTest COMMAND DiskSpaceBudgetTest)

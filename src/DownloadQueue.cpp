@@ -23,7 +23,13 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
-#include "DownloadQueue.h" // Interface declarations
+#include "DownloadQueue.h"
+#include "DiskSpaceBudget.h"
+#ifdef __WINDOWS__
+#include <wx/msw/wrapwin.h>
+#else
+#include <sys/stat.h>
+#endif // Interface declarations
 
 #include <protocol/Protocols.h>
 #include <protocol/kad/Constants.h>
@@ -1272,52 +1278,70 @@ uint16 CDownloadQueue::GetPausedFileCount() const
 	return count;
 }
 
+// Volume identity, rather than directory spelling: two directories can share one budget.
+static std::string DiskVolumeKey(const CPath &path)
+{
+#ifdef __WINDOWS__
+    wchar_t root[MAX_PATH];
+    if (!GetVolumePathNameW(path.GetRaw().wc_str(), root, MAX_PATH)) return {};
+    return std::string(wxString(root).Lower().utf8_str());
+#else
+    struct stat st;
+    if (::stat(path.GetRaw().fn_str(), &st) != 0) return {};
+    return std::to_string(static_cast<unsigned long long>(st.st_dev));
+#endif
+}
+
 void CDownloadQueue::CheckDiskspace(const CPath &path)
 {
-	const uint64 curTick = ::GetTickCount64();
-	if (curTick - m_lastDiskCheck < DISKSPACERECHECKTIME) {
-		return;
-	}
-
-	m_lastDiskCheck = curTick;
-
-	uint64 min = 0;
-	// Check if the user has set an explicit limit
-	if (thePrefs::IsCheckDiskspaceEnabled()) {
-		min = thePrefs::GetMinFreeDiskSpace();
-	}
-
-	// The very least acceptable diskspace is a single PART
-	if (min < PARTSIZE) {
-		min = PARTSIZE;
-	}
-
-	uint64 free = CPath::GetFreeSpaceAt(path);
-	if (free == static_cast<uint64>(wxInvalidOffset)) {
-		return;
-	} else if (free < min) {
-		CUserEvents::ProcessEvent(CUserEvents::OutOfDiskSpace, "Temporary partition");
-	}
-
-	for (FileQueue::size_type i = 0; i < m_filelist.size(); ++i) {
-		CPartFile *file = m_filelist[i];
-
-		switch (file->GetStatus()) {
-		case PS_ERROR:
-		case PS_COMPLETING:
-		case PS_COMPLETE:
-			continue;
-		}
-
-		if (free >= min && file->GetInsufficient()) {
-			// We'll try to resume files if there is enough free space
-			if (free - file->GetNeededSpace() > min) {
-				file->ResumeFile();
-			}
-		} else if (free < min && !file->IsPaused()) {
-			file->PauseFile(true);
-		}
-	}
+    const uint64 now = ::GetTickCount64();
+    if (now - m_lastDiskCheck < DISKSPACERECHECKTIME) return;
+    m_lastDiskCheck = now;
+    const uint64 floor = std::max<uint64>(PARTSIZE,
+        thePrefs::IsCheckDiskspaceEnabled() ? thePrefs::GetMinFreeDiskSpace() : 0);
+    CDiskSpaceBudget budget;
+    std::map<std::string, sint64> freeByVolume;
+    auto snapshot = [&](const CPath &directory) {
+        const std::string key = DiskVolumeKey(directory);
+        if (!key.empty() && freeByVolume.find(key) == freeByVolume.end()) {
+            const sint64 free = CPath::GetFreeSpaceAt(directory);
+            freeByVolume.emplace(key, free);
+            if (free >= 0) budget.Set(key, static_cast<uint64>(free), floor);
+        }
+        return key;
+    };
+    const std::string requestedVolume = snapshot(path);
+    if (!requestedVolume.empty() && freeByVolume[requestedVolume] >= 0
+        && static_cast<uint64>(freeByVolume[requestedVolume]) < floor) {
+        CUserEvents::ProcessEvent(CUserEvents::OutOfDiskSpace, "Temporary partition");
+    }
+    // Reserve active demand first so restarting an insufficient file cannot spend
+    // space already needed by a running download or its cross-volume completion.
+    for (CPartFile *file : m_filelist) {
+        const auto status = file->GetStatus();
+        if (status == PS_ERROR || status == PS_COMPLETE) continue;
+        const auto temp = snapshot(file->GetFilePath());
+        const auto incoming = snapshot(theApp->glob_prefs->GetCatPath(file->GetCategory()));
+        if (!file->IsPaused() || status == PS_COMPLETING) {
+            budget.AccountActive(temp, status == PS_COMPLETING ? 0 : file->GetNeededSpace());
+            if (temp != incoming) budget.AccountActive(incoming, file->GetFileSize());
+        }
+    }
+    for (CPartFile *file : m_filelist) {
+        const auto status = file->GetStatus();
+        if (status == PS_ERROR || status == PS_COMPLETING || status == PS_COMPLETE) continue;
+        const auto temp = snapshot(file->GetFilePath());
+        const auto incoming = snapshot(theApp->glob_prefs->GetCatPath(file->GetCategory()));
+        if (file->GetInsufficient()) {
+            const uint64 needed = file->GetNeededSpace();
+            if (file->GetStatus() != PS_ERROR && budget.Reserve(temp, needed, incoming, file->GetFileSize())) {
+                file->ResumeFile();
+            }
+        } else if (!file->IsPaused() && !temp.empty()) {
+            const sint64 free = freeByVolume[temp];
+            if (free >= 0 && static_cast<uint64>(free) < floor) file->PauseFile(true);
+        }
+    }
 }
 
 int CDownloadQueue::GetMaxFilesPerUDPServerPacket() const
