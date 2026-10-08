@@ -283,6 +283,7 @@ public:
 	bool IsHybrid() const { return m_bIsHybrid; }
 	uint32 GetCompatibleClient() const { return m_byCompatibleClient; }
 
+    bool HasStartedDownloadBlocks() const;
 	void ClearDownloadBlockRequests();
 	void RequestSharedFileList();
 	/// Put this browse's ask on the wire, if it is still waiting for one. Shared by the two

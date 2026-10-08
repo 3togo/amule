@@ -25,7 +25,8 @@
 
 #include <wx/wx.h>
 
-#include "PartFile.h"            // Interface declarations.
+#include "PartFile.h"
+#include "EndgamePolicy.h"            // Interface declarations.
 #include "PartFileWriteThread.h" // Needed for PB_READY etc.
 #include "PartFileHashThread.h"  // Needed for QueueHashCheck
 #include "config.h"              // Needed for VERSION
@@ -1444,7 +1445,7 @@ bool CPartFile::IsAlreadyRequested(uint64 start, uint64 end)
 	return false;
 }
 
-bool CPartFile::GetNextEmptyBlockInPart(uint16 partNumber, Requested_Block_Struct *result)
+bool CPartFile::GetNextEmptyBlockInPart(uint16 partNumber, Requested_Block_Struct *result, uint64 maxBytes)
 {
 	// Find start of this part
 	uint64 partStart = (PARTSIZE * partNumber);
@@ -1488,6 +1489,7 @@ bool CPartFile::GetNextEmptyBlockInPart(uint16 partNumber, Requested_Block_Struc
 		if (end > partEnd) {
 			end = partEnd;
 		}
+        end = EndgamePolicy::ClampEnd(start, end, maxBytes);
 		// If this gap has not already been requested, we have found a valid entry
 		if (!IsAlreadyRequested(start, end)) {
 			// Was this block to be returned
@@ -1499,8 +1501,12 @@ bool CPartFile::GetNextEmptyBlockInPart(uint16 partNumber, Requested_Block_Struc
 			}
 			return true;
 		} else {
-			// Reposition to end of that gap
-			start = end + 1;
+            for (const auto *reserved : m_requestedblocks_list) {
+                if (start <= reserved->EndOffset && end >= reserved->StartOffset) {
+                    end = std::max(end, reserved->EndOffset);
+                }
+            }
+            start = end + 1;
 		}
 		// If tried all gaps then break out of the loop
 		if (end == partEnd) {
@@ -2139,6 +2145,36 @@ bool CPartFile::GetNextRequestedBlock(
 	if (sender->GetPartStatus().empty()) {
 		return false;
 	}
+    m_waitingEndgamePeer = false;
+    const uint64 now = GetTickCount64();
+    const bool late = thePrefs::GetEndgame() && EndgamePolicy::AtLeast(completedsize, GetFileSize(), 900);
+    const bool endgame = thePrefs::GetEndgame() && EndgamePolicy::IsEndgame(
+        completedsize, GetFileSize(), static_cast<uint64>(GetKBpsDown() * 1024));
+    if (!endgame) m_endgameWaitStart = 0;
+    auto nextForPeer = [&](uint16 part, Requested_Block_Struct *result) {
+        bool faster = false;
+        const uint64 rate = static_cast<uint64>(sender->GetKBpsDown() * 1024);
+        if (late) {
+            for (const auto &ref : m_downloadingSourcesList) {
+                auto *peer = ref.GetClient();
+                if (peer != sender && peer->GetDownloadState() == DS_DOWNLOADING
+                    && peer->IsPartAvailable(part)
+                    && EndgamePolicy::Faster(rate, static_cast<uint64>(peer->GetKBpsDown() * 1024))) {
+                    faster = true;
+                    break;
+                }
+            }
+        }
+        if (endgame && faster) {
+            if (!m_endgameWaitStart) m_endgameWaitStart = now;
+            if (now - m_endgameWaitStart < 15000) {
+                m_waitingEndgamePeer = true;
+                return false;
+            }
+        }
+        const uint64 cap = late && faster ? EndgamePolicy::ReservationBytes(rate, BLOCKSIZE) : BLOCKSIZE;
+        return GetNextEmptyBlockInPart(part, result, cap);
+    };
 	// Define and create the list of the chunks to download
 	const uint16 partCount = GetPartCount();
 	ChunkList chunksList;
@@ -2149,7 +2185,7 @@ bool CPartFile::GetNextRequestedBlock(
 		// Create a request block structure if a chunk has been previously selected
 		if (sender->GetLastPartAsked() != 0xffff) {
 			Requested_Block_Struct *pBlock = new Requested_Block_Struct;
-			if (GetNextEmptyBlockInPart(sender->GetLastPartAsked(), pBlock) == true) {
+			if (nextForPeer(sender->GetLastPartAsked(), pBlock) == true) {
 				// Keep a track of all pending requested blocks
 				m_requestedblocks_list.push_back(pBlock);
 				// Update list of blocks to return
@@ -2173,7 +2209,7 @@ bool CPartFile::GetNextRequestedBlock(
 				// Identify the locally missing part(s) that this source has
 				for (uint16 i = 0; i < partCount; ++i) {
 					if (sender->IsPartAvailable(i) == true &&
-						GetNextEmptyBlockInPart(i, NULL) == true) {
+						nextForPeer(i, NULL) == true) {
 						// Create a new entry for this chunk and add it to the list
 						Chunk newEntry;
 						newEntry.part = i;
@@ -4683,11 +4719,19 @@ CUpDownClient *CPartFile::GetSlowerDownloadingClient(uint32 speed, CUpDownClient
 		if ((cur_src->GetDownloadState() == DS_DOWNLOADING) && (cur_src != caller)) {
 			// Ensure the slow client has blocks that the caller actually has
 			// available to download
-			if (!cur_src->HasUsefulBlocksFor(caller)) {
+            if (!cur_src->HasUsefulBlocksFor(caller)) {
 				continue;
 			}
 			uint32 factored_bytes_per_second =
 				static_cast<uint32>((cur_src->GetKBpsDown() * 1024) * DROP_FACTOR);
+            if (thePrefs::GetEndgame() && EndgamePolicy::IsEndgame(completedsize, GetFileSize(),
+                static_cast<uint64>(GetKBpsDown() * 1024))) {
+                const uint64 now = GetTickCount64();
+                if (!EndgamePolicy::MaySteal(now, m_lastEndgameSteal, cur_src->HasStartedDownloadBlocks(),
+                    static_cast<uint64>(cur_src->GetKBpsDown() * 1024), speed)) continue;
+                m_lastEndgameSteal = now;
+                return cur_src;
+            }
 			if (factored_bytes_per_second < speed) {
 				//				printf("Selecting source %p to drop: %d <
 				//%d\n", cur_src, factored_bytes_per_second, speed);

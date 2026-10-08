@@ -23,7 +23,8 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
-#include "updownclient.h" // Needed for CUpDownClient
+#include "updownclient.h"
+#include "EndgamePolicy.h" // Needed for CUpDownClient
 
 #include <protocol/Protocols.h>
 #include <protocol/ed2k/Client2Client/TCP.h>
@@ -624,13 +625,13 @@ void CUpDownClient::SendBlockRequests()
 	}
 
 	if (m_PendingBlocks_list.empty()) {
+        if (m_reqfile->IsEndgameWaitingForFastPeer()) return;
 
 		CUpDownClient *slower_client = NULL;
 
-		bool nearCompletion =
-			m_reqfile->GetPartCount() > 4 &&
-			(m_reqfile->GetFileSize() > m_reqfile->GetCompletedSize()) &&
-			((m_reqfile->GetFileSize() - m_reqfile->GetCompletedSize()) <= (4 * PARTSIZE));
+        const bool nearCompletion = EndgamePolicy::IsEndgame(
+            m_reqfile->GetCompletedSize(), m_reqfile->GetFileSize(),
+            static_cast<uint64>(m_reqfile->GetKBpsDown() * 1024));
 
 		if (thePrefs::GetDropSlowSources() || (nearCompletion && thePrefs::GetEndgame())) {
 			slower_client = m_reqfile->GetSlowerDownloadingClient(m_lastaverage, this);
@@ -1772,4 +1773,15 @@ bool CUpDownClient::HasUsefulBlocksFor(CUpDownClient *other) const
 		}
 	}
 	return false;
+}
+
+bool CUpDownClient::HasStartedDownloadBlocks() const
+{
+    for (const auto *block : m_DownloadBlocks_list) {
+        if (block->transferred) return true;
+    }
+    for (const auto *pending : m_PendingBlocks_list) {
+        if (pending->block->transferred || pending->totalUnzipped) return true;
+    }
+    return false;
 }

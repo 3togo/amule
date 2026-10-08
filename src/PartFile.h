@@ -155,6 +155,7 @@ public:
 
 	bool GetNextRequestedBlock(
 		CUpDownClient *sender, std::vector<Requested_Block_Struct *> &toadd, uint16 &count);
+	bool IsEndgameWaitingForFastPeer() const { return m_waitingEndgamePeer; }
 #ifndef CLIENT_GUI
 	// Not 'override': no other override in this class is marked, and Clang builds error out on
 	// the mix (-Werror=inconsistent-missing-override).
@@ -363,7 +364,7 @@ private:
 	void AddGap(uint16 part);
 	void FillGap(uint64 start, uint64 end);
 	void FillGap(uint16 part);
-	bool GetNextEmptyBlockInPart(uint16 partnumber, Requested_Block_Struct *result);
+	bool GetNextEmptyBlockInPart(uint16 partnumber, Requested_Block_Struct *result, uint64 maxBytes = BLOCKSIZE);
 	bool IsAlreadyRequested(uint64 start, uint64 end);
 	void CompleteFile(bool hashingdone);
 	void CreatePartFile(bool isImporting = false);
@@ -552,6 +553,9 @@ public:
 	bool ReadData(class CFileArea &area, uint64 offset, uint32 toread, bool *handleClosed = nullptr);
 
 private:
+    uint64 m_endgameWaitStart = 0;
+    uint64 m_lastEndgameSteal = 0;
+    bool m_waitingEndgamePeer = false;
 	/* downloading sources list */
 	CClientRefList m_downloadingSourcesList;
 
