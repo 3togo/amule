@@ -26,6 +26,9 @@
 #ifndef UPLOADQUEUE_H
 #define UPLOADQUEUE_H
 
+#include "UploadUtilization.h"
+#include "UploadRetentionPolicy.h"
+#include <map>
 #include "ClientRef.h"      // Needed for CClientRefList
 #include "MD4Hash.h"        // Needed for CMD4Hash
 #include "NetworkAddress.h" // Needed for CNetworkAddress
@@ -97,7 +100,9 @@ private:
 	uint64 m_nLastStartUpload;
 	uint64 m_lastSort;
 	bool lastupslotHighID; // VQB lowID alternation
+	std::map<CUpDownClient *, BroadbandUpload::SessionRetention> m_sessionRetention;
 	bool m_allowKicking;
+	BroadbandUpload::Utilization m_uploadUtilization;
 	// This KnownFile collects all currently uploading clients for display in the upload list control
 	CKnownFile *m_allUploadingKnownFile;
 };

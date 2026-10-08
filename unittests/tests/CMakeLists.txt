@@ -67,6 +67,11 @@ target_include_directories (ClientMetaTrailerTest PRIVATE
 )
 target_link_libraries (ClientMetaTrailerTest muleunit mulecommon)
 
+add_executable (UploadRetentionTest UploadRetentionTest.cpp)
+target_include_directories (UploadRetentionTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (UploadRetentionTest muleunit mulecommon)
+add_test (NAME UploadRetentionTest COMMAND UploadRetentionTest)
+
 # Tracked endpoint history is independent of live clients and the application clock.
 add_executable (TrackedClientRecordTest TrackedClientRecordTest.cpp)
 add_test (NAME TrackedClientRecordTest COMMAND TrackedClientRecordTest)

@@ -232,6 +232,9 @@ void CUploadQueue::AddUpNextClient(CUpDownClient *directadd)
 
 void CUploadQueue::Process()
 {
+	m_uploadUtilization.Update(GetTickCount64(),
+		static_cast<uint64>(thePrefs::GetMaxUpload()) * 1024,
+		theStats::GetUploadRate());
 	// Check if someone's waiting, if there is a slot for him,
 	// or if we should try to free a slot for him
 	uint64 tick = GetTickCount64();
@@ -567,6 +570,7 @@ bool CUploadQueue::RemoveFromUploadQueue(CUpDownClient *client)
 	}
 
 	if (found) {
+		m_sessionRetention.erase(client);
 		m_allUploadingKnownFile->RemoveUploadingClient(client);
 		theStats::RemoveUploadingClient();
 		if (client->GetTransferredUp()) {
@@ -609,6 +613,18 @@ bool CUploadQueue::CheckForTimeOver(CUpDownClient *client)
 		if (vips <= GetMaxSlots() / 2) {
 			return false;
 		}
+	}
+
+	const bool sessionLimitReached =
+		client->GetUpStartTimeDelay() > 3600000 || client->GetSessionUp() > 10485760;
+	if (sessionLimitReached &&
+		m_sessionRetention[client].Retain(GetTickCount64(),
+			true,
+			m_uploadUtilization.Sustained(GetTickCount64()),
+			client->GetUploadDatarate(),
+			std::max<uint64>(
+				3 * 1024, static_cast<uint64>(thePrefs::GetSlotAllocation()) * 1024 / 2))) {
+		return false;
 	}
 
 	// Ordinary slots. "Transfer full chunks": drop a client after 10 MB uploaded or after an
