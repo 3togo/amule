@@ -37,6 +37,7 @@ there client on the eMule forum..
 */
 
 #include "Indexed.h"
+#include "../utils/IndexPersistence.h"
 
 #include <protocol/Protocols.h>
 #include <protocol/ed2k/Constants.h>
@@ -308,162 +309,153 @@ void CIndexed::ReadFile()
 
 CIndexed::~CIndexed()
 {
-	try {
-		time_t now = time(NULL);
-		uint32_t s_total = 0;
-		uint32_t k_total = 0;
-		uint32_t l_total = 0;
+	const time_t now = time(NULL);
+	uint32_t s_total = 0, k_total = 0, l_total = 0;
+	// A failed index must not prevent saving the other independent indexes.
+	auto save = [](const wxString &path, auto writer) {
+		try {
+			if (!SaveIndexFile(CPath(path), writer)) {
+				AddDebugLogLineC(logKadIndex, "Unable to promote Kad index: " + path);
+			}
+		} catch (const CSafeIOException &err) {
+			AddDebugLogLineC(logKadIndex, "Unable to save Kad index: " + err.what());
+		} catch (const CInvalidPacket &err) {
+			AddDebugLogLineC(logKadIndex, "Invalid Kad index data: " + err.what());
+		} catch (const wxString &err) {
+			AddDebugLogLineC(logKadIndex, "Unable to save Kad index: " + err);
+		}
+	};
+	save(m_loadfilename, [&](CFile &load_file) {
+		load_file.WriteUInt32(1); // version
+		load_file.WriteUInt32(now);
+		wxASSERT(m_Load_map.size() < 0xFFFFFFFF);
+		load_file.WriteUInt32((uint32_t)m_Load_map.size());
+		for (LoadMap::iterator it = m_Load_map.begin(); it != m_Load_map.end(); ++it) {
+			Load *load = it->second;
+			wxASSERT(load);
+			if (load) {
+				load_file.WriteUInt128(load->keyID);
+				load_file.WriteUInt32(load->time);
+				l_total++;
+			}
+		}
+	});
+	save(m_sfilename, [&](CFile &s_file) {
+		s_file.WriteUInt32(2); // version
+		s_file.WriteUInt32(now + KADEMLIAREPUBLISHTIMES);
+		wxASSERT(m_Sources_map.size() < 0xFFFFFFFF);
+		s_file.WriteUInt32((uint32_t)m_Sources_map.size());
+		for (SrcHashMap::iterator itSrcHash = m_Sources_map.begin(); itSrcHash != m_Sources_map.end();
+			++itSrcHash) {
+			SrcHash *currSrcHash = itSrcHash->second;
+			s_file.WriteUInt128(currSrcHash->keyID);
 
-		CFile load_file;
-		if (load_file.Open(m_loadfilename, CFile::write)) {
-			load_file.WriteUInt32(1); // version
-			load_file.WriteUInt32(now);
-			wxASSERT(m_Load_map.size() < 0xFFFFFFFF);
-			load_file.WriteUInt32((uint32_t)m_Load_map.size());
-			for (LoadMap::iterator it = m_Load_map.begin(); it != m_Load_map.end(); ++it) {
-				Load *load = it->second;
-				wxASSERT(load);
-				if (load) {
-					load_file.WriteUInt128(load->keyID);
-					load_file.WriteUInt32(load->time);
-					l_total++;
-					delete load;
+			CKadSourcePtrList &KeyHashSrcMap = currSrcHash->m_Source_map;
+			wxASSERT(KeyHashSrcMap.size() < 0xFFFFFFFF);
+			s_file.WriteUInt32((uint32_t)KeyHashSrcMap.size());
+
+			for (CKadSourcePtrList::iterator itSource = KeyHashSrcMap.begin();
+				itSource != KeyHashSrcMap.end();
+				++itSource) {
+				Source *currSource = *itSource;
+				s_file.WriteUInt128(currSource->sourceID);
+
+				CKadEntryPtrList &SrcEntryList = currSource->entryList;
+				wxASSERT(SrcEntryList.size() < 0xFFFFFFFF);
+				s_file.WriteUInt32((uint32_t)SrcEntryList.size());
+				for (CKadEntryPtrList::iterator itEntry = SrcEntryList.begin();
+					itEntry != SrcEntryList.end();
+					++itEntry) {
+					Kademlia::CEntry *currName = *itEntry;
+					s_file.WriteUInt32(currName->m_tLifeTime);
+					currName->WriteTagList(&s_file);
+					s_total++;
 				}
 			}
-			load_file.Close();
 		}
+	});
+	save(m_kfilename, [&](CFile &k_file) {
+		// Version 4 carries the AICH block and the per-publisher hash index; gated
+		// with the writer in CKeyEntry::WritePublishTrackingDataToFile, so with
+		// KadProtocol10 off we write the version-3 file upstream writes. Reading
+		// both is unconditional, so toggling the preference never invalidates an
+		// existing keyword index.
+		// Saving with the preference off discards accumulated AICH data;
+		// re-enabling it starts collecting that data again from empty.
+		const bool includesAICH = thePrefs::GetKadProtocol10();
+		k_file.WriteUInt32(includesAICH ? 4 : 3);
+		k_file.WriteUInt32(now + KADEMLIAREPUBLISHTIMEK);
+		k_file.WriteUInt128(Kademlia::CKademlia::GetPrefs()->GetKadID());
 
-		CFile s_file;
-		if (s_file.Open(m_sfilename, CFile::write)) {
-			s_file.WriteUInt32(2); // version
-			s_file.WriteUInt32(now + KADEMLIAREPUBLISHTIMES);
-			wxASSERT(m_Sources_map.size() < 0xFFFFFFFF);
-			s_file.WriteUInt32((uint32_t)m_Sources_map.size());
-			for (SrcHashMap::iterator itSrcHash = m_Sources_map.begin();
-				itSrcHash != m_Sources_map.end();
-				++itSrcHash) {
-				SrcHash *currSrcHash = itSrcHash->second;
-				s_file.WriteUInt128(currSrcHash->keyID);
+		wxASSERT(m_Keyword_map.size() < 0xFFFFFFFF);
+		k_file.WriteUInt32((uint32_t)m_Keyword_map.size());
 
-				CKadSourcePtrList &KeyHashSrcMap = currSrcHash->m_Source_map;
-				wxASSERT(KeyHashSrcMap.size() < 0xFFFFFFFF);
-				s_file.WriteUInt32((uint32_t)KeyHashSrcMap.size());
+		for (KeyHashMap::iterator itKeyHash = m_Keyword_map.begin(); itKeyHash != m_Keyword_map.end();
+			++itKeyHash) {
+			KeyHash *currKeyHash = itKeyHash->second;
+			k_file.WriteUInt128(currKeyHash->keyID);
 
-				for (CKadSourcePtrList::iterator itSource = KeyHashSrcMap.begin();
-					itSource != KeyHashSrcMap.end();
-					++itSource) {
-					Source *currSource = *itSource;
-					s_file.WriteUInt128(currSource->sourceID);
+			CSourceKeyMap &KeyHashSrcMap = currKeyHash->m_Source_map;
+			wxASSERT(KeyHashSrcMap.size() < 0xFFFFFFFF);
+			k_file.WriteUInt32((uint32_t)KeyHashSrcMap.size());
 
-					CKadEntryPtrList &SrcEntryList = currSource->entryList;
-					wxASSERT(SrcEntryList.size() < 0xFFFFFFFF);
-					s_file.WriteUInt32((uint32_t)SrcEntryList.size());
-					for (CKadEntryPtrList::iterator itEntry = SrcEntryList.begin();
-						itEntry != SrcEntryList.end();
-						++itEntry) {
-						Kademlia::CEntry *currName = *itEntry;
-						s_file.WriteUInt32(currName->m_tLifeTime);
-						currName->WriteTagList(&s_file);
-						delete currName;
-						s_total++;
-					}
-					delete currSource;
+			for (CSourceKeyMap::iterator itSource = KeyHashSrcMap.begin();
+				itSource != KeyHashSrcMap.end();
+				++itSource) {
+				Source *currSource = itSource->second;
+				k_file.WriteUInt128(currSource->sourceID);
+
+				CKadEntryPtrList &SrcEntryList = currSource->entryList;
+				wxASSERT(SrcEntryList.size() < 0xFFFFFFFF);
+				k_file.WriteUInt32((uint32_t)SrcEntryList.size());
+
+				for (CKadEntryPtrList::iterator itEntry = SrcEntryList.begin();
+					itEntry != SrcEntryList.end();
+					++itEntry) {
+					Kademlia::CKeyEntry *currName =
+						static_cast<Kademlia::CKeyEntry *>(*itEntry);
+					wxASSERT(currName->IsKeyEntry());
+					k_file.WriteUInt32(currName->m_tLifeTime);
+					currName->WritePublishTrackingDataToFile(&k_file, includesAICH);
+					currName->WriteTagList(&k_file);
+					k_total++;
 				}
-				delete currSrcHash;
 			}
-			s_file.Close();
 		}
-
-		CFile k_file;
-		if (k_file.Open(m_kfilename, CFile::write)) {
-			// Version 4 carries the AICH block and the per-publisher hash index; gated
-			// with the writer in CKeyEntry::WritePublishTrackingDataToFile, so with
-			// KadProtocol10 off we write the version-3 file upstream writes. Reading
-			// both is unconditional, so toggling the preference never invalidates an
-			// existing keyword index.
-			// Saving with the preference off discards accumulated AICH data;
-			// re-enabling it starts collecting that data again from empty.
-			const bool includesAICH = thePrefs::GetKadProtocol10();
-			k_file.WriteUInt32(includesAICH ? 4 : 3);
-			k_file.WriteUInt32(now + KADEMLIAREPUBLISHTIMEK);
-			k_file.WriteUInt128(Kademlia::CKademlia::GetPrefs()->GetKadID());
-
-			wxASSERT(m_Keyword_map.size() < 0xFFFFFFFF);
-			k_file.WriteUInt32((uint32_t)m_Keyword_map.size());
-
-			for (KeyHashMap::iterator itKeyHash = m_Keyword_map.begin();
-				itKeyHash != m_Keyword_map.end();
-				++itKeyHash) {
-				KeyHash *currKeyHash = itKeyHash->second;
-				k_file.WriteUInt128(currKeyHash->keyID);
-
-				CSourceKeyMap &KeyHashSrcMap = currKeyHash->m_Source_map;
-				wxASSERT(KeyHashSrcMap.size() < 0xFFFFFFFF);
-				k_file.WriteUInt32((uint32_t)KeyHashSrcMap.size());
-
-				for (CSourceKeyMap::iterator itSource = KeyHashSrcMap.begin();
-					itSource != KeyHashSrcMap.end();
-					++itSource) {
-					Source *currSource = itSource->second;
-					k_file.WriteUInt128(currSource->sourceID);
-
-					CKadEntryPtrList &SrcEntryList = currSource->entryList;
-					wxASSERT(SrcEntryList.size() < 0xFFFFFFFF);
-					k_file.WriteUInt32((uint32_t)SrcEntryList.size());
-
-					for (CKadEntryPtrList::iterator itEntry = SrcEntryList.begin();
-						itEntry != SrcEntryList.end();
-						++itEntry) {
-						Kademlia::CKeyEntry *currName =
-							static_cast<Kademlia::CKeyEntry *>(*itEntry);
-						wxASSERT(currName->IsKeyEntry());
-						k_file.WriteUInt32(currName->m_tLifeTime);
-						currName->WritePublishTrackingDataToFile(
-							&k_file, includesAICH);
-						currName->WriteTagList(&k_file);
-						currName->DirtyDeletePublishData();
-						delete currName;
-						k_total++;
-					}
-					delete currSource;
-				}
-				CKeyEntry::ResetGlobalTrackingMap();
-				delete currKeyHash;
+	});
+	AddDebugLogLineN(logKadIndex,
+		CFormat("Serialized %u source, %u keyword, and %u load entries") % s_total % k_total %
+			l_total);
+	// Cleanup runs even when opening, serializing, flushing or promotion failed.
+	for (auto &item : m_Load_map)
+		delete item.second;
+	for (auto &item : m_Sources_map) {
+		for (Source *source : item.second->m_Source_map) {
+			for (CEntry *entry : source->entryList)
+				delete entry;
+			delete source;
+		}
+		delete item.second;
+	}
+	for (auto &item : m_Keyword_map) {
+		for (auto &sourceItem : item.second->m_Source_map) {
+			Source *source = sourceItem.second;
+			for (CEntry *entry : source->entryList) {
+				static_cast<CKeyEntry *>(entry)->DirtyDeletePublishData();
+				delete entry;
 			}
-			k_file.Close();
+			delete source;
 		}
-		AddDebugLogLineN(logKadIndex,
-			CFormat("Wrote %u source, %u keyword, and %u load entries") % s_total % k_total %
-				l_total);
-
-		for (SrcHashMap::iterator itNoteHash = m_Notes_map.begin(); itNoteHash != m_Notes_map.end();
-			++itNoteHash) {
-			SrcHash *currNoteHash = itNoteHash->second;
-			CKadSourcePtrList &KeyHashNoteMap = currNoteHash->m_Source_map;
-
-			for (CKadSourcePtrList::iterator itNote = KeyHashNoteMap.begin();
-				itNote != KeyHashNoteMap.end();
-				++itNote) {
-				Source *currNote = *itNote;
-				CKadEntryPtrList &NoteEntryList = currNote->entryList;
-				for (CKadEntryPtrList::iterator itNoteEntry = NoteEntryList.begin();
-					itNoteEntry != NoteEntryList.end();
-					++itNoteEntry) {
-					delete *itNoteEntry;
-				}
-				delete currNote;
-			}
-			delete currNoteHash;
+		delete item.second;
+	}
+	CKeyEntry::ResetGlobalTrackingMap();
+	for (auto &item : m_Notes_map) {
+		for (Source *source : item.second->m_Source_map) {
+			for (CEntry *entry : source->entryList)
+				delete entry;
+			delete source;
 		}
-
-		m_Notes_map.clear();
-	} catch (const CSafeIOException &err) {
-		AddDebugLogLineC(logKadIndex, "CSafeIOException in CIndexed::~CIndexed: " + err.what());
-	} catch (const CInvalidPacket &err) {
-		AddDebugLogLineC(
-			logKadIndex, "CInvalidPacket Exception in CIndexed::~CIndexed: " + err.what());
-	} catch (const wxString &e) {
-		AddDebugLogLineC(logKadIndex, "Exception in CIndexed::~CIndexed: " + e);
+		delete item.second;
 	}
 }
 

@@ -858,6 +858,32 @@ target_link_libraries (SafeKadTest
 	mulecommon
 )
 
+add_executable (KadIndexPersistenceTest
+	KadIndexPersistenceTest.cpp
+	${CMAKE_SOURCE_DIR}/src/SafeFile.cpp
+	${CMAKE_SOURCE_DIR}/src/CFile.cpp
+	${CMAKE_SOURCE_DIR}/src/MemFile.cpp
+	${CMAKE_SOURCE_DIR}/src/kademlia/utils/UInt128.cpp
+	${CMAKE_SOURCE_DIR}/src/Tag.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Path.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+)
+
+add_test (NAME KadIndexPersistenceTest
+	COMMAND KadIndexPersistenceTest
+)
+
+target_include_directories (KadIndexPersistenceTest
+	PRIVATE ${CMAKE_BINARY_DIR}
+	PRIVATE ${CMAKE_SOURCE_DIR}/src
+	PRIVATE ${CMAKE_SOURCE_DIR}/src/include
+)
+
+target_link_libraries (KadIndexPersistenceTest
+	muleunit
+)
+
 add_executable (FileDataIOTest
 	FileDataIOTest.cpp
 	${CMAKE_SOURCE_DIR}/src/SafeFile.cpp
