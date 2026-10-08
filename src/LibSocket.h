@@ -292,6 +292,8 @@ void SetSocketBindInterface(const wxString &iface);
 
 // Outcome of validating the configured bind interface, so the core can report
 // it once at startup instead of discovering it silently per socket.
+unsigned int SocketBindInterfaceIndex(const wxString &iface);
+
 enum BindInterfaceStatus
 {
 	BindIface_Empty,      // no interface configured (default)

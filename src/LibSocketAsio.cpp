@@ -97,6 +97,7 @@
 #include <net/if.h>      // if_nametoindex / if_indextoname / IF_NAMESIZE
 #include <arpa/inet.h>   // htonl
 #include <unistd.h>      // close() for the startup bind probe
+#include <ifaddrs.h>
 #include <cstring>       // strlen() for SO_BINDTODEVICE
 #include <cerrno>        // errno / EPERM
 #endif
@@ -299,16 +300,41 @@ static int ApplyBindToInterface(NativeSocketHandle native, const wxString &ifnam
 #endif
 }
 
-// Set while binding fails, so a failure is reported once, not on every connect. The core reports
-// the startup outcome via TestSocketBindInterface; this catches an interface lost later, such as a
-// VPN going down.
 static std::atomic<bool> s_bindFailing{ false };
 
-// Per-socket egress bind (reads the interface pushed in by the core).
-template <typename Handle> static void SetBoundInterface(Handle native, const wxString &ifname, bool isV6)
+unsigned int SocketBindInterfaceIndex(const wxString &iface)
+{
+    const unsigned int index = ResolveBindInterfaceIndex(iface);
+    if (!index) return 0;
+#ifdef __WINDOWS__
+    for (const auto &candidate : DetectNetworkInterfaces()) {
+        if (candidate.index == index) return index;
+    }
+#else
+    struct ifaddrs *interfaces = nullptr;
+    if (getifaddrs(&interfaces) != 0) return 0;
+    bool available = false;
+    for (auto *entry = interfaces; entry; entry = entry->ifa_next) {
+        if (entry->ifa_addr && (entry->ifa_flags & IFF_UP)
+            && if_nametoindex(entry->ifa_name) == index
+            && (entry->ifa_addr->sa_family == AF_INET || entry->ifa_addr->sa_family == AF_INET6)) {
+            available = true;
+            break;
+        }
+    }
+    freeifaddrs(interfaces);
+    if (available) return index;
+#endif
+    return 0;
+}
+
+// Per-socket egress bind (reads the interface pushed in by the core). Kept on the debug
+// channel to avoid spamming the normal log on every connect -- the core reports the overall
+// outcome once at startup via TestSocketBindInterface.
+template <typename Handle> static bool SetBoundInterface(Handle native, const wxString &ifname, bool isV6)
 {
 	if (ifname.IsEmpty()) {
-		return;
+		return true;
 	}
 	bool notFound = false;
 	int err = ApplyBindToInterface(static_cast<NativeSocketHandle>(native), ifname, isV6, &notFound);
@@ -317,16 +343,15 @@ template <typename Handle> static void SetBoundInterface(Handle native, const wx
 		AddDebugLogLineF(logAsio, CFormat("Bind-to-interface: bound socket to '%s'") % ifname);
 	} else if (!s_bindFailing.exchange(true)) {
 		AddLogLineC(
-			CFormat(notFound ? _("WARNING: network interface '%s' is gone - traffic is no "
-					     "longer bound to it and may leave via the default route.")
-					 : _("WARNING: could not bind to network interface '%s' - traffic "
-					     "may leave via the default route.")) %
+			CFormat(notFound ? _("Network interface '%s' is gone; socket creation blocked.")
+					 : _("Could not bind to network interface '%s'; socket creation blocked.")) %
 			ifname);
 	} else {
 		AddDebugLogLineN(logAsio,
 			CFormat("Bind-to-interface: could not bind socket to '%s' (%s)") % ifname %
 				(notFound ? "no such interface" : "error"));
 	}
+    return err == 0;
 }
 
 // Bind an already-open raw socket (e.g. libcurl's HTTP socket) to the
@@ -348,18 +373,18 @@ static BindInterfaceStatus ProbeBindInterface(const wxString &ifname)
 	if (ifname.IsEmpty()) {
 		return BindIface_Empty;
 	}
-	if (ResolveBindInterfaceIndex(ifname) == 0) {
+	if (SocketBindInterfaceIndex(ifname) == 0) {
 		return BindIface_NotFound;
 	}
 #ifdef __WINDOWS__
 	SOCKET fd = ::socket(AF_INET, SOCK_DGRAM, 0);
 	if (fd == INVALID_SOCKET) {
-		return BindIface_OK; // resolved; can't probe, assume ok
+		return BindIface_Unsupported; // Cannot establish confinement without a probe.
 	}
 #else
 	int fd = ::socket(AF_INET, SOCK_DGRAM, 0);
 	if (fd < 0) {
-		return BindIface_OK;
+		return BindIface_Unsupported;
 	}
 #endif
 	bool notFound = false;
@@ -514,9 +539,14 @@ public:
 			if (!m_socket->is_open()) {
 				m_socket->open(ip::tcp::v4(), openEc);
 			}
-			if (!openEc) {
-				SetBoundInterface(m_socket->native_handle(), s_bindToInterface, false);
-			}
+            if (openEc || !SetBoundInterface(m_socket->native_handle(), s_bindToInterface, false)) {
+                error_code ignored;
+                m_socket->close(ignored);
+                m_ErrorCode = openEc ? openEc.value() : static_cast<int>(boost::asio::error::access_denied);
+                m_closed = true;
+                if (m_notify) HandleConnect(error_code(m_ErrorCode, boost::system::system_category()));
+                return false;
+            }
 		}
 
 		if (wait || m_sync) {
@@ -1485,9 +1515,12 @@ public:
 			// When an explicit per-server interface is set (EC listener), use it verbatim --
 			// empty means "any", NOT a fall-back to the global P2P pin. Otherwise inherit the
 			// global bind-to-interface setting.
-			SetBoundInterface(native_handle(),
-				m_bindInterfaceOverride ? m_bindInterface : s_bindToInterface,
-				false);
+            if (!SetBoundInterface(native_handle(),
+                m_bindInterfaceOverride ? m_bindInterface : s_bindToInterface, false)) {
+                error_code ignored;
+                close(ignored);
+                throw system_error(boost::asio::error::access_denied);
+            }
 			// A replacement listener must fail if another process already owns the
 			// requested port. On Windows SO_REUSEADDR can otherwise allow both binds.
 #ifdef __WXMSW__
@@ -1994,7 +2027,9 @@ private:
 			SetCloexecOnSocket(m_socket->native_handle());
 			// Pin this UDP socket (ed2k client/server + Kad all funnel
 			// through here) to the configured interface (#173).
-			SetBoundInterface(m_socket->native_handle(), s_bindToInterface, false);
+            if (!SetBoundInterface(m_socket->native_handle(), s_bindToInterface, false)) {
+                throw system_error(boost::asio::error::access_denied);
+            }
 			m_socket->bind(endpoint);
 			AddDebugLogLineN(logAsio,
 				CFormat("Created UDP socket %s %d") % m_address.IPAddress() %
@@ -2003,6 +2038,7 @@ private:
 		} catch (const system_error &err) {
 			AddLogLineC(CFormat(_("Error creating UDP socket %s %d : %s")) %
 				    m_address.IPAddress() % m_address.Service() % err.code().message());
+            delete m_socket;
 			m_socket = NULL;
 			m_OK = false;
 		}

@@ -207,6 +207,8 @@ static void SetResourceLimits()
 // We store the received signal in order to avoid race-conditions
 // in the signal handler.
 bool g_shutdownSignal = false;
+static wxString g_monitoredBindInterface;
+static unsigned int g_monitoredBindIndex = 0;
 
 void OnShutdownSignal(int /* sig */)
 {
@@ -673,41 +675,16 @@ bool CamuleApp::OnInit()
 	// route.
 	const wxString &bindInterface = thePrefs::GetNetworkInterface();
 	SetSocketBindInterface(bindInterface);
-	switch (TestSocketBindInterface(bindInterface)) {
-	case BindIface_Empty:
-		break; // no interface configured -- nothing to report
-	case BindIface_OK:
-		// HTTP follows only where libcurl serves it, so say which traffic is bound.
-		if (CanBindHttpToInterface()) {
-			AddLogLineN(
-				CFormat(_("Binding aMule's peer-to-peer and HTTP traffic to interface: %s")) %
-				bindInterface);
-		} else {
-			AddLogLineN(CFormat(_("Binding aMule's peer-to-peer traffic to interface: %s "
-					      "(HTTP updates use the default route)")) %
-				    bindInterface);
-		}
-		break;
-	case BindIface_NotFound:
-		AddLogLineC(CFormat(_("WARNING: configured network interface '%s' was not found - "
-				      "traffic is NOT bound to it and may leave via the default "
-				      "route. Check the interface name in Preferences.")) %
-			    bindInterface);
-		break;
-	case BindIface_Denied:
-		AddLogLineC(CFormat(_("WARNING: binding to network interface '%s' requires elevated "
-				      "privileges and was NOT applied - traffic may leave via the "
-				      "default route. Grant the capability (e.g. 'sudo setcap "
-				      "cap_net_raw+ep' on the aMule binary) or run with sufficient "
-				      "privileges.")) %
-			    bindInterface);
-		break;
-	default:
-		AddLogLineC(CFormat(_("WARNING: could not bind to network interface '%s' - traffic "
-				      "may leave via the default route.")) %
-			    bindInterface);
-		break;
-	}
+    const auto bindStatus = TestSocketBindInterface(bindInterface);
+    if (!bindInterface.IsEmpty() && bindStatus != BindIface_OK) {
+        AddLogLineC(CFormat(_("Cannot bind to configured network interface '%s'; startup blocked.")) % bindInterface);
+        return false;
+    }
+    g_monitoredBindInterface = bindInterface;
+    g_monitoredBindIndex = SocketBindInterfaceIndex(bindInterface);
+    if (!bindInterface.IsEmpty()) {
+        AddLogLineN(CFormat(_("Strict network interface binding enabled: %s")) % bindInterface);
+    }
 
 	// The temp / incoming directories are validated and created further down, after the
 	// first-run wizard has had a chance to point them somewhere else.
@@ -2107,6 +2084,16 @@ void CamuleApp::OnCoreTimer(CTimerEvent &WXUNUSED(evt))
 	if (!IsRunning()) {
 		return;
 	}
+
+    static uint64 lastBindCheck = 0;
+    if (!g_monitoredBindInterface.IsEmpty() && msCur - lastBindCheck >= 1000) {
+        lastBindCheck = msCur;
+        if (SocketBindInterfaceIndex(g_monitoredBindInterface) != g_monitoredBindIndex
+            || TestSocketBindInterface(g_monitoredBindInterface) != BindIface_OK) {
+            AddLogLineC(_("Configured network interface was lost; shutting down to protect the binding."));
+            g_shutdownSignal = true;
+        }
+    }
 
 	// Check if we should terminate the app. OnShutdownSignal only sets the flag; the actual
 	// exit trigger runs from here (normal context) every CORE_TIMER_PERIOD ms.
