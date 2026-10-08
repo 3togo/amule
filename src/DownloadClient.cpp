@@ -633,9 +633,9 @@ void CUpDownClient::SendBlockRequests()
 
 		CUpDownClient *slower_client = NULL;
 
-        const bool nearCompletion = EndgamePolicy::IsEndgame(
-            m_reqfile->GetCompletedSize(), m_reqfile->GetFileSize(),
-            static_cast<uint64>(m_reqfile->GetKBpsDown() * 1024));
+		const bool nearCompletion = EndgamePolicy::IsEndgame(m_reqfile->GetCompletedSize(),
+			m_reqfile->GetFileSize(),
+			static_cast<uint64>(m_reqfile->GetKBpsDown() * 1024));
 
 		if (thePrefs::GetDropSlowSources() || (nearCompletion && thePrefs::GetEndgame())) {
 			slower_client = m_reqfile->GetSlowerDownloadingClient(m_lastaverage, this);
@@ -1224,8 +1224,8 @@ float CUpDownClient::CalculateKBpsDown()
 	}
 	// A waiting peer has no block response to trigger the usual refill. Retry
 	// from the core tick so the bounded preference window can expire.
-	if (m_endgameWaiting && m_reqfile && m_socket && GetDownloadState() == DS_DOWNLOADING
-		&& msCur - m_dwLastBlockReceived >= 1000) {
+	if (m_endgameWaiting && m_reqfile && m_socket && GetDownloadState() == DS_DOWNLOADING &&
+		msCur - m_dwLastBlockReceived >= 1000) {
 		SendBlockRequests();
 	}
 	if (msCur - m_dwLastBlockReceived > DOWNLOADTIMEOUT) {
@@ -1787,11 +1787,13 @@ bool CUpDownClient::HasUsefulBlocksFor(CUpDownClient *other) const
 
 bool CUpDownClient::HasStartedDownloadBlocks() const
 {
-    for (const auto *block : m_DownloadBlocks_list) {
-        if (block->transferred) return true;
-    }
-    for (const auto *pending : m_PendingBlocks_list) {
-        if (pending->block->transferred || pending->totalUnzipped) return true;
-    }
-    return false;
+	for (const auto *block : m_DownloadBlocks_list) {
+		if (block->transferred)
+			return true;
+	}
+	for (const auto *pending : m_PendingBlocks_list) {
+		if (pending->block->transferred || pending->totalUnzipped)
+			return true;
+	}
+	return false;
 }

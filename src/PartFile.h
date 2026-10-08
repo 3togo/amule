@@ -364,7 +364,8 @@ private:
 	void AddGap(uint16 part);
 	void FillGap(uint64 start, uint64 end);
 	void FillGap(uint16 part);
-	bool GetNextEmptyBlockInPart(uint16 partnumber, Requested_Block_Struct *result, uint64 maxBytes = BLOCKSIZE);
+	bool GetNextEmptyBlockInPart(
+		uint16 partnumber, Requested_Block_Struct *result, uint64 maxBytes = BLOCKSIZE);
 	bool IsAlreadyRequested(uint64 start, uint64 end);
 	void CompleteFile(bool hashingdone);
 	void CreatePartFile(bool isImporting = false);
@@ -553,9 +554,9 @@ public:
 	bool ReadData(class CFileArea &area, uint64 offset, uint32 toread, bool *handleClosed = nullptr);
 
 private:
-    uint64 m_endgameWaitStart = 0;
-    uint64 m_lastEndgameSteal = 0;
-    bool m_waitingEndgamePeer = false;
+	uint64 m_endgameWaitStart = 0;
+	uint64 m_lastEndgameSteal = 0;
+	bool m_waitingEndgamePeer = false;
 	/* downloading sources list */
 	CClientRefList m_downloadingSourcesList;
 
