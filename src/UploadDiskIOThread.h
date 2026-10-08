@@ -32,6 +32,7 @@
 
 #include <wx/thread.h>
 
+#include <memory>
 #include "Types.h"
 #include "FileArea.h" // Needed for CFileArea
 
@@ -55,6 +56,9 @@ struct Requested_Block_Struct;
 // OVERLAPPED removed -- reads are synchronous on this thread via CFileArea.
 struct ReadRequest_Struct
 {
+	~ReadRequest_Struct();
+	std::shared_ptr<std::atomic<uint32_t>> pendingReads;
+	bool counted = false;
 	OpenFile_Struct *pFileStruct;
 	CUpDownClient *pClient;
 	uint64 uStartOffset;

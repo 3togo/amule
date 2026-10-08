@@ -26,6 +26,8 @@
 #ifndef UPLOADQUEUE_H
 #define UPLOADQUEUE_H
 
+#include "UploadUtilization.h"
+#include "UploadDiagnostics.h"
 #include "ClientRef.h"      // Needed for CClientRefList
 #include "MD4Hash.h"        // Needed for CMD4Hash
 #include "NetworkAddress.h" // Needed for CNetworkAddress
@@ -98,6 +100,8 @@ private:
 	uint64 m_lastSort;
 	bool lastupslotHighID; // VQB lowID alternation
 	bool m_allowKicking;
+	BroadbandUpload::Utilization m_uploadUtilization;
+	BroadbandUpload::DiagnosticGate m_diagnosticGate;
 	// This KnownFile collects all currently uploading clients for display in the upload list control
 	CKnownFile *m_allUploadingKnownFile;
 };

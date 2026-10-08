@@ -232,6 +232,9 @@ void CUploadQueue::AddUpNextClient(CUpDownClient *directadd)
 
 void CUploadQueue::Process()
 {
+	m_uploadUtilization.Update(GetTickCount64(),
+		static_cast<uint64>(thePrefs::GetMaxUpload()) * 1024,
+		theStats::GetUploadRate());
 	// Check if someone's waiting, if there is a slot for him,
 	// or if we should try to free a slot for him
 	uint64 tick = GetTickCount64();
@@ -286,6 +289,19 @@ void CUploadQueue::Process()
 		theStats::AddSentBytes(sentBytes);
 	}
 
+	if (theLogger.IsEnabled(logLocalClient) && m_diagnosticGate.Due(tick)) {
+		BroadbandUpload::DiagnosticTotals totals;
+		// Only the main thread changes membership; snapshots defer on disk locks.
+		for (const auto &ref : m_uploadinglist)
+			totals.Add(ref.GetClient()->GetUploadBacklog());
+		AddDebugLogLineN(logLocalClient,
+			wxString::FromUTF8(totals.Format(m_uploadUtilization.Budget(),
+							 m_uploadUtilization.Rate(),
+							 m_uploadinglist.size(),
+							 m_waitinglist.size(),
+							 m_uploadUtilization.Age(tick))
+						   .c_str()));
+	}
 	// Periodically resort queue if it doesn't happen anyway
 	if ((sint64)(tick - m_lastSort) > MIN2MS(2)) {
 		SortGetBestClient();

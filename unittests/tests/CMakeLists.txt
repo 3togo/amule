@@ -1403,6 +1403,12 @@ target_link_libraries (StaticFsTest
 # share-root list, Range parsing, and the Content-Disposition builder.
 # SharedContent.cpp is plain std/POSIX (no wx, Beast or EC), same as
 # StaticFs.cpp, so it links standalone here.
+
+add_executable (UploadDiagnosticsTest UploadDiagnosticsTest.cpp)
+target_include_directories (UploadDiagnosticsTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (UploadDiagnosticsTest muleunit mulecommon)
+add_test (NAME UploadDiagnosticsTest COMMAND UploadDiagnosticsTest)
+
 add_executable (SharedContentTest
 	SharedContentTest.cpp
 	${CMAKE_SOURCE_DIR}/src/webapi/SharedContent.cpp
