@@ -32,6 +32,10 @@
 #include <wx/utils.h>
 #include <wx/filename.h>
 #include <algorithm> // Needed for std::min
+#include <cstdio>
+#ifdef __WINDOWS__
+#include <wx/msw/wrapwin.h>
+#endif
 
 #ifndef __WINDOWS__
 #include <sys/stat.h> // Needed for ::stat in GetFileStat
@@ -608,6 +612,20 @@ bool CPath::RemoveFile(const CPath &file)
 bool CPath::RenameFile(const CPath &src, const CPath &dst, bool overwrite)
 {
 	return ::wxRenameFile(src.m_filesystem, dst.m_filesystem, overwrite);
+}
+
+bool CPath::ReplaceFileAtomically(const CPath &src, const CPath &dst)
+{
+#ifdef __WINDOWS__
+	// No MOVEFILE_COPY_ALLOWED: a failed replacement must preserve the old file.
+	return ::MoveFileExW(src.m_filesystem.wc_str(),
+		       dst.m_filesystem.wc_str(),
+		       MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
+#else
+	// wxRenameFile falls back to a truncating copy when rename fails.
+	// Use the native operation so a failure cannot damage the existing index.
+	return ::rename(src.m_filesystem.fn_str(), dst.m_filesystem.fn_str()) == 0;
+#endif
 }
 
 bool CPath::BackupFile(const CPath &src, const wxString &appendix)

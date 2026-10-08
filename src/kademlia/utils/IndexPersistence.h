@@ -12,13 +12,16 @@ namespace Kademlia
 // The on-disk format and each index's independent lifetime remain unchanged.
 template <typename Writer> bool SaveIndexFile(const CPath &path, Writer writer)
 {
+	const CPath candidate = path.AppendExt(".new");
 	CFile file;
-	if (!file.Open(path, CFile::write_safe))
+	if (!file.Open(candidate, CFile::write))
 		return false;
 	writer(file);
 	if (!file.Flush())
 		return false;
-	return file.Close();
+	if (!file.Close())
+		return false;
+	return CPath::ReplaceFileAtomically(candidate, path);
 }
 } // namespace Kademlia
 #endif

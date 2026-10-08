@@ -169,6 +169,12 @@ public:
 	 */
 	static bool RenameFile(const CPath &src, const CPath &dst, bool overwrite = false);
 
+	/** Replaces dst by renaming src, without any copy/delete fallback.
+	 * Both paths must be on the same filesystem. On failure neither file
+	 * is deliberately removed or truncated.
+	 */
+	static bool ReplaceFileAtomically(const CPath &src, const CPath &dst);
+
 	/** Makes a backup of a file, by copying the original file to 'src' + 'appendix' */
 	static bool BackupFile(const CPath &src, const wxString &appendix);
 
