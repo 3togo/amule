@@ -2141,11 +2141,12 @@ bool CPartFile::GetNextRequestedBlock(
 	// overtake them (priority inversion). For common chunks the algorithm tries to spread
 	// the download between sources.
 
+	// A failed selection must not inherit another peer's waiting result.
+	m_waitingEndgamePeer = false;
 	// Check input parameters
 	if (sender->GetPartStatus().empty()) {
 		return false;
 	}
-	m_waitingEndgamePeer = false;
 	const uint64 now = GetTickCount64();
 	const bool late = thePrefs::GetEndgame() && EndgamePolicy::AtLeast(completedsize, GetFileSize(), 900);
 	const bool endgame = thePrefs::GetEndgame() &&
