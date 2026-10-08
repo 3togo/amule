@@ -875,6 +875,7 @@ private:
 	uint16 m_lastDownloadingPart; // last Part that was downloading
 	uint16 m_cShowDR;
 	uint64 m_dwLastBlockReceived;
+	bool m_endgameWaiting = false;
 	uint16 m_nRemoteQueueRank;
 	uint16 m_nOldRemoteQueueRank;
 	bool m_bCompleteSource;

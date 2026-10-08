@@ -7,7 +7,8 @@ Tiny trailing fragments remain attached to the reservation.
 
 At 99.9% completion, or an estimated 30 seconds remaining, faster sources get a
 15-second preference window. Slower sources retain their slot during this bounded
-wait and receive capped fallback work afterwards. Existing rarity selection stays
+wait and receive capped fallback work afterwards. Waiting peers retry from the
+core tick once per second even when no data response is pending. Existing rarity selection stays
 in place. Endgame reclamation cannot cancel a pipeline with received payload and
 has a 60-second per-file cooldown.
 

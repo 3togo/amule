@@ -562,6 +562,7 @@ void CUpDownClient::ProcessHashSet(const uint8_t *packet, uint32 size)
 void CUpDownClient::SendBlockRequests()
 {
 	m_dwLastBlockReceived = ::GetTickCount64();
+	m_endgameWaiting = false;
 
 	if (!m_reqfile) {
 		return;
@@ -625,7 +626,10 @@ void CUpDownClient::SendBlockRequests()
 	}
 
 	if (m_PendingBlocks_list.empty()) {
-        if (m_reqfile->IsEndgameWaitingForFastPeer()) return;
+		if (m_reqfile->IsEndgameWaitingForFastPeer()) {
+			m_endgameWaiting = true;
+			return;
+		}
 
 		CUpDownClient *slower_client = NULL;
 
@@ -1217,6 +1221,12 @@ float CUpDownClient::CalculateKBpsDown()
 	if (m_cShowDR == 30) {
 		m_cShowDR = 0;
 		UpdateDisplayedInfo();
+	}
+	// A waiting peer has no block response to trigger the usual refill. Retry
+	// from the core tick so the bounded preference window can expire.
+	if (m_endgameWaiting && m_reqfile && m_socket && GetDownloadState() == DS_DOWNLOADING
+		&& msCur - m_dwLastBlockReceived >= 1000) {
+		SendBlockRequests();
 	}
 	if (msCur - m_dwLastBlockReceived > DOWNLOADTIMEOUT) {
 		if (!GetSentCancelTransfer()) {

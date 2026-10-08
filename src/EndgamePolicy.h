@@ -19,7 +19,7 @@ inline uint64_t ReservationBytes(uint64_t rate, uint64_t full) {
 inline uint64_t ClampEnd(uint64_t start, uint64_t end, uint64_t cap) {
     if (end < start || !cap) return end;
     const uint64_t span = end - start;
-    if (span < cap || span - cap < 3 * 1024) return end;
+    if (span < cap || span - cap + 1 < 3 * 1024) return end;
     return start + cap - 1;
 }
 inline bool MaySteal(uint64_t now, uint64_t last, bool started, uint64_t slow, uint64_t fast) {
