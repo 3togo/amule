@@ -1,8 +1,32 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
-// Copyright (c) 2026 aMule Team
+//
+// This file is part of the aMule Project.
+//
+// Copyright (c) 2003-2026 aMule Team ( https://amule-org.github.io )
+//
+// Any parts of this program derived from the xMule, lMule or eMule project,
+// or contributed by third-party developers are copyrighted by their
+// respective authors.
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
+//
+
 // GUI rendering regression test. Requires a display; otherwise CTest skips it.
 
 #include <wx/app.h>
+#include <wx/frame.h>
+#include <wx/mstream.h>
 #include <wx/image.h>
 #include <wx/settings.h>
 #include <wx/menu.h>
@@ -13,6 +37,7 @@
 #include "icons/icon_data.h"
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <cstring>
 #include <cstdlib>
 
@@ -29,8 +54,10 @@ void require(bool ok, const char *message)
 }
 int main(int argc, char **argv)
 {
-	if (!wxEntryStart(argc, argv))
-		return 77;
+	if (!wxEntryStart(argc, argv)) {
+		std::cerr << "GUI initialization failed: no native rendering checks ran\n";
+		return std::getenv("AMULE_ICON_TEST_REQUIRE_GUI") ? 1 : 77;
+	}
 	if (!wxTheApp->CallOnInit()) {
 		wxEntryCleanup();
 		return 1;
@@ -44,6 +71,34 @@ int main(int argc, char **argv)
 		wxFileName::Mkdir(wxString::FromUTF8(output), wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL);
 	int status = 0;
 	try {
+		// Prime wx's neutral cache, then switch menu colours without resetting
+		// it. Live theme changes must affect both SVG and PNG menu rendering.
+		wxArtProvider::GetBitmapBundle("amule:menu_pause_fill", wxART_MENU, wxSize(16, 16));
+		for (bool preferSvg : { true, false }) {
+			for (const wxColour &colour :
+				{ wxColour(0, 0, 0), wxColour(255, 255, 255), wxColour(0, 0, 0) }) {
+				const auto bundle = CamuleArtProvider::GetMenuBitmapBundle(
+					"menu_pause_fill", wxSize(16, 16), colour, preferSvg);
+				require(bundle.IsOk(), "theme-aware bundle invalid");
+				const auto image = bundle.GetBitmap(wxSize(16, 16)).ConvertToImage();
+				require(image.GetRed(5, 7) == colour.Red() &&
+						image.GetGreen(5, 7) == colour.Green() &&
+						image.GetBlue(5, 7) == colour.Blue(),
+					"live theme switch kept stale menu colour");
+			}
+		}
+
+		for (const char *code : { "an", "unknown" }) {
+			const auto *entry = amule_find_icon((std::string("flag_") + code).c_str());
+			wxMemoryInputStream stream(entry->png_data, entry->png_len);
+			wxImage image(stream, wxBITMAP_TYPE_PNG);
+			require(image.IsOk() && image.GetSize() == wxSize(16, 12), "legacy flag not padded");
+			require(image.HasAlpha(), "legacy flag padding lacks transparency");
+			for (int x = 0; x < 16; ++x) {
+				require(image.GetAlpha(x, 11) == 0, "legacy flag bottom row not transparent");
+			}
+		}
+
 		CCountryFlags cache;
 		for (int i = 0; i < count; ++i) {
 			const auto &entry = entries[i];
@@ -92,8 +147,14 @@ int main(int argc, char **argv)
 						"PNG export failed");
 			}
 		}
+		const auto cached = cache.GetFlag("us", wxSize(16, 12), 2);
+		const auto cachedAgain = cache.GetFlag("us", wxSize(16, 12), 2);
+		require(cached.GetRefData() == cachedAgain.GetRefData(),
+			"flag pixels copied on repeated draw");
+		require(!cache.GetFlag("us", wxSize(0, 12), 1).IsOk(), "invalid flag size accepted");
 		const auto unknown = cache.GetFlag("unknown", wxSize(16, 12), 1);
 		const auto missing = cache.GetFlag("zz", wxSize(16, 12), 1);
+		require(unknown.GetRefData() == missing.GetRefData(), "unknown code missed bitmap cache");
 		require(std::memcmp(unknown.ConvertToImage().GetData(),
 				missing.ConvertToImage().GetData(),
 				16 * 12 * 3) == 0,
@@ -109,12 +170,19 @@ int main(int argc, char **argv)
 		require(item->GetId() == 1234 && item->GetItemLabel() == "&Pause",
 			"menu command or mnemonic changed");
 		require(item->GetBitmapBundle().IsOk(), "menu bitmap missing");
+#ifdef __WXOSX_COCOA__
+		require(LastMenuIconIsTemplate(menu), "Cocoa menu image not marked as a template");
+#endif
 		item->Enable(false);
 		require(!item->IsEnabled(), "disabled state");
 		auto check = menu.AppendCheckItem(1235, "Auto");
 		check->Check();
 		require(check->IsChecked(), "check state");
+#ifdef __WXOSX_COCOA__
+		const wxColour textColour = *wxBLACK;
+#else
 		const auto textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_MENUTEXT);
+#endif
 		const auto pause = item->GetBitmapBundle().GetBitmap(wxSize(16, 16)).ConvertToImage();
 		require(pause.GetRed(5, 7) == textColour.Red() &&
 				pause.GetGreen(5, 7) == textColour.Green() &&
@@ -129,7 +197,8 @@ int main(int argc, char **argv)
 	wxEntryCleanup();
 	if (!status)
 		std::cout << "PASS: " << flags << " flags and " << menus
-			  << " menu icons at 1x/1.5x/2x; fallback, DPI transition, menu semantics and theme "
+			  << " menu icons at 1x/1.5x/2x; fallback, bitmap cache, DPI transition, menu "
+			     "semantics and live theme "
 			     "colour\n";
 	return status;
 }

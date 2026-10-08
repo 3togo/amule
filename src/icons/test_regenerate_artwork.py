@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 import hashlib
 import json
 import unittest
+import struct
 
 from lxml import etree
 from picosvg.svg_types import SVGPath
@@ -71,6 +72,13 @@ class ArtworkConversionTest(unittest.TestCase):
             path = Path(directory) / 'arc.svg'
             path.write_text(result)
             self.assertEqual(count_packed_arc_flags(path), 0)
+
+    def test_png_flag_dimensions(self):
+        for path in sorted((ROOT / 'flags').glob('*.png')):
+            with self.subTest(flag=path.name):
+                data = path.read_bytes()
+                self.assertEqual(data[:8], b'\x89PNG\r\n\x1a\n')
+                self.assertEqual(struct.unpack('>II', data[16:24]), (16, 12))
 
     def test_all_flags_remain_vector_with_bounded_payload(self):
         originals = sorted((ROOT / 'vendor/flag-icons').glob('*.svg'))

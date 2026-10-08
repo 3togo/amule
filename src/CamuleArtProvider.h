@@ -31,6 +31,10 @@ public:
 	// CamuleArtProvider::MakeId("sort_dn") -> "amule:sort_dn".
 	static wxString MakeId(const wxString &name) { return PREFIX + name; }
 
+	// Menu colour is applied outside wxArtProvider's global bundle cache.
+	static wxBitmapBundle GetMenuBitmapBundle(
+		const wxString &name, const wxSize &size, const wxColour &colour, bool preferSvg = true);
+
 protected:
 	wxBitmap CreateBitmap(const wxArtID &id, const wxArtClient &client, const wxSize &size) override;
 

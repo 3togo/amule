@@ -26,6 +26,8 @@
 #define COUNTRYFLAGS_H
 
 #include <map>
+#include <set>
+#include <tuple>
 
 #include <wx/bmpbndl.h>
 #include <wx/string.h>
@@ -48,7 +50,13 @@ public:
 private:
 	// Load only flags actually displayed, after the art provider has been registered.
 	// Retain vector bundles rather than one raster size, so moving between monitors works.
-	std::map<wxString, wxBitmapBundle> m_flags;
+	struct FlagArtwork
+	{
+		wxBitmapBundle bundle;
+		std::map<std::tuple<int, int, double>, wxBitmap> bitmaps;
+	};
+	std::set<wxString> m_codes;
+	std::map<wxString, FlagArtwork> m_flags;
 };
 
 #endif // COUNTRYFLAGS_H

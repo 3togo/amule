@@ -65,12 +65,18 @@ notices unchanged. When changing conversion, compare native wxWidgets renders
 against the originals rendered with librsvg, including detailed flags and
 transparent edges at 1x, 1.5x, 2x, 3x and 4x.
 
-Menu SVGs use `#212529` as a replacement token: the art provider substitutes the
-system menu text colour at menu creation and recolours PNG fallbacks while
-preserving alpha. Native menus retain responsibility for disabled states,
+Menu SVGs use `#212529` as a replacement token. At popup creation,
+`GetMenuBitmapBundle` substitutes the current system menu text colour outside
+wxArtProvider's global cache and recolours PNG fallbacks while preserving alpha.
+Previously cached neutral artwork cannot retain an old theme colour. On Cocoa,
+menu images use a black alpha mask and are marked as AppKit templates after
+insertion, letting the native menu supply appearance, selection and disabled
+colours. Native menus retain responsibility for disabled states,
 keyboard navigation, checkmarks and platform image preferences. Country flags
-retain their original colours. The GUI caches vector bundles and requests the
-pixel size appropriate to the drawing window/DC rather than caching one 1× image.
+retain their original colours. The GUI caches vector bundles and a bounded set of completed bitmaps for each
+logical size/backing scale. Missing codes share the unknown bitmap without
+rescanning the embedded table. Windows icon/text cells draw HICON directly;
+GTK and macOS continue using logical bitmap sizes.
 The WebUI requests the embedded SVG through `/flags/{code}.svg`, with a PNG
 fallback for legacy artwork and older daemons. Both routes are local and cached.
 
@@ -78,11 +84,17 @@ fallback for legacy artwork and older daemons. Both routes are local and cached.
 
 With testing and a GUI enabled, build `IconArtworkTest` and run
 `ctest --test-dir build -R IconArtworkTest --output-on-failure`. It checks all
-bundled flags and menu symbols at 1×, 1.5× and 2×, monitor transitions, unknown
-codes, menu command IDs/mnemonics, disabled/check states and system menu colour.
-It skips when no GUI display is available. Set `AMULE_ICON_TEST_OUTPUT` to a
-directory to export the native renders for inspection. On GTK, also run with
-`GTK_THEME=Adwaita:dark` and `GTK_THEME=HighContrast`.
+bundled flags and menu symbols at 1×, 1.5× and 2×, simulated scale transitions,
+unknown codes, repeated bitmap reuse, transparent legacy padding, menu command
+IDs/mnemonics, disabled/check states, and repeated black/white theme-colour
+changes in both SVG and forced PNG rendering. On Cocoa it also checks that the
+native menu image is a template.
+It skips when no GUI display is available, unless `AMULE_ICON_TEST_REQUIRE_GUI`
+is set; CI sets it so missing native rendering is a failure. Linux GUI CI already
+uses Xvfb, and now includes separate dark and high-contrast artwork tests.
+The conversion/provenance/PNG-dimension/3.5 MB source-budget tests run in Icons CI. Set `AMULE_ICON_TEST_OUTPUT` to a
+directory to export the native renders for inspection. On GTK, run all three theme checks with
+`ctest --test-dir build -R 'IconArtwork.*Test' --output-on-failure` under Xvfb.
 
 Check Downloads and category menus, shared-file actions, search actions and
 server link copying at 100%, 150% and 200% display scaling. Check light, dark and
@@ -112,3 +124,13 @@ For this artwork set, SVG payload decreases from 3,189,897 to 929,668 bytes
 These are source/storage measurements, not executable-size measurements.
 `IconCompressionTest` verifies every decoded SVG byte against its source and
 checks damaged streams and invalid buffer lengths without requiring a display.
+
+The WebUI's actual `CountryCell` component has a Playwright check at device
+pixel ratios 1 and 2, including all 252 ISO-code PNG entries (251 SVG twins),
+legacy PNG fallback and hiding unavailable flags. Run
+`node unittests/browser-tests/country-flags.cjs` with Playwright installed.
+Set `AMULE_BROWSER_OUTPUT` to export screenshots. This fixture verifies the
+component and source assets; live API bytes are verified separately by the
+country-flag HTTP checks. Actual monitor changes, live OS appearance changes
+and highlighted menu rows still require a Windows/macOS desktop session; do
+not substitute simulated image sizes for those release checks.

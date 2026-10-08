@@ -1,10 +1,33 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
-// Copyright (c) 2026 aMule Team
+//
+// This file is part of the aMule Project.
+//
+// Copyright (c) 2003-2026 aMule Team ( https://amule-org.github.io )
+//
+// Any parts of this program derived from the xMule, lMule or eMule project,
+// or contributed by third-party developers are copyrighted by their
+// respective authors.
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
+//
 
 #include "MenuIcons.h"
+#include "CamuleArtProvider.h"
 
 #include <wx/artprov.h>
 #include <wx/bmpbndl.h>
+#include <wx/settings.h>
 
 wxMenuItem *AppendMenuIcon(wxMenu *menu, int id, const wxString &label, MenuIcon icon)
 {
@@ -48,12 +71,24 @@ wxMenuItem *AppendMenuIcon(wxMenu *menu, int id, const wxString &label, MenuIcon
 		break;
 	}
 	auto *item = new wxMenuItem(menu, id, label);
+#ifdef __WXOSX_COCOA__
+	// AppKit template images use black RGB with the artwork's alpha mask.
+	const wxColour colour = *wxBLACK;
+#else
+	const wxColour colour = wxSystemSettings::GetColour(wxSYS_COLOUR_MENUTEXT);
+#endif
 	const wxBitmapBundle bitmap =
-		wxArtProvider::GetBitmapBundle(wxString("amule:menu_") + name, wxART_MENU, wxSize(16, 16));
+		CamuleArtProvider::GetMenuBitmapBundle(wxString("menu_") + name, wxSize(16, 16), colour);
 	if (bitmap.IsOk()) {
 		// Set the image before insertion; native ports own layout and disabled states.
 		// Do not override GTK's menu-image preference or replace native checkmarks.
 		item->SetBitmap(bitmap);
 	}
-	return menu->Append(item);
+	menu->Append(item);
+#ifdef __WXOSX_COCOA__
+	if (bitmap.IsOk()) {
+		MarkMenuIconAsTemplate(*menu);
+	}
+#endif
+	return item;
 }

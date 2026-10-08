@@ -20,15 +20,13 @@ renderer and uses the application's existing zlib dependency.
    they retain dimensions from the old monitor. Avoid multiplying `FromDIP`
    results by the DPI scale again on wxMSW.
 
-2. **Handle live theme changes.** Menu SVG colour replacement and PNG
-   recolouring currently happen through the art provider using
-   `wxSYS_COLOUR_MENUTEXT`. Verify switching light/dark and Windows Contrast
-   themes while the application stays open. Audit wxArtProvider's cached
-   bundles and persistent menus: already-coloured assets may survive a
-   `wxEVT_SYS_COLOUR_CHANGED` event. If they do, rebuild those assets/menus
-   through a theme-aware cache or provider reset, then repaint affected
-   windows. Keep flags in their original colours. Verify disabled icons and
-   keyboard focus using native menu behavior.
+2. **Verify live theme changes.** The fix now colours each new popup outside
+   wxArtProvider's cached bundles, including PNG fallbacks. Automated tests
+   switch black/white/black while neutral artwork stays cached. This avoids
+   relying on Push/Pop, which leaves the bundle cache intact in wxWidgets 3.2.
+   Run the actual application through light/dark and Windows Contrast theme
+   changes without restarting, including a highlighted and a disabled menu
+   row. Flags retain their original colours.
 
 3. **Test the delivered package.** Launch the portable ZIP and installer on a
    clean supported Windows machine, rather than only from an MSYS2 build
@@ -51,7 +49,7 @@ Configure with `BUILD_TESTING=ON` and at least one GUI enabled, then run:
 
 ```sh
 cmake --build build --target IconCompressionTest IconArtworkTest
-ctest --test-dir build -R 'Icon(Compression|Artwork)Test' --output-on-failure
+ctest --test-dir build -R 'Icon(Compression|Artwork).*Test' --output-on-failure
 ```
 
 `IconCompressionTest` needs no display. `IconArtworkTest` needs a native GUI

@@ -22,33 +22,31 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
-#ifndef AMULE_MENUICONS_H
-#define AMULE_MENUICONS_H
-
-#include <wx/menu.h>
-
-// Semantic names keep a command's artwork consistent across context menus.
-enum class MenuIcon
-{
-	Pause,
-	Resume,
-	Stop,
-	Cancel,
-	Folder,
-	Info,
-	Link,
-	Preview,
-	Comments,
-	ClearCompleted,
-	Download,
-	Open
-};
-
-wxMenuItem *AppendMenuIcon(wxMenu *menu, int id, const wxString &label, MenuIcon icon);
+#include "MenuIcons.h"
 
 #ifdef __WXOSX_COCOA__
-void MarkMenuIconAsTemplate(wxMenu &menu);
-bool LastMenuIconIsTemplate(wxMenu &menu);
-#endif
+#import <AppKit/AppKit.h>
 
+namespace
+{
+NSImage *LastMenuImage(wxMenu &menu)
+{
+	NSMenu *native = menu.GetHMenu();
+	const NSInteger count = [native numberOfItems];
+	return count ? [[native itemAtIndex:count - 1] image] : nil;
+}
+}
+
+void MarkMenuIconAsTemplate(wxMenu &menu)
+{
+	// Called immediately after Append(), while this image is the last item.
+	// Cocoa supplies appearance, highlighted-row and disabled-state colours
+	// from the image's alpha mask instead of retaining our RGB pixels.
+	[LastMenuImage(menu) setTemplate:YES];
+}
+
+bool LastMenuIconIsTemplate(wxMenu &menu)
+{
+	return [LastMenuImage(menu) isTemplate];
+}
 #endif

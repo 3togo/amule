@@ -27,15 +27,27 @@ if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 		${CMAKE_SOURCE_DIR}/src/icons/icon_data.c
 	)
 	target_include_directories (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
-	target_link_libraries (IconArtworkTest wxWidgets::CORE ZLIB::ZLIB)
+	target_link_libraries (IconArtworkTest PRIVATE wxWidgets::CORE ZLIB::ZLIB)
 	if (WIN32)
 		# wx core imports Common Controls v6 entry points. Match the GUI's
 		# activation context and DPI awareness before the DLL loader runs.
 		target_sources (IconArtworkTest PRIVATE IconArtworkTest.rc)
 		target_include_directories (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR})
 	endif()
+	if (APPLE)
+		target_sources (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR}/src/MenuIcons_mac.mm)
+		target_link_libraries (IconArtworkTest PRIVATE "-framework AppKit")
+	endif()
 	add_test (NAME IconArtworkTest COMMAND IconArtworkTest)
 	set_tests_properties (IconArtworkTest PROPERTIES SKIP_RETURN_CODE 77 LABELS "gui")
+	if (UNIX AND NOT APPLE)
+		add_test (NAME IconArtworkDarkTest COMMAND IconArtworkTest)
+		add_test (NAME IconArtworkHighContrastTest COMMAND IconArtworkTest)
+		set_tests_properties (IconArtworkDarkTest PROPERTIES
+			ENVIRONMENT "GTK_THEME=Adwaita:dark" SKIP_RETURN_CODE 77 LABELS "gui")
+		set_tests_properties (IconArtworkHighContrastTest PROPERTIES
+			ENVIRONMENT "GTK_THEME=HighContrast" SKIP_RETURN_CODE 77 LABELS "gui")
+	endif()
 endif()
 
 # The checked-in lexer and native IPv6 rule store, without the application.
