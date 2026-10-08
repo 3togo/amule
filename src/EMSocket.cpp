@@ -210,10 +210,10 @@ void CEMSocket::OnReceive(int nErrorCode)
 
 	uint32 ret;
 	do {
-        if (pendingHeaderSize > PACKET_HEADER_SIZE) {
-            OnError(ERR_WRONGHEADER);
-            return;
-        }
+		if (pendingHeaderSize > PACKET_HEADER_SIZE) {
+			OnError(ERR_WRONGHEADER);
+			return;
+		}
 		uint32 readMax;
 		uint8_t *buf;
 		if (pendingHeaderSize < PACKET_HEADER_SIZE) {
@@ -233,12 +233,12 @@ void CEMSocket::OnReceive(int nErrorCode)
 			buf = pendingPacket;
 		} else {
 			buf = pendingPacket + pendingPacketSize;
-            const uint32 payload = CPacket::GetPacketSizeFromHeader(pendingHeader);
-            if (payload == UINT32_MAX || pendingPacketSize > payload) {
-                OnError(ERR_WRONGHEADER);
-                return;
-            }
-            readMax = payload - pendingPacketSize;
+			const uint32 payload = CPacket::GetPacketSizeFromHeader(pendingHeader);
+			if (payload == UINT32_MAX || pendingPacketSize > payload) {
+				OnError(ERR_WRONGHEADER);
+				return;
+			}
+			readMax = payload - pendingPacketSize;
 		}
 
 		// Reserve from the global download budget only when we actually intend to read

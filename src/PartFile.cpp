@@ -558,9 +558,9 @@ uint8 CPartFile::LoadPartFile(
 		}
 
 		uint32 tagcount = metFile.ReadUInt32();
-        if (!ProtocolBounds::Records(metFile.GetLength(), metFile.GetPosition(), tagcount, 3)) {
-            throw CInvalidPacket("Impossible part.met tag count");
-        }
+		if (!ProtocolBounds::Records(metFile.GetLength(), metFile.GetPosition(), tagcount, 3)) {
+			throw CInvalidPacket("Impossible part.met tag count");
+		}
 
 		for (uint32 j = 0; j < tagcount; ++j) {
 			CTag newtag(metFile, true);

@@ -85,7 +85,8 @@ CPacket::CPacket(uint8_t *rawHeader, uint8_t *buf)
 	memset(head, 0, sizeof head);
 	Header_Struct *header = reinterpret_cast<Header_Struct *>(rawHeader);
 	size = ProtocolBounds::TcpPayload(ENDIAN_SWAP_32(header->packetlength));
-    if (size == UINT32_MAX) throw CInvalidPacket("Invalid TCP packet length");
+	if (size == UINT32_MAX)
+		throw CInvalidPacket("Invalid TCP packet length");
 	opcode = header->command;
 	prot = header->eDonkeyID;
 	m_bSplitted = false;
@@ -174,15 +175,16 @@ CPacket::~CPacket()
 uint32 CPacket::GetPacketSizeFromHeader(const uint8_t *rawHeader)
 {
 	const Header_Struct *header = reinterpret_cast<const Header_Struct *>(rawHeader);
-    return ProtocolBounds::TcpPayload(ENDIAN_SWAP_32(header->packetlength));
+	return ProtocolBounds::TcpPayload(ENDIAN_SWAP_32(header->packetlength));
 }
 
 void CPacket::CopyToDataBuffer(unsigned int offset, const uint8_t *data, unsigned int n)
 {
-    if (!ProtocolBounds::Span(static_cast<uint64>(size) + 1, offset, n)) {
-        throw CInvalidPacket("Packet copy exceeds buffer");
-    }
-	memcpy(pBuffer + offset, data, n);
+	if (!ProtocolBounds::Span(size, offset, n) || (n && (!pBuffer || !data))) {
+		throw CInvalidPacket("Packet copy exceeds buffer");
+	}
+	if (n)
+		memcpy(pBuffer + offset, data, n);
 }
 
 uint8_t *CPacket::GetPacket()

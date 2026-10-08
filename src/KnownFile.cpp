@@ -25,7 +25,7 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
-#include <algorithm>   // std::remove_if
+#include <algorithm> // std::remove_if
 #include "ProtocolBounds.h"
 #include "KnownFile.h" // Do_not_auto_remove
 
@@ -547,7 +547,8 @@ bool CKnownFile::LoadHashsetFromFile(const CFileDataIO *file, bool checkhash)
 bool CKnownFile::LoadTagsFromFile(const CFileDataIO *file)
 {
 	uint32 tagcount = file->ReadUInt32();
-    if (!ProtocolBounds::Records(file->GetLength(), file->GetPosition(), tagcount, 3)) return false;
+	if (!ProtocolBounds::Records(file->GetLength(), file->GetPosition(), tagcount, 3))
+		return false;
 	m_taglist.clear();
 	m_verifyResult = CVerifyLocalDataResult();
 	wxString verifyCorruptMD4, verifyCorruptAICH;
