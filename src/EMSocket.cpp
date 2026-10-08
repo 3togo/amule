@@ -23,6 +23,7 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "StructuredDiagnostics.h"
 #include "EMSocket.h" // Interface declarations.
 
 #include <protocol/Protocols.h>
@@ -305,6 +306,8 @@ void CEMSocket::OnReceive(int nErrorCode)
 					return;
 				}
 
+                CStructuredDiagnostics::Get().Write("ed2k_tcp", "receive", "info",
+                    packet->GetOpCode(), packet->GetPacketSize());
 				PacketReceived(packet.get());
 			}
 		} else {

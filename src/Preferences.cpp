@@ -173,6 +173,8 @@ wxString CPreferences::s_VideoPlayer;
 bool CPreferences::s_msgonlyfriends;
 bool CPreferences::s_msgsecure;
 uint8 CPreferences::s_filterlevel;
+bool CPreferences::s_structuredDiagnosticsEnabled;
+uint32 CPreferences::s_structuredDiagnosticsMaxMiB;
 uint8 CPreferences::s_iFileBufferSize;
 uint8 CPreferences::s_iQueueSize;
 wxString CPreferences::s_sWebPath;
@@ -1381,6 +1383,8 @@ void CPreferences::BuildItemList(const wxString &appdir)
 			false)));
 
 	/** The following does not have an associated widget or section */
+    s_MiscList.push_back(new Cfg_Bool("/Diagnostics/Enabled", s_structuredDiagnosticsEnabled, false));
+    s_MiscList.push_back(MkCfg_Int("/Diagnostics/MaxMiB", s_structuredDiagnosticsMaxMiB, 8));
 	s_MiscList.push_back(new Cfg_Str("/eMule/Language", s_languageID));
 	s_MiscList.push_back(new Cfg_Str("/eMule/YourHostname", s_yourHostname, ""));
 

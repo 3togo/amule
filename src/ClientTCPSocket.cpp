@@ -22,6 +22,7 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "StructuredDiagnostics.h"
 #include "ClientTCPSocket.h"
 
 #include <algorithm>
@@ -2237,6 +2238,8 @@ bool CClientTCPSocket::PacketReceived(CPacket *packet)
 	}
 
 	if (!exception.IsEmpty()) {
+        CStructuredDiagnostics::Get().Write("ed2k_tcp", "parse_rejected", "warning",
+            packet->GetOpCode(), packet->GetPacketSize());
 		AddDebugLogLineN(logPacketErrors,
 			CFormat("Caught %s\nOn packet with protocol %x, opcode %x, size %u\tClientData: "
 				"%s\n") %

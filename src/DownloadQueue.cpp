@@ -23,6 +23,7 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "StructuredDiagnostics.h"
 #include "DownloadQueue.h" // Interface declarations
 
 #include <protocol/Protocols.h>
@@ -1296,6 +1297,7 @@ void CDownloadQueue::CheckDiskspace(const CPath &path)
 	if (free == static_cast<uint64>(wxInvalidOffset)) {
 		return;
 	} else if (free < min) {
+        CStructuredDiagnostics::Get().Write("disk", "space_low", "warning", min, free);
 		CUserEvents::ProcessEvent(CUserEvents::OutOfDiskSpace, "Temporary partition");
 	}
 

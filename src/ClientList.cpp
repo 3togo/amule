@@ -23,6 +23,7 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "StructuredDiagnostics.h"
 #include "ClientList.h" // Interface declarations.
 
 #include "BrowseManager.h"
@@ -730,6 +731,7 @@ void CClientList::AddBannedClient(const CNetworkAddress &address)
 	// Ban() with no IsBanned() check, so a client banned for aggressiveness and later flagged
 	// as a spammer counted twice while UnBan() gave back one.
 	if (m_bannedList.Ban(address, ::GetTickCount64())) {
+        CStructuredDiagnostics::Get().Write("peer", "ban", "warning");
 		theStats::AddBannedClient();
 	}
 }
