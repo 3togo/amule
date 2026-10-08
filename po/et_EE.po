@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-03 11:27+0100\n"
+"POT-Creation-Date: 2026-10-08 13:27+0900\n"
 "PO-Revision-Date: 2026-10-02 00:46+0000\n"
 "Last-Translator: \n"
 "Language-Team: Estonian <kde-i18n-doc@kde.org>\n"
@@ -5104,6 +5104,25 @@ msgstr "Saatmise saba suurus: 5000 klienti"
 #: src/muuli_wdr.cpp
 msgid "Server connection refresh interval: Disable"
 msgstr "Serveriühenduse värskenadamise intervall: Ei kasuta"
+
+#: src/muuli_wdr.cpp
+msgid "Experimental"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Enable experimental ED2K accelerated file publication"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"Testing is discouraged for normal use. Interoperability and server-load testing\n"
+"are incomplete; this may cause server disconnections. Enable only for\n"
+"controlled testing with a compatible server. Disabled by default."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Configure this experimental option on the daemon host."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Disable computer's timed standby mode"

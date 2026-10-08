@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule GIT\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-03 11:27+0100\n"
+"POT-Creation-Date: 2026-10-08 13:27+0900\n"
 "PO-Revision-Date: 2026-10-02 00:53+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
@@ -5045,6 +5045,25 @@ msgstr "Kích thước hàng đợi tải lên: 5000 client"
 #: src/muuli_wdr.cpp
 msgid "Server connection refresh interval: Disable"
 msgstr "Khoảng thời gian làm mới kết nối máy chủ: Tắt"
+
+#: src/muuli_wdr.cpp
+msgid "Experimental"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Enable experimental ED2K accelerated file publication"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"Testing is discouraged for normal use. Interoperability and server-load testing\n"
+"are incomplete; this may cause server disconnections. Enable only for\n"
+"controlled testing with a compatible server. Disabled by default."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Configure this experimental option on the daemon host."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Disable computer's timed standby mode"
