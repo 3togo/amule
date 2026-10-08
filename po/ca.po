@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-07 00:28-0400\n"
-"PO-Revision-Date: 2026-10-06 18:35+0000\n"
+"PO-Revision-Date: 2026-10-07 19:28+0000\n"
 "Last-Translator: minterior <minterior@gmail.com>\n"
 "Language-Team: Català\n"
 "Language: ca\n"
@@ -560,54 +560,54 @@ msgstr ""
 
 #: src/amule.cpp
 msgid "The P2P TCP port conflicts with the External Connections port. No sockets were changed.\n"
-msgstr ""
+msgstr "El port TCP P2P entra en conflicte amb el port de connexions externes. No s'ha canviat cap sòcol.\n"
 
 #: src/amule.cpp
 msgid "The P2P TCP port is too high for its associated server UDP port. No sockets were changed.\n"
-msgstr ""
+msgstr "El port TCP P2P és massa alt per al seu port UDP del servidor associat. No s'ha canviat cap sòcol.\n"
 
 #: src/amule.cpp
 msgid "The client UDP port conflicts with the server UDP port (TCP+3). No sockets were changed.\n"
-msgstr ""
+msgstr "El port UDP del client entra en conflicte amb el port UDP del servidor (TCP+3). No s'ha canviat cap sòcol.\n"
 
 #: src/amule.cpp
 #, c-format
 msgid "Could not rebind the server UDP port %u; no sockets were changed.\n"
-msgstr ""
+msgstr "No s'ha pogut tornar a vincular el port UDP del servidor %u; no s'ha canviat cap sòcol.\n"
 
 #: src/amule.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not rebind the P2P TCP port %u. %s"
-msgstr "ERROR: No s'ha pogut escoltar el port TCP."
+msgstr "No s'ha pogut tornar a vincular el port TCP P2P %u. %s"
 
 #: src/amule.cpp
 msgid "The previous listener and server UDP socket remain active.\n"
-msgstr ""
+msgstr "El sòcol d'escolta anterior i el sòcol UDP del servidor continuen actius.\n"
 
 #: src/amule.cpp
 msgid "The server UDP socket could not be restored; restart aMule.\n"
-msgstr ""
+msgstr "No s'ha pogut restaurar el sòcol UDP del servidor; reinicieu l'aMule.\n"
 
 #: src/amule.cpp
 msgid "The previous P2P listeners remain active.\n"
-msgstr ""
+msgstr "Els sòcols d'escolta P2P anteriors continuen actius.\n"
 
 #: src/amule.cpp
 msgid "The previous client UDP socket remains active.\n"
-msgstr ""
+msgstr "El sòcol UDP del client anterior continua actiu.\n"
 
 #: src/amule.cpp
 msgid "Some previous P2P sockets could not be restored; restart aMule.\n"
-msgstr ""
+msgstr "No s'han pogut restaurar alguns sòcols P2P anteriors; reinicieu l'aMule.\n"
 
 #: src/amule.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not rebind the client UDP port %u. %s"
-msgstr "No s'ha pogut suprimir la categoria: %s"
+msgstr "No s'ha pogut tornar a vincular el port UDP del client %u. %s"
 
 #: src/amule.cpp
 msgid "P2P listening sockets rebound; established peer connections were kept."
-msgstr ""
+msgstr "S'han tornat a vincular els sòcols d'escolta P2P; s'han mantingut les connexions establertes amb altres clients."
 
 #: src/amule.cpp
 msgid "Failed to create OnlineSig File"
@@ -1206,7 +1206,7 @@ msgstr "Tots"
 
 #: src/amule-remote-gui.cpp
 msgid "The daemon could not apply the connection port changes."
-msgstr ""
+msgstr "El dimoni no ha pogut aplicar els canvis als ports de connexió."
 
 #: src/amule-remote-gui.cpp
 msgid "not readable"
@@ -4764,44 +4764,48 @@ msgid "Reconnect on loss"
 msgstr "Reconnecta en perdre la connexió"
 
 #: src/muuli_wdr.cpp
-msgid "Kad protocol version"
-msgstr "Versió del protocol Kad"
+msgid "File repair hashes over Kad"
+msgstr "Hashes de reparació de fitxers a Kad"
 
 #: src/muuli_wdr.cpp
-msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
-msgstr "Anuncia el protocol Kad 0x0a (emmagatzematge AICH de paraules clau)"
-
-#: src/muuli_wdr.cpp
-msgid ""
-"When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
-"\n"
-"WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
-"\n"
-"Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
-"\n"
-"Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
-msgstr ""
-"Quan s'activa, l'aMule anuncia la versió 0x0a del protocol Kad i processa els hash AICH dels resultats de publicació i cerca de paraules clau.\n"
-"\n"
-"AVÍS: Activar aquesta opció pot fer que els clients Kad antics (anteriors a la 0.49b), que no poden interpretar les etiquetes AICH dels resultats, descartin resultats de cerca. La majoria dels clients actuals ho admeten, però si observeu que falten resultats de cerca, proveu de desactivar aquesta opció.\n"
-"\n"
-"Desactivar aquesta opció descarta les dades AICH de l'índex de paraules clau desades en el següent desament; tornar-la a activar obliga a recollir aquestes dades de nou.\n"
-"\n"
-"Els hash obtinguts dels resultats de cerca de Kad no es consideren fiables fins que les fonts de baixada els corroboren. Els recomptes de publicadors notificats, per si sols, mai no autoritzen la recuperació AICH."
-
-#: src/muuli_wdr.cpp
-msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
-msgstr "Rebutja les etiquetes de publicació AICH dels parells Kad antics (< 0x09)"
+msgid "Share and use file repair hashes (AICH) over Kad"
+msgstr "Comparteix i utilitza hashes de reparació de fitxers (AICH) a Kad"
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+"Share file repair hashes with other Kad nodes and learn them from Kad searches. These hashes can help aMule repair damaged download data without downloading an entire part again. aMule uses a hash for repair only once enough independent peers report the same one.\n"
 "\n"
-"WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+"Very old Kad clients (before eMule 0.49b) may miss search results containing these hashes. If you notice missing results, try turning this option off.\n"
+"\n"
+"Turning this option off discards the repair hashes stored in your Kad index on the next save. Turning it back on starts collecting them again.\n"
+"\n"
+"Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
-"Quan s'activa, es rebutgen les etiquetes de publicació de paraules clau AICH dels nodes que anuncien una versió de Kad inferior a 0x09, perquè aquestes versions no admeten l'emmagatzematge AICH de paraules clau. Les versions anunciades no demostren que un publicador sigui de confiança.\n"
+"Comparteix els hashes de reparació de fitxers amb altres nodes Kad i n'obté de les cerques a Kad. Aquests hashes poden ajudar l'aMule a reparar dades de baixada malmeses sense haver de tornar a baixar una part sencera. L'aMule només fa servir un hash per reparar quan prou clients independents comuniquen el mateix hash.\n"
 "\n"
-"AVÍS: Això pot rebutjar publicadors legítims la versió dels quals a la taula d'encaminament estigui desactualitzada, cosa que redueix la cobertura de hash AICH. Els nodes amb una versió desconeguda s'accepten igualment. Els hash obtinguts dels resultats de cerca de Kad requereixen la corroboració de fonts de baixada independentment d'aquest paràmetre."
+"Els clients Kad molt antics (anteriors a l'eMule 0.49b) poden perdre resultats de cerca que continguin aquests hashes. Si noteu que falten resultats, proveu de desactivar aquesta opció.\n"
+"\n"
+"En desactivar aquesta opció, els hashes de reparació emmagatzemats al vostre índex Kad es descarten en el següent desament. Si la torneu a activar, es tornen a recollir.\n"
+"\n"
+"Detall tècnic: en activar-la s'anuncia la versió 0x0a del protocol Kad i s'afegeixen hashes AICH a la publicació de paraules clau i als resultats de cerca."
+
+#: src/muuli_wdr.cpp
+msgid "Ignore repair hashes from Kad nodes too old to support them"
+msgstr "Ignora els hashes de reparació dels nodes Kad massa antics per admetre'ls"
+
+#: src/muuli_wdr.cpp
+msgid ""
+"Only applies when sharing and using file repair hashes over Kad is enabled. Ignore hashes published by nodes that report a Kad version too old to support them.\n"
+"\n"
+"A node's reported version may be out of date or inaccurate, so this can discard valid hashes and does not make accepted hashes trustworthy. Nodes whose version is unknown are still accepted.\n"
+"\n"
+"Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
+msgstr ""
+"Només s'aplica si està activada l'opció de compartir i utilitzar hashes de reparació de fitxers a Kad. Ignora els hashes publicats per nodes que declaren una versió de Kad massa antiga per admetre'ls.\n"
+"\n"
+"La versió que declara un node pot estar desactualitzada o ser inexacta, de manera que això pot descartar hashes vàlids i no fa que els hashes acceptats siguin fiables. Els nodes amb una versió desconeguda s'accepten igualment.\n"
+"\n"
+"Detall tècnic: rebutja les etiquetes de publicació AICH dels nodes que anuncien versions del protocol Kad inferiors a 0x09."
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"
@@ -4904,13 +4908,12 @@ msgid "Enter here the min disk space desired."
 msgstr "Poseu l'espai mínim de disc desitjat."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Save up to 10 HighID sources of rare files (20 or fewer sources) on exit"
-msgstr "Recorda 10 fonts dels fitxers rars (amb < 20 fonts)"
+msgstr "Desa fins a 10 fonts amb ID Alta dels fitxers rars (20 fonts o menys) en sortir"
 
 #: src/muuli_wdr.cpp
 msgid "The saved sources are used again only if aMule restarts within 2 hours. LowID sources are not saved: a LowID only identifies a peer on the server that assigned it."
-msgstr ""
+msgstr "Les fonts desades només es tornen a fer servir si l'aMule es reinicia en menys de 2 hores. Les fonts amb ID Baixa no es desen: una ID Baixa només identifica un client al servidor que l'ha assignada."
 
 #: src/muuli_wdr.cpp src/Statistics.cpp
 msgid "Uploads"
@@ -6509,9 +6512,8 @@ msgid "- Network interface binding changed.\n"
 msgstr "- S'ha canviat la vinculació a la interfície de xarxa.\n"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "- Local address binding changed.\n"
-msgstr "- S'ha canviat la vinculació a la interfície de xarxa.\n"
+msgstr "- S'ha canviat la vinculació de l'adreça local.\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- TCP port changed.\n"
@@ -9776,6 +9778,41 @@ msgid ""
 "\n"
 "Diagnostic output truncated.\n"
 msgstr ""
+
+#~ msgid "Kad protocol version"
+#~ msgstr "Versió del protocol Kad"
+
+#~ msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
+#~ msgstr "Anuncia el protocol Kad 0x0a (emmagatzematge AICH de paraules clau)"
+
+#~ msgid ""
+#~ "When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
+#~ "\n"
+#~ "WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
+#~ "\n"
+#~ "Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
+#~ "\n"
+#~ "Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
+#~ msgstr ""
+#~ "Quan s'activa, l'aMule anuncia la versió 0x0a del protocol Kad i processa els hash AICH dels resultats de publicació i cerca de paraules clau.\n"
+#~ "\n"
+#~ "AVÍS: Activar aquesta opció pot fer que els clients Kad antics (anteriors a la 0.49b), que no poden interpretar les etiquetes AICH dels resultats, descartin resultats de cerca. La majoria dels clients actuals ho admeten, però si observeu que falten resultats de cerca, proveu de desactivar aquesta opció.\n"
+#~ "\n"
+#~ "Desactivar aquesta opció descarta les dades AICH de l'índex de paraules clau desades en el següent desament; tornar-la a activar obliga a recollir aquestes dades de nou.\n"
+#~ "\n"
+#~ "Els hash obtinguts dels resultats de cerca de Kad no es consideren fiables fins que les fonts de baixada els corroboren. Els recomptes de publicadors notificats, per si sols, mai no autoritzen la recuperació AICH."
+
+#~ msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
+#~ msgstr "Rebutja les etiquetes de publicació AICH dels parells Kad antics (< 0x09)"
+
+#~ msgid ""
+#~ "When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+#~ "\n"
+#~ "WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+#~ msgstr ""
+#~ "Quan s'activa, es rebutgen les etiquetes de publicació de paraules clau AICH dels nodes que anuncien una versió de Kad inferior a 0x09, perquè aquestes versions no admeten l'emmagatzematge AICH de paraules clau. Les versions anunciades no demostren que un publicador sigui de confiança.\n"
+#~ "\n"
+#~ "AVÍS: Això pot rebutjar publicadors legítims la versió dels quals a la taula d'encaminament estigui desactualitzada, cosa que redueix la cobertura de hash AICH. Els nodes amb una versió desconeguda s'accepten igualment. Els hash obtinguts dels resultats de cerca de Kad requereixen la corroboració de fonts de baixada independentment d'aquest paràmetre."
 
 #~ msgid "Local"
 #~ msgstr "Local"

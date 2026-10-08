@@ -13,7 +13,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-07 00:28-0400\n"
-"PO-Revision-Date: 2026-10-06 18:40+0000\n"
+"PO-Revision-Date: 2026-10-08 11:09+0000\n"
 "Last-Translator: Marcel Pol <marcel@timelord.nl>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "Language: nl\n"
@@ -558,54 +558,54 @@ msgstr ""
 
 #: src/amule.cpp
 msgid "The P2P TCP port conflicts with the External Connections port. No sockets were changed.\n"
-msgstr ""
+msgstr "De P2P-TCP-poort conflicteert met de Externe Verbindingen-poort. Sockets zijn niet veranderd.\n"
 
 #: src/amule.cpp
 msgid "The P2P TCP port is too high for its associated server UDP port. No sockets were changed.\n"
-msgstr ""
+msgstr "De P2P-TCP-poort is te hoog voor de gerelateerde server-UDP-poort. Sockets zijn niet veranderd.\n"
 
 #: src/amule.cpp
 msgid "The client UDP port conflicts with the server UDP port (TCP+3). No sockets were changed.\n"
-msgstr ""
+msgstr "De client-UDP-poort conflicteert met de server-UDP-poort (TCP+3). Sockets zijn niet veranderd.\n"
 
 #: src/amule.cpp
 #, c-format
 msgid "Could not rebind the server UDP port %u; no sockets were changed.\n"
-msgstr ""
+msgstr "Herbinden van de server-UDP-poort %u mislukt; sockets zijn niet veranderd.\n"
 
 #: src/amule.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not rebind the P2P TCP port %u. %s"
-msgstr "FOUT: Kon niet luisteren op TCP-poort."
+msgstr "Herbinden van de P2P-TCP-poort %u mislukt. %s"
 
 #: src/amule.cpp
 msgid "The previous listener and server UDP socket remain active.\n"
-msgstr ""
+msgstr "De vorige luisteraar en server-UDP-socket blijven actief.\n"
 
 #: src/amule.cpp
 msgid "The server UDP socket could not be restored; restart aMule.\n"
-msgstr ""
+msgstr "De server-UDP-socket kon niet hersteld worden; herstart aMule.\n"
 
 #: src/amule.cpp
 msgid "The previous P2P listeners remain active.\n"
-msgstr ""
+msgstr "De vorige P2P-luisteraars blijven actief.\n"
 
 #: src/amule.cpp
 msgid "The previous client UDP socket remains active.\n"
-msgstr ""
+msgstr "De vorgie client-UDP-socket blijft actief.\n"
 
 #: src/amule.cpp
 msgid "Some previous P2P sockets could not be restored; restart aMule.\n"
-msgstr ""
+msgstr "Sommige vorige P2P-sockets konden niet worden hersteld; herstart aMule.\n"
 
 #: src/amule.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not rebind the client UDP port %u. %s"
-msgstr "Kon de categorie niet verwijderen: %s"
+msgstr "Herbinden van de client-UDP-poort %u mislukt. %s"
 
 #: src/amule.cpp
 msgid "P2P listening sockets rebound; established peer connections were kept."
-msgstr ""
+msgstr "P2P-luistersockets worden afgeslagen; bestaande peerverbindingen zijn behouden."
 
 #: src/amule.cpp
 msgid "Failed to create OnlineSig File"
@@ -1204,7 +1204,7 @@ msgstr "Alle"
 
 #: src/amule-remote-gui.cpp
 msgid "The daemon could not apply the connection port changes."
-msgstr ""
+msgstr "De daemon kon de veranderingen van de verbindingspoorten niet toepassen."
 
 #: src/amule-remote-gui.cpp
 msgid "not readable"
@@ -1252,7 +1252,7 @@ msgstr "Onbekend"
 
 #: src/amule-remote-gui.cpp
 msgid "The connected daemon does not support All searches."
-msgstr ""
+msgstr "De verbonden daemon ondersteunt \"All searches\" niet."
 
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
@@ -4074,9 +4074,8 @@ msgid "Type"
 msgstr "Type"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Search network"
-msgstr "Fout tijdens zoeken"
+msgstr "Doorzoek netwerk"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -4316,7 +4315,7 @@ msgstr "Deelverhouding"
 
 #: src/muuli_wdr.cpp src/SharedFilesCtrl.cpp
 msgid "Complete Sources"
-msgstr "Complete bronnen"
+msgstr "Complete Bronnen"
 
 #: src/muuli_wdr.cpp src/SharedFilesCtrl.cpp
 msgid "Shared since"
@@ -4763,44 +4762,48 @@ msgid "Reconnect on loss"
 msgstr "Verbind opnieuw bij verbroken verbinding"
 
 #: src/muuli_wdr.cpp
-msgid "Kad protocol version"
-msgstr "Kad-protocolversie"
+msgid "File repair hashes over Kad"
+msgstr "Bestandsreparatiehashes over Kad"
 
 #: src/muuli_wdr.cpp
-msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
-msgstr "Adverteer met Kad protocol 0x0a (AICH-sleutelwoorden opslag)"
-
-#: src/muuli_wdr.cpp
-msgid ""
-"When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
-"\n"
-"WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
-"\n"
-"Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
-"\n"
-"Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
-msgstr ""
-"Wanneer dit is ingeschakeld adverteert aMule met Kad-protocol versie 0x0a en verwerkt het AICH-hashes in sleutelwoordresultaten van publicaties en zoekopdrachten.\n"
-"\n"
-"WAARSCHUWING: Door dit in te schakelen worden zoekresultaten mogelijk niet getoond door oudere Kad-clients (pre-0.49b) die de AICH-resultaatlabels niet kunnen parseren. De meeste clients ondersteunen dit maar als u ontbrekende resultaten ervaart kan u proberen deze optie uit te schakelen.\n"
-"\n"
-"Het uitschakelen van deze optie gooit opgeslagen AICH-sleutelwoord indexgegevens weg bij de volgende opslag; het opnieuw inschakelen vereist dat alle gegevens opnieuw verzameld worden.\n"
-"\n"
-"Hashes geleerd uit Kad-zoekresultaten blijven onvertrouwd tot download-bronnen ze bevestigt. Gerapporteerde uitgeveraantallen zijn geen basis voor authorizatie van AICH-herstel."
-
-#: src/muuli_wdr.cpp
-msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
-msgstr "Sla AICH-publicatielabels vanuit verouderde Kad-peers af (< 0x09)"
+msgid "Share and use file repair hashes (AICH) over Kad"
+msgstr "Deel en gebruik bestandsreparatiehashes (AICH) over Kad"
 
 #: src/muuli_wdr.cpp
 msgid ""
-"When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+"Share file repair hashes with other Kad nodes and learn them from Kad searches. These hashes can help aMule repair damaged download data without downloading an entire part again. aMule uses a hash for repair only once enough independent peers report the same one.\n"
 "\n"
-"WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+"Very old Kad clients (before eMule 0.49b) may miss search results containing these hashes. If you notice missing results, try turning this option off.\n"
+"\n"
+"Turning this option off discards the repair hashes stored in your Kad index on the next save. Turning it back on starts collecting them again.\n"
+"\n"
+"Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
-"Wanneer dit is ingeschakeld worden AICH-sleutelwoord publicatielabels van nodes die adverteren met een Kad-versie onder 0x09 afgeslagen omdat deze versies geen AICH-sleutelwoord opslag ondersteunen. Geadverteerde versies zijn geen bewijs dat een uitgever betrouwbaar is.\n"
+"Deel bestandsreparatiehashes met andere Kad nodes en leer over hen door Kad zoekopdrachten. Deze hashes kunnen aMule helpen om beschadigde downloadgegevens te repareren zonder het hele deel opnieuw te downloaden. aMule gebruikt alleen een hash voor reparatie als genoeg onafhankelijke peers dezelfde hash rapporteren.\n"
 "\n"
-"WAARSCHUWING: Dit slaat mogelijk legitieme uitgevers af als hun routing-table versie verouderd is, waardoor AICH-hash-dekking verminderd. Nodes met onbekende versies worden nog steeds geaccepteerd. Hashes geleerd vanuit Kad-zoekresultaten vereisen download-bron bevestiging ondanks deze instelling."
+"Hele oude Kad clients (voor eMule versie 0.49b) kunnen zoekresultaten die deze hashes bevatten missen. Als u ontbrekende zoekresultaten opmerkt, probeer dan deze optie uit te schakelen.\n"
+"\n"
+"Door deze optie uit te schakelen gooit u ook de reparatiehashes die zijn opgeslagen in uw Kad-index weg bij de volgende keer opslaan. Het opnieuw inschakelen laat het verzamelen opnieuw beginnen.\n"
+"\n"
+"Technisch detail: door dit in te schakelen adverteert Kad-protocolversie 0x0a en voegt het AICH-hashes toe aan sleutelwoordpublicaties en -zoekresultaten."
+
+#: src/muuli_wdr.cpp
+msgid "Ignore repair hashes from Kad nodes too old to support them"
+msgstr "Negeer reparatiehashes van Kad-nodes die te oud zijn om ze te ondersteunen"
+
+#: src/muuli_wdr.cpp
+msgid ""
+"Only applies when sharing and using file repair hashes over Kad is enabled. Ignore hashes published by nodes that report a Kad version too old to support them.\n"
+"\n"
+"A node's reported version may be out of date or inaccurate, so this can discard valid hashes and does not make accepted hashes trustworthy. Nodes whose version is unknown are still accepted.\n"
+"\n"
+"Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
+msgstr ""
+"Is alleen van toepassing als delen en gebruik van bestandsreparatiehashes over Kad is ingeschakeld. Negeer hashes die gepubliceerd zijn door nodes die een Kad-versie rapporteren die te oud zijn om de hashes te ondersteunen.\n"
+"\n"
+"De gerapporteerde versie van een node kan verouderd of incorrect zijn dus dit kan ook geldige hashes negeren, en maakt geaccepteerde hashes ook niet betrouwbaar. Nodes waarvan de versie onbekend is worden nog wel geaccepteerd.\n"
+"\n"
+"Technisch detail: verwerpt AICH-publicatielabels van nodes die adverteren met Kad-protocolversies voor 0x09."
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"
@@ -4903,13 +4906,12 @@ msgid "Enter here the min disk space desired."
 msgstr "Voer hier de gewenste min schijfruimte in."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Save up to 10 HighID sources of rare files (20 or fewer sources) on exit"
-msgstr "Bewaar 10 bronnen van zeldzame bestanden (<20 bronnen)"
+msgstr "Bewaar tot wel 10 bronnen van zeldzame bestanden (20 bronnen of minder) bij het afsluiten"
 
 #: src/muuli_wdr.cpp
 msgid "The saved sources are used again only if aMule restarts within 2 hours. LowID sources are not saved: a LowID only identifies a peer on the server that assigned it."
-msgstr ""
+msgstr "De opgeslagen bronnen worden alleen opnieuw gebruikt als aMule binnen 2 uur herstart. LaagID-bronnen worden niet opgeslagen: een LaagID identificeert alleen een peer op de server die het toewees."
 
 #: src/muuli_wdr.cpp src/Statistics.cpp
 msgid "Uploads"
@@ -6359,7 +6361,7 @@ msgstr "Ongeldige categorie gevonden, wordt overgeslagen"
 
 #: src/Preferences.cpp
 msgid "TCP port can't be higher than 65532 due to server UDP socket being TCP+3"
-msgstr "TCP-poort kan niet hoger zijn dan 65532 omdat de server UDP-poort de TCP-poort + 3 is"
+msgstr "TCP-poort kan niet hoger zijn dan 65532 omdat de server UDP socket gelijk is aan de TCP-poort + 3"
 
 #: src/Preferences.cpp
 #, c-format
@@ -6508,9 +6510,8 @@ msgid "- Network interface binding changed.\n"
 msgstr "- Binding van netwerkinterface gewijzigd.\n"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "- Local address binding changed.\n"
-msgstr "- Binding van netwerkinterface gewijzigd.\n"
+msgstr "- Lokale adresbinding veranderd.\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- TCP port changed.\n"
@@ -6648,7 +6649,7 @@ msgstr "Kon de registratie van de URL-afhandelaar niet verwijderen."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "macOS does not let an application stop being the default handler. To stop aMule opening these, make another application the default."
-msgstr "macOS staat niet toe dat een app niet langer de standaard behandelaar is. Om te voorkomen dat aMule deze opent maakt u een andere app de standaard."
+msgstr "macOS staat niet toe dat een app niet langer de standaard afhandelaar is. Om te voorkomen dat aMule deze opent maakt u een andere app de standaard."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The web server and aMule API require external connections to be enabled."
@@ -6951,7 +6952,7 @@ msgstr "Min grootte moet kleiner zijn dan max grootte. Max grootte wordt genegee
 
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
 msgid "Main"
-msgstr "Standaard"
+msgstr "Hoofdcategorie"
 
 #: src/SearchList.cpp
 #, c-format
@@ -6972,9 +6973,8 @@ msgid "Invalid entry in stored search list, file may be corrupt"
 msgstr "Ongeldige vermelding in opgeslagen zoeklijst, bestand kan beschadigd zijn"
 
 #: src/SearchList.cpp
-#, fuzzy
 msgid "All search can't be done if neither eD2k nor Kad is available"
-msgstr "Kad-zoekopdracht kan niet worden uitgevoerd als Kad niet draait"
+msgstr "\"All search\" kan niet worden uitgevoerd als eD2k en Kad allebei niet beschikbaar zijn"
 
 #: src/SearchList.cpp
 msgid "eD2k search can't be done if eD2k is not connected"
@@ -6982,7 +6982,7 @@ msgstr "eD2K-zoekopdracht kan niet worden uitgevoerd als eD2K niet draait"
 
 #: src/SearchList.cpp
 msgid "All search: no usable Kad keyword; continuing with eD2k."
-msgstr ""
+msgstr "All search: geen bruikbaar Kad-sleutelwoord; doorgaan met eD2k."
 
 #: src/SearchList.cpp
 msgid "No keyword for Kad search - aborting"
@@ -6994,7 +6994,7 @@ msgstr "Onverwachte fout bij Kad-zoekopdracht: "
 
 #: src/SearchList.cpp
 msgid "All search: Kad component could not start: "
-msgstr ""
+msgstr "All search: Kad-onderdeel kon niet opstarten: "
 
 #: src/SearchList.cpp
 msgid "Search timed out: the server did not answer."
@@ -7050,37 +7050,32 @@ msgid "New"
 msgstr "Nieuw"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "eD2k: Current server"
-msgstr "eD2k-serverlijst (server.met)"
+msgstr "eD2k: Huidige server"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "eD2k: All servers"
-msgstr "Verwijder alle servers"
+msgstr "eD2k: Alle servers"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "All networks"
-msgstr "Geen netwerk"
+msgstr "Alle netwerken"
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "Search the connected eD2k server."
-msgstr "Server nu mee verbonden."
+msgstr "Doorzoek de verbonden eD2k-server."
 
 #: src/SearchModeIcons.h
 msgid "Search the connected eD2k server and other servers in the server list."
-msgstr ""
+msgstr "Doorzoek de verbonden eD2k-server en andere servers in de serverlijst."
 
 #: src/SearchModeIcons.h
-#, fuzzy
 msgid "Search the Kad network."
-msgstr "Verbind met het netwerk."
+msgstr "Doorzoek het Kad-netwerk."
 
 #: src/SearchModeIcons.h
 msgid "Search eD2k servers and Kad, using whichever networks are available."
-msgstr ""
+msgstr "Doorzoek eD2k-servers en Kad door gebruik te maken van welk netwerk beschikbaar is."
 
 #: src/SearchProgressReport.cpp
 msgid "running"
@@ -7124,36 +7119,35 @@ msgstr "Geen zoekopdrachten om over te rapporteren.\n"
 #: src/SearchSourceFormat.h
 #, c-format
 msgid "Estimated availability: %u"
-msgstr ""
+msgstr "Verwachtte beschikbaarheid: %u"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "eD2k sources: %u"
-msgstr "Bestandsbronnen:"
+msgstr "eD2k-bronnen: %u"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "Kad sources: %u"
-msgstr "Gevonden bronnen: %s"
+msgstr "Kad-bronnen: %u"
 
 #: src/SearchSourceFormat.h
 msgid "Network counts may overlap; they are not added together."
-msgstr ""
+msgstr "Netwerktellingen kunnen overlappen; ze worden niet opgeteld."
 
 #: src/SearchSourceFormat.h
-#, fuzzy
 msgid "Network breakdown unavailable."
-msgstr "Nieuwe versie beschikbaar"
+msgstr "Netwerkuitsplitings niet beschikbaar."
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "Complete sources: %u"
-msgstr "Complete bronnen"
+msgstr "Complete bronnen: %u"
 
 #: src/SearchSourceFormat.h
-#, fuzzy, c-format
+#, c-format
 msgid "Direct client endpoints: %u"
-msgstr "Nieuwe client-id is %u"
+msgstr "Directe client-eindpunten: %u"
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
@@ -7187,19 +7181,19 @@ msgid "No valid servers to which to connect found in server list"
 msgstr "Geen geldige servers om mee te verbinden gevonden in serverlijst"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connected to %s (%s:%i), sending login request"
-msgstr "Verbonden met %s (%s:%i)"
+msgstr "Verbonden met %s (%s:%i), aanmeldingsverzoek wordt verstuurd"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Obfuscated connection established on: %s (%s:%i)"
-msgstr "Verbinding gemaakt met: %s"
+msgstr "Geobfusceerde verbinding gemaakt met: %s (%s:%i)"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connection established on: %s (%s:%i)"
-msgstr "Verbinding gemaakt met: %s"
+msgstr "Verbinding gemaakt met: %s (%s:%i)"
 
 #: src/ServerConnect.cpp
 msgid "Fatal Error while trying to connect. Internet connection might be down"
@@ -8264,7 +8258,7 @@ msgstr "Geen geldige hash (lengte moet precies 32 tekens zijn)\n"
 
 #: src/TextClient.cpp
 msgid "The connected daemon does not support All searches.\n"
-msgstr ""
+msgstr "De verbonden daemon ondersteunt \"All searches\" niet.\n"
 
 #. TRANSLATORS:
 #. 'help search' is a command to the program, do not translate it.
@@ -8662,7 +8656,6 @@ msgid "Execute a search."
 msgstr "Voer een zoekopdracht uit."
 
 #: src/TextClient.cpp
-#, fuzzy
 msgid ""
 "A search type has to be specified by giving the type:\n"
 "    GLOBAL\n"
@@ -8681,10 +8674,11 @@ msgid ""
 "Example: 'search global linux iso --type Iso --min-size 100M' returns\n"
 "results for \"linux iso\" of file-type Iso at least 100 MiB.\n"
 msgstr ""
-"Er moet een zoektype worden opgegeven door het type op te geven:\n"
+"Er moet een zoektype worden gespecifieerd door het type op te geven:\n"
 "    GLOBAL\n"
 "    LOCAL\n"
 "    KAD\n"
+"    ALL: Alle netwerken (vereist daemon-ondersteuning)\n"
 "Voorbeeld: 'search kad file' voert een kad-zoekopdracht uit naar \"file\".\n"
 "\n"
 "Optionele filters kunnen worden toegevoegd voor, na, of tussen\n"
@@ -8710,9 +8704,8 @@ msgid "Execute a kad search"
 msgstr "Voer een kad zoekopdracht uit"
 
 #: src/TextClient.cpp
-#, fuzzy
 msgid "Execute an eD2k and Kad search"
-msgstr "Voer een kad zoekopdracht uit"
+msgstr "Voer een eD2k- en Kad-zoekopdracht uit"
 
 #: src/TextClient.cpp
 msgid "Show the results of a search."
@@ -9787,6 +9780,41 @@ msgid ""
 "\n"
 "Diagnostic output truncated.\n"
 msgstr ""
+
+#~ msgid "Kad protocol version"
+#~ msgstr "Kad-protocolversie"
+
+#~ msgid "Advertise Kad protocol 0x0a (AICH keyword storage)"
+#~ msgstr "Adverteer met Kad protocol 0x0a (AICH-sleutelwoorden opslag)"
+
+#~ msgid ""
+#~ "When enabled, aMule advertises Kad protocol version 0x0a and processes AICH hashes in keyword publish/search results.\n"
+#~ "\n"
+#~ "WARNING: Enabling this may cause search results to be dropped by older Kad clients (pre-0.49b) that cannot parse the AICH result tags. Most current clients support it, but if you experience missing search results, try disabling this option.\n"
+#~ "\n"
+#~ "Disabling this option discards stored AICH keyword-index data on the next save; re-enabling it requires collecting that data again.\n"
+#~ "\n"
+#~ "Hashes learned from Kad search results remain untrusted until download sources corroborate them. Reported publisher counts alone never authorize AICH recovery."
+#~ msgstr ""
+#~ "Wanneer dit is ingeschakeld adverteert aMule met Kad-protocol versie 0x0a en verwerkt het AICH-hashes in sleutelwoordresultaten van publicaties en zoekopdrachten.\n"
+#~ "\n"
+#~ "WAARSCHUWING: Door dit in te schakelen worden zoekresultaten mogelijk niet getoond door oudere Kad-clients (pre-0.49b) die de AICH-resultaatlabels niet kunnen parseren. De meeste clients ondersteunen dit maar als u ontbrekende resultaten ervaart kan u proberen deze optie uit te schakelen.\n"
+#~ "\n"
+#~ "Het uitschakelen van deze optie gooit opgeslagen AICH-sleutelwoord indexgegevens weg bij de volgende opslag; het opnieuw inschakelen vereist dat alle gegevens opnieuw verzameld worden.\n"
+#~ "\n"
+#~ "Hashes geleerd uit Kad-zoekresultaten blijven onvertrouwd tot download-bronnen ze bevestigt. Gerapporteerde uitgeveraantallen zijn geen basis voor authorizatie van AICH-herstel."
+
+#~ msgid "Reject AICH publish tags from legacy Kad peers (< 0x09)"
+#~ msgstr "Sla AICH-publicatielabels vanuit verouderde Kad-peers af (< 0x09)"
+
+#~ msgid ""
+#~ "When enabled, AICH keyword publish tags from nodes advertising a Kad version below 0x09 are rejected because these versions do not support AICH keyword storage. Advertised versions are not proof that a publisher is trustworthy.\n"
+#~ "\n"
+#~ "WARNING: This may reject legitimate publishers whose routing-table version is stale, reducing AICH hash coverage. Nodes with unknown version are still accepted. Hashes learned from Kad search results require download-source corroboration regardless of this setting."
+#~ msgstr ""
+#~ "Wanneer dit is ingeschakeld worden AICH-sleutelwoord publicatielabels van nodes die adverteren met een Kad-versie onder 0x09 afgeslagen omdat deze versies geen AICH-sleutelwoord opslag ondersteunen. Geadverteerde versies zijn geen bewijs dat een uitgever betrouwbaar is.\n"
+#~ "\n"
+#~ "WAARSCHUWING: Dit slaat mogelijk legitieme uitgevers af als hun routing-table versie verouderd is, waardoor AICH-hash-dekking verminderd. Nodes met onbekende versies worden nog steeds geaccepteerd. Hashes geleerd vanuit Kad-zoekresultaten vereisen download-bron bevestiging ondanks deze instelling."
 
 #~ msgid "Local"
 #~ msgstr "Lokaal"

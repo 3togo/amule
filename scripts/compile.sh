@@ -15,8 +15,14 @@ die () {
 usage() {
 	echo "Compiles the program"
 	echo
-	echo "Usage: $0 [-d] [-h | -?]"
+	echo "Usage: $0 [-d] [-e] [-s] [--clean] [-h | -?]"
+	echo "  --clean      Remove the build folder first, for a full rebuild"
+	echo "               (default is an incremental build)"
 	echo "  -d           Enable debug compilation (default is release)"
+	echo "  -e"
+	echo "  --experimental"
+	echo "               Also compile every experimental feature"
+	echo "               (ENABLE_ALL_EXPERIMENTAL)"
 	echo "  -h"
 	echo "  --help       Display this help message"
 	echo "  -j<n>"
@@ -26,16 +32,24 @@ usage() {
 	echo "               Build against an empty, isolated ccache directory"
 	echo "               and print its size at the end, to measure this"
 	echo "               project's own ccache footprint. Skips running tests."
+	echo "               Implies --clean."
+	echo "  -s"
+	echo "  --strip      Show the sizes of the stripped executables, as a"
+	echo "               stripped install would produce them. The files in"
+	echo "               the build folder are left untouched."
 }
 
+OPT_CLEAN=0
 OPT_DEBUG=Release
+OPT_EXPERIMENTAL=NO
 OPT_J=1
 OPT_MEASURE_CACHE=0
+OPT_STRIP=0
 
 # Setup parse options
 # -o "j:" means short flag 'j' requires an argument
 # --long "jobs:" means long flag 'jobs' requires an argument
-if ! PARAMS=$(getopt -o "dhj:c" -l "debug,jobs:,help,measure-cache" -n "$0" -- "$@"); then
+if ! PARAMS=$(getopt -o "dehj:cs" -l "clean,debug,experimental,jobs:,help,measure-cache,strip" -n "$0" -- "$@"); then
 	# If getopt fails (invalid flag), exit
 	usage
 	false; die 10
@@ -46,9 +60,18 @@ eval set -- "$PARAMS"
 
 while true; do
 	case "$1" in
+	--clean )
+		OPT_CLEAN=1
+		shift
+		;;
 	-d | --debug )
 		OPT_DEBUG=Debug
 		echo "[DEBUG compilation ENABLED]"
+		shift
+		;;
+	-e | --experimental )
+		OPT_EXPERIMENTAL=YES
+		echo "[EXPERIMENTAL features ENABLED]"
 		shift
 		;;
 	-h | --help )
@@ -67,6 +90,11 @@ while true; do
 		;;
 	-c | --measure-cache )
 		OPT_MEASURE_CACHE=1
+		OPT_CLEAN=1
+		shift
+		;;
+	-s | --strip )
+		OPT_STRIP=1
 		shift
 		;;
 	-- )
@@ -81,8 +109,10 @@ while true; do
 done
 
 cmake_configure () {
-	rm -rf build
-	die 21 "Error trying to remove the build folder"
+	if [[ ${OPT_CLEAN} == 1 ]]; then
+		rm -rf build
+		die 21 "Error trying to remove the build folder"
+	fi
 
 	cmake \
 		-B build \
@@ -102,7 +132,8 @@ cmake_configure () {
 		-DBUILD_WEBSERVER=YES \
 		-DENABLE_NLS=YES \
 		-DENABLE_UPNP=YES \
-		-DENABLE_IP2COUNTRY=YES
+		-DENABLE_IP2COUNTRY=YES \
+		-DENABLE_ALL_EXPERIMENTAL=${OPT_EXPERIMENTAL}
 
 	die 22 "CMake configuration failed"
 }
@@ -138,6 +169,26 @@ cmake_test() {
 	die 4 "CMake test failed"
 }
 
+cmake_strip_sizes() {
+	local STRIP_DIR
+	STRIP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/amule-strip.XXXXXX")
+	die 24 "Error creating scratch install directory"
+
+	cmake --install build --strip --prefix "${STRIP_DIR}" > /dev/null
+	local INSTALL_STATUS=$?
+
+	if [[ ${INSTALL_STATUS} == 0 ]]; then
+		echo
+		echo "Sizes of the stripped executables:"
+		ls -lhS "${STRIP_DIR}/bin"
+	fi
+
+	rm -rf "${STRIP_DIR}"
+
+	(exit "${INSTALL_STATUS}")
+	die 5 "CMake stripped install failed"
+}
+
 GIT_ROOT=$(git rev-parse --show-toplevel)
 [[ ${PWD} == "${GIT_ROOT}" ]]
 die 12 \
@@ -161,6 +212,10 @@ if [[ ${OPT_MEASURE_CACHE} == 1 ]]; then
 	du -sh "${CCACHE_DIR}"
 else
 	cmake_test
+fi
+
+if [[ ${OPT_STRIP} == 1 ]]; then
+	cmake_strip_sizes
 fi
 
 exit 0

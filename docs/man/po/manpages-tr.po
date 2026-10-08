@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
-"POT-Creation-Date: 2026-10-02 08:36+0800\n"
-"PO-Revision-Date: 2026-10-06 18:44+0000\n"
+"POT-Creation-Date: 2026-10-07 10:08-0400\n"
+"PO-Revision-Date: 2026-10-07 16:31+0000\n"
 "Last-Translator: Sebastiano Pistore <SebastianoPistore.info@protonmail.ch>\n"
 "Language-Team: \n"
 "Language: tr\n"
@@ -101,6 +101,18 @@ msgstr "B<[ -c> I<E<lt>yolE<gt>>, B<--config-dir>=I<E<lt>yolE<gt>> B<]>"
 #: ../../src/utils/cas/docs/cas.1.in
 msgid "Read config from I<E<lt>pathE<gt>> instead of home"
 msgstr "Yapılandırmayı home yerine I<E<lt>yolE<gt>>dan oku"
+
+#. type: TP
+#: amule.1.in amuled.1.in amulegui.1.in
+#, fuzzy, no-wrap
+#| msgid "B<[ --amule-config-file>=I<E<lt>pathE<gt>> B<]>"
+msgid "B<[ --log-file>=I<E<lt>fileE<gt>> B<]>"
+msgstr "B<[ --amule-config-file>=I<E<lt>yolE<gt>> B<]>"
+
+#. type: Plain text
+#: amule.1.in amuled.1.in
+msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<amule.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<logfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
+msgstr ""
 
 #. type: TP
 #: amule.1.in amulegui.1.in
@@ -934,6 +946,11 @@ msgstr "B<amulegui> istemci bir programdır ve amule ya da amuled'e DB yoluyla b
 
 #. type: Plain text
 #: amulegui.1.in
+msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<remote.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<remotelogfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
+msgstr ""
+
+#. type: Plain text
+#: amulegui.1.in
 msgid "Skip connection dialog."
 msgstr "Bağlantı diyaloğunu geç."
 
@@ -1428,6 +1445,11 @@ msgstr "B<wxcas> çevrimiçi imzanızın içeriklerini güzel bir wx penceresind
 #: ../../src/utils/wxCas/docs/wxcas.1.in
 msgid "Based on Pedro de Oliveira's B<cas>(1).  B<wxcas> was written by ThePolish E<lt>thepolish@vipmail.ruE<gt>"
 msgstr "Pedro de Oliveira'nın B<cas>(1) programına dayalıdır. B<wxcas> ThePolish E<lt>thepolish@vipmail.ruE<gt> tarafından yazılmıştır"
+
+#, fuzzy
+#~| msgid "B<[ -geometry >I<E<lt>geomE<gt>> B<]>"
+#~ msgid "[B<-geometry> I<E<lt>geomE<gt>>]"
+#~ msgstr "B<[ -geometry >I<E<lt>geomE<gt>> B<]>"
 
 #~ msgid "The I<E<lt>numberE<gt>> of a file from the last search has to be given.  Example: 'download 12' will start to download the file with the number 12 of the previous search."
 #~ msgstr "Bir dosyanın son aramadan I<E<lt>sayıE<gt>> değerinin girilmesi gerekir.  Mesela 'download 12' son aramadaki 12 numaralı dosyayı indirmeye başlar."

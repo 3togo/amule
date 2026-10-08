@@ -2672,7 +2672,20 @@ void CamuleApp::OnVerifyLocalDataFinished(CVerifyLocalDataEvent &evt)
 			return;
 		}
 	}
+	const CVerifyLocalDataResult previous = checked->GetVerifyResult();
 	checked->SetVerifyResult(evt.GetResult());
+	const CVerifyLocalDataResult &result = evt.GetResult();
+	const bool damageChanged = result.EncodedMD4() != previous.EncodedMD4() ||
+				   result.EncodedAICH() != previous.EncodedAICH();
+	// Blocks already queued for current downloaders may come from parts now known corrupt;
+	// ending those sessions drops them and sends the peers the new part status.
+	if (damageChanged && result.IsCorrupt()) {
+		checked->EndCorruptUploadSessions();
+	}
+	// The server offer marks the file complete or not (CreateOfferedFilePacket).
+	if (sharedfiles && result.IsCorrupt() != previous.IsCorrupt()) {
+		sharedfiles->RepublishFile(checked);
+	}
 	// Or the EC update skips the file as unchanged, and amulegui never sees the result.
 	checked->MarkECChanged();
 	// Redraw the row: the task's last progress update has already gone out before this.
@@ -2881,7 +2894,8 @@ void CamuleApp::SetPublicIP(const uint32 dwIP)
 wxString CamuleApp::GetLog(bool reset)
 {
 	wxFile logfile;
-	logfile.Open(thePrefs::GetConfigDir() + "logfile");
+	const wxString logfileName = m_logFile;
+	logfile.Open(logfileName);
 	if (!logfile.IsOpened()) {
 		return _("ERROR: can't open logfile");
 	}
@@ -2903,7 +2917,7 @@ wxString CamuleApp::GetLog(bool reset)
 	delete[] tmp_buffer;
 	if (reset) {
 		theLogger.CloseLogfile();
-		if (theLogger.OpenLogfile(thePrefs::GetConfigDir() + "logfile")) {
+		if (theLogger.OpenLogfile(logfileName)) {
 			AddLogLineN(_("Log has been reset"));
 		}
 		ECServerHandler->ResetAllLogs();
@@ -3391,7 +3405,10 @@ void CamuleApp::ShowConnectionState(bool forceUpdate)
 				} else {
 					AddLogLineC(_("Connected to Kad (firewalled)"));
 				}
-				m_kadConnectedSince = wxDateTime::Now();
+				// Between ok and firewalled Kad stays connected: keep the time it connected.
+				if (!(old_state & (CONNECTED_KAD_OK | CONNECTED_KAD_FIREWALLED))) {
+					m_kadConnectedSince = wxDateTime::Now();
+				}
 			} else {
 				AddLogLineC(_("Disconnected from Kad"));
 				m_kadConnectedSince = wxDateTime();

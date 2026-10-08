@@ -184,6 +184,11 @@ public:
 	// amuled's main() reads it after wxEntry() has destroyed the app.
 	static int ConfigureExitCode();
 
+	// The POSIX daemon launcher waits for a log-open result from its child. Other
+	// binaries and Windows leave the descriptor unset, so reporting is a no-op.
+	static void SetDaemonStartupFd(int fd);
+	static void ReportDaemonStartup(bool success, const char *error = nullptr);
+
 protected:
 	wxString FullMuleVersion;
 	wxString OSDescription;
@@ -194,6 +199,7 @@ protected:
 	bool m_geometryEnabled;
 	bool m_disableFatal;
 	wxString m_geometryString;
+	// Default basename until InitCommon selects the absolute log path.
 	wxString m_logFile;
 	wxString m_appName;
 	wxString m_PidFile;

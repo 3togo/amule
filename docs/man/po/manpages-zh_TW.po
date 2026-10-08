@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule Manual zh_TW\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 08:36+0800\n"
-"PO-Revision-Date: 2026-10-06 18:44+0000\n"
+"POT-Creation-Date: 2026-10-07 10:08-0400\n"
+"PO-Revision-Date: 2026-10-07 16:31+0000\n"
 "Last-Translator: Wayne Su <mstarmstar@gmail.com>\n"
 "Language-Team: \n"
 "Language: zh_TW\n"
@@ -110,6 +110,18 @@ msgstr "B<[ -c> I<E<lt>路徑E<gt>>, B<--config-dir>=I<E<lt>路徑E<gt>> B<]>"
 #: ../../src/utils/cas/docs/cas.1.in
 msgid "Read config from I<E<lt>pathE<gt>> instead of home"
 msgstr "從 I<E<lt>pathE<gt>> 讀取設定檔，而不是個人目錄"
+
+#. type: TP
+#: amule.1.in amuled.1.in amulegui.1.in
+#, fuzzy, no-wrap
+#| msgid "B<[ --amule-config-file>=I<E<lt>pathE<gt>> B<]>"
+msgid "B<[ --log-file>=I<E<lt>fileE<gt>> B<]>"
+msgstr "B<[ --amule-config-file>=I<E<lt>路徑E<gt>> B<]>"
+
+#. type: Plain text
+#: amule.1.in amuled.1.in
+msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<amule.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<logfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
+msgstr ""
 
 #. type: TP
 #: amule.1.in amulegui.1.in
@@ -945,6 +957,11 @@ msgstr "B<amulegui> 是個客戶端程式，可以經由外部連線和 amule �
 
 #. type: Plain text
 #: amulegui.1.in
+msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<remote.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<remotelogfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
+msgstr ""
+
+#. type: Plain text
+#: amulegui.1.in
 msgid "Skip connection dialog."
 msgstr "跳過連線對話。"
 
@@ -1441,6 +1458,11 @@ msgstr "B<wxcas> 是可以在桌面以更佳的 wx 視窗顯示你的 aMule 線�
 #: ../../src/utils/wxCas/docs/wxcas.1.in
 msgid "Based on Pedro de Oliveira's B<cas>(1).  B<wxcas> was written by ThePolish E<lt>thepolish@vipmail.ruE<gt>"
 msgstr "改寫自 Pedro de Oliveira 的 B<cas>(1)， B<wxcas>的作者：ThePolish E<lt>thepolish@vipmail.ruE<gt>"
+
+#, fuzzy
+#~| msgid "B<[ -geometry >I<E<lt>geomE<gt>> B<]>"
+#~ msgid "[B<-geometry> I<E<lt>geomE<gt>>]"
+#~ msgstr "B<[ -geometry >I<E<lt>視窗狀態E<gt>> B<]>"
 
 #~ msgid "The I<E<lt>numberE<gt>> of a file from the last search has to be given.  Example: 'download 12' will start to download the file with the number 12 of the previous search."
 #~ msgstr "I<E<lt>編號E<gt>> 指上次搜尋檔案時的結果。例如：「download 12」會下載上次搜尋時編號 12 的檔案。"

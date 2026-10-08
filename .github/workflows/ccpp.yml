@@ -60,6 +60,7 @@ env:
     libupnp-dev \
     libwxgtk3.2-dev \
     pkg-config \
+    po4a \
     xvfb \
     xauth \
     wx3.2-headers
@@ -107,7 +108,7 @@ env:
     -DBUILD_MONOLITHIC=YES \
     -DBUILD_REMOTEGUI=YES \
     -DBUILD_TESTING=YES \
-    -DENABLE_ALL_SEARCH_INTEGRATION_TEST=YES \
+    -DENABLE_INTEGRATION_TESTS=YES \
     -DBUILD_WEBSERVER=YES \
     -DENABLE_NLS=YES \
     -DENABLE_UPNP=YES
@@ -132,9 +133,10 @@ env:
   # fast unit test gets 10 s. The budget lives here rather than in a TIMEOUT property, which
   # would also cap distro builds that run ctest with no limit.
   ctest_kdf_tests: '^(CredentialsTest|AmuleApiConfigTest)$'
-  # AllSearchIntegrationTest starts and restarts a real daemon. Run it separately
-  # on Ubuntu without a per-test deadline, rather than applying the unit budget.
-  ctest_fast_exclude: '^(CredentialsTest|AmuleApiConfigTest|AllSearchIntegrationTest|AllSearchClientCapabilityTest)$'
+  # Integration tests start and restart real processes. Run them separately
+  # on Ubuntu outside the fast unit-test time budget, with 300 s each so a hung daemon
+  # still fails the job. AllSearchIntegrationTest takes about 15 s on the runners.
+  ctest_fast_exclude: '^(CredentialsTest|AmuleApiConfigTest|AllSearchIntegrationTest|AllSearchClientCapabilityTest|LogfilePathIntegrationTest)$'
 
 jobs:
   # Window IDs in muuli_wdr.h and each EC enum in the .abstract files must not repeat a value. Two
@@ -155,6 +157,13 @@ jobs:
       fail-fast: false
       matrix:
         build_type: [Debug, Release]
+        # Release builds without libbfd, as Debian and the Flatpak do, so the addr2line
+        # backtrace path is tested too. Debug keeps libbfd.
+        include:
+          - build_type: Debug
+            bfd: YES
+          - build_type: Release
+            bfd: NO
     steps:
       - uses: actions/checkout@v7
       - name: restore ccache
@@ -176,7 +185,8 @@ jobs:
           cmake \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             ${{ env.cmake_common_config_flags }} \
-            ${{ env.cmake_ubuntu_config_flags }}
+            ${{ env.cmake_ubuntu_config_flags }} \
+            -DENABLE_BFD=${{ matrix.bfd }}
       - name: zero ccache stats
         run: ccache --zero-stats
       - name: make
@@ -194,8 +204,8 @@ jobs:
         run: |
           xvfb-run -a ctest ${{ env.ctest_flags }} --timeout 10 -E '${{ env.ctest_fast_exclude }}' &&
           xvfb-run -a ctest ${{ env.ctest_flags }} --timeout 60 -R '${{ env.ctest_kdf_tests }}'
-      - name: run All search integration test
-        run: ctest ${{ env.ctest_flags }} --no-tests=error -R '^AllSearch(Integration|ClientCapability)Test$'
+      - name: run integration tests
+        run: ctest ${{ env.ctest_flags }} --timeout 300 --no-tests=error -R '^(AllSearch(Integration|ClientCapability)|LogfilePathIntegration)Test$'
       # amuleapi_curl_smoke drives these two against a live daemon rather than
       # compiling its own copy. Release only: the smoke times SSE windows, and
       # a Debug daemon makes those flaky.
@@ -278,8 +288,8 @@ jobs:
         run: |
           xvfb-run -a ctest ${{ env.ctest_flags }} --timeout 10 -E '${{ env.ctest_fast_exclude }}' &&
           xvfb-run -a ctest ${{ env.ctest_flags }} --timeout 60 -R '${{ env.ctest_kdf_tests }}'
-      - name: run All search integration test
-        run: ctest ${{ env.ctest_flags }} --no-tests=error -R '^AllSearch(Integration|ClientCapability)Test$'
+      - name: run integration tests
+        run: ctest ${{ env.ctest_flags }} --timeout 300 --no-tests=error -R '^(AllSearch(Integration|ClientCapability)|LogfilePathIntegration)Test$'
 
   # Configures with the oldest CMake that CMakeLists.txt declares, so the floor stays
   # true. Configure only: the build itself does not depend on the CMake version.
@@ -311,7 +321,7 @@ jobs:
           "$RUNNER_TEMP/cmake-min/bin/cmake" .. \
             -DBUILD_EVERYTHING=YES \
             -DBUILD_TESTING=YES \
-            -DENABLE_ALL_SEARCH_INTEGRATION_TEST=YES \
+            -DENABLE_INTEGRATION_TESTS=YES \
             -DENABLE_ALL_EXPERIMENTAL=YES \
             ${{ env.cmake_ubuntu_config_flags }}
 

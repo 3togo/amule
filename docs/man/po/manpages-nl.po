@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2026-10-02 08:36+0800\n"
-"PO-Revision-Date: 2026-10-06 18:45+0000\n"
+"POT-Creation-Date: 2026-10-07 10:08-0400\n"
+"PO-Revision-Date: 2026-10-08 11:09+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
 "Language: nl\n"
@@ -104,6 +104,17 @@ msgid "Read config from I<E<lt>pathE<gt>> instead of home"
 msgstr "Lees configuratiebestand vanuit I<E<lt>padE<gt>> in plaats van de thuislocatie"
 
 #. type: TP
+#: amule.1.in amuled.1.in amulegui.1.in
+#, no-wrap
+msgid "B<[ --log-file>=I<E<lt>fileE<gt>> B<]>"
+msgstr "B<[ --log-bestand>=I<E<lt>bestandE<gt>> B<]>"
+
+#. type: Plain text
+#: amule.1.in amuled.1.in
+msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<amule.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<logfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
+msgstr "Schrijf logbestanden naar de gespecificeerde bestandsnaam in plaats van naar het standaard logbestand.  Overschrijft de B<LogBestandPad> instelling onder B<[eMule]> in I<amule.conf> voor alleen deze keer uitvoeren.  Relatieve paden worden opgelost in relatie tot de configuratiemap.  De oudermap moet al bestaan en schrijfbaar zijn; het wordt niet automatisch aangemaakt.  Een lege of afwezige configuratie-instelling gebruikt I<logbestand> in de configuratiemap.  Bij het opstarten wordt het vorige logbestand geback-upt op hetzelfde pad en wordt I<.bak> toegevoegd.  Als de back-up niet aangemaakt kan worden wordt een waarschuwing getoond en wordt de huidige sessie toegevoegd aan het bestaande logbestand.  Configuratieveranderingen treden in werking na opnieuw opstarten."
+
+#. type: TP
 #: amule.1.in amulegui.1.in
 #, no-wrap
 msgid "B<[ -geometry >I<E<lt>geomE<gt>> B<]>"
@@ -132,12 +143,12 @@ msgstr "Schakel het starten van aMule bij het aanmelden van de gebruiker in of u
 #. type: Plain text
 #: amule.1.in amuled.1.in amulegui.1.in
 msgid "Enable or disable aMule as the current user's default handler for ed2k:// and magnet: links, then exit.  I<E<lt>valueE<gt>> is B<on> or B<off> for both kinds of link, or B<ed2k:on>, B<ed2k:off>, B<magnet:on> or B<magnet:off> for one of them.  The OS-specific store is selected automatically: Windows registry, macOS LaunchServices, Linux XDG I<mimeapps.list>."
-msgstr "Schakel aMule in of uit als de standaard behandelaar van ed2:// en magnet:-koppelingen voor de huidige gebruiker, sluit dan af.  I<E<lt>waardeE<gt>> is B<aan> of B<uit> voor beide soorten koppelingen, of B<ed2k:aan>, B<ed2k:uit>, B<magnet:on> of B<magnet:uit> voor een enkele soort.  De OS-specifieke opslagruimte wordt automatisch geselecteerd: Windows registry, macOS LaunchService, Linux XDG I<mimeapps.list>."
+msgstr "Schakel aMule in of uit als de standaard afhandelaar van ed2:// en magnet:-koppelingen voor de huidige gebruiker, sluit dan af.  I<E<lt>waardeE<gt>> is B<aan> of B<uit> voor beide soorten koppelingen, of B<ed2k:aan>, B<ed2k:uit>, B<magnet:on> of B<magnet:uit> voor een enkele soort.  De OS-specifieke opslagruimte wordt automatisch geselecteerd: Windows registry, macOS LaunchService, Linux XDG I<mimeapps.list>."
 
 #. type: Plain text
 #: amule.1.in amuled.1.in amulegui.1.in
 msgid "Enable or disable aMule as the current user's handler for I<.emulecollection> files, then exit.  The OS-specific store is selected automatically: Windows registry, macOS LaunchServices, Linux XDG I<mimeapps.list>."
-msgstr "Schakel aMule in of uit als de standaard behandelaar van I<.emulecollection>-bestanden, sluit dan af.  De OS-specifieke opslagruimte wordt automatisch geselecteerd: Windows registry, macOS LaunchServices, Linux XDG I<mimeapps.list>."
+msgstr "Schakel aMule in of uit als de standaard afhandelaar van I<.emulecollection>-bestanden, sluit dan af.  De OS-specifieke opslagruimte wordt automatisch geselecteerd: Windows registry, macOS LaunchServices, Linux XDG I<mimeapps.list>."
 
 #. type: TP
 #: amule.1.in amuled.1.in
@@ -645,7 +656,7 @@ msgstr "Beschikbare zoektypes:"
 #. type: Plain text
 #: amulecmd.1.in
 msgid "Searches eD2k and Kad together, using the available network if the other cannot start. Requires a daemon advertising All search support; older daemons return a clear error without starting a search. Example: 'search all amule'."
-msgstr ""
+msgstr "Doorzoek zowel eD2k en Kad door gebruik te maken van het beschikbare netwerk als de andere niet opstart. Vereist een daemon die adverteert met \"All search support\"; oudere daemons geven een lege foutmelding terug zonder een zoekopdracht te starten. Voorbeeld: 'search all amule'."
 
 #. type: Plain text
 #: amulecmd.1.in
@@ -931,6 +942,11 @@ msgstr "amulegui - aMule-besturingsprogramma met GUI"
 #: amulegui.1.in
 msgid "B<amulegui> is a client program, and can be connected to amule or amuled via EC. You can manage your amule program with it. It provides almost the same functionalities as amule, even if the core works on another computer."
 msgstr "B<amulegui> is een client-programma en kan verbonden worden met amule of amuled via EV. U kunt uw amule programma ermee beheren. Het biedt bijna dezelfde functionaliteit als amule, zelfs als de kern op een andere computer werkt."
+
+#. type: Plain text
+#: amulegui.1.in
+msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<remote.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<remotelogfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
+msgstr "Schrijf logbestanden naar de gespecificeerde bestandsnaam in plaats van naar het standaard logbestand.  Overschrijft de B<LogBestandPad> instelling onder B<[eMule]> in I<amule.conf> voor alleen deze keer uitvoeren.  Relatieve paden worden opgelost in relatie tot de configuratiemap.  De oudermap moet al bestaan en schrijfbaar zijn; het wordt niet automatisch aangemaakt.  Een lege of afwezige configuratie-instelling gebruikt I<remotelogfile> in de configuratiemap.  Bij het opstarten wordt het vorige logbestand geback-upt op hetzelfde pad en wordt I<.bak> toegevoegd.  Als de back-up niet aangemaakt kan worden wordt een waarschuwing getoond en wordt de huidige sessie toegevoegd aan het bestaande logbestand.  Configuratieveranderingen treden in werking na opnieuw opstarten."
 
 #. type: Plain text
 #: amulegui.1.in
@@ -1426,6 +1442,11 @@ msgstr "B<wxcas> is een programma om de inhoud van uw online handtekeningsbestan
 #: ../../src/utils/wxCas/docs/wxcas.1.in
 msgid "Based on Pedro de Oliveira's B<cas>(1).  B<wxcas> was written by ThePolish E<lt>thepolish@vipmail.ruE<gt>"
 msgstr "Gebaseerd op Pedro de Oliveira's B<cas>(1).  B<wxcas> is geschreven door ThePolish E<lt>thepolish@vipmail.ruE<gt>"
+
+#, fuzzy
+#~| msgid "B<[ -geometry >I<E<lt>geomE<gt>> B<]>"
+#~ msgid "[B<-geometry> I<E<lt>geomE<gt>>]"
+#~ msgstr "B<[ -geometry>I<E<lt>geomE<gt>> B<]>"
 
 #~ msgid "The I<E<lt>numberE<gt>> of a file from the last search has to be given.  Example: 'download 12' will start to download the file with the number 12 of the previous search."
 #~ msgstr "Het I<E<lt>nummerE<gt>> van een bestand in de laatste zoekopdracht moet gegeven worden.  Voorbeeld: 'download 12' zal het bestand met nummer 12 uit de vorige zoekopdracht beginnen te downloaden."

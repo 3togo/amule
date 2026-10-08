@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: manpages-ru\n"
-"POT-Creation-Date: 2026-10-02 08:36+0800\n"
-"PO-Revision-Date: 2026-10-06 18:44+0000\n"
+"POT-Creation-Date: 2026-10-07 10:08-0400\n"
+"PO-Revision-Date: 2026-10-08 11:09+0000\n"
 "Last-Translator: Sebastiano Pistore <SebastianoPistore.info@protonmail.ch>\n"
 "Language-Team: Russian <LL@li.org>\n"
 "Language: ru\n"
@@ -104,6 +104,17 @@ msgstr "B<[ -c> I<E<lt>путьE<gt>>, B<--config-dir>=I<E<lt>путьE<gt>> B<]
 #: ../../src/utils/cas/docs/cas.1.in
 msgid "Read config from I<E<lt>pathE<gt>> instead of home"
 msgstr "Прочитать конфигурацию из места, указанного в I<E<lt>путиE<gt>>, вместо домашнего каталога"
+
+#. type: TP
+#: amule.1.in amuled.1.in amulegui.1.in
+#, no-wrap
+msgid "B<[ --log-file>=I<E<lt>fileE<gt>> B<]>"
+msgstr "B<[ --log-file>=I<E<lt>файлE<gt>> B<]>"
+
+#. type: Plain text
+#: amule.1.in amuled.1.in
+msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<amule.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<logfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
+msgstr "Записывать журнал в указанный файл вместо файла журнала по умолчанию.  Переопределяет параметр B<LogFilePath> в разделе B<[eMule]> файла I<amule.conf> только для этого запуска.  Относительные пути разрешаются относительно каталога конфигурации.  Родительский каталог должен уже существовать и быть доступным для записи; автоматически он не создаётся.  Пустой или отсутствующий параметр конфигурации использует I<logfile> в каталоге конфигурации.  При запуске предыдущий журнал сохраняется по тому же пути с добавлением I<.bak>.  Если резервную копию создать не удаётся, в журнал записывается предупреждение, а текущий сеанс дописывается в существующий журнал.  Изменения конфигурации вступают в силу после перезапуска."
 
 #. type: TP
 #: amule.1.in amulegui.1.in
@@ -936,6 +947,11 @@ msgstr "Программа B<amulegui> позволяет управлять я�
 
 #. type: Plain text
 #: amulegui.1.in
+msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<remote.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<remotelogfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
+msgstr "Записывать журнал в указанный файл вместо файла журнала по умолчанию.  Переопределяет параметр B<LogFilePath> в разделе B<[eMule]> файла I<remote.conf> только для этого запуска.  Относительные пути разрешаются относительно каталога конфигурации.  Родительский каталог должен уже существовать и быть доступным для записи; автоматически он не создаётся.  Пустой или отсутствующий параметр конфигурации использует I<remotelogfile> в каталоге конфигурации.  При запуске предыдущий журнал сохраняется по тому же пути с добавлением I<.bak>.  Если резервную копию создать не удаётся, в журнал записывается предупреждение, а текущий сеанс дописывается в существующий журнал.  Изменения конфигурации вступают в силу после перезапуска."
+
+#. type: Plain text
+#: amulegui.1.in
 msgid "Skip connection dialog."
 msgstr "Пропустить диалог соединения."
 
@@ -1428,6 +1444,11 @@ msgstr "B<wxcas> - программа для отображения содерж
 #: ../../src/utils/wxCas/docs/wxcas.1.in
 msgid "Based on Pedro de Oliveira's B<cas>(1).  B<wxcas> was written by ThePolish E<lt>thepolish@vipmail.ruE<gt>"
 msgstr "Основана на программе B<cas>(1) написанной Pedro de Oliveira. B<wxcas> была написана ThePolish E<lt>thepolish@vipmail.ruE<gt>"
+
+#, fuzzy
+#~| msgid "B<[ -geometry >I<E<lt>geomE<gt>> B<]>"
+#~ msgid "[B<-geometry> I<E<lt>geomE<gt>>]"
+#~ msgstr "B<[ -geometry >I<E<lt>геометрияE<gt>> B<]>"
 
 #~ msgid "The I<E<lt>numberE<gt>> of a file from the last search has to be given.  Example: 'download 12' will start to download the file with the number 12 of the previous search."
 #~ msgstr "Необходимо указать I<E<lt>номерE<gt>> файла из последнего поиска.  Пример: 'download 12' начнёт скачивание файла под номером 12 из предыдущего поиска."

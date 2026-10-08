@@ -56,15 +56,16 @@
 #include "updownclient.h" // Needed for CUpDownClient
 #endif
 
-#include "MemFile.h"       // Needed for CMemFile
-#include "Preferences.h"   // Needed for CPreferences
-#include "DownloadQueue.h" // Needed for CDownloadQueue
-#include "amule.h"         // Needed for theApp
-#include "ED2KLink.h"      // Needed for CED2KLink
-#include "Packet.h"        // Needed for CTag
-#include "SearchList.h"    // Needed for CSearchFile
-#include "ClientList.h"    // Needed for clientlist
-#include "Statistics.h"    // Needed for theStats
+#include "MemFile.h"          // Needed for CMemFile
+#include "PartStatusWriter.h" // Needed for WritePartBitmap
+#include "Preferences.h"      // Needed for CPreferences
+#include "DownloadQueue.h"    // Needed for CDownloadQueue
+#include "amule.h"            // Needed for theApp
+#include "ED2KLink.h"         // Needed for CED2KLink
+#include "Packet.h"           // Needed for CTag
+#include "SearchList.h"       // Needed for CSearchFile
+#include "ClientList.h"       // Needed for clientlist
+#include "Statistics.h"       // Needed for theStats
 #include "Logger.h"
 #include <common/Format.h>        // Needed for CFormat
 #include <common/FileFunctions.h> // Needed for GetLastModificationTime
@@ -1536,22 +1537,12 @@ void CPartFile::UpdateCompletedInfos()
 
 void CPartFile::WritePartStatus(CMemFile *file)
 {
-	uint16 parts = GetED2KPartCount();
-	file->WriteUInt16(parts);
-	uint16 done = 0;
-	while (done != parts) {
-		uint8 towrite = 0;
-		for (uint32 i = 0; i != 8; ++i) {
-			if (IsComplete(done)) {
-				towrite |= (1 << i);
-			}
-			++done;
-			if (done == parts) {
-				break;
-			}
-		}
-		file->WriteUInt8(towrite);
+	// Completed this session but still a CPartFile until restart: a complete file, then.
+	if (!IsPartFile()) {
+		CKnownFile::WritePartStatus(file);
+		return;
 	}
+	WritePartBitmap(*file, GetED2KPartCount(), [this](uint16 part) { return IsComplete(part); });
 }
 
 void CPartFile::WriteCompleteSourcesCount(CMemFile *file)

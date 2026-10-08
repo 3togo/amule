@@ -44,13 +44,15 @@
 #include "updownclient.h" // Needed for CUpDownClient
 #endif
 
-#include "MemFile.h"       // Needed for CMemFile
-#include "Packet.h"        // Needed for CPacket
-#include "Preferences.h"   // Needed for CPreferences
-#include "KnownFileList.h" // Needed for CKnownFileList
-#include "amule.h"         // Needed for theApp
-#include "PartFile.h"      // Needed for SavePartFile
-#include "ClientList.h"    // Needed for clientlist (buddy support)
+#include "MemFile.h"          // Needed for CMemFile
+#include "PartStatusWriter.h" // Needed for WriteCompleteFilePartStatus
+#include "UploadQueue.h"      // Needed for CUploadQueue (EndCorruptUploadSessions)
+#include "Packet.h"           // Needed for CPacket
+#include "Preferences.h"      // Needed for CPreferences
+#include "KnownFileList.h"    // Needed for CKnownFileList
+#include "amule.h"            // Needed for theApp
+#include "PartFile.h"         // Needed for SavePartFile
+#include "ClientList.h"       // Needed for clientlist (buddy support)
 #include "Logger.h"
 #include "ScopedPtr.h"     // Needed for CScopedArray and CScopedPtr
 #include "GuiEvents.h"     // Needed for Notify_*
@@ -417,6 +419,31 @@ uint32 CKnownFile::GetUploadDatarate() const
 		total += ref.GetUploadDatarate();
 	}
 	return total;
+}
+
+void CKnownFile::WritePartStatus(CMemFile *file)
+{
+	WriteCompleteFilePartStatus(*file, m_verifyResult, GetED2KPartCount());
+}
+
+void CKnownFile::EndCorruptUploadSessions()
+{
+	// Collected first: ending a session changes m_ClientUploadList. A session with nothing queued
+	// in a corrupt part keeps its slot, so a peer early in its session does not get an eMuleAI
+	// "upload faker" strike; it gets the new status at its next reask, or when it requests a
+	// corrupt part (AddReqBlock).
+	std::vector<CUpDownClient *> affected;
+	for (const CClientRef &ref : m_ClientUploadList) {
+		if (ref.GetUploadState() == US_UPLOADING &&
+			ref.GetClient()->HasQueuedBlockInCorruptPart(this)) {
+			affected.push_back(ref.GetClient());
+		}
+	}
+	for (CUpDownClient *client : affected) {
+		if (theApp->uploadqueue->RemoveFromUploadQueue(client)) {
+			client->EndUploadSessionWithStatus(this);
+		}
+	}
 }
 
 uint16 CKnownFile::GetTransferringClientCount() const
@@ -1161,7 +1188,9 @@ void CKnownFile::CreateOfferedFilePacket(CMemFile *files, CServer *pServer, CUpD
 #define FILE_INCOMPLETE_PORT 0xfcfc
 			// complete   file: ip 251.251.251 (0xfbfbfbfb) port 0xfbfb
 			// incomplete file: op 252.252.252 (0xfcfcfcfc) port 0xfcfc
-			if (GetStatus() == PS_COMPLETE) {
+			// A file with parts a check found corrupt is offered as incomplete: peers are told
+			// we lack those parts (WritePartStatus), so the server should not count us complete.
+			if (GetStatus() == PS_COMPLETE && !m_verifyResult.IsCorrupt()) {
 				nClientID = FILE_COMPLETE_ID;
 				nClientPort = FILE_COMPLETE_PORT;
 			} else {

@@ -252,6 +252,7 @@ bool CPreferences::s_ConnectToKad;
 bool CPreferences::s_ConnectToED2K;
 bool CPreferences::s_KadProtocol10;
 bool CPreferences::s_KadStrictAichPublishers;
+bool CPreferences::s_KadProtocol10Supported = true;
 unsigned CPreferences::s_maxClientVersions;
 bool CPreferences::s_DropSlowSources;
 bool CPreferences::s_IsClientCryptLayerSupported;
@@ -1067,15 +1068,7 @@ void CPreferences::BuildItemList(const wxString &appdir)
 	// Enabled networks
 	NewCfgItem(IDC_NETWORKKAD, (new Cfg_Bool("/eMule/ConnectToKad", s_ConnectToKad, true)));
 	NewCfgItem(IDC_NETWORKED2K, (new Cfg_Bool("/eMule/ConnectToED2K", s_ConnectToED2K, true)));
-	NewCfgItem(IDC_KADPROTOCOL10,
-		(new Cfg_Bool("/eMule/KadProtocol10",
-			s_KadProtocol10,
-#ifdef ENABLE_KAD_PROTOCOL_10
-			true
-#else
-			false
-#endif
-			)));
+	NewCfgItem(IDC_KADPROTOCOL10, (new Cfg_Bool("/eMule/KadProtocol10", s_KadProtocol10, true)));
 	NewCfgItem(IDC_KADSTRICTAICHPUBLISHERS,
 		(new Cfg_Bool("/eMule/KadStrictAichPublishers", s_KadStrictAichPublishers, false)));
 

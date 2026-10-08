@@ -151,17 +151,21 @@ Common `-D` options (`YES` / `NO` unless noted otherwise):
 | `USE_SYSTEM_PICOJSON`    | OFF     | use a system-installed `picojson.h` instead of the bundled copy           |
 | `DOWNLOAD_AND_BUILD_DEPS` | OFF    | download and build missing dependencies. Needs Git and CMake 3.14       |
 
+Sharing and using file repair hashes (AICH) over Kad is enabled by default
+whenever `KadProtocol10` has not been saved in `amule.conf`, including
+configurations upgraded from aMule 3.1.0. An explicitly saved choice is
+preserved. This runtime preference can be changed through Preferences, EC
+or amuleapi.
+
 ### Experimental options
 
-These switches are `OFF` by default. Each one compiles in unfinished
-work; with the switch off, that code is left out of the build.
+These switches are `OFF` by default and compile in unfinished work.
 
 | Option                            | Effect |
 | --------------------------------- | ------ |
 | `ENABLE_UTP`                      | IPv4 uTP in `amule` and `amuled`: datagram framing, inbound streams, and dialing a peer that advertises uTP |
 | `ENABLE_IPV6`                     | native IPv6 TCP admission. The IPv6 identity work is not complete |
 | `ENABLE_NATT_SERVER_COORDINATION` | the server-coordinated NAT-T wire codecs. No login advertisement or network traffic yet |
-| `ENABLE_KAD_PROTOCOL_10`          | sets the compile-time default for the Kad protocol `0x0a` runtime preference (AICH hashes on keyword storage). Can be toggled at runtime via Preferences, EC and amuleapi |
 | `ENABLE_KAD_NODE_PROTECTION`      | local Kad node-protection heuristics: adaptive request timeouts and Kad identity checks. No wire-protocol change |
 | `ENABLE_ALL_EXPERIMENTAL`         | all of the switches above |
 

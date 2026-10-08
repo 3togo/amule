@@ -44,6 +44,7 @@
 #endif
 
 #ifndef __WINDOWS__
+#include <cerrno>
 #include <cstdio>  // fprintf() for the pre-wxEntry "forking to background" notice
 #include <cstring> // strcmp() for the pre-wxEntry daemon-flag scan
 #include <fcntl.h> // open()/O_RDWR for the early daemonize fork
@@ -142,36 +143,88 @@ static bool AmuledWantsDaemonFork(int argc, char **argv)
 
 static void AmuledDaemonizeEarly()
 {
-	// Say goodbye on the still-attached terminal before detaching stdio. This
-	// runs before wxEntry(), so there's no gettext yet -- plain English notice.
 	fprintf(stdout, "amuled: forking to background - see you\n");
 	fflush(stdout);
 
-	// Detach stdio to /dev/null and fork; the original process exits so the shell returns, and
-	// the child -- session leader after setsid() -- carries on into wxEntry(). The pid file is
-	// written later from InitGui(), now running in this child, with getpid().
-	for (int i_fd = 0; i_fd < 3; ++i_fd) {
-		close(i_fd);
+	int startup[2];
+	if (pipe(startup) != 0) {
+		perror("amuled: cannot create startup pipe");
+		_exit(1);
 	}
-	int fd = open("/dev/null", O_RDWR);
-	if (fd >= 0) {
-		// fd is 0, the lowest free after the closes, so dup twice to reopen stdout(1) and
-		// stderr(2) on /dev/null. The empty bodies ignore the dup return deliberately,
-		// silencing -Wunused-result.
-		if (dup(fd)) {
+	// Keep the writer outside stdio even if the launcher started with a closed
+	// standard descriptor. An exec'd helper must not inherit this pipe end.
+	if (startup[1] < 3) {
+		const int moved = fcntl(startup[1], F_DUPFD, 3);
+		if (moved < 0) {
+			perror("amuled: cannot reserve startup descriptor");
+			_exit(1);
 		}
-		if (dup(fd)) {
-		}
+		close(startup[1]);
+		startup[1] = moved;
 	}
-	pid_t pid = fork();
+	if (fcntl(startup[1], F_SETFD, FD_CLOEXEC) < 0) {
+		perror("amuled: cannot protect startup descriptor");
+		_exit(1);
+	}
+
+	const pid_t pid = fork();
 	if (pid < 0) {
+		perror("amuled: cannot fork");
 		_exit(1);
 	}
 	if (pid > 0) {
-		_exit(0); // original process: leave without running static dtors
+		close(startup[1]);
+		char status;
+		ssize_t count;
+		do {
+			count = read(startup[0], &status, 1);
+		} while (count < 0 && errno == EINTR);
+		if (count == 1 && status == 'S') {
+			close(startup[0]);
+			_exit(0);
+		}
+		if (count == 1 && status == 'E') {
+			char message[512];
+			while ((count = read(startup[0], message, sizeof(message))) != 0) {
+				if (count < 0) {
+					if (errno == EINTR) {
+						continue;
+					}
+					break;
+				}
+				fwrite(message, 1, count, stderr);
+			}
+		} else {
+			fputs("ERROR: daemon exited before reporting its log file startup result\n", stderr);
+		}
+		fflush(stderr);
+		close(startup[0]);
+		_exit(1);
 	}
-	setsid(); // child detaches from the controlling tty
+
+	close(startup[0]);
+	CamuleAppCommon::SetDaemonStartupFd(startup[1]);
+	signal(SIGPIPE, SIG_IGN);
+	if (setsid() < 0) {
+		CamuleAppCommon::ReportDaemonStartup(false, "ERROR: unable to detach daemon session");
+		_exit(1);
+	}
+	const int fd = open("/dev/null", O_RDWR);
+	if (fd < 0) {
+		CamuleAppCommon::ReportDaemonStartup(false, "ERROR: unable to open /dev/null");
+		_exit(1);
+	}
+	for (int i_fd = 0; i_fd < 3; ++i_fd) {
+		if (dup2(fd, i_fd) < 0) {
+			CamuleAppCommon::ReportDaemonStartup(false, "ERROR: unable to detach daemon stdio");
+			_exit(1);
+		}
+	}
+	if (fd > 2) {
+		close(fd);
+	}
 }
+
 #endif // !__WINDOWS__
 
 int main(int argc, char **argv)
@@ -182,6 +235,13 @@ int main(int argc, char **argv)
 	}
 #endif
 	const int rc = wxEntry(argc, argv);
+	// Startup stopped before InitCommon reported, for example because another instance holds
+	// the config. Nothing reached a log file, so hand the launcher what was logged: it is what
+	// a foreground run prints, reason included. A no-op once InitCommon has reported.
+	const wxString unwritten = theLogger.GetUnwrittenLog().Strip(wxString::trailing);
+	CamuleAppCommon::ReportDaemonStartup(false,
+		unwritten.IsEmpty() ? "ERROR: amuled stopped during startup; run it without -f to see why"
+				    : (const char *)unwritten.utf8_str());
 	// wx before 3.2.7 cannot set the status of a --configure-* run, so it is applied here.
 	const int configured = CamuleAppCommon::ConfigureExitCode();
 	return configured >= 0 ? configured : rc;

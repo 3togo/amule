@@ -404,8 +404,10 @@ bool CClientTCPSocket::ProcessPacket(const uint8_t *buffer, uint32 size, uint8 o
 			throw;
 		}
 
-		if (thePrefs::ParanoidFilter() && !IsLowID(m_client->GetUserIDHybrid()) &&
-			(GetRemoteIP() != wxUINT32_SWAP_ALWAYS(m_client->GetUserIDHybrid()))) {
+		if (thePrefs::ParanoidFilter() &&
+			PeerAddressing::ParanoidHelloMismatch(m_remoteAddress,
+				IsLowID(m_client->GetUserIDHybrid()),
+				wxUINT32_SWAP_ALWAYS(m_client->GetUserIDHybrid()))) {
 			wxString reason = "Client claims a different IP from the one we received the hello "
 					  "packet from: ";
 			reason += Uint32toStringIP(wxUINT32_SWAP_ALWAYS(m_client->GetUserIDHybrid())) +
@@ -581,11 +583,7 @@ bool CClientTCPSocket::ProcessPacket(const uint8_t *buffer, uint32 size, uint8 o
 			m_client->SetUploadFileID(reqfile);
 			CMemFile data(16 + 16);
 			data.WriteHash(reqfile->GetFileHash());
-			if (reqfile->IsPartFile()) {
-				static_cast<CPartFile *>(reqfile)->WritePartStatus(&data);
-			} else {
-				data.WriteUInt16(0);
-			}
+			reqfile->WritePartStatus(&data);
 			CPacket *packet = new CPacket(data, OP_EDONKEYPROT, OP_FILESTATUS);
 			theStats::AddUpOverheadFileRequest(packet->GetPacketSize());
 			AddDebugLogLineN(
@@ -1265,11 +1263,7 @@ bool CClientTCPSocket::ProcessExtPacket(const uint8_t *buffer, uint32 size, uint
 				AddDebugLogLineN(
 					logRemoteClient, "Remote Client: OP_MULTIPACKET has OP_SETREQFILEID");
 				data_out.WriteUInt8(OP_FILESTATUS);
-				if (reqfile->IsPartFile()) {
-					static_cast<CPartFile *>(reqfile)->WritePartStatus(&data_out);
-				} else {
-					data_out.WriteUInt16(0);
-				}
+				reqfile->WritePartStatus(&data_out);
 				break;
 			}
 			// We still send the source packet separately..
@@ -1952,11 +1946,7 @@ bool CClientTCPSocket::ProcessExtPacket(const uint8_t *buffer, uint32 size, uint
 
 				CMemFile data_out(128);
 				if (sender->GetUDPVersion() > 3) {
-					if (reqfile->IsPartFile()) {
-						static_cast<CPartFile *>(reqfile)->WritePartStatus(&data_out);
-					} else {
-						data_out.WriteUInt16(0);
-					}
+					reqfile->WritePartStatus(&data_out);
 				}
 
 				data_out.WriteUInt16(sender->GetUploadQueueWaitingPosition());
