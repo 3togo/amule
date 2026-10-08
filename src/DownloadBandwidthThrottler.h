@@ -37,21 +37,21 @@ public:
 	static CDownloadBandwidthThrottler &Get();
 
 	// Refill the bucket at the start of each DownloadQueue tick; maxDownloadKBps == 0 is
-	// unlimited mode, where Reserve returns the full request. Leftover from the previous tick
-	// is discarded: the cap is strict, not burst-friendly, since an accumulating bucket would
-	// let a quiet period bank capacity and overshoot MaxDownload once data resumes.
+	// unlimited bandwidth mode. File-data reads additionally respect memoryHeadroom. Leftover from the
+	// previous tick is discarded: the cap is strict, not burst-friendly, since an accumulating bucket
+	// would let a quiet period bank capacity and overshoot MaxDownload once data resumes.
 	void RefillBudget(uint32 maxDownloadKBps, uint32 tickPeriodMs, uint64 memoryHeadroom = UINT64_MAX);
 
 	// Reserve up to wantBytes from the shared budget, returning how many bytes the caller may
 	// read this round, in [0, wantBytes]. Returning 0 means the bucket is exhausted; the caller
 	// should suspend reads (set pendingOnReceive on the socket) and wait for the next refill to
 	// wake it.
-	uint32 Reserve(uint32 wantBytes);
+	uint32 Reserve(uint32 wantBytes, bool fileData = true);
 
 	// Refund unused bytes to the shared budget. Used when Reserve granted more than Read()
 	// actually returned (TCP partial reads, EOF) so the unused capacity stays available to
 	// other peers in the same tick.
-	void Refund(uint32 bytes);
+	void Refund(uint32 bytes, bool fileData = true);
 
 	// A socket that suspended its read because Reserve() came back empty, and the counterpart
 	// for one that goes away while suspended.
@@ -81,6 +81,8 @@ private:
 
 	std::atomic<int64_t> m_bytesAvailable{ 0 };
 	std::atomic<bool> m_unlimited{ true };
+	std::atomic<int64_t> m_memoryAvailable{ INT64_MAX };
+	std::atomic<bool> m_memoryUnlimited{ true };
 
 	std::mutex m_pausedLock;
 	// Suspended, waiting for the next refill.

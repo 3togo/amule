@@ -68,7 +68,7 @@ public:
 
 	void LoadMetFiles(const CPath &path, const LoadProgressCb &progressCb = nullptr);
 
-    uint64 GetDownloadBufferThreshold(uint64 current) const;
+	uint64 GetDownloadBufferThreshold(uint64 current) const;
 	/// Main worker function.
 	void Process();
 
@@ -253,9 +253,9 @@ private:
 	//! The mutex associated with this class, mutable to allow for const functions.
 	mutable wxMutex m_mutex;
 
-    uint64 m_downloadBufferBudget = 0;
-    uint64 m_downloadBufferedBytes = 0;
-    uint64 m_bufferedFileCount = 0;
+	uint64 m_downloadBufferBudget = 0;
+	uint64 m_downloadBufferedBytes = 0;
+	uint64 m_bufferedFileCount = 0;
 	uint32 m_datarate;
 	uint64 m_lastDiskCheck;
 	uint64 m_lastudpsearchtime;

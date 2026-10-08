@@ -31,6 +31,7 @@
 #include "Packet.h" // Needed for CPacket
 #include "amule.h"
 #include "DownloadBandwidthThrottler.h"
+#include "DownloadBufferPolicy.h"
 #include "GetTickCount.h"
 #include "UploadBandwidthThrottler.h"
 #include "Logger.h"
@@ -239,11 +240,15 @@ void CEMSocket::OnReceive(int nErrorCode)
 		// IsDownloadThrottled() (server control sockets) skip the reservation and do not
 		// count against the cap.
 		const bool throttled = IsDownloadThrottled();
+		// Headers and peer control responses retain bandwidth tokens without
+		// spending file-buffer headroom, so a full disk cannot block browsing.
+		const bool fileData = pendingHeaderSize == sizeof(pendingHeader) &&
+				      DownloadBufferPolicy::IsFileData(pendingHeader[0], pendingHeader[5]);
 		uint32 grantedBytes = 0;
 		ret = 0;
 		if (readMax) {
 			if (throttled) {
-				grantedBytes = CDownloadBandwidthThrottler::Get().Reserve(readMax);
+				grantedBytes = CDownloadBandwidthThrottler::Get().Reserve(readMax, fileData);
 				if (grantedBytes == 0) {
 					// Bucket exhausted; resume on the next tick refill.
 					// Register for that wake-up rather than relying on
@@ -260,14 +265,14 @@ void CEMSocket::OnReceive(int nErrorCode)
 			ret = Read(buf, readMax);
 			if (BlocksRead()) {
 				if (throttled) {
-					CDownloadBandwidthThrottler::Get().Refund(grantedBytes);
+					CDownloadBandwidthThrottler::Get().Refund(grantedBytes, fileData);
 				}
 				pendingOnReceive = true;
 				return;
 			}
 			if (LastError() || ret == 0) {
 				if (throttled) {
-					CDownloadBandwidthThrottler::Get().Refund(grantedBytes);
+					CDownloadBandwidthThrottler::Get().Refund(grantedBytes, fileData);
 				}
 				return;
 			}
@@ -276,7 +281,7 @@ void CEMSocket::OnReceive(int nErrorCode)
 		// Refund the slice we reserved but didn't actually read so the
 		// leftover stays available to other peers in the same tick.
 		if (throttled && grantedBytes > (uint32)ret) {
-			CDownloadBandwidthThrottler::Get().Refund(grantedBytes - ret);
+			CDownloadBandwidthThrottler::Get().Refund(grantedBytes - ret, fileData);
 		}
 
 		// CPU load improvement

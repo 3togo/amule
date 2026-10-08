@@ -22,13 +22,17 @@ CDownloadBandwidthThrottler &CDownloadBandwidthThrottler::Get()
 	return s_instance;
 }
 
-void CDownloadBandwidthThrottler::RefillBudget(uint32 maxDownloadKBps, uint32 tickPeriodMs, uint64 memoryHeadroom)
+void CDownloadBandwidthThrottler::RefillBudget(
+	uint32 maxDownloadKBps, uint32 tickPeriodMs, uint64 memoryHeadroom)
 {
+	m_memoryAvailable.store(
+		static_cast<int64_t>(std::min<uint64>(memoryHeadroom, INT64_MAX)), std::memory_order_release);
+	m_memoryUnlimited.store(memoryHeadroom == UINT64_MAX, std::memory_order_release);
 	if (maxDownloadKBps == 0) {
 		// MaxDownload=0 means literally unlimited. Saturate the bucket so even a Reserve()
 		// that raced past the m_unlimited check still returns the full request.
-		m_unlimited.store(memoryHeadroom == UINT64_MAX, std::memory_order_release);
-        m_bytesAvailable.store(static_cast<int64_t>(std::min<uint64>(memoryHeadroom, INT64_MAX)), std::memory_order_release);
+		m_unlimited.store(true, std::memory_order_release);
+		m_bytesAvailable.store(INT64_MAX, std::memory_order_release);
 		return;
 	}
 
@@ -53,28 +57,35 @@ void CDownloadBandwidthThrottler::RefillBudget(uint32 maxDownloadKBps, uint32 ti
 	if (newBudget > cap) {
 		newBudget = cap;
 	}
-	m_bytesAvailable.store(std::min<int64_t>(newBudget,
-        static_cast<int64_t>(std::min<uint64>(memoryHeadroom, INT64_MAX))), std::memory_order_release);
+	m_bytesAvailable.store(newBudget, std::memory_order_release);
 }
 
-uint32 CDownloadBandwidthThrottler::Reserve(uint32 wantBytes)
+namespace
 {
-	if (m_unlimited.load(std::memory_order_acquire)) {
-		return wantBytes;
-	}
-
-	int64_t current = m_bytesAvailable.load(std::memory_order_acquire);
+uint32 ReserveFrom(std::atomic<int64_t> &bucket, uint32 wantBytes)
+{
+	int64_t current = bucket.load(std::memory_order_acquire);
 	while (current > 0) {
-		const uint32 granted = (current < (int64_t)wantBytes) ? (uint32)current : wantBytes;
-		if (m_bytesAvailable.compare_exchange_weak(current,
-			    current - granted,
-			    std::memory_order_acq_rel,
-			    std::memory_order_acquire)) {
+		const uint32 granted = static_cast<uint32>(std::min<int64_t>(current, wantBytes));
+		if (bucket.compare_exchange_weak(
+			    current, current - granted, std::memory_order_acq_rel, std::memory_order_acquire))
 			return granted;
-		}
-		// CAS failed; `current` was reloaded with the latest value.
 	}
 	return 0;
+}
+} // namespace
+
+uint32 CDownloadBandwidthThrottler::Reserve(uint32 wantBytes, bool fileData)
+{
+	const uint32 bandwidth = m_unlimited.load(std::memory_order_acquire)
+					 ? wantBytes
+					 : ReserveFrom(m_bytesAvailable, wantBytes);
+	if (!fileData || m_memoryUnlimited.load(std::memory_order_acquire))
+		return bandwidth;
+	const uint32 granted = ReserveFrom(m_memoryAvailable, bandwidth);
+	if (bandwidth > granted && !m_unlimited.load(std::memory_order_acquire))
+		m_bytesAvailable.fetch_add(bandwidth - granted, std::memory_order_acq_rel);
+	return granted;
 }
 
 void CDownloadBandwidthThrottler::PauseUntilRefill(CEMSocket *socket)
@@ -119,10 +130,12 @@ void CDownloadBandwidthThrottler::WakePaused()
 	}
 }
 
-void CDownloadBandwidthThrottler::Refund(uint32 bytes)
+void CDownloadBandwidthThrottler::Refund(uint32 bytes, bool fileData)
 {
-	if (bytes == 0 || m_unlimited.load(std::memory_order_acquire)) {
+	if (!bytes)
 		return;
-	}
-	m_bytesAvailable.fetch_add((int64_t)bytes, std::memory_order_acq_rel);
+	if (!m_unlimited.load(std::memory_order_acquire))
+		m_bytesAvailable.fetch_add(bytes, std::memory_order_acq_rel);
+	if (fileData && !m_memoryUnlimited.load(std::memory_order_acquire))
+		m_memoryAvailable.fetch_add(bytes, std::memory_order_acq_rel);
 }
