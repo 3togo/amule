@@ -30,6 +30,11 @@ target_include_directories (KadFirewallRecheckTest PRIVATE
 )
 target_link_libraries (KadFirewallRecheckTest muleunit mulecommon)
 
+add_executable (UploadAdmissionTest UploadAdmissionTest.cpp)
+target_include_directories (UploadAdmissionTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (UploadAdmissionTest muleunit mulecommon)
+add_test (NAME UploadAdmissionTest COMMAND UploadAdmissionTest)
+
 # Credit identity and wait ownership run without the application. The test supplies
 # a deterministic GetTickCount64; do not link the production clock into this target.
 add_executable (ClientCreditsTest

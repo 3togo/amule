@@ -24,6 +24,7 @@
 //
 
 #include "UploadQueue.h" // Interface declarations
+#include "UploadAdmissionPolicy.h"
 #include "UploadQueueAddressPolicy.h"
 
 #include <protocol/Protocols.h>
@@ -232,6 +233,9 @@ void CUploadQueue::AddUpNextClient(CUpDownClient *directadd)
 
 void CUploadQueue::Process()
 {
+	m_uploadUtilization.Update(GetTickCount64(),
+		static_cast<uint64>(thePrefs::GetMaxUpload()) * 1024,
+		theStats::GetUploadRate());
 	// Check if someone's waiting, if there is a slot for him,
 	// or if we should try to free a slot for him
 	uint64 tick = GetTickCount64();
@@ -248,7 +252,9 @@ void CUploadQueue::Process()
 		|| theApp->listensocket->TooManySockets()) {
 		m_allowKicking = false;
 		// Already a slot free, try to fill it
-	} else if (m_uploadinglist.size() < GetMaxSlots()) {
+	} else if (m_uploadinglist.size() < BroadbandUpload::AdmissionLimit(GetMaxSlots(),
+						    MAX_UP_CLIENTS_ALLOWED,
+						    m_uploadUtilization.Sustained(tick))) {
 		m_allowKicking = false;
 		m_nLastStartUpload = tick;
 		AddUpNextClient();
