@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 11:43+0900\n"
 "PO-Revision-Date: 2026-10-07 16:30+0000\n"
 "Last-Translator: Fation <dj_barthezz@linuxmail.org lushnja_corps@hotmail.Language-Team:\n"
 "Language: sq\n"
@@ -362,28 +362,13 @@ msgstr "Rezultatet e diagnostikimit të memories për daljen e aMule:"
 
 #: src/amule.cpp
 #, c-format
-msgid "Binding aMule's peer-to-peer and HTTP traffic to interface: %s"
+msgid "Cannot bind to configured network interface '%s'; startup blocked."
 msgstr ""
 
 #: src/amule.cpp
-#, c-format
-msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
-msgstr "Po lidhet trafiku peer-to-peer i aMule me ndërfaqen: %s (përditësimet HTTP përdorin rrugën e parazgjedhur)"
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
-msgstr "PARALAJMËRIM: ndërfaqja e rrjetit e konfiguruar '%s' nuk u gjet - trafiku NUK është i lidhur me të dhe mund të dalë përmes rrugës së parazgjedhur. Kontrolloni emrin e ndërfaqes në Preferenca."
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
-msgstr "PARALAJMËRIM: lidhja me ndërfaqen e rrjetit '%s' kërkon privilegje të ngritura dhe NUK u aplikua - trafiku mund të dalë përmes rrugës së parazgjedhur. Jepni aftësinë e nevojshme (p.sh. 'sudo setcap cap_net_raw+ep' në binarin e aMule) ose ekzekutoni me privilegje të mjaftueshme."
-
-#: src/amule.cpp src/LibSocketAsio.cpp
-#, c-format
-msgid "WARNING: could not bind to network interface '%s' - traffic may leave via the default route."
-msgstr "PARALAJMËRIM: nuk u lidh dot me ndërfaqen e rrjetit '%s' - trafiku mund të dalë përmes rrugës së parazgjedhur."
+#, fuzzy, c-format
+msgid "Strict network interface binding enabled: %s"
+msgstr "- Lidhja e ndërfaqes së rrjetit u ndryshua.\n"
 
 #: src/amule.cpp
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
@@ -639,6 +624,10 @@ msgstr ""
 #: src/amule.cpp
 msgid "Server hostname notified"
 msgstr "Emri i hostit të serverit u njoftua"
+
+#: src/amule.cpp
+msgid "Configured network interface was lost; shutting down to protect the binding."
+msgstr ""
 
 #: src/amule.cpp
 #, c-format
@@ -3126,6 +3115,10 @@ msgid "HTTP download cancelled"
 msgstr "Shkarkimi HTTP u anulua"
 
 #: src/HTTPDownload.cpp
+msgid "HTTP request blocked: this backend cannot bind to the configured interface."
+msgstr ""
+
+#: src/HTTPDownload.cpp
 msgid "The URL to download can't be empty"
 msgstr "URL-ja për shkarkim nuk mund të jetë bosh"
 
@@ -3667,8 +3660,13 @@ msgstr "Lidhja e Jashtme: Handshake dështoi."
 
 #: src/LibSocketAsio.cpp
 #, c-format
-msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
+msgid "Network interface '%s' is gone; socket creation blocked."
 msgstr ""
+
+#: src/LibSocketAsio.cpp
+#, fuzzy, c-format
+msgid "Could not bind to network interface '%s'; socket creation blocked."
+msgstr "PARALAJMËRIM: nuk u lidh dot me ndërfaqen e rrjetit '%s' - trafiku mund të dalë përmes rrugës së parazgjedhur."
 
 #: src/LibSocketAsio.cpp
 #, c-format
@@ -9724,6 +9722,18 @@ msgstr "aMule duket se është duke funksionuar. Ju lutemi mbylleni dhe rinisni 
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Po hiqen të dhënat e përdoruesit te $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
+#~ msgstr "Po lidhet trafiku peer-to-peer i aMule me ndërfaqen: %s (përditësimet HTTP përdorin rrugën e parazgjedhur)"
+
+#, c-format
+#~ msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
+#~ msgstr "PARALAJMËRIM: ndërfaqja e rrjetit e konfiguruar '%s' nuk u gjet - trafiku NUK është i lidhur me të dhe mund të dalë përmes rrugës së parazgjedhur. Kontrolloni emrin e ndërfaqes në Preferenca."
+
+#, c-format
+#~ msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
+#~ msgstr "PARALAJMËRIM: lidhja me ndërfaqen e rrjetit '%s' kërkon privilegje të ngritura dhe NUK u aplikua - trafiku mund të dalë përmes rrugës së parazgjedhur. Jepni aftësinë e nevojshme (p.sh. 'sudo setcap cap_net_raw+ep' në binarin e aMule) ose ekzekutoni me privilegje të mjaftueshme."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

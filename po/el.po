@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 11:43+0900\n"
 "PO-Revision-Date: 2026-10-07 16:24+0000\n"
 "Last-Translator: Dimitris <dgalanak@yahoo.com>\n"
 "Language-Team: Greek\n"
@@ -363,28 +363,13 @@ msgstr "Αποτελέσματα εντοπισμού σφαλμάτων μνή�
 
 #: src/amule.cpp
 #, c-format
-msgid "Binding aMule's peer-to-peer and HTTP traffic to interface: %s"
+msgid "Cannot bind to configured network interface '%s'; startup blocked."
 msgstr ""
 
 #: src/amule.cpp
-#, c-format
-msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
-msgstr "Σύνδεση της κίνησης peer-to-peer του aMule στη διεπαφή: %s (οι ενημερώσεις HTTP χρησιμοποιούν την προεπιλεγμένη διαδρομή)"
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
-msgstr "ΠΡΟΕΙΔΟΠΟΙΗΣΗ: η διαμορφωμένη διεπαφή δικτύου '%s' δεν βρέθηκε - η κίνηση ΔΕΝ συνδέεται σε αυτήν και ενδέχεται να εξέρχεται μέσω της προεπιλεγμένης διαδρομής. Ελέγξτε το όνομα διεπαφής στις Προτιμήσεις."
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
-msgstr "ΠΡΟΕΙΔΟΠΟΙΗΣΗ: η σύνδεση στη διεπαφή δικτύου '%s' απαιτεί αυξημένα δικαιώματα και ΔΕΝ εφαρμόστηκε - η κίνηση ενδέχεται να εξέρχεται μέσω της προεπιλεγμένης διαδρομής. Παραχωρήστε τη δυνατότητα (π.χ. 'sudo setcap cap_net_raw+ep' στο εκτελέσιμο του aMule) ή εκτελέστε με επαρκή δικαιώματα."
-
-#: src/amule.cpp src/LibSocketAsio.cpp
-#, c-format
-msgid "WARNING: could not bind to network interface '%s' - traffic may leave via the default route."
-msgstr "ΠΡΟΕΙΔΟΠΟΙΗΣΗ: δεν ήταν δυνατή η σύνδεση στη διεπαφή δικτύου '%s' - η κίνηση ενδέχεται να εξέρχεται μέσω της προεπιλεγμένης διαδρομής."
+#, fuzzy, c-format
+msgid "Strict network interface binding enabled: %s"
+msgstr "- Η σύνδεση διεπαφής δικτύου άλλαξε.\n"
 
 #: src/amule.cpp
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
@@ -640,6 +625,10 @@ msgstr ""
 #: src/amule.cpp
 msgid "Server hostname notified"
 msgstr "Το όνομα κεντρικού υπολογιστή του διακομιστή ειδοποιήθηκε"
+
+#: src/amule.cpp
+msgid "Configured network interface was lost; shutting down to protect the binding."
+msgstr ""
 
 #: src/amule.cpp
 #, c-format
@@ -3129,6 +3118,10 @@ msgid "HTTP download cancelled"
 msgstr "Το κατέβασμα HTTP ακυρώθηκε"
 
 #: src/HTTPDownload.cpp
+msgid "HTTP request blocked: this backend cannot bind to the configured interface."
+msgstr ""
+
+#: src/HTTPDownload.cpp
 msgid "The URL to download can't be empty"
 msgstr "Το URL για κατέβασμα δεν μπορεί να είναι κενό"
 
@@ -3670,8 +3663,13 @@ msgstr "Εξωτερική σύνδεση: Η χειραψία απέτυχε."
 
 #: src/LibSocketAsio.cpp
 #, c-format
-msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
+msgid "Network interface '%s' is gone; socket creation blocked."
 msgstr ""
+
+#: src/LibSocketAsio.cpp
+#, fuzzy, c-format
+msgid "Could not bind to network interface '%s'; socket creation blocked."
+msgstr "ΠΡΟΕΙΔΟΠΟΙΗΣΗ: δεν ήταν δυνατή η σύνδεση στη διεπαφή δικτύου '%s' - η κίνηση ενδέχεται να εξέρχεται μέσω της προεπιλεγμένης διαδρομής."
 
 #: src/LibSocketAsio.cpp
 #, c-format
@@ -9735,6 +9733,18 @@ msgstr "Το aMule φαίνεται να εκτελείται. Κλείστε τ
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Αφαίρεση δεδομένων χρήστη στο $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
+#~ msgstr "Σύνδεση της κίνησης peer-to-peer του aMule στη διεπαφή: %s (οι ενημερώσεις HTTP χρησιμοποιούν την προεπιλεγμένη διαδρομή)"
+
+#, c-format
+#~ msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
+#~ msgstr "ΠΡΟΕΙΔΟΠΟΙΗΣΗ: η διαμορφωμένη διεπαφή δικτύου '%s' δεν βρέθηκε - η κίνηση ΔΕΝ συνδέεται σε αυτήν και ενδέχεται να εξέρχεται μέσω της προεπιλεγμένης διαδρομής. Ελέγξτε το όνομα διεπαφής στις Προτιμήσεις."
+
+#, c-format
+#~ msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
+#~ msgstr "ΠΡΟΕΙΔΟΠΟΙΗΣΗ: η σύνδεση στη διεπαφή δικτύου '%s' απαιτεί αυξημένα δικαιώματα και ΔΕΝ εφαρμόστηκε - η κίνηση ενδέχεται να εξέρχεται μέσω της προεπιλεγμένης διαδρομής. Παραχωρήστε τη δυνατότητα (π.χ. 'sudo setcap cap_net_raw+ep' στο εκτελέσιμο του aMule) ή εκτελέστε με επαρκή δικαιώματα."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 11:43+0900\n"
 "PO-Revision-Date: 2026-10-07 16:23+0000\n"
 "Last-Translator: Alex Thomsen Leth <alexl@stofanet.dk>\n"
 "Language-Team: aMule Team <https://github.com/amule-org/amule>\n"
@@ -363,28 +363,13 @@ msgstr "Resultater af hukommelsesfejlfinding for aMule-afslutning:"
 
 #: src/amule.cpp
 #, c-format
-msgid "Binding aMule's peer-to-peer and HTTP traffic to interface: %s"
+msgid "Cannot bind to configured network interface '%s'; startup blocked."
 msgstr ""
 
 #: src/amule.cpp
-#, c-format
-msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
-msgstr "Binder aMules peer-to-peer-trafik til interface: %s (HTTP-opdateringer bruger standardruten)"
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
-msgstr "ADVARSEL: det konfigurerede netværksinterface '%s' blev ikke fundet - trafikken bindes IKKE til det og kan blive sendt via standardruten. Kontroller interfacenavnet i Indstillinger."
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
-msgstr "ADVARSEL: binding til netværksinterfacet '%s' kræver forhøjede rettigheder og blev IKKE anvendt - trafikken kan blive sendt via standardruten. Giv rettigheden (f.eks. 'sudo setcap cap_net_raw+ep' på aMule-binærfilen), eller kør med tilstrækkelige rettigheder."
-
-#: src/amule.cpp src/LibSocketAsio.cpp
-#, c-format
-msgid "WARNING: could not bind to network interface '%s' - traffic may leave via the default route."
-msgstr "ADVARSEL: kunne ikke binde til netværksinterfacet '%s' - trafikken kan blive sendt via standardruten."
+#, fuzzy, c-format
+msgid "Strict network interface binding enabled: %s"
+msgstr "- Binding til netværksinterface ændret.\n"
 
 #: src/amule.cpp
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
@@ -641,6 +626,10 @@ msgstr ""
 #, fuzzy
 msgid "Server hostname notified"
 msgstr "Servernavn :"
+
+#: src/amule.cpp
+msgid "Configured network interface was lost; shutting down to protect the binding."
+msgstr ""
 
 #: src/amule.cpp
 #, c-format
@@ -3125,6 +3114,10 @@ msgid "HTTP download cancelled"
 msgstr "HTTP-download annulleret"
 
 #: src/HTTPDownload.cpp
+msgid "HTTP request blocked: this backend cannot bind to the configured interface."
+msgstr ""
+
+#: src/HTTPDownload.cpp
 msgid "The URL to download can't be empty"
 msgstr "URL'en, der skal downloades, må ikke være tom"
 
@@ -3666,8 +3659,13 @@ msgstr "Ekstern forbindelse: Håndtryk fejlede."
 
 #: src/LibSocketAsio.cpp
 #, c-format
-msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
+msgid "Network interface '%s' is gone; socket creation blocked."
 msgstr ""
+
+#: src/LibSocketAsio.cpp
+#, fuzzy, c-format
+msgid "Could not bind to network interface '%s'; socket creation blocked."
+msgstr "ADVARSEL: kunne ikke binde til netværksinterfacet '%s' - trafikken kan blive sendt via standardruten."
 
 #: src/LibSocketAsio.cpp
 #, c-format
@@ -9719,6 +9717,18 @@ msgstr "aMule ser ud til at køre. Luk den venligst, og kør afinstallationsprog
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Fjerner brugerdata på $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
+#~ msgstr "Binder aMules peer-to-peer-trafik til interface: %s (HTTP-opdateringer bruger standardruten)"
+
+#, c-format
+#~ msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
+#~ msgstr "ADVARSEL: det konfigurerede netværksinterface '%s' blev ikke fundet - trafikken bindes IKKE til det og kan blive sendt via standardruten. Kontroller interfacenavnet i Indstillinger."
+
+#, c-format
+#~ msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
+#~ msgstr "ADVARSEL: binding til netværksinterfacet '%s' kræver forhøjede rettigheder og blev IKKE anvendt - trafikken kan blive sendt via standardruten. Giv rettigheden (f.eks. 'sudo setcap cap_net_raw+ep' på aMule-binærfilen), eller kør med tilstrækkelige rettigheder."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

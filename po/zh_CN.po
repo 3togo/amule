@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 11:43+0900\n"
 "PO-Revision-Date: 2026-10-07 16:31+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
@@ -389,28 +389,13 @@ msgstr "对 aMule 退出的内存 Debug 结果："
 
 #: src/amule.cpp
 #, c-format
-msgid "Binding aMule's peer-to-peer and HTTP traffic to interface: %s"
-msgstr "绑定 aMule 的 P2P 和 HTTP 流量到接口：%s"
+msgid "Cannot bind to configured network interface '%s'; startup blocked."
+msgstr ""
 
 #: src/amule.cpp
-#, c-format
-msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
-msgstr "将 amule 的 p2p 流量绑定到接口：%s（HTTP 流量使用默认路由）"
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
-msgstr "警告：未找到配置的网络接口'%s' - 流量未绑定到该接口，可能通过默认路由离开。 在首选项中检查接口名。"
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
-msgstr "警告：绑定到网络接口“%s”需要提升权限，但未成功 - 流量可能通过默认路由离开。请授予相应权限（例如，在 aMule 二进制文件上运行“sudo setcap cap_net_raw+ep”），或以足够的权限运行命令。"
-
-#: src/amule.cpp src/LibSocketAsio.cpp
-#, c-format
-msgid "WARNING: could not bind to network interface '%s' - traffic may leave via the default route."
-msgstr "警告：无法绑定到网络接口“%s” − 流量可能经默认路由离开。"
+#, fuzzy, c-format
+msgid "Strict network interface binding enabled: %s"
+msgstr "- 更改了网络接口绑定.\n"
 
 #: src/amule.cpp
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
@@ -660,6 +645,10 @@ msgstr ""
 #: src/amule.cpp
 msgid "Server hostname notified"
 msgstr "获取服务器名称"
+
+#: src/amule.cpp
+msgid "Configured network interface was lost; shutting down to protect the binding."
+msgstr ""
 
 #: src/amule.cpp
 #, c-format
@@ -3130,6 +3119,10 @@ msgid "HTTP download cancelled"
 msgstr "HTTP 下载已经取消"
 
 #: src/HTTPDownload.cpp
+msgid "HTTP request blocked: this backend cannot bind to the configured interface."
+msgstr ""
+
+#: src/HTTPDownload.cpp
 msgid "The URL to download can't be empty"
 msgstr "要下载的地址不能为空"
 
@@ -3670,8 +3663,13 @@ msgstr "远程连接：握手失败。"
 
 #: src/LibSocketAsio.cpp
 #, c-format
-msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
-msgstr "警告：网络接口 '%s' 不存在—— 流量不再绑定到该接口，可能通过默认路由离开。"
+msgid "Network interface '%s' is gone; socket creation blocked."
+msgstr ""
+
+#: src/LibSocketAsio.cpp
+#, fuzzy, c-format
+msgid "Could not bind to network interface '%s'; socket creation blocked."
+msgstr "警告：无法绑定到网络接口“%s” − 流量可能经默认路由离开。"
 
 #: src/LibSocketAsio.cpp
 #, c-format
@@ -9690,6 +9688,26 @@ msgstr "aMule 似乎正在运行。请将其关闭并重新运行卸载程序。
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "正在删除 $APPDATA\\aMule 中的用户数据..."
+
+#, c-format
+#~ msgid "Binding aMule's peer-to-peer and HTTP traffic to interface: %s"
+#~ msgstr "绑定 aMule 的 P2P 和 HTTP 流量到接口：%s"
+
+#, c-format
+#~ msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
+#~ msgstr "将 amule 的 p2p 流量绑定到接口：%s（HTTP 流量使用默认路由）"
+
+#, c-format
+#~ msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
+#~ msgstr "警告：未找到配置的网络接口'%s' - 流量未绑定到该接口，可能通过默认路由离开。 在首选项中检查接口名。"
+
+#, c-format
+#~ msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
+#~ msgstr "警告：绑定到网络接口“%s”需要提升权限，但未成功 - 流量可能通过默认路由离开。请授予相应权限（例如，在 aMule 二进制文件上运行“sudo setcap cap_net_raw+ep”），或以足够的权限运行命令。"
+
+#, c-format
+#~ msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
+#~ msgstr "警告：网络接口 '%s' 不存在—— 流量不再绑定到该接口，可能通过默认路由离开。"
 
 #~ msgid "Kad protocol version"
 #~ msgstr "Kad 协议版本"

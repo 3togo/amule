@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 11:43+0900\n"
 "PO-Revision-Date: 2026-10-07 19:28+0000\n"
 "Last-Translator: minterior <minterior@gmail.com>\n"
 "Language-Team: Català\n"
@@ -390,28 +390,13 @@ msgstr "Resultat de la depuració de la memòria a la sortida de l'aMule:"
 
 #: src/amule.cpp
 #, c-format
-msgid "Binding aMule's peer-to-peer and HTTP traffic to interface: %s"
-msgstr "S'està vinculant el trànsit d'igual a igual i HTTP de l'aMule a la interfície: %s"
+msgid "Cannot bind to configured network interface '%s'; startup blocked."
+msgstr ""
 
 #: src/amule.cpp
-#, c-format
-msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
-msgstr "S'està vinculant el trànsit d'igual a igual de l'aMule a la interfície: %s (les actualitzacions HTTP fan servir la ruta predeterminada)"
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
-msgstr "AVÍS: no s'ha trobat la interfície de xarxa configurada «%s»; el trànsit NO hi està vinculat i pot sortir per la ruta predeterminada. Comproveu el nom de la interfície a les preferències."
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
-msgstr "AVÍS: vincular-se a la interfície de xarxa «%s» requereix privilegis elevats i NO s'ha aplicat; el trànsit pot sortir per la ruta predeterminada. Concediu la capacitat (per exemple, «sudo setcap cap_net_raw+ep» sobre el binari de l'aMule) o executeu-lo amb privilegis suficients."
-
-#: src/amule.cpp src/LibSocketAsio.cpp
-#, c-format
-msgid "WARNING: could not bind to network interface '%s' - traffic may leave via the default route."
-msgstr "AVÍS: no s'ha pogut vincular a la interfície de xarxa «%s»; el trànsit pot sortir per la ruta predeterminada."
+#, fuzzy, c-format
+msgid "Strict network interface binding enabled: %s"
+msgstr "- S'ha canviat la vinculació a la interfície de xarxa.\n"
 
 #: src/amule.cpp
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
@@ -661,6 +646,10 @@ msgstr ""
 #: src/amule.cpp
 msgid "Server hostname notified"
 msgstr "Nom del servidor notificat"
+
+#: src/amule.cpp
+msgid "Configured network interface was lost; shutting down to protect the binding."
+msgstr ""
 
 #: src/amule.cpp
 #, c-format
@@ -3131,6 +3120,10 @@ msgid "HTTP download cancelled"
 msgstr "Descàrrega HTTP cancel·lada"
 
 #: src/HTTPDownload.cpp
+msgid "HTTP request blocked: this backend cannot bind to the configured interface."
+msgstr ""
+
+#: src/HTTPDownload.cpp
 msgid "The URL to download can't be empty"
 msgstr "L'adreça URL a baixar no pot estar buida"
 
@@ -3671,8 +3664,13 @@ msgstr "Connexió externa: Conformitat de connexió denegada."
 
 #: src/LibSocketAsio.cpp
 #, c-format
-msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
-msgstr "AVÍS: la interfície de xarxa «%s» ha desaparegut; el trànsit ja no hi està vinculat i pot sortir per la ruta predeterminada."
+msgid "Network interface '%s' is gone; socket creation blocked."
+msgstr ""
+
+#: src/LibSocketAsio.cpp
+#, fuzzy, c-format
+msgid "Could not bind to network interface '%s'; socket creation blocked."
+msgstr "AVÍS: no s'ha pogut vincular a la interfície de xarxa «%s»; el trànsit pot sortir per la ruta predeterminada."
 
 #: src/LibSocketAsio.cpp
 #, c-format
@@ -9706,6 +9704,26 @@ msgstr "Sembla que l'aMule s'està executant. Tanqueu-lo i torneu a executar el 
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "S'estan eliminant les dades d'usuari a $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Binding aMule's peer-to-peer and HTTP traffic to interface: %s"
+#~ msgstr "S'està vinculant el trànsit d'igual a igual i HTTP de l'aMule a la interfície: %s"
+
+#, c-format
+#~ msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
+#~ msgstr "S'està vinculant el trànsit d'igual a igual de l'aMule a la interfície: %s (les actualitzacions HTTP fan servir la ruta predeterminada)"
+
+#, c-format
+#~ msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
+#~ msgstr "AVÍS: no s'ha trobat la interfície de xarxa configurada «%s»; el trànsit NO hi està vinculat i pot sortir per la ruta predeterminada. Comproveu el nom de la interfície a les preferències."
+
+#, c-format
+#~ msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
+#~ msgstr "AVÍS: vincular-se a la interfície de xarxa «%s» requereix privilegis elevats i NO s'ha aplicat; el trànsit pot sortir per la ruta predeterminada. Concediu la capacitat (per exemple, «sudo setcap cap_net_raw+ep» sobre el binari de l'aMule) o executeu-lo amb privilegis suficients."
+
+#, c-format
+#~ msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
+#~ msgstr "AVÍS: la interfície de xarxa «%s» ha desaparegut; el trànsit ja no hi està vinculat i pot sortir per la ruta predeterminada."
 
 #~ msgid "Kad protocol version"
 #~ msgstr "Versió del protocol Kad"

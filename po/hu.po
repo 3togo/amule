@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 11:43+0900\n"
 "PO-Revision-Date: 2026-10-07 16:26+0000\n"
 "Last-Translator: Dévai Tamás <gonosztopi@amule.org>\n"
 "Language-Team: Hungarian <hu@li.org>\n"
@@ -361,29 +361,14 @@ msgid "Memory debug results for aMule exit:"
 msgstr "Memória debug eredmények az aMule bezárásáról:"
 
 #: src/amule.cpp
+#, c-format
+msgid "Cannot bind to configured network interface '%s'; startup blocked."
+msgstr ""
+
+#: src/amule.cpp
 #, fuzzy, c-format
-msgid "Binding aMule's peer-to-peer and HTTP traffic to interface: %s"
-msgstr "Az összes hálózati forgalom kötése ehhez az interfészhez: %s"
-
-#: src/amule.cpp
-#, c-format
-msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
-msgstr "Az aMule peer-to-peer forgalmának kötése ehhez az interfészhez: %s (a HTTP frissítések az alapértelmezett útvonalat használják)"
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
-msgstr "FIGYELMEZTETÉS: a beállított '%s' hálózati interfész nem található - a forgalom NEM lesz hozzá kötve, és az alapértelmezett útvonalon keresztül távozhat. Ellenőrizd az interfész nevét a Beállításokban."
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
-msgstr "FIGYELMEZTETÉS: a(z) '%s' hálózati interfészhez való kötéshez emelt jogosultság szükséges, ezért NEM lett alkalmazva - a forgalom az alapértelmezett útvonalon keresztül távozhat. Add meg a szükséges jogosultságot (pl. 'sudo setcap cap_net_raw+ep' az aMule futtatható fájlon), vagy futtasd megfelelő jogosultsággal."
-
-#: src/amule.cpp src/LibSocketAsio.cpp
-#, c-format
-msgid "WARNING: could not bind to network interface '%s' - traffic may leave via the default route."
-msgstr "FIGYELMEZTETÉS: nem sikerült kötni a(z) '%s' hálózati interfészhez - a forgalom az alapértelmezett útvonalon keresztül távozhat."
+msgid "Strict network interface binding enabled: %s"
+msgstr "- A hálózati interfész kötése megváltozott.\n"
 
 #: src/amule.cpp
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
@@ -639,6 +624,10 @@ msgstr ""
 #: src/amule.cpp
 msgid "Server hostname notified"
 msgstr "Szerver hostname értesítve"
+
+#: src/amule.cpp
+msgid "Configured network interface was lost; shutting down to protect the binding."
+msgstr ""
 
 #: src/amule.cpp
 #, c-format
@@ -3115,6 +3104,10 @@ msgid "HTTP download cancelled"
 msgstr "HTTP letöltés megszakítva"
 
 #: src/HTTPDownload.cpp
+msgid "HTTP request blocked: this backend cannot bind to the configured interface."
+msgstr ""
+
+#: src/HTTPDownload.cpp
 msgid "The URL to download can't be empty"
 msgstr "A letöltendő URL nem lehet üres"
 
@@ -3650,8 +3643,13 @@ msgid "External Connection: Handshake failed."
 msgstr "Külső kapcsolat: Kézfogás sikertelen."
 
 #: src/LibSocketAsio.cpp
+#, c-format
+msgid "Network interface '%s' is gone; socket creation blocked."
+msgstr ""
+
+#: src/LibSocketAsio.cpp
 #, fuzzy, c-format
-msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
+msgid "Could not bind to network interface '%s'; socket creation blocked."
 msgstr "FIGYELMEZTETÉS: nem sikerült kötni a(z) '%s' hálózati interfészhez - a forgalom az alapértelmezett útvonalon keresztül távozhat."
 
 #: src/LibSocketAsio.cpp
@@ -9677,6 +9675,26 @@ msgstr "Úgy tűnik, az aMule fut. Zárd be, majd futtasd újra az eltávolító
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Felhasználói adatok eltávolítása innen: $APPDATA\\aMule..."
+
+#, fuzzy, c-format
+#~ msgid "Binding aMule's peer-to-peer and HTTP traffic to interface: %s"
+#~ msgstr "Az összes hálózati forgalom kötése ehhez az interfészhez: %s"
+
+#, c-format
+#~ msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
+#~ msgstr "Az aMule peer-to-peer forgalmának kötése ehhez az interfészhez: %s (a HTTP frissítések az alapértelmezett útvonalat használják)"
+
+#, c-format
+#~ msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
+#~ msgstr "FIGYELMEZTETÉS: a beállított '%s' hálózati interfész nem található - a forgalom NEM lesz hozzá kötve, és az alapértelmezett útvonalon keresztül távozhat. Ellenőrizd az interfész nevét a Beállításokban."
+
+#, c-format
+#~ msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
+#~ msgstr "FIGYELMEZTETÉS: a(z) '%s' hálózati interfészhez való kötéshez emelt jogosultság szükséges, ezért NEM lett alkalmazva - a forgalom az alapértelmezett útvonalon keresztül távozhat. Add meg a szükséges jogosultságot (pl. 'sudo setcap cap_net_raw+ep' az aMule futtatható fájlon), vagy futtasd megfelelő jogosultsággal."
+
+#, fuzzy, c-format
+#~ msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
+#~ msgstr "FIGYELMEZTETÉS: nem sikerült kötni a(z) '%s' hálózati interfészhez - a forgalom az alapértelmezett útvonalon keresztül távozhat."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

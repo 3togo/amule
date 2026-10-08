@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule GIT\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 11:43+0900\n"
 "PO-Revision-Date: 2026-10-07 16:32+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
@@ -344,27 +344,12 @@ msgstr ""
 
 #: src/amule.cpp
 #, c-format
-msgid "Binding aMule's peer-to-peer and HTTP traffic to interface: %s"
+msgid "Cannot bind to configured network interface '%s'; startup blocked."
 msgstr ""
 
 #: src/amule.cpp
 #, c-format
-msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
-msgstr ""
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
-msgstr ""
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
-msgstr ""
-
-#: src/amule.cpp src/LibSocketAsio.cpp
-#, c-format
-msgid "WARNING: could not bind to network interface '%s' - traffic may leave via the default route."
+msgid "Strict network interface binding enabled: %s"
 msgstr ""
 
 #: src/amule.cpp
@@ -603,6 +588,10 @@ msgstr ""
 
 #: src/amule.cpp
 msgid "Server hostname notified"
+msgstr ""
+
+#: src/amule.cpp
+msgid "Configured network interface was lost; shutting down to protect the binding."
 msgstr ""
 
 #: src/amule.cpp
@@ -3017,6 +3006,10 @@ msgid "HTTP download cancelled"
 msgstr ""
 
 #: src/HTTPDownload.cpp
+msgid "HTTP request blocked: this backend cannot bind to the configured interface."
+msgstr ""
+
+#: src/HTTPDownload.cpp
 msgid "The URL to download can't be empty"
 msgstr ""
 
@@ -3557,7 +3550,12 @@ msgstr ""
 
 #: src/LibSocketAsio.cpp
 #, c-format
-msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
+msgid "Network interface '%s' is gone; socket creation blocked."
+msgstr ""
+
+#: src/LibSocketAsio.cpp
+#, c-format
+msgid "Could not bind to network interface '%s'; socket creation blocked."
 msgstr ""
 
 #: src/LibSocketAsio.cpp

@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 11:43+0900\n"
 "PO-Revision-Date: 2026-10-07 16:28+0000\n"
 "Last-Translator: Marcelo Jimenez <mroberto@users.sourceforge.com>\n"
 "Language-Team: Português (Brasileiro) <pt@li.org>\n"
@@ -392,28 +392,13 @@ msgstr "Resultados da depuração da memória para a saída do aMule:"
 
 #: src/amule.cpp
 #, c-format
-msgid "Binding aMule's peer-to-peer and HTTP traffic to interface: %s"
-msgstr "Conectando o tráfego p2p e HTTP do aMule à interface: %s"
+msgid "Cannot bind to configured network interface '%s'; startup blocked."
+msgstr ""
 
 #: src/amule.cpp
-#, c-format
-msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
-msgstr "Conectando o tráfego par-a-par do aMule para a interface: %s (atualizações via HTTP usam a rota padrão)"
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
-msgstr "AVISO: a interface de rede configurada '%s' não foi encontrada - o tráfego não está conectado a ela e pode sair pela rota padrão. Confira o nome da interface em Preferências."
-
-#: src/amule.cpp
-#, c-format
-msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
-msgstr "AVISO: para conectar-se à interface de rede '%s' são necessários privilégios elevados e NÃO FOI aplicado - o tráfego pode sair pela rota padrão. Condeda a capacidade (e.g. 'sudo setcap cap_net_raw+ep') ao binário do aMule ou rode-o com privilégios suficientes."
-
-#: src/amule.cpp src/LibSocketAsio.cpp
-#, c-format
-msgid "WARNING: could not bind to network interface '%s' - traffic may leave via the default route."
-msgstr "AVISO: não foi possível conectar-se à interface de rede '%s' - o tráfego pode sair pela rota padrão."
+#, fuzzy, c-format
+msgid "Strict network interface binding enabled: %s"
+msgstr "- Interface de conexão de rede modificada.\n"
 
 #: src/amule.cpp
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
@@ -664,6 +649,10 @@ msgstr ""
 #: src/amule.cpp
 msgid "Server hostname notified"
 msgstr "Nome do servidor notificado"
+
+#: src/amule.cpp
+msgid "Configured network interface was lost; shutting down to protect the binding."
+msgstr ""
 
 #: src/amule.cpp
 #, c-format
@@ -3134,6 +3123,10 @@ msgid "HTTP download cancelled"
 msgstr "Download HTTP cancelado"
 
 #: src/HTTPDownload.cpp
+msgid "HTTP request blocked: this backend cannot bind to the configured interface."
+msgstr ""
+
+#: src/HTTPDownload.cpp
 msgid "The URL to download can't be empty"
 msgstr "A URL para baixar não pode estar vazia"
 
@@ -3674,8 +3667,13 @@ msgstr "Conexão Externa: Handshake falhou."
 
 #: src/LibSocketAsio.cpp
 #, c-format
-msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
-msgstr "AVISO: a interface de rede '%s' foi perdida - o tráfego não está mais ligado a ela e pode sair pela rota padrão."
+msgid "Network interface '%s' is gone; socket creation blocked."
+msgstr ""
+
+#: src/LibSocketAsio.cpp
+#, fuzzy, c-format
+msgid "Could not bind to network interface '%s'; socket creation blocked."
+msgstr "AVISO: não foi possível conectar-se à interface de rede '%s' - o tráfego pode sair pela rota padrão."
 
 #: src/LibSocketAsio.cpp
 #, c-format
@@ -9699,6 +9697,26 @@ msgstr "O aMule parece estar rodando. Por favor, feche-o e rode o desinstalador 
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Removendo os dados do usuário em $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Binding aMule's peer-to-peer and HTTP traffic to interface: %s"
+#~ msgstr "Conectando o tráfego p2p e HTTP do aMule à interface: %s"
+
+#, c-format
+#~ msgid "Binding aMule's peer-to-peer traffic to interface: %s (HTTP updates use the default route)"
+#~ msgstr "Conectando o tráfego par-a-par do aMule para a interface: %s (atualizações via HTTP usam a rota padrão)"
+
+#, c-format
+#~ msgid "WARNING: configured network interface '%s' was not found - traffic is NOT bound to it and may leave via the default route. Check the interface name in Preferences."
+#~ msgstr "AVISO: a interface de rede configurada '%s' não foi encontrada - o tráfego não está conectado a ela e pode sair pela rota padrão. Confira o nome da interface em Preferências."
+
+#, c-format
+#~ msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
+#~ msgstr "AVISO: para conectar-se à interface de rede '%s' são necessários privilégios elevados e NÃO FOI aplicado - o tráfego pode sair pela rota padrão. Condeda a capacidade (e.g. 'sudo setcap cap_net_raw+ep') ao binário do aMule ou rode-o com privilégios suficientes."
+
+#, c-format
+#~ msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
+#~ msgstr "AVISO: a interface de rede '%s' foi perdida - o tráfego não está mais ligado a ela e pode sair pela rota padrão."
 
 #~ msgid "Kad protocol version"
 #~ msgstr "Versão do protocolo Kad"
