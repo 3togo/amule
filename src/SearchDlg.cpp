@@ -904,6 +904,14 @@ void CSearchDlg::OnStartRejected(wxUIntPtr searchID, const wxString &error)
 
 void CSearchDlg::OnSearchAdded(wxUIntPtr searchID, const wxString &name, uint32 kind)
 {
+	// Notifications may carry a kind from a newer daemon. Validate the wire
+	// value before converting it to the local enum or creating a tab.
+	if (kind != LocalSearch && kind != GlobalSearch && kind != KadSearch && kind != BrowseSearch &&
+		kind != AllSearch) {
+		return;
+	}
+	const SearchType type = static_cast<SearchType>(kind);
+
 	if (m_startingLocalSearch) {
 		// The local user's own search: OnBnClickedStart creates its tab
 		// itself, selected, as soon as StartNewSearch returns.
@@ -918,13 +926,13 @@ void CSearchDlg::OnSearchAdded(wxUIntPtr searchID, const wxString &name, uint32 
 	// it must not pull the selection away from what the user is doing. Synchronous, matching its
 	// mirror Search_Removed -> CloseSearchTab: both run from wherever the core changed the
 	// search set, including inside EC packet handling.
-	CreateNewTab(((kind == KadSearch || kind == AllSearch) ? "!" : "") +
-			     GetSearchTypeTag(static_cast<SearchType>(kind)) + name + " (0)",
+	CreateNewTab(((kind == KadSearch || kind == AllSearch) ? "!" : "") + GetSearchTypeTag(type) + name +
+			     " (0)",
 		searchID,
 		false,
-		static_cast<SearchType>(kind));
+		type);
 	if (CSearchListCtrl *page = GetSearchList(searchID)) {
-		page->SetSearchTabLabel(GetSearchTypeTag(static_cast<SearchType>(kind)) + name);
+		page->SetSearchTabLabel(GetSearchTypeTag(type) + name);
 		page->SetSearchRunning(kind == KadSearch || kind == AllSearch);
 	}
 }
