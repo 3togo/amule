@@ -28,6 +28,7 @@
 #define KADEMLIA_KADEMLIA_UDPFIREWALLTESTER_H
 
 #include "Kademlia.h"
+#include "UDPVerificationExpiry.h"
 #include "../routing/Contact.h"
 #include <list>
 
@@ -84,6 +85,8 @@ public:
 	static void QueryNextClient(); // try the next available client for the firewallcheck
 
 private:
+	static void CheckVerificationExpiry(uint64_t now);
+	static CUDPVerificationExpiry m_verificationExpiry;
 	// are we in search for testclients
 	static bool GetUDPCheckClientsNeeded() noexcept
 	{

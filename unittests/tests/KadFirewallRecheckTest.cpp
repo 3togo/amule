@@ -4,6 +4,7 @@
 
 #include <muleunit/test.h>
 #include <kademlia/kademlia/FirewallRecheck.h>
+#include <kademlia/kademlia/UDPVerificationExpiry.h>
 
 using namespace muleunit;
 using Kademlia::CFirewallRecheck;
@@ -102,4 +103,89 @@ TEST(KadFirewallRecheck, LateAnswersDoNotExtendGrace)
 	AddAllAnswers(fw, kStart);
 	fw.AddAnswer(kStart + 50);
 	ASSERT_TRUE(fw.IsFirewalled(kStart + CFirewallRecheck::kGraceSeconds));
+}
+
+DECLARE_SIMPLE(KadUDPVerificationExpiry)
+
+namespace
+{
+using Kademlia::CUDPVerificationExpiry;
+constexpr uint64_t kUDPStart = 1000000;
+constexpr uint64_t kUDPNextRound = kUDPStart + 60 * 60 * 1000;
+constexpr uint64_t kUDPTimeout = CUDPVerificationExpiry::kRoundTimeoutMs + 1;
+} // namespace
+
+TEST(KadUDPVerificationExpiry, TwoFailedRoundsExpire)
+{
+	CUDPVerificationExpiry expiry;
+	expiry.Start(kUDPStart);
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	expiry.Start(kUDPNextRound);
+	ASSERT_TRUE(expiry.CheckTimeout(kUDPNextRound + kUDPTimeout));
+}
+
+TEST(KadUDPVerificationExpiry, PollingCannotCountOneRoundTwice)
+{
+	CUDPVerificationExpiry expiry;
+	expiry.Start(kUDPStart);
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound));
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + kUDPTimeout));
+}
+
+TEST(KadUDPVerificationExpiry, TimeoutBoundary)
+{
+	CUDPVerificationExpiry expiry;
+	expiry.Start(kUDPStart);
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	expiry.Start(kUDPNextRound);
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + CUDPVerificationExpiry::kRoundTimeoutMs));
+	ASSERT_TRUE(expiry.CheckTimeout(kUDPNextRound + kUDPTimeout));
+}
+
+TEST(KadUDPVerificationExpiry, SuccessBreaksFailureSequence)
+{
+	CUDPVerificationExpiry expiry;
+	expiry.Start(kUDPStart);
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	expiry.Start(kUDPNextRound);
+	expiry.RecordResult(); // verified open
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + kUDPTimeout));
+	expiry.Start(kUDPNextRound + kUDPTimeout);
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + 2 * kUDPTimeout));
+}
+
+TEST(KadUDPVerificationExpiry, FirewalledResultBreaksFailureSequence)
+{
+	CUDPVerificationExpiry expiry;
+	expiry.Start(kUDPStart);
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	expiry.Start(kUDPNextRound);
+	expiry.RecordResult(); // completed firewalled result is evidence too
+	expiry.Start(kUDPNextRound + kUDPTimeout);
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + 2 * kUDPTimeout));
+}
+
+TEST(KadUDPVerificationExpiry, LateSuccessRestoresFreshSequence)
+{
+	CUDPVerificationExpiry expiry;
+	expiry.Start(kUDPStart);
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	expiry.Start(kUDPNextRound);
+	ASSERT_TRUE(expiry.CheckTimeout(kUDPNextRound + kUDPTimeout));
+	expiry.RecordResult();
+	expiry.Start(kUDPNextRound + kUDPTimeout);
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + 2 * kUDPTimeout));
+}
+
+TEST(KadUDPVerificationExpiry, ResetDropsPreviousSession)
+{
+	CUDPVerificationExpiry expiry;
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart));
+	expiry.Start(kUDPStart);
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	expiry.Reset();
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound));
+	expiry.Start(kUDPNextRound);
+	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + kUDPTimeout));
 }
