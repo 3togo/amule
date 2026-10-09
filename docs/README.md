@@ -171,6 +171,22 @@ aMule's search also supports filtering by these categories — click the
 type dropdown in the search panel.
 
 
+## Passing event values to commands
+
+### Event commands
+
+In the monolithic aMule application, Preferences → Events configures Core and
+GUI commands. With a remote `amulegui`, Core command controls are disabled:
+Core commands must be configured in the daemon's `amule.conf`. Restart `amuled`
+after editing its event command settings. Remote GUI preferences are not sent
+to the daemon.
+
+The "New chat session" event is raised locally by `amulegui`, so its GUI command
+and `%SENDER` variable remain available with a remote core. Both command controls
+are disabled for the three daemon-raised events: "Download completed", "Error on
+completion", and "Out of space". Their GUI commands require a local core.
+
+
 ## Troubleshooting
 
 * **"LowID"** — your ports aren't reachable. See the
@@ -201,16 +217,3 @@ developers have no control over what other peers transfer through this
 medium and cannot be held liable for non-personal copyright
 infringement or other illegal activity by third parties. Share
 responsibly.
-
-### Event commands
-
-In the monolithic aMule application, Preferences → Events configures Core and
-GUI commands. With a remote `amulegui`, Core command controls are disabled:
-Core commands must be configured in the daemon's `amule.conf`. Restart `amuled`
-after editing its event command settings. Remote GUI preferences are not sent
-to the daemon.
-
-The "New chat session" event is raised locally by `amulegui`, so its GUI command
-and `%SENDER` variable remain available with a remote core. Both command controls
-are disabled for the three daemon-raised events: "Download completed", "Error on
-completion", and "Out of space". Their GUI commands require a local core.
