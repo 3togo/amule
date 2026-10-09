@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
-"PO-Revision-Date: 2026-10-07 16:27+0000\n"
+"POT-Creation-Date: 2026-10-09 03:26+0000\n"
+"PO-Revision-Date: 2026-10-08 11:09+0000\n"
 "Last-Translator: Marcel Pol <marcel@timelord.nl>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "Language: nl\n"
@@ -6629,7 +6629,7 @@ msgstr "Kon de registratie van de URL-afhandelaar niet verwijderen."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "macOS does not let an application stop being the default handler. To stop aMule opening these, make another application the default."
-msgstr "macOS staat niet toe dat een app niet langer de standaard behandelaar is. Om te voorkomen dat aMule deze opent maakt u een andere app de standaard."
+msgstr "macOS staat niet toe dat een app niet langer de standaard afhandelaar is. Om te voorkomen dat aMule deze opent maakt u een andere app de standaard."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The web server and aMule API require external connections to be enabled."
@@ -6827,12 +6827,23 @@ msgid "Core command:"
 msgstr "Kerncommando:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Configure core commands in the daemon's amule.conf and restart amuled.\n"
+"These settings are not sent to the daemon."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "Enable command execution on GUI"
 msgstr "Schakel uitvoeren van commando's in GUI in"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "GUI command:"
 msgstr "GUI commando:"
+
+#: src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "This daemon does not support GUI commands for this event."
+msgstr "De verbonden daemon ondersteunt \"All searches\" niet."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
@@ -6932,7 +6943,7 @@ msgstr "Min grootte moet kleiner zijn dan max grootte. Max grootte wordt genegee
 
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
 msgid "Main"
-msgstr "Standaard"
+msgstr "Hoofdcategorie"
 
 #: src/SearchList.cpp
 #, c-format

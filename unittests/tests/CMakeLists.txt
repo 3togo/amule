@@ -429,6 +429,21 @@ target_link_libraries (ClientVersionStringTest
 	mulecommon
 )
 
+# Remote event validation, bounded history, independent cursors and subscription changes.
+add_executable (ECUserEventsTest
+	ECUserEventsTest.cpp
+	${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp
+)
+add_test (NAME ECUserEventsTest COMMAND ECUserEventsTest)
+target_include_directories (ECUserEventsTest PRIVATE
+	${CMAKE_BINARY_DIR}
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_SOURCE_DIR}/src/include
+	${CMAKE_SOURCE_DIR}/src/libs
+	${CMAKE_BINARY_DIR}/src/libs
+)
+target_link_libraries (ECUserEventsTest muleunit ec mulecommon)
+
 # amulegui's preferences commit: only the fields the user changed reach the core, so values
 # another EC client set are not written back (#1659). EC tag types only, no app.
 add_executable (ECPrefsDiffTest
@@ -2095,6 +2110,14 @@ if (ENABLE_INTEGRATION_TESTS AND BUILD_DAEMON AND UNIX AND NOT APPLE)
 			COMMAND ${Python3_EXECUTABLE}
 				${CMAKE_CURRENT_SOURCE_DIR}/AllSearchIntegrationTest.py $<TARGET_FILE:amuled>
 		)
+		if (BUILD_REMOTEGUI)
+			add_test (NAME UserEventsIntegrationTest
+				COMMAND ${Python3_EXECUTABLE}
+					${CMAKE_CURRENT_SOURCE_DIR}/UserEventsIntegrationTest.py
+					$<TARGET_FILE:amuled> $<TARGET_FILE:amulegui>
+			)
+			set_tests_properties (UserEventsIntegrationTest PROPERTIES SKIP_RETURN_CODE 77)
+		endif ()
 		if (BUILD_AMULEAPI AND BUILD_AMULECMD)
 			add_test (NAME AllSearchClientCapabilityTest
 				COMMAND ${Python3_EXECUTABLE}

@@ -207,6 +207,11 @@ EC_OP_REFRESH_MEDIA_METADATA        0x67
 ## Additive: the flip op is unchanged, so an older client is unaffected, and a
 ## core that does not know this one answers EC_OP_FAILED.
 EC_OP_PARTFILE_SET_A4AF_AUTO        0x68
+## Poll user events newer than EC_TAG_USER_EVENT_CURSOR. Capability-gated.
+## Omitting the cursor returns only the current sequence, with no events,
+## so enabling a command can establish a baseline without replaying history.
+EC_OP_GET_USER_EVENTS              0x69
+EC_OP_USER_EVENTS                  0x6A
 [/Section]
 
 [Section Content]
@@ -269,6 +274,9 @@ EC_TAG_CAN_CHAT_SESSIONS                  0x0027
 ## GUI_ID. Deliberately distinct from EC_TAG_CAN_CHAT_SESSIONS: a client that
 ## predates the hash tag would merge two such sessions under one legacy id.
 EC_TAG_CAN_CHAT_PEER_HASH                 0x0028
+## Echoed in AUTH_OK with the current event sequence as its integer value.
+## Start here on every connection: events from before login must not run.
+EC_TAG_CAN_USER_EVENTS                     0x002A
 
 
 EC_TAG_CLIENT_NAME                        0x0100
@@ -766,6 +774,14 @@ EC_TAG_SELECT_PREFS                       0x1000
 		EC_TAG_SHAREDDIR_RECURSIVE                0x2001
 	EC_TAG_SHAREDDIR_REJECTED                 0x2002
 		EC_TAG_SHAREDDIR_ERROR                    0x2003
+
+## User-event data only; GUI commands are never transmitted. Event IDs and
+## the cursor are uint64. Keys and variable names/values are UTF-8 strings.
+EC_TAG_USER_EVENT_CURSOR                   0x2100
+EC_TAG_USER_EVENT                          0x2101
+	EC_TAG_USER_EVENT_KEY                      0x2102
+	EC_TAG_USER_EVENT_VARIABLE                 0x2103
+		EC_TAG_USER_EVENT_VALUE                    0x2104
 [/Section]
 
 [Section Content]

@@ -2734,6 +2734,7 @@ void CamuleApp::OnFinishedCompletion(CCompletionEvent &evt)
 	completed->CompleteFileEnded(evt.ErrorOccurred(), evt.GetFullPath());
 	if (evt.ErrorOccurred()) {
 		CUserEvents::ProcessEvent(CUserEvents::ErrorOnCompletion, completed);
+		return;
 	}
 
 	// Check if we should execute an script/app/whatever.

@@ -19,7 +19,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule 2.3.3\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-09 03:26+0000\n"
 "PO-Revision-Date: 2026-10-07 19:34+0000\n"
 "Last-Translator: got3nks <got3nks@users.noreply.github.com>\n"
 "Language-Team: SebastianoPistore.info@protonmail.ch\n"
@@ -6836,12 +6836,23 @@ msgid "Core command:"
 msgstr "Comando Core:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Configure core commands in the daemon's amule.conf and restart amuled.\n"
+"These settings are not sent to the daemon."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "Enable command execution on GUI"
 msgstr "Abilita l'esecuzione del comando sulla GUI"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "GUI command:"
 msgstr "Comando GUI:"
+
+#: src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "This daemon does not support GUI commands for this event."
+msgstr "Il demone connesso non supporta la ricerca su tutte le reti."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-09 03:26+0000\n"
 "PO-Revision-Date: 2026-10-07 16:30+0000\n"
 "Last-Translator: Oleksandr Kovalenko <alx.kovalenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation@linux.org.ua>\n"
@@ -6882,12 +6882,22 @@ msgid "Core command:"
 msgstr "Команда ядра:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Configure core commands in the daemon's amule.conf and restart amuled.\n"
+"These settings are not sent to the daemon."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "Enable command execution on GUI"
 msgstr "Ввімкнути виконання команд в ГІК"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "GUI command:"
 msgstr "Команда ГІК:"
+
+#: src/PrefsUnifiedDlg.cpp
+msgid "This daemon does not support GUI commands for this event."
+msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"

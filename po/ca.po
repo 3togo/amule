@@ -14,8 +14,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
-"PO-Revision-Date: 2026-10-07 19:28+0000\n"
+"POT-Creation-Date: 2026-10-09 03:26+0000\n"
+"PO-Revision-Date: 2026-10-08 20:54+0000\n"
 "Last-Translator: minterior <minterior@gmail.com>\n"
 "Language-Team: Català\n"
 "Language: ca\n"
@@ -939,7 +939,7 @@ msgstr "Kad: Connectant"
 
 #: src/amuleDlg.cpp
 msgid "Kad: Off"
-msgstr "Kad: Inativa"
+msgstr "Kad: Inactiva"
 
 #: src/amuleDlg.cpp
 msgid "Core"
@@ -6827,12 +6827,23 @@ msgid "Core command:"
 msgstr "Odre del nucli:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Configure core commands in the daemon's amule.conf and restart amuled.\n"
+"These settings are not sent to the daemon."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "Enable command execution on GUI"
 msgstr "Activa l'execució d'ordres a la interfície gràfica"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "GUI command:"
 msgstr "Ordre de la IGU:"
+
+#: src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "This daemon does not support GUI commands for this event."
+msgstr "El dimoni connectat no admet la cerca a totes les xarxes."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
