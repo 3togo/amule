@@ -62,7 +62,7 @@
 #endif
 #include "Preferences.h" // Needed for CPreferences
 #include "Logger.h"
-#include "GuiEvents.h"     // Needed for Notify_* macros
+#include "GuiEvents.h" // Needed for Notify_* macros
 #include "UserEvents.h"
 #include <ec/cpp/ECUserEvents.h>
 #include "Statistics.h"    // Needed for theStats
