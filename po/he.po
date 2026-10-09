@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-08 12:59+0900\n"
+"POT-Creation-Date: 2026-10-09 09:30+0000\n"
 "PO-Revision-Date: 2026-10-07 16:26+0000\n"
 "Last-Translator: Peace Kramer <kpeace1@gmail.com>\n"
 "Language-Team: Hebrew\n"
@@ -6836,6 +6836,12 @@ msgstr "אפשר ביצוע פקודות על ממשק גרפי"
 #: src/PrefsUnifiedDlg.cpp
 msgid "GUI command:"
 msgstr "פקודת ממשק גרפי:"
+
+#: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Only the chat event supports GUI commands with a remote core."
+msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"

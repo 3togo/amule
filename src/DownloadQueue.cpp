@@ -1296,7 +1296,8 @@ void CDownloadQueue::CheckDiskspace(const CPath &path)
 	if (free == static_cast<uint64>(wxInvalidOffset)) {
 		return;
 	} else if (free < min) {
-		CUserEvents::ProcessEvent(CUserEvents::OutOfDiskSpace, "Temporary partition");
+		const wxString partition = path.GetRaw();
+		CUserEvents::ProcessEvent(CUserEvents::OutOfDiskSpace, partition.wx_str());
 	}
 
 	for (FileQueue::size_type i = 0; i < m_filelist.size(); ++i) {

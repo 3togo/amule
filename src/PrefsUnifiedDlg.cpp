@@ -713,6 +713,19 @@ bool PrefsUnifiedDlg::TransferToWindow()
 		}
 	}
 
+#ifdef CLIENT_GUI
+	// Cfg transfer can re-enable command fields from saved checkbox values.
+	for (unsigned int i = 0; i < CUserEvents::GetCount(); ++i) {
+		const int base = USEREVENTS_FIRST_ID + static_cast<int>(i) * USEREVENTS_IDS_PER_EVENT;
+		FindWindow(base + 1)->Disable();
+		FindWindow(base + 2)->Disable();
+		const bool localChat = i == CUserEvents::NewChatSession;
+		FindWindow(base + 3)->Enable(localChat);
+		FindWindow(base + 4)->Enable(localChat && CUserEvents::IsGUICommandEnabled(
+								  static_cast<CUserEvents::EventType>(i)));
+	}
+#endif
+
 	// The memory-mapped-I/O checkbox is only meaningful when the core we drive supports
 	// mmap: the local build on monolithic (MMAP_SUPPORTED), or the daemon's EC-advertised
 	// capability on the remote GUI. Hide it otherwise.
@@ -1707,7 +1720,7 @@ void PrefsUnifiedDlg::OnCheckBoxChange(wxCommandEvent &event)
 		id < USEREVENTS_FIRST_ID + (int)CUserEvents::GetCount() * USEREVENTS_IDS_PER_EVENT) {
 		// The corresponding text control always has
 		// an ID one greater than the checkbox
-		FindWindow(id + 1)->Enable(value);
+		FindWindow(id + 1)->Enable(value && FindWindow(id)->IsEnabled());
 		return;
 	}
 
@@ -2672,6 +2685,20 @@ void PrefsUnifiedDlg::CreateEventPanels(const int idx, const wxString &vars, wxW
 	item15->Add(item17, wxSizerFlags().Expand().CenterVertical().Border(wxALL, 5));
 
 	item7->Add(item15, wxSizerFlags().Expand().CenterVertical().Border(wxALL, 0));
+
+#ifdef CLIENT_GUI
+	item9->Disable();
+	item12->Disable();
+	if (idx != CUserEvents::NewChatSession) {
+		item14->Disable();
+		item17->Disable();
+	}
+	item7->Add(new wxStaticText(item8,
+			   wxID_ANY,
+			   _("Core commands must be configured in the daemon's amule.conf.\n"
+			     "Only the chat event supports GUI commands with a remote core.")),
+		wxSizerFlags().Border(wxALL, 5));
+#endif
 
 	wxStaticText *item13 = new wxStaticText(item8,
 		-1,
