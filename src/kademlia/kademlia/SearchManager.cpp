@@ -212,18 +212,12 @@ CSearch *CSearchManager::PrepareFindKeywords(const wxString &keyword,
 		// GonoszTopi - seconded
 		KadGetKeywordHash(wstrKeyword, &s->m_target);
 
-		// Stop any existing search for the same target so a new one can start.
-		if (m_searches.find(s->m_target) != m_searches.end()) {
-			SearchMap::iterator it = m_searches.find(s->m_target);
-			if (it != m_searches.end()) {
-				AddDebugLogLineN(logSearch,
-					CFormat("Stopping existing Kad search for keyword '%s' to start a "
-						"new one") %
-						wstrKeyword);
-				m_searches.erase(it);
-			}
-		}
+		// Kad routes replies by target. Never preempt another client's search.
 		s->SetSearchTermData(searchTermsDataSize, searchTermsData);
+		if (m_searches.find(s->m_target) != m_searches.end()) {
+			throw wxString(_("Kademlia: Search keyword is already on search list: ")) +
+				wstrKeyword;
+		}
 
 		// Inc our searchID
 		// If called from external client use predefined search id
