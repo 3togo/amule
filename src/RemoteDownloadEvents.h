@@ -12,6 +12,7 @@
 
 // Only statuses actually received in this EC session establish a baseline. The first
 // status for a file is a snapshot, even when the file is first seen during a later poll.
+// Reset the history whenever a new EC session begins.
 class CRemoteDownloadEvents
 {
 public:
