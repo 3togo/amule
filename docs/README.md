@@ -201,3 +201,27 @@ developers have no control over what other peers transfer through this
 medium and cannot be held liable for non-personal copyright
 infringement or other illegal activity by third parties. Share
 responsibly.
+
+### Passing event values to commands
+
+Event command templates are split into arguments before `%FILE`, `%NAME`,
+`%HASH`, `%SIZE`, `%DLACTIVETIME`, `%SENDER`, or `%PARTITION` is substituted.
+Each value stays inside its original argument, including spaces, quotes, and
+shell punctuation. Quote fixed paths in the template using the native command
+syntax; placeholders do not need extra quoting to keep substituted spaces intact.
+Existing commands that relied on a placeholder expanding into multiple arguments
+must be rewritten with those arguments explicitly in the template.
+
+An explicit shell (`sh -c`, `cmd /c`, etc.) still interprets its script argument.
+Do not put event placeholders into that script: file names and chat sender names
+can come from other users. On POSIX, pass them as positional arguments instead:
+
+```sh
+sh -c 'mv -- "$1" /x/' _ %FILE
+sh -c 'printf "%s\n" "$1"' _ %NAME
+```
+
+Here `_` supplies the shell's `$0`, and the event value becomes `$1`. Always quote
+`"$1"` in the script. For Windows, prefer a program that accepts separate arguments
+instead of embedding event values in a `cmd /c` command string. This also avoids
+shell expansion of characters such as `%`, `&`, and `|`.

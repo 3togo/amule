@@ -23,6 +23,7 @@
 //
 
 #include "UserEvents.h"
+#include "UserEventCommand.h"
 
 #include <common/Format.h>
 #include "AppImageEnv.h" // Needed for GetSanitizedExecEnv
@@ -131,29 +132,45 @@ wxString &CUserEvents::GetGUICommandVar(const unsigned int event)
 	case CUserEvents::ID: { \
 		VARS break; \
 	}
-#define USEREVENTS_REPLACE_VAR(VAR, DESC, CODE) command.Replace("%" VAR, CODE);
+#define USEREVENTS_REPLACE_VAR(VAR, DESC, CODE) values.emplace_back("%" VAR, CODE);
 static void ExecuteCommand(enum CUserEvents::EventType event, const void *object, const wxString &cmd)
 {
 	// This variable is needed by the USEREVENTS_EVENTLIST macro.
-	wxString command = cmd;
+	std::vector<std::pair<wxString, wxString>> values;
 	switch (event) {
 		USEREVENTS_EVENTLIST()
 		/* This macro expands to handle all user event types. Example:
 		   case CUserEvents::NewChatSession:
-		       command.Replace( "%SENDER", *((wxString*)object) );
+		       values.emplace_back("%SENDER", *static_cast<const wxString *>(object));
 		       break; */
 	}
-	if (!command.empty()) {
+	const wxArrayString args = BuildUserEventCommand(cmd, values);
+	if (!args.IsEmpty() && !args[0].empty()) {
+		std::vector<wxWCharBuffer> buffers;
+		std::vector<const wchar_t *> argv;
+		buffers.reserve(args.size());
+		argv.reserve(args.size() + 1);
+		for (const wxString &arg : args) {
+			buffers.emplace_back(arg.wc_str());
+			argv.push_back(buffers.back().data());
+		}
+		argv.push_back(nullptr);
 		// Inside an AppImage, run the user command with a sanitized environment so it loads
 		// system libraries rather than the bundled ones (#334); a no-op copy elsewhere.
 		CTerminationProcess *p = new CTerminationProcess(cmd);
 		wxExecuteEnv execEnv;
 		const bool sanitized = AppImageEnv::GetSanitizedExecEnv(execEnv);
-		if (!wxExecute(command, wxEXEC_ASYNC, p, sanitized ? &execEnv : nullptr)) {
+		long pid = 0;
+		try {
+			pid = wxExecute(argv.data(), wxEXEC_ASYNC, p, sanitized ? &execEnv : nullptr);
+		} catch (...) {
+			// Report unusable execution environments just like spawn failures.
+		}
+		if (pid <= 0) {
 			// If wxExecute fails, we need to delete the CTerminationProcess
 			// otherwise it will leak.
 			delete p;
-			AddLogLineC(CFormat(_("Failed to execute command '%s' on '%s' event.")) % command %
+			AddLogLineC(CFormat(_("Failed to execute command '%s' on '%s' event.")) % cmd %
 				    s_EventList[event].name);
 		}
 	}

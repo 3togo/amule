@@ -2160,3 +2160,10 @@ if (ENABLE_UPNP)
 endif()
 target_link_libraries (AICHSearchResultTest muleunit mulecommon wxWidgets::BASE CRYPTOPP::CRYPTOPP)
 add_test (NAME AICHSearchResultTest COMMAND AICHSearchResultTest)
+
+# Event values are untrusted: verify they cannot become additional arguments or
+# shell syntax when passed as positional parameters to a configured shell.
+add_executable (UserEventCommandTest UserEventCommandTest.cpp)
+add_test (NAME UserEventCommandTest COMMAND UserEventCommandTest)
+target_include_directories (UserEventCommandTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (UserEventCommandTest muleunit mulecommon wxWidgets::BASE)
