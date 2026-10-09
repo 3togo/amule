@@ -25,6 +25,8 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "KadCallbackPolicy.h"
+#include "kademlia/kademlia/UDPFirewallTester.h"
 #include <algorithm>   // std::remove_if
 #include "KnownFile.h" // Do_not_auto_remove
 
@@ -1512,7 +1514,9 @@ bool CKnownFile::PublishSrc()
 {
 	uint32 lastBuddyIP = 0;
 
-	if (theApp->IsFirewalled()) {
+	const bool udpFirewalled = Kademlia::CUDPFirewallTester::IsFirewalledUDP(true);
+	if (Kademlia::NeedsBuddy(
+		    theApp->IsFirewalled(), udpFirewalled, Kademlia::CUDPFirewallTester::IsVerified())) {
 		CUpDownClient *buddy = theApp->clientlist->GetBuddy();
 		if (buddy) {
 			lastBuddyIP = theApp->clientlist->GetBuddy()->GetIP();

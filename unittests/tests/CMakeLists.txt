@@ -54,6 +54,12 @@ target_include_directories (IPFilterIPv6Test PRIVATE
 )
 target_link_libraries (IPFilterIPv6Test muleunit mulecommon ${Boost_LIBRARIES})
 
+# Callback and buddy eligibility without a running Kad instance.
+add_executable (KadCallbackPolicyTest KadCallbackPolicyTest.cpp)
+add_test (NAME KadCallbackPolicyTest COMMAND KadCallbackPolicyTest)
+target_include_directories (KadCallbackPolicyTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (KadCallbackPolicyTest muleunit mulecommon)
+
 # The Kad firewall state across an hourly recheck, with the clock passed in.
 add_executable (KadFirewallRecheckTest KadFirewallRecheckTest.cpp)
 add_test (NAME KadFirewallRecheckTest COMMAND KadFirewallRecheckTest)

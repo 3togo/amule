@@ -23,6 +23,7 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "KadCallbackPolicy.h"
 #include <wx/wx.h>
 #include <wx/mstream.h>
 #include <wx/tokenzr.h>
@@ -1265,10 +1266,12 @@ void CUpDownClient::SendHelloTypePacket(CMemFile *data)
 #endif
 	// direct callback is only possible if connected to kad, tcp firewalled and verified UDP open (for
 	// example on a full cone NAT)
+	const bool udpFirewalled = Kademlia::CUDPFirewallTester::IsFirewalledUDP(true);
 	const uint32 uDirectUDPCallback =
-		(Kademlia::CKademlia::IsRunning() && Kademlia::CKademlia::IsFirewalled() &&
-			!Kademlia::CUDPFirewallTester::IsFirewalledUDP(true) &&
-			Kademlia::CUDPFirewallTester::IsVerified())
+		(Kademlia::CKademlia::IsRunning() &&
+			Kademlia::DirectCallbackAvailable(Kademlia::CKademlia::IsFirewalled(),
+				udpFirewalled,
+				Kademlia::CUDPFirewallTester::IsVerified()))
 			? 1
 			: 0;
 

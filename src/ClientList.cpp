@@ -23,6 +23,7 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "KadCallbackPolicy.h"
 #include "ClientList.h" // Interface declarations.
 
 #include "BrowseManager.h"
@@ -660,8 +661,11 @@ void CClientList::Process()
 	// We either never had a buddy, or lost our buddy..
 	if (buddy == Disconnected) {
 		if (m_nBuddyStatus != Disconnected || m_pBuddy.IsLinked()) {
-			if (Kademlia::CKademlia::IsRunning() && theApp->IsFirewalled() &&
-				Kademlia::CUDPFirewallTester::IsFirewalledUDP(true)) {
+			const bool udpFirewalled = Kademlia::CUDPFirewallTester::IsFirewalledUDP(true);
+			if (Kademlia::CKademlia::IsRunning() &&
+				Kademlia::NeedsBuddy(theApp->IsFirewalled(),
+					udpFirewalled,
+					Kademlia::CUDPFirewallTester::IsVerified())) {
 				// We are a lowID client and we just lost our buddy.
 				// Go ahead and instantly try to find a new buddy.
 				Kademlia::CKademlia::GetPrefs()->SetFindBuddy();
@@ -673,9 +677,11 @@ void CClientList::Process()
 	}
 
 	if (Kademlia::CKademlia::IsConnected()) {
+		const bool udpFirewalled = Kademlia::CUDPFirewallTester::IsFirewalledUDP(true);
 		// we only need a buddy if direct callback is not available
-		if (Kademlia::CKademlia::IsFirewalled() &&
-			Kademlia::CUDPFirewallTester::IsFirewalledUDP(true)) {
+		if (Kademlia::NeedsBuddy(Kademlia::CKademlia::IsFirewalled(),
+			    udpFirewalled,
+			    Kademlia::CUDPFirewallTester::IsVerified())) {
 			// Kad buddies do not work with RequireCrypt, so it is disabled here. Buddy
 			// connections themselves have supported obfuscation since eMule 0.49a, but
 			// callback requests do not, so we could not answer one under RequireCrypt.
