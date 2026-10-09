@@ -2196,9 +2196,17 @@ add_test (NAME AICHSearchResultTest COMMAND AICHSearchResultTest)
 
 # Event values are untrusted: verify they cannot become additional arguments or
 # shell syntax when passed as positional parameters to a configured shell.
-add_executable (UserEventCommandTest UserEventCommandTest.cpp)
+add_executable (UserEventCommandTest
+	UserEventCommandTest.cpp
+	${CMAKE_SOURCE_DIR}/src/ExternalCommand.cpp
+	${CMAKE_SOURCE_DIR}/src/AppImageEnv.cpp
+	${CMAKE_SOURCE_DIR}/src/TerminationProcess.cpp
+	${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp
+)
 add_test (NAME UserEventCommandTest COMMAND UserEventCommandTest)
-target_include_directories (UserEventCommandTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_include_directories (UserEventCommandTest PRIVATE
+	${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include
+)
 target_link_libraries (UserEventCommandTest muleunit mulecommon wxWidgets::BASE)
 
 if (WIN32)
