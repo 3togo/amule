@@ -76,8 +76,7 @@
 # family is enabled EXCEPT `NewDeleteLeaks` (28 false positives from wxThread
 # detached self-delete, same reason it was suppressed before); `NewDelete`
 # (the use-after-free / double-free checker) is the high-value one this pulls
-# back in. Its only non-project hits are in wx template headers, dropped via
-# ExcludeHeaderFilterRegex below.
+# back in. Its non-project hits in wx template headers are filtered by CI.
 #
 # `bugprone-narrowing-conversions` is deliberately NOT in this whole-tree set:
 # it fires ~350× on this C-derived codebase (implicit int->uint8 and friends),
@@ -124,9 +123,6 @@ Checks: >
 
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*/src/.*\.(h|hpp)$'
-# clang-analyzer path diagnostics can surface inside instantiated wx template
-# headers (e.g. cplusplus.NewDelete in wx/buffer.h, wx/string.h) even though
-# HeaderFilterRegex targets project headers -- exclude the wx system headers
-# so those library-internal false positives don't fail the gate.
-ExcludeHeaderFilterRegex: '.*/wx-[0-9.]+/.*'
+# clang-tidy-18 does not support ExcludeHeaderFilterRegex. CI filters system
+# header path diagnostics, including wx template internals, from the gate.
 FormatStyle: none
