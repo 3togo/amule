@@ -2175,3 +2175,16 @@ target_include_directories (OfferFilesPolicyTest PRIVATE
 )
 target_link_libraries (OfferFilesPolicyTest muleunit mulecommon)
 add_test (NAME OfferFilesPolicyTest COMMAND OfferFilesPolicyTest)
+
+# External interoperability is opt-in and uses only a loopback server built from
+# the documented release. Do not download or connect to a public server in CTest.
+set (OFFERFILES_INTEROP_SERVER "" CACHE FILEPATH "ed2k-server v0.9.79 binary for local OFFERFILES interoperability")
+if (ENABLE_INTEGRATION_TESTS AND BUILD_DAEMON AND OFFERFILES_INTEROP_SERVER)
+	find_package (Python3 REQUIRED COMPONENTS Interpreter)
+	add_test (NAME OfferFilesInteropTest
+		COMMAND ${Python3_EXECUTABLE}
+			${CMAKE_CURRENT_SOURCE_DIR}/OfferFilesInteropTest.py
+			$<TARGET_FILE:amuled> ${OFFERFILES_INTEROP_SERVER}
+	)
+	set_tests_properties (OfferFilesInteropTest PROPERTIES TIMEOUT 360 LABELS "integration")
+endif()

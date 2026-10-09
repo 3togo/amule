@@ -511,6 +511,15 @@ bool CServerSocket::ProcessPacket(const uint8_t *packet, uint32 size, int8 opcod
 									  : COfferFilesAdvertisement());
 				}
 				if (m_offerFilesPolicy.Get()) {
+					// Commit the connection's limits only after the complete
+					// advertisement validates. Cached UDP metadata must not hide the
+					// login snapshot.
+					cur_server->SetSoftFiles(offerFiles.SoftLimit());
+					cur_server->SetHardFiles(offerFiles.HardLimit());
+					if (update) {
+						update->SetSoftFiles(offerFiles.SoftLimit());
+						update->SetHardFiles(offerFiles.HardLimit());
+					}
 					AddDebugLogLineN(logServer,
 						CFormat("OFFERFILES v1: soft=%u hard=%u advertised batch=%u "
 							"interval=%u ms; "

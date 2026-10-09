@@ -49,6 +49,7 @@
 #include "amule.h"         // Needed for theApp
 #include "PartFile.h"      // Needed for PartFile
 #include "Server.h"        // Needed for CServer
+#include "ServerList.h"    // Needed for live UDP publication limits
 #include "Statistics.h"    // Needed for theStats
 #include "Logger.h"
 #include <common/Format.h>
@@ -1497,6 +1498,27 @@ void CSharedFileList::SendListToServer()
 	if (policy && !publication.Due(GetTickCount64(), policy->IntervalMs())) {
 		return;
 	}
+	// Check the candidate budget before walking/sorting a potentially huge library.
+	// Once exhausted, subsequent core ticks must remain constant-time.
+	uint32 limit = server->GetSoftFiles();
+	if (limit == 0 || limit > 200) {
+		limit = 200;
+	}
+	if (policy) {
+		limit = policy->BatchLimit(
+			publication.Count(), server->GetSoftFiles(), server->GetHardFiles());
+		// UDP status updates change the list entry, while the socket owns a copy.
+		// Either source may tighten the connection snapshot, never enlarge it.
+		if (const CServer *listed = theApp->serverlist->GetServerByAddress(
+			    server->GetAddress(), server->GetPort())) {
+			limit = std::min(limit,
+				policy->BatchLimit(
+					publication.Count(), listed->GetSoftFiles(), listed->GetHardFiles()));
+		}
+		if (!limit) {
+			return;
+		}
+	}
 	std::vector<CKnownFile *> SortedList;
 
 	{
@@ -1521,20 +1543,6 @@ void CSharedFileList::SendListToServer()
 
 	std::sort(SortedList.begin(), SortedList.end(), SortFunc);
 
-	// Limits for the server.
-
-	uint32 limit = server->GetSoftFiles();
-	if (limit == 0 || limit > 200) {
-		limit = 200;
-	}
-
-	if (policy) {
-		limit = policy->BatchLimit(
-			publication.Count(), server->GetSoftFiles(), server->GetHardFiles());
-		if (!limit) {
-			return;
-		}
-	}
 	if ((uint32)SortedList.size() < limit) {
 		limit = SortedList.size();
 		if (limit == 0) {
@@ -1629,12 +1637,25 @@ void CSharedFileList::Process()
 	}
 
 	Publish();
+	ProcessED2K();
+}
+
+void CSharedFileList::ProcessED2K(bool acceleratedOnly)
+{
 	CServerSocket *socket = theApp->serverconnect->GetConnectedSocket();
 	const auto *policy =
 		socket ? socket->GetOfferFilesAdvertisement(thePrefs::GetExperimentalED2KPublication())
 		       : nullptr;
-	const uint32 interval = policy ? policy->IntervalMs() : ED2KREPUBLISHTIME;
-	if (!m_lastPublishED2KFlag || (::GetTickCount64() - m_lastPublishED2K < interval)) {
+	// The fast core-tick path must not change legacy maintenance scheduling.
+	if (acceleratedOnly && !policy) {
+		return;
+	}
+	const uint64 now = ::GetTickCount64();
+	// A fresh negotiated connection may publish immediately. Measure subsequent
+	// intervals from queue acceptance, without catch-up batches after a late tick.
+	const bool due = policy ? socket->GetOfferFilesPublication().Due(now, policy->IntervalMs())
+				: now - m_lastPublishED2K >= ED2KREPUBLISHTIME;
+	if (!m_lastPublishED2KFlag || !due) {
 		return;
 	}
 	SendListToServer();

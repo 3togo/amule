@@ -1,8 +1,9 @@
-# ED2K extension conventions: OFFERFILES v1 draft
+# ED2K extension conventions: OFFERFILES v1
 
 Accelerated publication is experimental and **disabled by default**. Normal users
-are discouraged from testing it: interoperability and server-load testing are
-incomplete, and accelerated offers may cause server disconnections.
+are discouraged from testing it: controlled loopback interoperability is tested,
+but production server-load validation remains incomplete and accelerated offers
+may cause server disconnections.
 
 For controlled testing with a compatible server, enable **Advanced → Experimental
 → Enable experimental ED2K accelerated file publication**. Daemon users can set
@@ -15,8 +16,11 @@ pacing. Disabling the setting restores the existing batch heuristic (at most 200
 records) and one-minute pacing. No server identity or manual rate override enables
 acceleration.
 
-Publication uses the existing approximately one-second monotonic processing loop.
-Intervals shorter than that are limited by the loop, with no catch-up bursts.
+Negotiated publication runs on each monotonic core timer tick (100 ms in the GUI and
+300 ms in the daemon), separately from the one-second shared-file maintenance
+loop. It sends at most one batch per eligible tick, measuring the next interval
+from socket queue acceptance; late ticks do not grant catch-up bursts. Legacy
+publication keeps the existing shared-file maintenance schedule.
 Distinct candidate hashes are counted only after socket queue acceptance,
 including legacy offers before negotiation, and reset on disconnect. Queue
 acceptance does not confirm transmission or indexing. Already offered hashes are
@@ -60,7 +64,7 @@ One post-login `OP_SERVERIDENT` packet carries each field exactly once:
 | `ST_SOFTFILES` | existing numeric uint32 tag | greater than 0 |
 | `ST_HARDFILES` | existing numeric uint32 tag | greater than advertised batch |
 
-The draft requires the uint32 tag encoding, not uint8/uint16/uint64 substitutes.
+Version 1 requires the uint32 tag encoding, not uint8/uint16/uint64 substitutes.
 String field names are case-sensitive. The soft limit is a per-connection
 indexing budget, while the hard value is a per-packet boundary. It is not a
 global server capacity. To accommodate historical plain/compressed differences,
@@ -72,11 +76,61 @@ interval is at least the advertised interval and 500 ms. This gives at most
 400 records/second without a burst entitlement. These are experimental local
 ceilings, not a production load recommendation.
 
-## Remaining validation
+## Server verification and remaining validation
 
-Run interoperability tests against the companion server implementation,
+Controlled interoperability tests use the companion server implementation,
 including coalesced TCP frames, disconnects, overload backpressure, concurrent
-publishers, and reconnect waves. The companion capability was agreed but not
-implemented at the time of the original draft. This opt-in does not establish
-production readiness. Acknowledgements, automatic retries after indexing
+publishers, and reconnect waves. The published companion implementation is
+[ed2k-server v0.9.79](https://github.com/andrey23127/ed2k-server/tree/v0.9.79),
+commit `eb2cc91c7be18da76f9173c3f7e31941466a370a`. Its source includes the
+advertisement, snapshot, pacing and overload acceptance tests from issue #19.
+This opt-in and controlled local measurements do not establish production
+readiness. Acknowledgements, automatic retries after indexing
 failures, and dynamic policy renegotiation remain separate extensions.
+
+## Reproducing local interoperability
+
+Build the companion server from the tag above using its unmodified lockfile:
+
+```sh
+cargo +1.90.0 build --locked
+cargo +1.90.0 test --locked --test integration offerfiles_v1
+```
+
+The published lockfile's ICU dependencies require Rust 1.88 or newer even though
+the server package declares an older minimum. Rust 1.90 was used for these
+checks; no dependency downgrade or server-source patch is needed.
+
+Run the actual aMule daemon against the actual server binary:
+
+```sh
+python3 unittests/tests/OfferFilesInteropTest.py \
+  /absolute/path/to/amuled /absolute/path/to/ed2k-server \
+  --large-library 60000 --output /tmp/offerfiles-results.json
+```
+
+The runner creates only temporary loopback servers and libraries, with private
+server mode, empty seed lists, disabled updates and Kad, and isolated aMule
+configuration directories. It requires Python 3 and a system libcrypto with the
+MD4 function to generate real content hashes for its `known.met` fixtures.
+Fixtures are real 64-byte files with unique hashes and timestamps; their seeded
+metadata excludes hashing throughput from these publication measurements.
+A local relay observes actual OFFERFILES frames and can remove the compression
+flag or cluster two frames. Assertions use the server's independent indexed
+source counts and publication counters, not the client's published markers.
+
+Cases cover plain and compressed offers, clustered arrivals, soft candidate
+budget, reconnect reset, disabled server/client settings, invalid advertisement
+configuration, global backpressure, and four concurrent publishers. The optional
+large-library case measures 60,000 files. All cases retain the local 200-record
+cap and strict per-packet hard boundary.
+
+The reconnect-wave case starts four fresh sessions together, then disconnects
+and reconnects all four to verify budget reset under the global ceiling.
+Large libraries receive a longer startup allowance because loading the fixture
+precedes the publication measurements.
+
+For the smaller suite through CTest, configure with
+`-DENABLE_INTEGRATION_TESTS=ON -DOFFERFILES_INTEROP_SERVER=/absolute/path/to/ed2k-server`
+and run `ctest --test-dir build --output-on-failure -R OfferFilesInteropTest`.
+The external test is not registered without that explicit binary path.
