@@ -328,6 +328,7 @@ void CSearchList::RemoveResults(wxUIntPtr searchID)
 	m_kadAICHKeys.erase(static_cast<uint32_t>(searchID));
 	m_searchStartTimes.erase(static_cast<uint32_t>(searchID));
 	m_searchKinds.erase(static_cast<uint32_t>(searchID));
+	m_resultSourceCounts.erase(static_cast<uint32_t>(searchID));
 	m_searchStrings.erase(static_cast<uint32_t>(searchID));
 	m_browsePeers.erase(static_cast<uint32_t>(searchID));
 
@@ -774,6 +775,13 @@ void CSearchList::FinalizeLocalSearch()
 	m_searchInProgress = false;
 	m_ed2kSearchFinished = true;
 
+	if (m_searchType == AllSearch) {
+		LogResultSourceCounts(static_cast<uint32_t>(m_currentSearch), wxT("AllSearch eD2k component finished"));
+		if (m_KadSearchFinished) {
+			LogResultSourceCounts(static_cast<uint32_t>(m_currentSearch), wxT("AllSearch COMPLETE"));
+		}
+	}
+
 	if (!m_shuttingDown) {
 		Notify_SearchLocalEnd();
 	}
@@ -1105,7 +1113,9 @@ void CSearchList::ProcessSearchAnswer(
 	for (; results > 0; --results) {
 		auto file =
 			std::make_unique<CSearchFile>(packet, optUTF8, m_currentSearch, serverIP, serverPort);
-		AddToList(std::move(file), false);
+		if (AddToList(std::move(file), false)) {
+			m_resultSourceCounts[static_cast<uint32_t>(m_currentSearch)].tcp++;
+		}
 	}
 }
 
@@ -1116,7 +1126,9 @@ void CSearchList::ProcessUDPSearchAnswer(
 		return;
 	}
 	auto file = std::make_unique<CSearchFile>(packet, optUTF8, m_currentSearch, serverIP, serverPort);
-	AddToList(std::move(file), false);
+	if (AddToList(std::move(file), false)) {
+		m_resultSourceCounts[static_cast<uint32_t>(m_currentSearch)].udp++;
+	}
 }
 
 bool CSearchList::AddToList(std::unique_ptr<CSearchFile> owned, bool clientResponse)
@@ -1420,6 +1432,16 @@ void CSearchList::SetKadSearchFinished(uint32_t searchID)
 	if (searchID == m_currentSearch && m_searchType == KadSearch) {
 		m_KadSearchFinished = true;
 	}
+
+	auto remap = m_kadToEd2kSearchId.find(searchID);
+	if (remap != m_kadToEd2kSearchId.end()) {
+		LogResultSourceCounts(remap->second, wxT("AllSearch Kad component finished"));
+		if (m_ed2kSearchFinished) {
+			LogResultSourceCounts(remap->second, wxT("AllSearch COMPLETE"));
+		}
+	} else {
+		LogResultSourceCounts(searchID, wxT("Kad search finished"));
+	}
 }
 
 CSearchList::SearchLifecycleState CSearchList::GetSearchLifecycleStateById(wxUIntPtr searchID) const
@@ -1559,6 +1581,13 @@ void CSearchList::StopInFlightEd2kSearch()
 void CSearchList::FinalizeGlobalSearch()
 {
 	m_ed2kSearchFinished = true;
+
+	if (m_searchType == AllSearch) {
+		LogResultSourceCounts(static_cast<uint32_t>(m_currentSearch), wxT("AllSearch eD2k component finished"));
+		if (m_KadSearchFinished) {
+			LogResultSourceCounts(static_cast<uint32_t>(m_currentSearch), wxT("AllSearch COMPLETE"));
+		}
+	}
 	// Order is crucial here: on wxMSW an additional event can be generated during the stop. So
 	// the packet has to be deleted first, so that OnGlobalSearchTimer() returns immediately
 	// (packet-null early return) without re-entering this path.
@@ -1572,6 +1601,17 @@ void CSearchList::FinalizeGlobalSearch()
 		theApp->serverlist->RemoveObserver(&m_serverQueue);
 		CoreNotify_Search_Update_Progress(0xffff);
 	}
+	}
+
+void CSearchList::LogResultSourceCounts(uint32_t searchID, const wxString &context)
+{
+	auto it = m_resultSourceCounts.find(searchID);
+	if (it == m_resultSourceCounts.end()) {
+		return;
+	}
+	const ResultSourceCounts &c = it->second;
+	AddLogLineN(CFormat(wxT("%s [search %u]: TCP=%zu  UDP=%zu  Kad=%zu  total=%zu")) % context %
+		    searchID % c.tcp % c.udp % c.kad % c.total());
 }
 
 CSearchList::CMemFilePtr CSearchList::CreateSearchData(
@@ -1986,7 +2026,9 @@ void CSearchList::KademliaSearchKeyword(uint32_t searchID,
 		sampled ? &key->second : nullptr);
 	tempFile->SetKadPublishInfo(kadPublishInfo);
 
-	AddToList(std::move(tempFile));
+	if (AddToList(std::move(tempFile))) {
+		m_resultSourceCounts[effectiveSearchID].kad++;
+	}
 }
 
 void CSearchList::UpdateSearchFileByHash(const CMD4Hash &hash)
