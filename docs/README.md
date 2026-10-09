@@ -182,9 +182,26 @@ after editing its event command settings. Remote GUI preferences are not sent
 to the daemon.
 
 The "New chat session" event is raised locally by `amulegui`, so its GUI command
-and `%SENDER` variable remain available with a remote core. Both command controls
-are disabled for the three daemon-raised events: "Download completed", "Error on
-completion", and "Out of space". Their GUI commands require a local core.
+and `%SENDER` variable remain available with a remote core. "Download completed"
+also runs its GUI command locally when `amulegui` observes a known download change
+to complete. Downloads already complete when first seen, including the initial
+sync and the first sync after a reconnect, do not trigger commands. Each GUI sees
+its own transitions; a completion cleared by another client before the next poll
+can be missed.
+
+Remote completion commands support `%NAME`, `%HASH`, `%SIZE`, and `%DLACTIVETIME`.
+`%FILE` expands to an empty string in remote GUI mode: EC does not supply a reliable
+full path for the local download proxy, and the file lives on the daemon's host.
+For example, a local desktop notification can use:
+
+```sh
+notify-send "aMule" "Finished %NAME (%SIZE bytes)"
+```
+
+"Error on completion" and "Out of space" remain daemon-only with a remote core,
+and their GUI controls are disabled. EC's error status also covers failures
+unrelated to completion, so it cannot reliably identify the completion error
+event; daemon free-space checks are not visible to the GUI.
 
 Event command templates are split into arguments before `%FILE`, `%NAME`,
 `%HASH`, `%SIZE`, `%DLACTIVETIME`, `%SENDER`, or `%PARTITION` is substituted.

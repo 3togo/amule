@@ -25,6 +25,7 @@
 #ifndef AMULE_REMOTE_GUI_H
 #define AMULE_REMOTE_GUI_H
 
+#include "RemoteDownloadEvents.h"
 #include "SearchEd2kSlot.h"
 #include "SearchStartRequests.h"
 #include <functional>             // std::function for the CSharedFilesRem
@@ -554,6 +555,8 @@ class CKnownFilesRem : public CRemoteContainer<CKnownFile, uint32, CEC_SharedFil
 {
 	CKnownFile *CreateKnownFile(const CEC_SharedFile_Tag *tag, CKnownFile *file = NULL);
 	CPartFile *CreatePartFile(const CEC_PartFile_Tag *tag);
+
+	CRemoteDownloadEvents m_downloadEvents;
 
 	bool m_initialUpdate; // improved handling for first data transfer
 

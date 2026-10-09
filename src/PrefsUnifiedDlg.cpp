@@ -719,10 +719,11 @@ bool PrefsUnifiedDlg::TransferToWindow()
 		const int base = USEREVENTS_FIRST_ID + static_cast<int>(i) * USEREVENTS_IDS_PER_EVENT;
 		FindWindow(base + 1)->Disable();
 		FindWindow(base + 2)->Disable();
-		const bool localChat = i == CUserEvents::NewChatSession;
-		FindWindow(base + 3)->Enable(localChat);
-		FindWindow(base + 4)->Enable(localChat && CUserEvents::IsGUICommandEnabled(
-								  static_cast<CUserEvents::EventType>(i)));
+		const bool localEvent =
+			i == CUserEvents::NewChatSession || i == CUserEvents::DownloadCompleted;
+		FindWindow(base + 3)->Enable(localEvent);
+		FindWindow(base + 4)->Enable(localEvent && CUserEvents::IsGUICommandEnabled(
+								   static_cast<CUserEvents::EventType>(i)));
 	}
 #endif
 
@@ -2689,14 +2690,16 @@ void PrefsUnifiedDlg::CreateEventPanels(const int idx, const wxString &vars, wxW
 #ifdef CLIENT_GUI
 	item9->Disable();
 	item12->Disable();
-	if (idx != CUserEvents::NewChatSession) {
+	if (idx != CUserEvents::NewChatSession && idx != CUserEvents::DownloadCompleted) {
 		item14->Disable();
 		item17->Disable();
 	}
-	item7->Add(new wxStaticText(item8,
-			   wxID_ANY,
-			   _("Core commands must be configured in the daemon's amule.conf.\n"
-			     "Only the chat event supports GUI commands with a remote core.")),
+	item7->Add(
+		new wxStaticText(item8,
+			wxID_ANY,
+			_("Core commands must be configured in the daemon's amule.conf.\n"
+			  "Chat and observed download completions support GUI commands with a remote core.\n"
+			  "Already completed downloads do not run commands at first sync or reconnect.")),
 		wxSizerFlags().Border(wxALL, 5));
 #endif
 

@@ -2212,3 +2212,9 @@ target_link_libraries (UserEventCommandTest muleunit mulecommon wxWidgets::BASE)
 if (WIN32)
 	target_link_libraries (UserEventCommandTest shell32)
 endif()
+
+# EC session baselines suppress completion commands during initial sync/reconnect.
+add_executable (RemoteDownloadEventsTest RemoteDownloadEventsTest.cpp)
+add_test (NAME RemoteDownloadEventsTest COMMAND RemoteDownloadEventsTest)
+target_include_directories (RemoteDownloadEventsTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (RemoteDownloadEventsTest muleunit mulecommon)

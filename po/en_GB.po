@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-09 09:30+0000\n"
+"POT-Creation-Date: 2026-10-09 11:02+0000\n"
 "PO-Revision-Date: 2026-10-07 16:24+0000\n"
 "Last-Translator: Dévai Tamás <devait@vnet.hu>\n"
 "Language-Team: aMule Team <https://github.com/amule-org/amule>\n"
@@ -6790,7 +6790,8 @@ msgstr "GUI command:"
 #: src/PrefsUnifiedDlg.cpp
 msgid ""
 "Core commands must be configured in the daemon's amule.conf.\n"
-"Only the chat event supports GUI commands with a remote core."
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
 msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
@@ -8910,7 +8911,8 @@ msgid "Download completed"
 msgstr "Download completed"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "The full path to the file."
 
 #: src/UserEvents.h
@@ -8948,6 +8950,10 @@ msgstr "Disk partition."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Error on completion"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "The full path to the file."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format

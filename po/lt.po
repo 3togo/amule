@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-09 09:30+0000\n"
+"POT-Creation-Date: 2026-10-09 11:02+0000\n"
 "PO-Revision-Date: 2026-10-07 16:27+0000\n"
 "Last-Translator: Dovydas Sankauskas <laisve@gmail.com>\n"
 "Language-Team: Lithuanian <komp_lt@konf.lt>\n"
@@ -6880,7 +6880,8 @@ msgstr "Grafinės aplinkos komanda:"
 #: src/PrefsUnifiedDlg.cpp
 msgid ""
 "Core commands must be configured in the daemon's amule.conf.\n"
-"Only the chat event supports GUI commands with a remote core."
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
 msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
@@ -9034,7 +9035,8 @@ msgid "Download completed"
 msgstr "Atsiuntimas baigtas"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "Pilnas kelias iki failo."
 
 #: src/UserEvents.h
@@ -9072,6 +9074,10 @@ msgstr "Disko skirsnis."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Baigiant siųsti failą įvyko klaida"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "Pilnas kelias iki failo."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format

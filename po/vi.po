@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule GIT\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-09 09:30+0000\n"
+"POT-Creation-Date: 2026-10-09 11:02+0000\n"
 "PO-Revision-Date: 2026-10-07 16:32+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
@@ -6760,7 +6760,8 @@ msgstr "Lệnh GUI:"
 #: src/PrefsUnifiedDlg.cpp
 msgid ""
 "Core commands must be configured in the daemon's amule.conf.\n"
-"Only the chat event supports GUI commands with a remote core."
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
 msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
@@ -8862,7 +8863,8 @@ msgid "Download completed"
 msgstr "Tải xuống hoàn tất"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "Đường dẫn đầy đủ đến tệp."
 
 #: src/UserEvents.h
@@ -8900,6 +8902,10 @@ msgstr "Phân vùng đĩa."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Lỗi khi hoàn tất"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "Đường dẫn đầy đủ đến tệp."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
