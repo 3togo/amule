@@ -32,6 +32,7 @@
 
 #include <wx/thread.h>
 
+#include "UploadPacketBuilder.h"
 #include "Types.h"
 #include "FileArea.h" // Needed for CFileArea
 
@@ -63,11 +64,6 @@ struct ReadRequest_Struct
 	CFileArea area;                 // holds read buffer; replaces BYTE* pBuffer + OVERLAPPED
 };
 
-// Packet + payload-size pair, used by the static packet-creation helpers. Mirrors eMule's
-// CPacketList + Packet::uStatsPayLoad approach; aMule's CPacket has no uStatsPayLoad member, so we
-// carry the value alongside the pointer.
-typedef std::list<std::pair<CPacket *, uint32>> CPacketList;
-
 // Port of eMule's CUploadDiskIOThread (UploadDiskIOThread.h:48-86). Windows primitives replaced
 // with wxWidgets equivalents:
 //   CWinThread           -> wxThread (joinable)
@@ -87,7 +83,7 @@ public:
 	void SocketNeedsMoreData();       // eMule ref: UploadDiskIOThread.h:56
 
 	// eMule ref: UploadDiskIOThread.h:72-73 -- static packet creation helpers
-	// uploadDatarate (bytes/s) scales per-packet chunk size (10 KiB floor, 128 KiB ceiling).
+	// uploadDatarate (bytes/s) scales per-packet chunk size (10 KiB floor, EMBLOCKSIZE ceiling).
 	static void CreateStandardPackets(const uint8_t *buffer,
 		uint64 startOffset,
 		uint64 endOffset,

@@ -48,6 +48,7 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		UploadBandwidthThrottler.cpp
 		UploadClient.cpp
 		UploadDiskIOThread.cpp
+		UploadPacketBuilder.cpp
 		UploadQueue.cpp
 		PartFileWriteThread.cpp
 		PartFileHashThread.cpp

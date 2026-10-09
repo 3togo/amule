@@ -32,19 +32,12 @@
 #include "PartFile.h"        // Needed for CPartFile
 #include "ClientTCPSocket.h" // Needed for CClientTCPSocket
 #include "Packet.h"          // Needed for CPacket
-#include "MemFile.h"         // Needed for CMemFile
 #include "amule.h"           // Needed for theApp
 #include "Logger.h"
 #include "OtherFunctions.h" // Needed for GetFiletype / ftArchive
 #include "MD4Hash.h"
-#include "ScopedPtr.h" // Needed for CScopedArray
 #include "UploadBandwidthThrottler.h"
 #include "Statistics.h" // Needed for theStats
-
-#include <protocol/Protocols.h>
-#include <protocol/ed2k/Client2Client/TCP.h>
-#include <algorithm> // Needed for std::min / std::max
-#include <zlib.h>
 
 #define SLOT_COMPRESSIONCHECK_DATARATE (1024 * 150) // 150 KB/s -- above this we may disable compression
 #define MAX_FINISHED_REQUESTS_COMPRESSION 15        // max queued finished reads before disabling compression
@@ -456,7 +449,6 @@ bool CUploadDiskIOThread::ReleaseOpenFile(OpenFile_Struct *pFileStruct)
 	return false;
 }
 
-// eMule 0.70b ref: CUploadDiskIOThread::CreateStandardPackets()
 void CUploadDiskIOThread::CreateStandardPackets(const uint8_t *buffer,
 	uint64 startOffset,
 	uint64 endOffset,
@@ -464,52 +456,10 @@ void CUploadDiskIOThread::CreateStandardPackets(const uint8_t *buffer,
 	const uint8_t *fileHash,
 	uint32 uploadDatarate)
 {
-	uint32 togo = (uint32)(endOffset - startOffset);
-
-	CMemFile memfile(buffer, togo);
-	// Adaptive chunk size: scale with per-slot speed, floor 10 KiB, ceil EMBLOCKSIZE. /8 is
-	// ~125 ms of data per chunk, enough to saturate a TCP segment burst without making per-
-	// packet latency awful on slow peers, and the floor keeps it sane while uploadDatarate is
-	// still 0. Going past EMBLOCKSIZE buys nothing, since the receiver requests blocks of
-	// exactly that size.
-	const uint32 chunkSize = std::min(std::max(uploadDatarate / 8u, 10240u), (uint32)EMBLOCKSIZE);
-	uint32 nPacketSize = (togo <= chunkSize + 2600u) ? togo : chunkSize;
-
-	while (togo) {
-		if (togo < nPacketSize * 2) {
-			nPacketSize = togo;
-		}
-
-		wxASSERT(nPacketSize);
-		togo -= nPacketSize;
-
-		uint64 endpos = (endOffset - togo);
-		uint64 startpos = endpos - nPacketSize;
-
-		bool bLargeBlocks = (startpos > 0xFFFFFFFF) || (endpos > 0xFFFFFFFF);
-
-		CMemFile data(nPacketSize + 16 + 2 * (bLargeBlocks ? 8 : 4));
-		data.WriteHash(CMD4Hash(fileHash));
-		if (bLargeBlocks) {
-			data.WriteUInt64(startpos);
-			data.WriteUInt64(endpos);
-		} else {
-			data.WriteUInt32(startpos);
-			data.WriteUInt32(endpos);
-		}
-		char *tempbuf = new char[nPacketSize];
-		memfile.Read(tempbuf, nPacketSize);
-		data.Write(tempbuf, nPacketSize);
-		delete[] tempbuf;
-		CPacket *packet = new CPacket(data,
-			(bLargeBlocks ? OP_EMULEPROT : OP_EDONKEYPROT),
-			(bLargeBlocks ? (uint8)OP_SENDINGPART_I64 : (uint8)OP_SENDINGPART));
-		theStats::AddUpOverheadFileRequest(16 + 2 * (bLargeBlocks ? 8 : 4));
-		packetList.push_back(std::make_pair(packet, nPacketSize));
-	}
+	theStats::AddUpOverheadFileRequest(UploadPacketBuilder::Standard(
+		buffer, startOffset, endOffset, packetList, fileHash, uploadDatarate));
 }
 
-// eMule 0.70b ref: CUploadDiskIOThread::CreatePackedPackets()
 void CUploadDiskIOThread::CreatePackedPackets(const uint8_t *buffer,
 	uint64 startOffset,
 	uint64 endOffset,
@@ -517,60 +467,7 @@ void CUploadDiskIOThread::CreatePackedPackets(const uint8_t *buffer,
 	const uint8_t *fileHash,
 	uint32 uploadDatarate)
 {
-	uint32 togo = (uint32)(endOffset - startOffset);
-	uLongf newsize = togo + 300;
-	CScopedArray<uint8_t> output(newsize);
-	// eMule 0.70b: use compression level 1 instead of 9 -- for typical 10240-byte
-	// blocks the size difference is small (~4-12%) but level 1 is 1.5-2.5x faster.
-	uint16 result = compress2(output.get(), &newsize, buffer, togo, 1);
-	if (result != Z_OK || togo <= newsize) {
-		CreateStandardPackets(buffer, startOffset, endOffset, packetList, fileHash, uploadDatarate);
-		return;
-	}
-
-	CMemFile memfile(output.get(), newsize);
-
-	uint32 totalPayloadSize = 0;
-	uint32 oldSize = togo;
-	togo = newsize;
-	// Adaptive chunk size -- see CreateStandardPackets for rationale.
-	const uint32 chunkSize = std::min(std::max(uploadDatarate / 8u, 10240u), (uint32)EMBLOCKSIZE);
-	uint32 nPacketSize = (togo <= chunkSize + 2600u) ? togo : chunkSize;
-
-	while (togo) {
-		if (togo < nPacketSize * 2) {
-			nPacketSize = togo;
-		}
-		togo -= nPacketSize;
-
-		bool isLargeBlock = (startOffset > 0xFFFFFFFF) || (endOffset > 0xFFFFFFFF);
-
-		CMemFile data(nPacketSize + 16 + (isLargeBlock ? 12 : 8));
-		data.WriteHash(CMD4Hash(fileHash));
-		if (isLargeBlock) {
-			data.WriteUInt64(startOffset);
-		} else {
-			data.WriteUInt32(startOffset);
-		}
-		data.WriteUInt32(newsize);
-		char *tempbuf = new char[nPacketSize];
-		memfile.Read(tempbuf, nPacketSize);
-		data.Write(tempbuf, nPacketSize);
-		delete[] tempbuf;
-		CPacket *packet = new CPacket(
-			data, OP_EMULEPROT, (isLargeBlock ? OP_COMPRESSEDPART_I64 : OP_COMPRESSEDPART));
-
-		uint32 payloadSize =
-			static_cast<uint32>((static_cast<uint64>(nPacketSize) * oldSize) / newsize);
-
-		if (togo == 0 && totalPayloadSize + payloadSize < oldSize) {
-			payloadSize = oldSize - totalPayloadSize;
-		}
-
-		totalPayloadSize += payloadSize;
-
-		theStats::AddUpOverheadFileRequest(24);
-		packetList.push_back(std::make_pair(packet, payloadSize));
-	}
+	theStats::AddUpOverheadFileRequest(UploadPacketBuilder::Packed(
+		buffer, startOffset, endOffset, packetList, fileHash, uploadDatarate));
 }
 // File_checked_for_headers

@@ -320,6 +320,24 @@ target_include_directories (PacketTest PRIVATE
 target_link_libraries (PacketTest muleunit ZLIB::ZLIB)
 add_test (NAME PacketTest COMMAND PacketTest)
 
+add_executable (UploadPacketBuilderTest
+	UploadPacketBuilderTest.cpp
+	${CMAKE_SOURCE_DIR}/src/UploadPacketBuilder.cpp
+	${CMAKE_SOURCE_DIR}/src/Packet.cpp
+	${CMAKE_SOURCE_DIR}/src/MemFile.cpp
+	${CMAKE_SOURCE_DIR}/src/SafeFile.cpp
+	${CMAKE_SOURCE_DIR}/src/Tag.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+)
+target_include_directories (UploadPacketBuilderTest PRIVATE
+	${CMAKE_BINARY_DIR}
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_SOURCE_DIR}/src/include
+)
+target_link_libraries (UploadPacketBuilderTest muleunit ZLIB::ZLIB)
+add_test (NAME UploadPacketBuilderTest COMMAND UploadPacketBuilderTest)
+
 if (ENABLE_UTP)
 	add_executable (UtpContextTest
 		UtpContextTest.cpp
