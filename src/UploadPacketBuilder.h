@@ -40,19 +40,24 @@ typedef std::list<std::pair<CPacket *, uint32>> CPacketList;
 
 namespace UploadPacketBuilder
 {
-// Append owning packets and return the file-request overhead to add to statistics.
+// Called once per packet, including the standard fallback, to preserve packet counters.
+using OverheadRecorder = void (*)(uint32);
+
+// Append owning packets, report per-packet overhead, and return the overhead byte total.
 uint32 Standard(const uint8_t *buffer,
 	uint64 startOffset,
 	uint64 endOffset,
 	CPacketList &packets,
 	const uint8_t *fileHash,
-	uint32 uploadDatarate);
+	uint32 uploadDatarate,
+	OverheadRecorder recordOverhead = nullptr);
 uint32 Packed(const uint8_t *buffer,
 	uint64 startOffset,
 	uint64 endOffset,
 	CPacketList &packets,
 	const uint8_t *fileHash,
-	uint32 uploadDatarate);
+	uint32 uploadDatarate,
+	OverheadRecorder recordOverhead = nullptr);
 } // namespace UploadPacketBuilder
 
 #endif

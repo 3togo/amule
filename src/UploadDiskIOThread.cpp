@@ -456,8 +456,13 @@ void CUploadDiskIOThread::CreateStandardPackets(const uint8_t *buffer,
 	const uint8_t *fileHash,
 	uint32 uploadDatarate)
 {
-	theStats::AddUpOverheadFileRequest(UploadPacketBuilder::Standard(
-		buffer, startOffset, endOffset, packetList, fileHash, uploadDatarate));
+	UploadPacketBuilder::Standard(buffer,
+		startOffset,
+		endOffset,
+		packetList,
+		fileHash,
+		uploadDatarate,
+		&theStats::AddUpOverheadFileRequest);
 }
 
 void CUploadDiskIOThread::CreatePackedPackets(const uint8_t *buffer,
@@ -467,7 +472,12 @@ void CUploadDiskIOThread::CreatePackedPackets(const uint8_t *buffer,
 	const uint8_t *fileHash,
 	uint32 uploadDatarate)
 {
-	theStats::AddUpOverheadFileRequest(UploadPacketBuilder::Packed(
-		buffer, startOffset, endOffset, packetList, fileHash, uploadDatarate));
+	UploadPacketBuilder::Packed(buffer,
+		startOffset,
+		endOffset,
+		packetList,
+		fileHash,
+		uploadDatarate,
+		&theStats::AddUpOverheadFileRequest);
 }
 // File_checked_for_headers

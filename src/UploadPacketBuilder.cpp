@@ -46,7 +46,8 @@ uint32 Assemble(const uint8_t *buffer,
 	bool compressed,
 	CPacketList &packets,
 	const uint8_t *fileHash,
-	uint32 uploadDatarate)
+	uint32 uploadDatarate,
+	UploadPacketBuilder::OverheadRecorder recordOverhead)
 {
 	uint32 remaining = size;
 	uint32 accounted = 0;
@@ -97,7 +98,11 @@ uint32 Assemble(const uint8_t *buffer,
 		}
 		accounted += payloadSize;
 		// The old compressed builder counts 24 even for the 28-byte I64 header.
-		overhead += compressed ? 24 : headerSize;
+		const uint32 packetOverhead = compressed ? 24 : headerSize;
+		overhead += packetOverhead;
+		if (recordOverhead) {
+			recordOverhead(packetOverhead);
+		}
 		packets.emplace_back(packet.get(), payloadSize);
 		packet.release();
 	}
@@ -110,10 +115,20 @@ uint32 UploadPacketBuilder::Standard(const uint8_t *buffer,
 	uint64 endOffset,
 	CPacketList &packets,
 	const uint8_t *fileHash,
-	uint32 uploadDatarate)
+	uint32 uploadDatarate,
+	UploadPacketBuilder::OverheadRecorder recordOverhead)
 {
 	const uint32 size = static_cast<uint32>(endOffset - startOffset);
-	return Assemble(buffer, size, startOffset, endOffset, size, false, packets, fileHash, uploadDatarate);
+	return Assemble(buffer,
+		size,
+		startOffset,
+		endOffset,
+		size,
+		false,
+		packets,
+		fileHash,
+		uploadDatarate,
+		recordOverhead);
 }
 
 uint32 UploadPacketBuilder::Packed(const uint8_t *buffer,
@@ -121,14 +136,16 @@ uint32 UploadPacketBuilder::Packed(const uint8_t *buffer,
 	uint64 endOffset,
 	CPacketList &packets,
 	const uint8_t *fileHash,
-	uint32 uploadDatarate)
+	uint32 uploadDatarate,
+	UploadPacketBuilder::OverheadRecorder recordOverhead)
 {
 	const uint32 size = static_cast<uint32>(endOffset - startOffset);
 	uLongf packedSize = size + 300;
 	CScopedArray<uint8_t> output(packedSize);
 	// Retain level 1 and the standard-packet fallback when compression does not help.
 	if (compress2(output.get(), &packedSize, buffer, size, 1) != Z_OK || size <= packedSize) {
-		return Standard(buffer, startOffset, endOffset, packets, fileHash, uploadDatarate);
+		return Standard(
+			buffer, startOffset, endOffset, packets, fileHash, uploadDatarate, recordOverhead);
 	}
 	return Assemble(output.get(),
 		static_cast<uint32>(packedSize),
@@ -138,5 +155,6 @@ uint32 UploadPacketBuilder::Packed(const uint8_t *buffer,
 		true,
 		packets,
 		fileHash,
-		uploadDatarate);
+		uploadDatarate,
+		recordOverhead);
 }

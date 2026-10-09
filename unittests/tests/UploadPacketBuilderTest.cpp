@@ -37,6 +37,9 @@
 #include <cstring>
 #include <vector>
 #include <zlib.h>
+#if defined(__unix__) || defined(__APPLE__)
+#include <sys/mman.h>
+#endif
 
 using namespace muleunit;
 
@@ -179,6 +182,13 @@ struct Packets
 	}
 };
 
+std::vector<uint32> overheadUpdates;
+
+void RecordOverhead(uint32 bytes)
+{
+	overheadUpdates.push_back(bytes);
+}
+
 void Compare(const std::vector<uint8_t> &input, uint64 start, uint32 rate, bool packed)
 {
 	const uint8_t hash[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
@@ -190,18 +200,27 @@ void Compare(const std::vector<uint8_t> &input, uint64 start, uint32 rate, bool 
 	const uint8_t *buffer = source.empty() ? &empty : source.data();
 	const uint32 oldOverhead = packed ? Legacy::Packed(original, start, end, expected.list, hash, rate)
 					  : Legacy::Standard(original, start, end, expected.list, hash, rate);
+	overheadUpdates.clear();
 	const uint32 newOverhead =
-		packed ? UploadPacketBuilder::Packed(buffer, start, end, actual.list, hash, rate)
-		       : UploadPacketBuilder::Standard(buffer, start, end, actual.list, hash, rate);
+		packed ? UploadPacketBuilder::Packed(
+				 buffer, start, end, actual.list, hash, rate, &RecordOverhead)
+		       : UploadPacketBuilder::Standard(
+				 buffer, start, end, actual.list, hash, rate, &RecordOverhead);
 	ASSERT_EQUALS(oldOverhead, newOverhead);
 	ASSERT_TRUE(source == input);
 	ASSERT_EQUALS(expected.list.size(), actual.list.size());
+	ASSERT_EQUALS(actual.list.size(), overheadUpdates.size());
+	size_t packetIndex = 0;
 	auto reference = expected.list.begin();
 	uint32 total = 0;
 	for (auto &entry : actual.list) {
 		CPacket &oldPacket = *reference->first;
 		CPacket &newPacket = *entry.first;
 		ASSERT_EQUALS(reference->second, entry.second);
+		const bool compressed = oldPacket.GetOpCode() == OP_COMPRESSEDPART ||
+					oldPacket.GetOpCode() == OP_COMPRESSEDPART_I64;
+		ASSERT_EQUALS(compressed ? 24u : oldPacket.GetPacketSize() - reference->second,
+			overheadUpdates[packetIndex++]);
 		ASSERT_EQUALS(oldPacket.GetRealPacketSize(), newPacket.GetRealPacketSize());
 		ASSERT_EQUALS(oldPacket.IsFromPF(), newPacket.IsFromPF());
 		ASSERT_TRUE(std::memcmp(oldPacket.GetPacket(),
@@ -315,3 +334,58 @@ TEST(UploadPacketBuilder, CompressedAccountingAndAppend)
 	ASSERT_EQUALS(count + 1, packets.list.size());
 	ASSERT_TRUE(first == packets.list.front().first);
 }
+
+TEST(UploadPacketBuilder, VariedBlocksAndRates)
+{
+	uint32 state = 7919;
+	for (unsigned i = 0; i < 150; ++i) {
+		state = state * 1664525u + 1013904223u;
+		const uint32 size = 1 + state % (3 * EMBLOCKSIZE);
+		auto data = Noise(size);
+		if (i % 2 == 0) {
+			for (size_t j = 24000; j < data.size(); ++j) {
+				data[j] = data[j % 24000];
+			}
+		}
+		const uint64 start = i % 3 == 0 ? uint64(0xFFFFFFFF) - size / 2 : uint64(state) * 3;
+		const uint32 rate = state % (EMBLOCKSIZE * 16);
+		Compare(data, start, rate, false);
+		Compare(data, start, rate, true);
+	}
+}
+
+#if defined(__unix__) || defined(__APPLE__)
+TEST(UploadPacketBuilder, ReadOnlyMappedInput)
+{
+	const std::vector<uint8_t> data(EMBLOCKSIZE, 'A');
+	struct Mapping
+	{
+		void *address;
+		~Mapping()
+		{
+			if (address != MAP_FAILED) {
+				munmap(address, EMBLOCKSIZE);
+			}
+		}
+	} mapping{ mmap(nullptr, EMBLOCKSIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0) };
+	ASSERT_TRUE(mapping.address != MAP_FAILED);
+	std::memcpy(mapping.address, data.data(), data.size());
+	ASSERT_EQUALS(0, mprotect(mapping.address, EMBLOCKSIZE, PROT_READ));
+	const uint8_t hash[16] = {};
+	const auto *buffer = static_cast<const uint8_t *>(mapping.address);
+	for (bool compressed : { false, true }) {
+		Packets packets;
+		if (compressed) {
+			UploadPacketBuilder::Packed(buffer, 0, EMBLOCKSIZE, packets.list, hash, 0);
+		} else {
+			UploadPacketBuilder::Standard(buffer, 0, EMBLOCKSIZE, packets.list, hash, 0);
+		}
+		uint32 total = 0;
+		for (const auto &entry : packets.list) {
+			total += entry.second;
+		}
+		ASSERT_EQUALS(EMBLOCKSIZE, total);
+	}
+	ASSERT_TRUE(std::memcmp(buffer, data.data(), data.size()) == 0);
+}
+#endif
