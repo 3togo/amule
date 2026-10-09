@@ -25,6 +25,8 @@
 #ifndef KAD_CALLBACK_POLICY_H
 #define KAD_CALLBACK_POLICY_H
 
+#include <cstdint>
+
 namespace Kademlia
 {
 
@@ -37,6 +39,17 @@ inline bool DirectCallbackAvailable(bool tcpFirewalled, bool udpFirewalled, bool
 inline bool NeedsBuddy(bool tcpFirewalled, bool udpFirewalled, bool udpVerified)
 {
 	return tcpFirewalled && (udpFirewalled || !udpVerified);
+}
+
+// A changed callback route must replace its published address without waiting for the timer.
+inline bool CanPublishSource(
+	bool needsBuddy, uint32_t buddyIP, uint32_t lastBuddyIP, uint32_t nextPublishTime, uint32_t now)
+{
+	if (needsBuddy && buddyIP == 0) {
+		return false;
+	}
+	const uint32_t routeBuddyIP = needsBuddy ? buddyIP : 0;
+	return routeBuddyIP != lastBuddyIP || now >= nextPublishTime;
 }
 
 } // namespace Kademlia
