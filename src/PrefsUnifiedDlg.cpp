@@ -1080,7 +1080,7 @@ bool PrefsUnifiedDlg::TransferFromWindow()
 		if (i == CUserEvents::NewChatSession) {
 			continue;
 		}
-		const int base = USEREVENTS_FIRST_ID + i * USEREVENTS_IDS_PER_EVENT;
+		const int base = USEREVENTS_FIRST_ID + static_cast<int>(i) * USEREVENTS_IDS_PER_EVENT;
 		if (CfgChanged(base + 3) || CfgChanged(base + 4)) {
 			theApp->ResetUserEventSubscription();
 			break;
@@ -2737,7 +2737,7 @@ void PrefsUnifiedDlg::UpdateUserEventControls()
 {
 	const bool supported = theApp->m_connect->ServerSupportsUserEvents();
 	for (unsigned int i = 0; i < CUserEvents::GetCount(); ++i) {
-		const int base = USEREVENTS_FIRST_ID + i * USEREVENTS_IDS_PER_EVENT;
+		const int base = USEREVENTS_FIRST_ID + static_cast<int>(i) * USEREVENTS_IDS_PER_EVENT;
 		FindWindow(base + 1)->Disable();
 		FindWindow(base + 2)->Disable();
 		const bool guiSupported = supported || i == CUserEvents::NewChatSession;

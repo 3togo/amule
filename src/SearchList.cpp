@@ -776,9 +776,11 @@ void CSearchList::FinalizeLocalSearch()
 	m_ed2kSearchFinished = true;
 
 	if (m_searchType == AllSearch) {
-		LogResultSourceCounts(static_cast<uint32_t>(m_currentSearch), wxT("AllSearch eD2k component finished"));
+		LogResultSourceCounts(
+			static_cast<uint32_t>(m_currentSearch), wxT("AllSearch eD2k component finished"));
 		if (m_KadSearchFinished) {
-			LogResultSourceCounts(static_cast<uint32_t>(m_currentSearch), wxT("AllSearch COMPLETE"));
+			LogResultSourceCounts(
+				static_cast<uint32_t>(m_currentSearch), wxT("AllSearch COMPLETE"));
 		}
 	}
 
@@ -1583,9 +1585,11 @@ void CSearchList::FinalizeGlobalSearch()
 	m_ed2kSearchFinished = true;
 
 	if (m_searchType == AllSearch) {
-		LogResultSourceCounts(static_cast<uint32_t>(m_currentSearch), wxT("AllSearch eD2k component finished"));
+		LogResultSourceCounts(
+			static_cast<uint32_t>(m_currentSearch), wxT("AllSearch eD2k component finished"));
 		if (m_KadSearchFinished) {
-			LogResultSourceCounts(static_cast<uint32_t>(m_currentSearch), wxT("AllSearch COMPLETE"));
+			LogResultSourceCounts(
+				static_cast<uint32_t>(m_currentSearch), wxT("AllSearch COMPLETE"));
 		}
 	}
 	// Order is crucial here: on wxMSW an additional event can be generated during the stop. So
@@ -1601,7 +1605,7 @@ void CSearchList::FinalizeGlobalSearch()
 		theApp->serverlist->RemoveObserver(&m_serverQueue);
 		CoreNotify_Search_Update_Progress(0xffff);
 	}
-	}
+}
 
 void CSearchList::LogResultSourceCounts(uint32_t searchID, const wxString &context)
 {
