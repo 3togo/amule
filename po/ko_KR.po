@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-08 12:59+0900\n"
+"POT-Creation-Date: 2026-10-09 10:44+0000\n"
 "PO-Revision-Date: 2026-10-07 16:27+0000\n"
 "Last-Translator: Hyunju Kang <rexington@gmail.com>\n"
 "Language-Team: Korean <hoenny@daum.net>\n"
@@ -2771,19 +2771,48 @@ msgstr ""
 msgid "OK"
 msgstr "확인"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed command token followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "미리보기"
 
 #: src/FileLaunch.cpp
-#, fuzzy, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "오류: 외부 재생기를 실행하지 못했습니다."
+#, c-format
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr ""
+
+#: src/FileLaunch.cpp
+#, fuzzy, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "오류: 외부 재생기를 실행하지 못했습니다."
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -8956,6 +8985,11 @@ msgstr "파일의 올려주기를 재시작합니다: %s"
 #, c-format
 msgid "Suspending upload of file: %s"
 msgstr "파일의 올려주기를 정지합니다: %s"
+
+#: src/UserEvents.cpp
+#, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
 
 #: src/UserEvents.cpp
 #, c-format

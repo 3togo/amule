@@ -42,15 +42,30 @@ constexpr Platform NativePlatform = Platform::Windows;
 constexpr Platform NativePlatform = Platform::Posix;
 #endif
 
+enum class RejectionReason
+{
+	None,
+	EmptyCommand,
+	EmbeddedNul,
+	ExecutableSubstitution,
+	InterpreterSubstitution,
+	UnsafeWindowsShellValue,
+	UnsupportedWindowsCommand
+};
+
+// Human-readable explanation for a validation refusal, separate from spawn errors.
+wxString DescribeRejection(RejectionReason reason);
+
 // Parse before expansion. Reject substituted executables, embedded NULs, unsafe
-// interpreter positions, and Windows shell/batch substitution. The platform can
+// interpreter positions, and unsafe values for Windows command-shell targets. The platform can
 // be selected explicitly to validate both policies on either build host. If no
 // placeholder is used, fallbackArgument is validated as data and appended.
 wxArrayString Build(const wxString &command,
 	const std::vector<std::pair<wxString, wxString>> &values,
 	bool *substituted = nullptr,
 	Platform platform = NativePlatform,
-	const wxString *fallbackArgument = nullptr);
+	const wxString *fallbackArgument = nullptr,
+	RejectionReason *rejection = nullptr);
 
 // Serialize arguments with Windows C runtime quoting, including trailing backslashes.
 wxString BuildWindowsCommandLine(const wxArrayString &args);

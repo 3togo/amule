@@ -19,7 +19,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule 2.3.3\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-08 12:59+0900\n"
+"POT-Creation-Date: 2026-10-09 10:44+0000\n"
 "PO-Revision-Date: 2026-10-09 07:35+0000\n"
 "Last-Translator: got3nks <got3nks@users.noreply.github.com>\n"
 "Language-Team: SebastianoPistore.info@protonmail.ch\n"
@@ -2782,19 +2782,48 @@ msgstr "%.2f KiB/s"
 msgid "OK"
 msgstr "OK"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed command token followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Anteprima"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "ERRORE: Impossibile eseguire il lettore multimediale esterno! Comando: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr "Il lettore video configurato non è stato trovato: %s"
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "ERRORE: Impossibile eseguire il lettore multimediale esterno! Comando: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -8945,6 +8974,11 @@ msgstr "Ripristino invio del file: %s"
 #, c-format
 msgid "Suspending upload of file: %s"
 msgstr "Sospensione invio del file: %s"
+
+#: src/UserEvents.cpp
+#, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
 
 #: src/UserEvents.cpp
 #, c-format

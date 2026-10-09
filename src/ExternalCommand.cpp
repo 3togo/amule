@@ -30,6 +30,7 @@
 #include <limits>
 
 #include <wx/cmdline.h>
+#include <wx/intl.h>
 #include <wx/utils.h>
 
 namespace ExternalCommand
@@ -37,11 +38,24 @@ namespace ExternalCommand
 
 namespace
 {
-wxString ProgramName(const wxString &path)
+wxString NormalizedProgramPath(const wxString &path, Platform platform)
 {
+	wxString normalized = path;
+	if (platform == Platform::Windows) {
+		// Win32 treats trailing dots/spaces as aliases of the same file.
+		while (normalized.EndsWith(".") || normalized.EndsWith(" ")) {
+			normalized.RemoveLast();
+		}
+	}
+	return normalized;
+}
+
+wxString ProgramName(const wxString &path, Platform platform)
+{
+	const wxString normalized = NormalizedProgramPath(path, platform);
 	// Recognize both separators, including Windows paths tested on POSIX.
-	const int separator = std::max(path.Find('/', true), path.Find('\\', true));
-	wxString name = path.Mid(separator + 1).Lower();
+	const int separator = std::max(normalized.Find('/', true), normalized.Find('\\', true));
+	wxString name = normalized.Mid(separator + 1).Lower();
 	if (name.EndsWith(".exe") || name.EndsWith(".com")) {
 		name = name.Left(name.length() - 4);
 	}
@@ -61,17 +75,65 @@ bool IsInterpreter(const wxString &name)
 	       name == "node" || name == "nodejs" || name == "php" || name == "lua";
 }
 
+bool IsWindowsCommandShell(const wxString &program, Platform platform)
+{
+	const wxString name = ProgramName(program, platform);
+	const wxString lower = NormalizedProgramPath(program, platform).Lower();
+	return platform == Platform::Windows &&
+	       (name == "cmd" || lower.EndsWith(".bat") || lower.EndsWith(".cmd"));
+}
+
+// Keep cmd's switches and first command token fixed. Support /c or /k, with
+// common switches preceding it; the data arguments come after the fixed token.
+size_t CmdCommandIndex(const wxArrayString &args)
+{
+	for (size_t i = 1; i < args.size(); ++i) {
+		const wxString option = args[i].Lower();
+		if (option == "/c" || option == "/k") {
+			return i + 1;
+		}
+		if (option != "/d" && option != "/q" && option != "/a" && option != "/u" &&
+			option != "/e:on" && option != "/e:off" && option != "/f:on" && option != "/f:off" &&
+			option != "/v:on" && option != "/v:off") {
+			break;
+		}
+	}
+	return std::numeric_limits<size_t>::max();
+}
+
+bool IsProhibitedLauncher(const wxString &name)
+{
+	return name == "cmd" || name == "command" || name == "powershell" || name == "pwsh" ||
+	       name == "wscript" || name == "cscript" || name == "mshta" || name == "rundll32" ||
+	       name == "regsvr32" || name == "env" || name == "busybox";
+}
+
 // How many leading arguments must remain fixed? Use deliberately narrow forms
 // for interpreters: a fixed script filename, or POSIX shell -c with fixed code.
 // Recognized wrappers can hide another interpreter; reject expansion through them.
 size_t ProtectedArguments(const wxArrayString &args, Platform platform)
 {
-	const wxString name = ProgramName(args[0]);
-	const wxString executable = args[0].Lower();
-	if (name == "cmd" || name == "command" || name == "powershell" || name == "pwsh" ||
-		name == "wscript" || name == "cscript" || name == "mshta" || name == "rundll32" ||
-		name == "regsvr32" || name == "env" || name == "busybox" || executable.EndsWith(".bat") ||
-		executable.EndsWith(".cmd")) {
+	const wxString name = ProgramName(args[0], platform);
+	const wxString executable = NormalizedProgramPath(args[0], platform).Lower();
+	if (platform == Platform::Windows && name == "cmd") {
+		const size_t commandIndex = CmdCommandIndex(args);
+		if (commandIndex >= args.size()) {
+			return std::numeric_limits<size_t>::max();
+		}
+		const wxString target = ProgramName(args[commandIndex], platform);
+		// Nested interpreters can turn a later data argument into their code
+		// argument. cmd dispatch builtins can also select or evaluate another
+		// command from later arguments. Invoke supported programs directly.
+		if (IsInterpreter(target) || IsProhibitedLauncher(target) || target == "call" ||
+			target == "start" || target == "for" || target == "if") {
+			return std::numeric_limits<size_t>::max();
+		}
+		return commandIndex + 1;
+	}
+	if (platform == Platform::Windows && (executable.EndsWith(".bat") || executable.EndsWith(".cmd"))) {
+		return 1;
+	}
+	if (IsProhibitedLauncher(name)) {
 		return std::numeric_limits<size_t>::max();
 	}
 	if (!IsInterpreter(name)) {
@@ -85,33 +147,70 @@ size_t ProtectedArguments(const wxArrayString &args, Platform platform)
 	}
 	return std::numeric_limits<size_t>::max(); // unsupported interpreter options: fail closed
 }
-bool IsSafeValue(const wxString &value, Platform platform)
+RejectionReason ValidateValue(const wxString &value, bool commandShell)
 {
 	if (value.find(wxChar(0)) != wxString::npos) {
-		return false;
+		return RejectionReason::EmbeddedNul;
 	}
-	return platform != Platform::Windows || value.find_first_of("\"%!\r\n") == wxString::npos;
+	if (commandShell && value.find_first_of("\"%!\r\n") != wxString::npos) {
+		return RejectionReason::UnsafeWindowsShellValue;
+	}
+	return RejectionReason::None;
 }
 } // namespace
+
+wxString DescribeRejection(RejectionReason reason)
+{
+	switch (reason) {
+	case RejectionReason::None:
+		return {};
+	case RejectionReason::EmptyCommand:
+		return _("The command has no executable.");
+	case RejectionReason::EmbeddedNul:
+		return _("The command template or an argument contains a NUL character.");
+	case RejectionReason::ExecutableSubstitution:
+		return _("An event value cannot select the executable.");
+	case RejectionReason::InterpreterSubstitution:
+		return _("An event value would be used as interpreter code, a script name, or an unsupported "
+			 "launcher argument.");
+	case RejectionReason::UnsafeWindowsShellValue:
+		return _("A command-shell argument contains a double quote, percent sign, exclamation mark, "
+			 "or line break.");
+	case RejectionReason::UnsupportedWindowsCommand:
+		return _("cmd.exe requires a fixed command token followed by separate data arguments.");
+	}
+	return {};
+}
 
 wxArrayString Build(const wxString &command,
 	const std::vector<std::pair<wxString, wxString>> &values,
 	bool *substituted,
 	Platform platform,
-	const wxString *fallbackArgument)
+	const wxString *fallbackArgument,
+	RejectionReason *rejection)
 {
+	if (rejection != nullptr) {
+		*rejection = RejectionReason::None;
+	}
+	const auto reject = [rejection](RejectionReason reason) {
+		if (rejection != nullptr) {
+			*rejection = reason;
+		}
+		return wxArrayString{};
+	};
 	if (substituted != nullptr) {
 		*substituted = false;
 	}
 	if (command.find(wxChar(0)) != wxString::npos) {
-		return {};
+		return reject(RejectionReason::EmbeddedNul);
 	}
 	wxArrayString args = wxCmdLineParser::ConvertStringToArgs(
 		command, platform == Platform::Windows ? wxCMD_LINE_SPLIT_DOS : wxCMD_LINE_SPLIT_UNIX);
 	if (args.IsEmpty() || args[0].empty()) {
-		return {};
+		return reject(RejectionReason::EmptyCommand);
 	}
 	const size_t protectedArgs = ProtectedArguments(args, platform);
+	const bool commandShell = IsWindowsCommandShell(args[0], platform);
 	bool didSubstitute = false;
 	for (size_t index = 0; index < args.size(); ++index) {
 		wxString &arg = args[index];
@@ -122,9 +221,17 @@ wxArrayString Build(const wxString &command,
 				for (const auto &value : values) {
 					if (!value.first.empty() &&
 						arg.Mid(i, value.first.length()) == value.first) {
-						if (index < protectedArgs ||
-							!IsSafeValue(value.second, platform)) {
-							return {};
+						if (index < protectedArgs) {
+							return reject(
+								index == 0 ? RejectionReason::
+										     ExecutableSubstitution
+									   : RejectionReason::
+										     InterpreterSubstitution);
+						}
+						const RejectionReason reason =
+							ValidateValue(value.second, commandShell);
+						if (reason != RejectionReason::None) {
+							return reject(reason);
 						}
 						didSubstitute = true;
 						expanded += value.second;
@@ -138,11 +245,42 @@ wxArrayString Build(const wxString &command,
 				expanded += arg[i++];
 			}
 		}
+		// A literal prefix/suffix containing a quote or expansion marker would
+		// undermine cmd quoting even if the inserted value itself is harmless.
+		if (commandShell && expanded != arg) {
+			const RejectionReason reason = ValidateValue(expanded, true);
+			if (reason != RejectionReason::None) {
+				return reject(reason);
+			}
+		}
 		arg = expanded;
 	}
-	if (!didSubstitute && fallbackArgument != nullptr) {
-		if (args.size() < protectedArgs || !IsSafeValue(*fallbackArgument, platform)) {
-			return {};
+	const bool appendFallback = !didSubstitute && fallbackArgument != nullptr;
+	if ((didSubstitute || appendFallback) && commandShell) {
+		for (size_t i = 1; i < args.size(); ++i) {
+			const RejectionReason reason = ValidateValue(args[i], true);
+			if (reason != RejectionReason::None) {
+				return reject(reason);
+			}
+		}
+	}
+	if ((didSubstitute || appendFallback) && commandShell && ProgramName(args[0], platform) == "cmd") {
+		const size_t index = CmdCommandIndex(args);
+		// Compound script text and literal embedded quotes need a different
+		// quoting grammar. Refuse them rather than interpolate data into code.
+		if (index >= args.size() || args[index].empty() || args[index].StartsWith("/") ||
+			args[index].StartsWith("-") ||
+			args[index].find_first_of(" \t\"%!\r\n&|<>^()") != wxString::npos) {
+			return reject(RejectionReason::UnsupportedWindowsCommand);
+		}
+	}
+	if (appendFallback) {
+		if (args.size() < protectedArgs) {
+			return reject(RejectionReason::InterpreterSubstitution);
+		}
+		const RejectionReason reason = ValidateValue(*fallbackArgument, commandShell);
+		if (reason != RejectionReason::None) {
+			return reject(reason);
 		}
 		args.Add(*fallbackArgument);
 	}

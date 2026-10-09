@@ -72,13 +72,16 @@ bool LaunchWithPlayer(const wxString &player, const CPath &path, wxWindow *paren
 	const wxString target = path.GetRaw();
 	const wxString name = path.GetFullName().GetRaw();
 
+	ExternalCommand::RejectionReason rejection;
 	wxArrayString parts = ExternalCommand::Build(player,
 		{ { "%PARTFILE", target }, { "%PARTNAME", name }, { "$file", target } },
 		nullptr,
 		ExternalCommand::NativePlatform,
-		&target);
+		&target,
+		&rejection);
 	if (parts.IsEmpty()) {
-		Fail(CFormat(_("ERROR: Failed to execute external media-player! Command: '%s'")) % player,
+		Fail(CFormat(_("Media-player command '%s' was not run: %s")) % player %
+				ExternalCommand::DescribeRejection(rejection),
 			parent,
 			reportModally);
 		return false;
