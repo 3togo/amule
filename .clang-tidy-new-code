@@ -44,5 +44,4 @@ Checks: >
 
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*/src/.*\.(h|hpp)$'
-ExcludeHeaderFilterRegex: '.*/wx-[0-9.]+/.*'
 FormatStyle: none

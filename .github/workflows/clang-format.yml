@@ -19,6 +19,7 @@ on:
 permissions:
   contents: read
 
+# Keep formatting on LLVM 18, matching the clang-tidy version used by this branch.
 jobs:
   clang-format:
     name: Check clang-format
