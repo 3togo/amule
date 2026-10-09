@@ -194,19 +194,13 @@ For anything else, the documentation and forum are the best places to look:
 * GitHub Issues: <https://github.com/amule-org/amule/issues>
 
 
-## Safety / legal
-
-aMule is an interface to the eD2k and Kad networks. The aMule
-developers have no control over what other peers transfer through this
-medium and cannot be held liable for non-personal copyright
-infringement or other illegal activity by third parties. Share
-responsibly.
-
-### Passing event values to commands
+## Passing event values to commands
 
 Event command templates are split into arguments before `%FILE`, `%NAME`,
 `%HASH`, `%SIZE`, `%DLACTIVETIME`, `%SENDER`, or `%PARTITION` is substituted.
-Each value stays inside its original argument, including spaces, quotes, and
+On Windows, arguments are serialized with Windows C runtime escaping, including
+backslashes before quotes and trailing backslashes. Each value stays inside its
+original argument, including spaces, quotes, and
 shell punctuation. Quote fixed paths in the template using the native command
 syntax; placeholders do not need extra quoting to keep substituted spaces intact.
 Existing commands that relied on a placeholder expanding into multiple arguments
@@ -225,3 +219,11 @@ Here `_` supplies the shell's `$0`, and the event value becomes `$1`. Always quo
 `"$1"` in the script. For Windows, prefer a program that accepts separate arguments
 instead of embedding event values in a `cmd /c` command string. This also avoids
 shell expansion of characters such as `%`, `&`, and `|`.
+
+## Safety / legal
+
+aMule is an interface to the eD2k and Kad networks. The aMule
+developers have no control over what other peers transfer through this
+medium and cannot be held liable for non-personal copyright
+infringement or other illegal activity by third parties. Share
+responsibly.

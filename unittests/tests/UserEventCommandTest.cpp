@@ -30,6 +30,11 @@
 #include <wx/filename.h>
 #include <wx/utils.h>
 
+#ifdef __WINDOWS__
+#include <wx/msw/wrapwin.h>
+#include <shellapi.h>
+#endif
+
 using namespace muleunit;
 
 DECLARE_SIMPLE(UserEventCommand)
@@ -109,5 +114,49 @@ TEST(UserEventCommand, ShellPositionalArgumentIsData)
 	wxRemoveFile(output);
 	ASSERT_EQUALS(0L, status);
 	ASSERT_EQUALS(value, received);
+}
+#endif
+
+TEST(UserEventCommand, WindowsEscapesTrailingBackslashes)
+{
+	wxArrayString args;
+	args.Add("notify.exe");
+	args.Add("C:\\folder with spaces\\");
+	args.Add("next");
+	ASSERT_EQUALS(wxString("\"notify.exe\" \"C:\\folder with spaces\\\\\" \"next\""),
+		BuildWindowsUserEventCommandLine(args));
+}
+
+TEST(UserEventCommand, WindowsEscapesBackslashesBeforeQuotes)
+{
+	wxArrayString args;
+	args.Add("notify.exe");
+	args.Add("sender\\\" --extra");
+	args.Add("");
+	ASSERT_EQUALS(wxString("\"notify.exe\" \"sender\\\\\\\" --extra\" \"\""),
+		BuildWindowsUserEventCommandLine(args));
+}
+
+#ifdef __WINDOWS__
+TEST(UserEventCommand, WindowsNativeArgumentRoundTrip)
+{
+	wxArrayString args;
+	args.Add("C:\\Program Files\\notify.exe");
+	args.Add("C:\\folder with spaces\\");
+	args.Add("sender\\\" --extra");
+	args.Add("two\\\\\"quotes\"");
+	args.Add("");
+	int count = 0;
+	wchar_t **parsed = CommandLineToArgvW(BuildWindowsUserEventCommandLine(args).wc_str(), &count);
+	ASSERT_TRUE(parsed != nullptr);
+	wxArrayString received;
+	for (int i = 0; i < count; ++i) {
+		received.Add(parsed[i]);
+	}
+	LocalFree(parsed);
+	ASSERT_EQUALS(args.size(), received.size());
+	for (size_t i = 0; i < args.size(); ++i) {
+		ASSERT_EQUALS(args[i], received[i]);
+	}
 }
 #endif

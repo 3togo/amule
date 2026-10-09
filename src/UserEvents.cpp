@@ -146,6 +146,8 @@ static void ExecuteCommand(enum CUserEvents::EventType event, const void *object
 	}
 	const wxArrayString args = BuildUserEventCommand(cmd, values);
 	if (!args.IsEmpty() && !args[0].empty()) {
+
+#ifndef __WINDOWS__
 		std::vector<wxWCharBuffer> buffers;
 		std::vector<const wchar_t *> argv;
 		buffers.reserve(args.size());
@@ -155,6 +157,7 @@ static void ExecuteCommand(enum CUserEvents::EventType event, const void *object
 			argv.push_back(buffers.back().data());
 		}
 		argv.push_back(nullptr);
+#endif
 		// Inside an AppImage, run the user command with a sanitized environment so it loads
 		// system libraries rather than the bundled ones (#334); a no-op copy elsewhere.
 		CTerminationProcess *p = new CTerminationProcess(cmd);
@@ -162,7 +165,14 @@ static void ExecuteCommand(enum CUserEvents::EventType event, const void *object
 		const bool sanitized = AppImageEnv::GetSanitizedExecEnv(execEnv);
 		long pid = 0;
 		try {
+#ifdef __WINDOWS__
+			pid = wxExecute(BuildWindowsUserEventCommandLine(args),
+				wxEXEC_ASYNC,
+				p,
+				sanitized ? &execEnv : nullptr);
+#else
 			pid = wxExecute(argv.data(), wxEXEC_ASYNC, p, sanitized ? &execEnv : nullptr);
+#endif
 		} catch (...) {
 			// Report unusable execution environments just like spawn failures.
 		}

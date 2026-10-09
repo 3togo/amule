@@ -63,4 +63,32 @@ inline wxArrayString BuildUserEventCommand(
 	return args;
 }
 
+// Windows CreateProcess accepts a string, and wxWidgets 3.2's argv overload
+// does not double backslashes before embedded quotes or the closing quote.
+// Quote each argument using the Windows C runtime rules instead.
+inline wxString BuildWindowsUserEventCommandLine(const wxArrayString &args)
+{
+	wxString command;
+	for (const wxString &arg : args) {
+		if (!command.empty()) {
+			command += ' ';
+		}
+		command += '"';
+		size_t backslashes = 0;
+		for (const wxUniChar ch : arg) {
+			if (ch == '\\') {
+				++backslashes;
+				continue;
+			}
+			const size_t count = ch == '"' ? backslashes * 2 + 1 : backslashes;
+			command += wxString('\\', count);
+			command += ch;
+			backslashes = 0;
+		}
+		command += wxString('\\', backslashes * 2);
+		command += '"';
+	}
+	return command;
+}
+
 #endif // USEREVENTCOMMAND_H

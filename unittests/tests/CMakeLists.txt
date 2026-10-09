@@ -2167,3 +2167,7 @@ add_executable (UserEventCommandTest UserEventCommandTest.cpp)
 add_test (NAME UserEventCommandTest COMMAND UserEventCommandTest)
 target_include_directories (UserEventCommandTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries (UserEventCommandTest muleunit mulecommon wxWidgets::BASE)
+
+if (WIN32)
+	target_link_libraries (UserEventCommandTest shell32)
+endif()
