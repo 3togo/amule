@@ -182,3 +182,57 @@ TEST(ECUserEvents, ReenablingAndPreferenceResetCannotReplayQueuedEvents)
 	ASSERT_TRUE(subscription.BeginPoll(1, true, request));
 	ASSERT_TRUE(request.GetTagByName(EC_TAG_USER_EVENT_CURSOR) == nullptr);
 }
+
+TEST(ECUserEvents, LoginBaselineKeepsEventsBeforeFirstPoll)
+{
+	CUserEventStream stream;
+	stream.Add(Completion());
+	const uint64 baseline = stream.Latest();
+	CUserEventSubscription subscription;
+	subscription.Reset(baseline, 1);
+	// Completion can occur while the GUI is still fetching startup preferences.
+	stream.Add(Completion());
+	CECPacket request(EC_OP_NOOP);
+	ASSERT_TRUE(subscription.BeginPoll(1, true, request));
+	const CECTag *cursor = request.GetTagByName(EC_TAG_USER_EVENT_CURSOR);
+	ASSERT_TRUE(cursor != nullptr);
+	ASSERT_EQUALS(baseline, cursor->GetInt());
+	ASSERT_EQUALS(1u, subscription.Read(stream.Read(baseline), 1).size());
+}
+
+TEST(ECUserEvents, ReconnectBaselineExcludesOfflineEventsButKeepsNewEvents)
+{
+	CUserEventStream stream;
+	CUserEventSubscription subscription;
+	subscription.Reset(0, 1);
+	CECPacket request(EC_OP_NOOP);
+	ASSERT_TRUE(subscription.BeginPoll(1, true, request));
+	subscription.Abort();     // The socket died with a request outstanding.
+	stream.Add(Completion()); // Happened while disconnected.
+	const uint64 baseline = stream.Latest();
+	subscription.Reset(baseline, 1);
+	stream.Add(Completion()); // Happened after the new authentication.
+	ASSERT_TRUE(subscription.BeginPoll(1, true, request));
+	ASSERT_EQUALS(baseline, request.GetTagByName(EC_TAG_USER_EVENT_CURSOR)->GetInt());
+	ASSERT_EQUALS(1u, subscription.Read(stream.Read(baseline), 1).size());
+}
+
+TEST(ECUserEvents, CommandEditDrainsPendingPollBeforeResynchronizing)
+{
+	CUserEventStream stream;
+	CUserEventSubscription subscription;
+	subscription.Reset(0, 1);
+	CECPacket request(EC_OP_NOOP);
+	ASSERT_TRUE(subscription.BeginPoll(1, true, request));
+	stream.Add(Completion());
+	const CECPacket oldReply = stream.Read(0);
+	subscription.Reset(0); // Same event enabled, but a different command.
+	ASSERT_FALSE(subscription.BeginPoll(1, true, request));
+	ASSERT_EQUALS(0u, subscription.Read(oldReply, 1).size());
+	ASSERT_TRUE(subscription.BeginPoll(1, true, request));
+	ASSERT_TRUE(request.GetTagByName(EC_TAG_USER_EVENT_CURSOR) == nullptr);
+	ASSERT_EQUALS(0u, subscription.Read(stream.Read(0, true), 1).size());
+	stream.Add(Completion());
+	ASSERT_TRUE(subscription.BeginPoll(1, true, request));
+	ASSERT_EQUALS(1u, subscription.Read(stream.Read(1), 1).size());
+}

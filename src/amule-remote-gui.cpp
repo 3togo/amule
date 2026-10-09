@@ -911,7 +911,7 @@ void CamuleRemoteGuiApp::FinishReconnect(int result)
 
 	if (result == wxID_OK) {
 		AddLogLineCS(_("Reconnected to the remote core."));
-		m_userevents_handler.Reset(m_connect->UserEventBaseline());
+		m_userevents_handler.Start(m_connect->UserEventBaseline());
 
 		// The daemon may have been upgraded while we were away, so re-read
 		// the version rather than leaving the pre-drop one on screen.
@@ -1102,7 +1102,7 @@ void CamuleRemoteGuiApp::OnNotifyEvent(CMuleGUIEvent &evt)
 
 void CamuleRemoteGuiApp::Startup()
 {
-	m_userevents_handler.Reset(m_connect->UserEventBaseline());
+	m_userevents_handler.Start(m_connect->UserEventBaseline());
 
 	if (dialog->SaveUserPass()) {
 		wxConfig::Get()->Write("/EC/Host", dialog->Host());
@@ -1266,6 +1266,11 @@ uint32 EnabledRemoteUserEvents()
 	return enabled;
 }
 } // namespace
+
+void CUserEventsHandlerRem::Start(uint64 baseline)
+{
+	m_subscription.Reset(baseline, EnabledRemoteUserEvents());
+}
 
 void CUserEventsHandlerRem::Poll(CRemoteConnect *connection)
 {

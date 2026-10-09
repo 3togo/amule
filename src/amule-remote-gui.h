@@ -834,6 +834,7 @@ public:
 	void HandlePacket(const CECPacket *packet) override;
 	void AbortPendingRequest() override { m_subscription.Abort(); }
 	void Reset(uint64 baseline) { m_subscription.Reset(baseline); }
+	void Start(uint64 baseline);
 	void Poll(CRemoteConnect *connection);
 
 private:

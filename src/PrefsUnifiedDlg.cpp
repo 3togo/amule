@@ -1076,6 +1076,10 @@ bool PrefsUnifiedDlg::TransferFromWindow()
 #endif
 	// GUI commands are local; changing them starts a new event subscription.
 	for (unsigned int i = 0; i < CUserEvents::GetCount(); ++i) {
+		// Chat is raised locally and has no remote subscription.
+		if (i == CUserEvents::NewChatSession) {
+			continue;
+		}
 		const int base = USEREVENTS_FIRST_ID + i * USEREVENTS_IDS_PER_EVENT;
 		if (CfgChanged(base + 3) || CfgChanged(base + 4)) {
 			theApp->ResetUserEventSubscription();

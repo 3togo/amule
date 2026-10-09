@@ -49,7 +49,9 @@ private:
 class CUserEventSubscription
 {
 public:
-	void Reset(uint64 baseline);
+	// Login already supplies a baseline; enabled commands can poll from it directly.
+	// Preference changes leave enabled at zero and synchronize on the next poll.
+	void Reset(uint64 baseline, uint32 enabled = 0);
 	void Abort() { m_pending = m_discardPending = false; }
 	bool BeginPoll(uint32 enabled, bool supported, CECPacket &request);
 	std::vector<CUserEventData> Read(const CECPacket &packet, uint32 enabled);

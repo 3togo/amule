@@ -131,10 +131,10 @@ std::vector<CUserEventData> CUserEventCursor::Read(const CECPacket &packet)
 	return result;
 }
 
-void CUserEventSubscription::Reset(uint64 baseline)
+void CUserEventSubscription::Reset(uint64 baseline, uint32 enabled)
 {
 	m_cursor.Reset(baseline);
-	m_active = 0;
+	m_active = enabled;
 	// A preference change can happen while the previous request is in flight.
 	// Drain its reply before issuing a new request with this same handler.
 	m_discardPending = m_pending;
