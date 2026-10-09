@@ -119,73 +119,123 @@ TEST(KadUDPVerificationExpiry, TwoFailedRoundsExpire)
 {
 	CUDPVerificationExpiry expiry;
 	expiry.Start(kUDPStart);
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPStart + kUDPTimeout));
 	expiry.Start(kUDPNextRound);
-	ASSERT_TRUE(expiry.CheckTimeout(kUDPNextRound + kUDPTimeout));
+	ASSERT_TRUE(expiry.ShouldExpire(kUDPNextRound + kUDPTimeout));
 }
 
 TEST(KadUDPVerificationExpiry, PollingCannotCountOneRoundTwice)
 {
 	CUDPVerificationExpiry expiry;
 	expiry.Start(kUDPStart);
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound));
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPStart + kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPNextRound));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPNextRound + kUDPTimeout));
 }
 
 TEST(KadUDPVerificationExpiry, TimeoutBoundary)
 {
 	CUDPVerificationExpiry expiry;
 	expiry.Start(kUDPStart);
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPStart + kUDPTimeout));
 	expiry.Start(kUDPNextRound);
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + CUDPVerificationExpiry::kRoundTimeoutMs));
-	ASSERT_TRUE(expiry.CheckTimeout(kUDPNextRound + kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPNextRound + CUDPVerificationExpiry::kRoundTimeoutMs));
+	ASSERT_TRUE(expiry.ShouldExpire(kUDPNextRound + kUDPTimeout));
 }
 
 TEST(KadUDPVerificationExpiry, SuccessBreaksFailureSequence)
 {
 	CUDPVerificationExpiry expiry;
 	expiry.Start(kUDPStart);
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPStart + kUDPTimeout));
 	expiry.Start(kUDPNextRound);
-	expiry.RecordResult(); // verified open
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + kUDPTimeout));
+	expiry.RecordResult(kUDPNextRound); // verified open
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPNextRound + kUDPTimeout));
 	expiry.Start(kUDPNextRound + kUDPTimeout);
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + 2 * kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPNextRound + 2 * kUDPTimeout));
 }
 
 TEST(KadUDPVerificationExpiry, FirewalledResultBreaksFailureSequence)
 {
 	CUDPVerificationExpiry expiry;
 	expiry.Start(kUDPStart);
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPStart + kUDPTimeout));
 	expiry.Start(kUDPNextRound);
-	expiry.RecordResult(); // completed firewalled result is evidence too
+	expiry.RecordResult(kUDPNextRound); // completed firewalled result is evidence too
 	expiry.Start(kUDPNextRound + kUDPTimeout);
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + 2 * kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPNextRound + 2 * kUDPTimeout));
 }
 
 TEST(KadUDPVerificationExpiry, LateSuccessRestoresFreshSequence)
 {
 	CUDPVerificationExpiry expiry;
 	expiry.Start(kUDPStart);
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPStart + kUDPTimeout));
 	expiry.Start(kUDPNextRound);
-	ASSERT_TRUE(expiry.CheckTimeout(kUDPNextRound + kUDPTimeout));
-	expiry.RecordResult();
+	ASSERT_TRUE(expiry.ShouldExpire(kUDPNextRound + kUDPTimeout));
+	expiry.RecordResult(kUDPNextRound + kUDPTimeout);
 	expiry.Start(kUDPNextRound + kUDPTimeout);
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + 2 * kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPNextRound + 2 * kUDPTimeout));
 }
 
 TEST(KadUDPVerificationExpiry, ResetDropsPreviousSession)
 {
 	CUDPVerificationExpiry expiry;
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPStart));
 	expiry.Start(kUDPStart);
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPStart + kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPStart + kUDPTimeout));
 	expiry.Reset();
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPNextRound));
 	expiry.Start(kUDPNextRound);
-	ASSERT_FALSE(expiry.CheckTimeout(kUDPNextRound + kUDPTimeout));
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPNextRound + kUDPTimeout));
+}
+
+TEST(KadUDPVerificationExpiry, RecheckRestartsCannotExtendMaximumAge)
+{
+	CUDPVerificationExpiry expiry;
+	expiry.RecordResult(kUDPStart);
+	expiry.Start(kUDPStart);
+	const uint64_t interval = 5 * 60 * 1000;
+	for (uint64_t elapsed = interval; elapsed < CUDPVerificationExpiry::kMaxVerificationAgeMs;
+		elapsed += interval) {
+		const uint64_t now = kUDPStart + elapsed;
+		// Match ReCheckFirewallUDP: account for the old round, then start a new one.
+		ASSERT_FALSE(expiry.ShouldExpire(now));
+		expiry.Start(now);
+	}
+	const uint64_t deadline = kUDPStart + CUDPVerificationExpiry::kMaxVerificationAgeMs;
+	ASSERT_FALSE(expiry.ShouldExpire(deadline - 1));
+	ASSERT_TRUE(expiry.ShouldExpire(deadline));
+	expiry.Start(deadline);
+	ASSERT_TRUE(expiry.ShouldExpire(deadline + 1));
+}
+
+TEST(KadUDPVerificationExpiry, MaximumAgeAppliesWithNoRunningRound)
+{
+	CUDPVerificationExpiry expiry;
+	expiry.RecordResult(kUDPStart);
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPStart + CUDPVerificationExpiry::kMaxVerificationAgeMs - 1));
+	ASSERT_TRUE(expiry.ShouldExpire(kUDPStart + CUDPVerificationExpiry::kMaxVerificationAgeMs));
+}
+
+TEST(KadUDPVerificationExpiry, CompletedResultRenewsMaximumAge)
+{
+	CUDPVerificationExpiry expiry;
+	expiry.RecordResult(kUDPStart);
+	expiry.Start(kUDPNextRound);
+	expiry.RecordResult(kUDPNextRound);
+	const uint64_t deadline = kUDPNextRound + CUDPVerificationExpiry::kMaxVerificationAgeMs;
+	ASSERT_FALSE(expiry.ShouldExpire(kUDPStart + CUDPVerificationExpiry::kMaxVerificationAgeMs));
+	ASSERT_FALSE(expiry.ShouldExpire(deadline - 1));
+	ASSERT_TRUE(expiry.ShouldExpire(deadline));
+}
+
+TEST(KadUDPVerificationExpiry, ResetClearsAgeAndZeroIsAValidResultTime)
+{
+	CUDPVerificationExpiry expiry;
+	expiry.RecordResult(0);
+	ASSERT_FALSE(expiry.ShouldExpire(CUDPVerificationExpiry::kMaxVerificationAgeMs - 1));
+	ASSERT_TRUE(expiry.ShouldExpire(CUDPVerificationExpiry::kMaxVerificationAgeMs));
+	expiry.Reset();
+	ASSERT_FALSE(expiry.ShouldExpire(CUDPVerificationExpiry::kMaxVerificationAgeMs));
 }

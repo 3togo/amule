@@ -55,10 +55,10 @@ CUDPFirewallTester::UsedClientList CUDPFirewallTester::m_usedTestClients;
 
 void CUDPFirewallTester::CheckVerificationExpiry(uint64_t now)
 {
-	if (m_verificationExpiry.CheckTimeout(now) && m_isFWVerifiedUDP) {
+	if (m_verificationExpiry.ShouldExpire(now) && m_isFWVerifiedUDP) {
 		m_isFWVerifiedUDP = false;
-		AddDebugLogLineN(
-			logKadUdpFwTester, "UDP verification expired after two inconclusive rechecks");
+		AddDebugLogLineN(logKadUdpFwTester,
+			"UDP verification expired: consecutive inconclusive rechecks or maximum age reached");
 		if (m_lastSucceededTime != 0) {
 			AddDebugLogLineN(logKadUdpFwTester,
 				CFormat("Last successful UDP check was %u seconds ago") %
@@ -73,9 +73,9 @@ bool CUDPFirewallTester::IsFirewalledUDP(bool lastStateIfTesting)
 	if (CKademlia::IsRunningInLANMode()) {
 		return false;
 	}
+	const uint64_t now = ::GetTickCount64();
+	CheckVerificationExpiry(now);
 	if (!m_timedOut && IsFWCheckUDPRunning()) {
-		const uint64_t now = ::GetTickCount64();
-		CheckVerificationExpiry(now);
 		if (!m_firewalledUDP && CKademlia::IsFirewalled() && m_testStart != 0 &&
 			now - m_testStart > CUDPVerificationExpiry::kRoundTimeoutMs && !m_isFWVerifiedUDP) {
 			AddDebugLogLineN(logKadUdpFwTester,
@@ -170,7 +170,7 @@ void CUDPFirewallTester::SetUDPFWCheckResult(
 			m_testStart = 0;
 			m_firewalledUDP = false;
 			m_isFWVerifiedUDP = true;
-			m_verificationExpiry.RecordResult();
+			m_verificationExpiry.RecordResult(::GetTickCount64());
 			m_timedOut = false;
 			m_fwChecksFinishedUDP = UDP_FIREWALLTEST_CLIENTSTOASK; // don't do any more tests
 			m_fwChecksRunningUDP = 0;      // all other tests are cancelled
@@ -197,7 +197,7 @@ void CUDPFirewallTester::SetUDPFWCheckResult(
 			AddDebugLogLineN(logKadUdpFwTester, "New KAD Firewallstate (UDP): Firewalled");
 			m_firewalledUDP = true;
 			m_isFWVerifiedUDP = true;
-			m_verificationExpiry.RecordResult();
+			m_verificationExpiry.RecordResult(::GetTickCount64());
 			m_timedOut = false;
 			theApp->ShowConnectionState();
 			m_possibleTestClients.clear(); // clear list, keep used clients list though

@@ -37,6 +37,7 @@ class CUDPVerificationExpiry
 public:
 	static constexpr uint64_t kRoundTimeoutMs = 6 * 60 * 1000;
 	static constexpr unsigned kFailedRoundsToExpire = 2;
+	static constexpr uint64_t kMaxVerificationAgeMs = 2 * 60 * 60 * 1000;
 
 	void Start(uint64_t now)
 	{
@@ -45,30 +46,35 @@ public:
 		m_counted = false;
 	}
 
-	// A running round can count only once, however often its state is queried.
-	bool CheckTimeout(uint64_t now)
+	// A running round can count only once. Its deadline is independent of the age of
+	// the last completed result, so frequent recheck restarts cannot retain stale evidence.
+	bool ShouldExpire(uint64_t now)
 	{
-		if (!m_running || m_counted || now < m_startedAt || now - m_startedAt <= kRoundTimeoutMs) {
-			return false;
+		if (m_running && !m_counted && now >= m_startedAt && now - m_startedAt > kRoundTimeoutMs) {
+			m_counted = true;
+			if (m_failedRounds < kFailedRoundsToExpire) {
+				++m_failedRounds;
+			}
 		}
-		m_counted = true;
-		if (m_failedRounds < kFailedRoundsToExpire) {
-			++m_failedRounds;
-		}
-		return m_failedRounds >= kFailedRoundsToExpire;
+		return m_failedRounds >= kFailedRoundsToExpire ||
+		       (m_hasResult && now >= m_verifiedAt && now - m_verifiedAt >= kMaxVerificationAgeMs);
 	}
 
-	// Either an open or a firewalled result is evidence; cancellations are not.
-	void RecordResult()
+	// Either an open or a firewalled result renews verification; cancellations do not.
+	void RecordResult(uint64_t now)
 	{
 		m_running = false;
 		m_failedRounds = 0;
+		m_verifiedAt = now;
+		m_hasResult = true;
 	}
 
 	void Reset() { *this = CUDPVerificationExpiry(); }
 
 private:
 	uint64_t m_startedAt = 0;
+	uint64_t m_verifiedAt = 0;
+	bool m_hasResult = false;
 	unsigned m_failedRounds = 0;
 	bool m_running = false;
 	bool m_counted = false;
