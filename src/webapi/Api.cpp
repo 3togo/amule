@@ -57,7 +57,7 @@
 #include "OtherFunctions.h"        // GetFiletypeByName for the shared file_type token
 #include <common/MediaCodecName.h> // Needed for MediaCodecLabel
 #include <common/Path.h>           // CPath
-#include <icon_data.h>             // amule_find_icon -- country flags for GET /flags/{code}.png
+#include "icons/icon_data.h"
 
 #include <ec/cpp/ECPacket.h>
 #include <ec/cpp/ECCodes.h>
@@ -1601,7 +1601,7 @@ CHttpServer::Response CApiDispatcher::DispatchToHandler(const CHttpServer::Reque
 	// image an <img src> points at, carrying no per-installation data.
 	if (path.compare(0, 7, "/flags/") == 0) {
 		if (req.method != "GET" && req.method != "HEAD") {
-			return MethodNotAllowed("GET, HEAD", "only GET / HEAD on /flags/{code}.png");
+			return MethodNotAllowed("GET, HEAD", "only GET / HEAD on /flags/{code}[@2x,@3x].png");
 		}
 		return ServeCountryFlag(req, path);
 	}
@@ -1727,7 +1727,6 @@ CHttpServer::Response CApiDispatcher::ServeStaticFile(
 CHttpServer::Response CApiDispatcher::ServeCountryFlag(
 	const CHttpServer::Request &, const std::string &url_path)
 {
-	// Exact shape only: "/flags/" + name + ".png".
 	static const std::string kPrefix = "/flags/";
 	static const std::string kSuffix = ".png";
 	if (url_path.size() <= kPrefix.size() + kSuffix.size() ||
@@ -1735,9 +1734,13 @@ CHttpServer::Response CApiDispatcher::ServeCountryFlag(
 		url_path.compare(url_path.size() - kSuffix.size(), kSuffix.size(), kSuffix) != 0) {
 		return ErrorResponse(404, "not_found", "no such flag");
 	}
-	const std::string code =
-		url_path.substr(kPrefix.size(), url_path.size() - kPrefix.size() - kSuffix.size());
-
+	std::string code = url_path.substr(kPrefix.size(), url_path.size() - kPrefix.size() - kSuffix.size());
+	int scale = 1;
+	if (code.size() > 3 && (code.compare(code.size() - 3, 3, "@2x") == 0 ||
+				       code.compare(code.size() - 3, 3, "@3x") == 0)) {
+		scale = code[code.size() - 2] - '0';
+		code.resize(code.size() - 3);
+	}
 	// Two lowercase ASCII letters, the shape `country_code` arrives in, plus the one
 	// literal name the set ships alongside them: "unknown", the "??" placeholder
 	// CCountryFlags falls back to, offered so a frontend can match the desktop.
@@ -1750,11 +1753,17 @@ CHttpServer::Response CApiDispatcher::ServeCountryFlag(
 	if (!is_alpha2 && code != "unknown") {
 		return ErrorResponse(404, "not_found", "no such flag");
 	}
-
-	// The famfamfam set covers 248 of the ~300 assignable alpha-2 codes and GeoIP
-	// can resolve one it has no artwork for, so a well-formed miss is a 404.
-	const struct AMuleIconEntry *icon = amule_find_icon(("flag_" + code).c_str());
-	if (!icon || icon->png_data == nullptr || icon->png_len == 0) {
+	const auto entry = amule_find_icon(("flag_" + code).c_str());
+	if (!entry) {
+		return ErrorResponse(404, "not_found", "no such flag");
+	}
+	const unsigned char *data = scale == 3   ? entry->png3x_data
+				    : scale == 2 ? entry->png2x_data
+						 : entry->png_data;
+	const unsigned int length = scale == 3   ? entry->png3x_len
+				    : scale == 2 ? entry->png2x_len
+						 : entry->png_len;
+	if (!data || !length) {
 		return ErrorResponse(404, "not_found", "no such flag");
 	}
 
@@ -1763,7 +1772,7 @@ CHttpServer::Response CApiDispatcher::ServeCountryFlag(
 	r.content_type = "image/png";
 	// Dispatch() applies the ETag and 304 swap to every 200 GET/HEAD, and the
 	// transport writes a HEAD as headers only, so this handler just produces bytes.
-	r.body.assign(reinterpret_cast<const char *>(icon->png_data), icon->png_len);
+	r.body.assign(reinterpret_cast<const char *>(data), length);
 	// The artwork is compiled in and can only change with a new build, while a peer
 	// list is a page full of <img> tags pointing here. A day of freshness turns those
 	// into cache hits, while bounding how long an upgraded daemon serves stale art.

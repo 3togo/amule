@@ -3,8 +3,38 @@ name: Icons CI
 on:
   push:
     branches: [ "**" ]
+    paths:
+      - 'src/icons/**'
+      - 'src/CountryFlag*'
+      - 'src/CamuleArtProvider.*'
+      - 'src/MenuIcons*'
+      - 'src/webapi/static/**'
+      - 'src/webapi/Api.*'
+      - '**/CMakeLists.txt'
+      - 'cmake/**'
+      - 'docs/THIRDPARTY.md'
+      - 'unittests/tests/IconArtworkTest*'
+      - 'unittests/curl-tests/amuleapi/32-country-flags.sh'
+      - 'unittests/browser-tests/country-flags.cjs'
+      - '.github/workflows/icons.yml'
+      - '.github/workflows/ccpp.yml'
   pull_request:
     branches: [ "**" ]
+    paths:
+      - 'src/icons/**'
+      - 'src/CountryFlag*'
+      - 'src/CamuleArtProvider.*'
+      - 'src/MenuIcons*'
+      - 'src/webapi/static/**'
+      - 'src/webapi/Api.*'
+      - '**/CMakeLists.txt'
+      - 'cmake/**'
+      - 'docs/THIRDPARTY.md'
+      - 'unittests/tests/IconArtworkTest*'
+      - 'unittests/curl-tests/amuleapi/32-country-flags.sh'
+      - 'unittests/browser-tests/country-flags.cjs'
+      - '.github/workflows/icons.yml'
+      - '.github/workflows/ccpp.yml'
 
 permissions:
   contents: read
@@ -16,6 +46,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install artwork maintenance dependencies
+        run: python3 -m pip install picosvg==0.23.0
+
+      - name: Test artwork conversion, dimensions, provenance and size budget
+        run: python3 src/icons/test_regenerate_artwork.py
 
       # src/icons/icon_data.c is regenerated from src/icons/*.png at configure
       # time when Python3 is present, so the checked-in copy is only ever
@@ -33,3 +73,27 @@ jobs:
             git --no-pager diff -- src/icons/icon_data.c | head -60
             exit 1
           fi
+
+  browser-country-flags:
+    name: WebUI country flags at 1x, 2x and 3x
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Install browser test dependencies
+        run: |
+          npm install --prefix "$RUNNER_TEMP/amule-artwork-browser" --no-package-lock playwright@1.62.1
+          "$RUNNER_TEMP/amule-artwork-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Check the actual WebUI country component and render screenshots
+        env:
+          NODE_PATH: ${{ runner.temp }}/amule-artwork-browser/node_modules
+          AMULE_BROWSER_OUTPUT: ${{ runner.temp }}/amule-artwork-screenshots
+        run: node unittests/browser-tests/country-flags.cjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: webui-country-flags
+          path: ${{ runner.temp }}/amule-artwork-screenshots
+          if-no-files-found: ignore

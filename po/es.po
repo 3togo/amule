@@ -1786,11 +1786,6 @@ msgstr[1] "%u comentarios"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Cliente bloqueado %s por enviar %s en datos corruptos de un total de %s para el archivo '%s'"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Error al cargar los datos de países para '%s'."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Automática [Ba]"
@@ -9709,6 +9704,10 @@ msgstr "aMule parece estar en ejecución. Por favor, ciérrelo y vuelva a ejecut
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Eliminando los datos de usuario en $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Error al cargar los datos de países para '%s'."
 
 #~ msgid "Kad protocol version"
 #~ msgstr "Versión del protocolo Kad"

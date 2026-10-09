@@ -3165,12 +3165,25 @@ Trigger an on-demand Kad notes lookup for a search result you have not downloade
 
 The country-flag image for a `country_code`. `/clients`, `/servers` and their SSE diffs carry the ISO 3166-1 alpha-2 code (see [`GET /api/v1/clients`](#get-apiv1clients)); this is where the matching artwork comes from, so a frontend does not have to ship its own flag set.
 
-Note the path is deliberately **outside** `/api/v1/` — it is an image an `<img src>` points at, not a JSON resource, and it is versioned by the daemon build rather than by the API contract.
+Note the path is deliberately **outside** `/api/v1/` — it is an image an `<img src>` points at, not a JSON resource, and it is versioned with the binary artwork rather than by the API contract.
 
-`{code}` must be exactly two **lowercase** ASCII letters, or the literal `unknown` for the "??" placeholder the desktop GUI falls back to when a code is empty or unrecognised. The bytes are the 16×11 famfamfam PNGs compiled into the daemon binary — the same artwork the desktop draws — so the route behaves identically whether or not `[Server]/StaticRoot` is set, and never touches the file system.
+The three embedded PNG densities are available at `/flags/{code}.png` (16×12),
+`/flags/{code}@2x.png` (32×24), and `/flags/{code}@3x.png` (48×36). All variants
+have identical country-code validation, GET/HEAD and caching behavior. SVG flag
+routes are not supported. The WebUI uses `srcset` and falls back to the 1x image
+when an older API does not provide higher densities.
+
+`{code}` must be exactly two **lowercase** ASCII letters, or the literal `unknown`
+for the "??" placeholder the desktop GUI uses for an empty or unrecognised code.
+The flag-icons PNGs and legacy `an`/`unknown` artwork are compiled into the binary,
+using the same images as the desktop. This route never reads the filesystem and
+works independently of `[Server]/StaticRoot`. Missing artwork returns 404;
+ETags are derived from the embedded response bytes.
 
 ```sh
 curl -s http://$HOST/flags/de.png -o de.png
+curl -s http://$HOST/flags/de@2x.png -o de@2x.png
+curl -s http://$HOST/flags/de@3x.png -o de@3x.png
 curl -s http://$HOST/flags/unknown.png -o unknown.png
 ```
 
@@ -3180,7 +3193,7 @@ Responses carry an `ETag` and honour `If-None-Match` with `304 Not Modified` lik
 
 The response is never `Content-Encoding: gzip` — a PNG is already entropy-coded, so the server skips compression for it.
 
-**Errors:** `404 not_found` for anything that is neither two lowercase letters nor `unknown` (uppercase, wrong length, digits, another extension), and for a well-formed code the famfamfam set has no artwork for — it covers 248 of the assignable alpha-2 codes, so a resolvable country can legitimately have no flag. Render the code as text, or fall back to `unknown.png`, in that case. `400 bad_request` for paths carrying traversal tokens, per [Path validation](#path-validation).
+**Errors:** `404 not_found` for anything that is neither two lowercase letters nor `unknown` (uppercase, wrong length, digits, another extension), and for a well-formed code the bundled set has no artwork for — a newer GeoIP database can legitimately return a code absent from the artwork. Render the code as text, or fall back to `unknown.png`, in that case. `400 bad_request` for paths carrying traversal tokens, per [Path validation](#path-validation).
 
 Clients whose country could not be resolved — GeoIP disabled, unsupported by the build, or a private/unmatched address — come back with `country_code: null`. There is no per-country image to request in that case; draw nothing, or `unknown.png` for parity with the desktop list.
 

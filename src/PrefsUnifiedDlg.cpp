@@ -716,7 +716,7 @@ bool PrefsUnifiedDlg::TransferToWindow()
 #ifdef CLIENT_GUI
 	// Cfg transfer can re-enable command fields from saved checkbox values.
 	for (unsigned int i = 0; i < CUserEvents::GetCount(); ++i) {
-		const int base = USEREVENTS_FIRST_ID + i * USEREVENTS_IDS_PER_EVENT;
+		const int base = USEREVENTS_FIRST_ID + static_cast<int>(i) * USEREVENTS_IDS_PER_EVENT;
 		for (int offset = 1; offset <= 4; ++offset) {
 			FindWindow(base + offset)->Disable();
 		}

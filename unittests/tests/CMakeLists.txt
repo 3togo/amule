@@ -5,6 +5,39 @@ add_test (NAME QuicCMakeConfigTest
 		-P ${CMAKE_CURRENT_SOURCE_DIR}/QuicCMakeConfigTest.cmake
 )
 
+# Native icon rendering needs wx core and a display (skipped if unavailable).
+if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
+	add_executable (IconArtworkTest
+		IconArtworkTest.cpp
+		${CMAKE_SOURCE_DIR}/src/CamuleArtProvider.cpp
+		${CMAKE_SOURCE_DIR}/src/CountryFlags.cpp
+		${CMAKE_SOURCE_DIR}/src/MenuIcons.cpp
+		${CMAKE_SOURCE_DIR}/src/icons/icon_data.c
+	)
+	target_include_directories (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	target_link_libraries (IconArtworkTest PRIVATE wxWidgets::CORE)
+	if (WIN32)
+		# wx core imports Common Controls v6 entry points. Match the GUI's
+		# activation context and DPI awareness before the DLL loader runs.
+		target_sources (IconArtworkTest PRIVATE IconArtworkTest.rc)
+		target_include_directories (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR})
+	endif()
+	if (APPLE)
+		target_sources (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR}/src/MenuIcons_mac.mm)
+		target_link_libraries (IconArtworkTest PRIVATE "-framework AppKit")
+	endif()
+	add_test (NAME IconArtworkTest COMMAND IconArtworkTest)
+	set_tests_properties (IconArtworkTest PROPERTIES SKIP_RETURN_CODE 77 LABELS "gui")
+	if (UNIX AND NOT APPLE)
+		add_test (NAME IconArtworkDarkTest COMMAND IconArtworkTest)
+		add_test (NAME IconArtworkHighContrastTest COMMAND IconArtworkTest)
+		set_tests_properties (IconArtworkDarkTest PROPERTIES
+			ENVIRONMENT "GTK_THEME=Adwaita:dark" SKIP_RETURN_CODE 77 LABELS "gui")
+		set_tests_properties (IconArtworkHighContrastTest PROPERTIES
+			ENVIRONMENT "GTK_THEME=HighContrast" SKIP_RETURN_CODE 77 LABELS "gui")
+	endif()
+endif()
+
 # The checked-in lexer and native IPv6 rule store, without the application.
 add_executable (IPFilterIPv6Test
 	IPFilterIPv6Test.cpp
