@@ -124,7 +124,7 @@ const uint8 *RLE_Data::Decode(const uint8 *buff, int len)
 				i += 3;
 			} else {
 				// This is a single byte.
-				if (j < m_len) {
+				if (decBuf && j < m_len) {
 					decBuf[j] = buff[i];
 				}
 				j++;
