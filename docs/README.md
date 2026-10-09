@@ -205,7 +205,12 @@ responsibly.
 ### Event commands
 
 In the monolithic aMule application, Preferences → Events configures Core and
-GUI commands. With a remote `amulegui`, both sets of controls are disabled:
-Core commands must be configured in the daemon's `amule.conf`, and GUI event
-commands run only with a local core. Restart `amuled` after editing its event
-command settings. Remote GUI preferences are not sent to the daemon.
+GUI commands. With a remote `amulegui`, Core command controls are disabled:
+Core commands must be configured in the daemon's `amule.conf`. Restart `amuled`
+after editing its event command settings. Remote GUI preferences are not sent
+to the daemon.
+
+The "New chat session" event is raised locally by `amulegui`, so its GUI command
+and `%SENDER` variable remain available with a remote core. Both command controls
+are disabled for the three daemon-raised events: "Download completed", "Error on
+completion", and "Out of space". Their GUI commands require a local core.

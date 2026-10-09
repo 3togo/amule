@@ -127,7 +127,6 @@ wxString &CUserEvents::GetGUICommandVar(const unsigned int event)
 	return s_EventList[event].gui_command;
 }
 
-#ifndef CLIENT_GUI
 #define USEREVENTS_EVENT(ID, NAME, VARS) \
 	case CUserEvents::ID: { \
 		VARS break; \
@@ -160,8 +159,6 @@ static void ExecuteCommand(enum CUserEvents::EventType event, const void *object
 	}
 }
 
-#endif // !CLIENT_GUI
-
 void CUserEvents::ProcessEvent(enum EventType event, const void *object)
 {
 	wxCHECK_RET(CheckIndex(event), "CUserEvents::ProcessEvent: event index out of range");
@@ -172,7 +169,7 @@ void CUserEvents::ProcessEvent(enum EventType event, const void *object)
 		ExecuteCommand(event, object, s_EventList[event].core_command);
 	}
 #endif
-#if !defined(AMULE_DAEMON) && !defined(CLIENT_GUI)
+#ifndef AMULE_DAEMON
 	if (s_EventList[event].gui_enabled) {
 		ExecuteCommand(event, object, s_EventList[event].gui_command);
 	}

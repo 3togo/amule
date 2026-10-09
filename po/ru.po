@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-09 08:05+0000\n"
+"POT-Creation-Date: 2026-10-09 09:30+0000\n"
 "PO-Revision-Date: 2026-10-07 16:29+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
@@ -6893,7 +6893,7 @@ msgstr "Команда граф. интерфейса:"
 #: src/PrefsUnifiedDlg.cpp
 msgid ""
 "Core commands must be configured in the daemon's amule.conf.\n"
-"GUI commands run only with a local core."
+"Only the chat event supports GUI commands with a remote core."
 msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp

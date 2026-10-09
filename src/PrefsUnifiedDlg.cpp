@@ -717,9 +717,12 @@ bool PrefsUnifiedDlg::TransferToWindow()
 	// Cfg transfer can re-enable command fields from saved checkbox values.
 	for (unsigned int i = 0; i < CUserEvents::GetCount(); ++i) {
 		const int base = USEREVENTS_FIRST_ID + static_cast<int>(i) * USEREVENTS_IDS_PER_EVENT;
-		for (int offset = 1; offset <= 4; ++offset) {
-			FindWindow(base + offset)->Disable();
-		}
+		FindWindow(base + 1)->Disable();
+		FindWindow(base + 2)->Disable();
+		const bool localChat = i == CUserEvents::NewChatSession;
+		FindWindow(base + 3)->Enable(localChat);
+		FindWindow(base + 4)->Enable(localChat && CUserEvents::IsGUICommandEnabled(
+								  static_cast<CUserEvents::EventType>(i)));
 	}
 #endif
 
@@ -2686,12 +2689,14 @@ void PrefsUnifiedDlg::CreateEventPanels(const int idx, const wxString &vars, wxW
 #ifdef CLIENT_GUI
 	item9->Disable();
 	item12->Disable();
-	item14->Disable();
-	item17->Disable();
+	if (idx != CUserEvents::NewChatSession) {
+		item14->Disable();
+		item17->Disable();
+	}
 	item7->Add(new wxStaticText(item8,
 			   wxID_ANY,
 			   _("Core commands must be configured in the daemon's amule.conf.\n"
-			     "GUI commands run only with a local core.")),
+			     "Only the chat event supports GUI commands with a remote core.")),
 		wxSizerFlags().Border(wxALL, 5));
 #endif
 
