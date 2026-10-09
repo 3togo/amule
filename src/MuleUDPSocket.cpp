@@ -235,6 +235,11 @@ void CMuleUDPSocket::OnDisconnected(int WXUNUSED(errorCode))
 	 * http://sourceforge.net/tracker/index.php?func=detail&aid=1885472&group_id=9863&atid=309863
 	 */
 	AddDebugLogLineC(logMuleUDP, m_name + "Socket died, recreating.");
+	// This callback must hold m_mutex because DestroySocket/CreateSocket mutate
+	// m_socket, which other threads (notably the UBT thread via SendControlData)
+	// access under the same lock. Without it, a reconnect here races against
+	// SendControlData's m_socket->SendTo, causing heap corruption.
+	wxMutexLocker lock(m_mutex);
 	DestroySocket();
 	CreateSocket();
 }
