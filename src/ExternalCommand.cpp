@@ -26,24 +26,95 @@
 #include "AppImageEnv.h"
 #include "TerminationProcess.h"
 
+#include <algorithm>
+#include <limits>
+
 #include <wx/cmdline.h>
 #include <wx/utils.h>
 
 namespace ExternalCommand
 {
 
-wxArrayString Build(
-	const wxString &command, const std::vector<std::pair<wxString, wxString>> &values, bool *substituted)
+namespace
+{
+wxString ProgramName(const wxString &path)
+{
+	// Recognize both separators, including Windows paths tested on POSIX.
+	const int separator = std::max(path.Find('/', true), path.Find('\\', true));
+	wxString name = path.Mid(separator + 1).Lower();
+	if (name.EndsWith(".exe") || name.EndsWith(".com")) {
+		name = name.Left(name.length() - 4);
+	}
+	return name;
+}
+
+bool IsPosixShell(const wxString &name)
+{
+	return name == "sh" || name == "bash" || name == "dash" || name == "ash" || name == "ksh" ||
+	       name == "mksh" || name == "zsh";
+}
+
+bool IsInterpreter(const wxString &name)
+{
+	return IsPosixShell(name) || name == "fish" || name == "csh" || name == "tcsh" ||
+	       name.StartsWith("python") || name == "py" || name == "perl" || name == "ruby" ||
+	       name == "node" || name == "nodejs" || name == "php" || name == "lua";
+}
+
+// How many leading arguments must remain fixed? Use deliberately narrow forms
+// for interpreters: a fixed script filename, or POSIX shell -c with fixed code.
+// Recognized wrappers can hide another interpreter; reject expansion through them.
+size_t ProtectedArguments(const wxArrayString &args, Platform platform)
+{
+	const wxString name = ProgramName(args[0]);
+	const wxString executable = args[0].Lower();
+	if (name == "cmd" || name == "command" || name == "powershell" || name == "pwsh" ||
+		name == "wscript" || name == "cscript" || name == "mshta" || name == "rundll32" ||
+		name == "regsvr32" || name == "env" || name == "busybox" || executable.EndsWith(".bat") ||
+		executable.EndsWith(".cmd")) {
+		return std::numeric_limits<size_t>::max();
+	}
+	if (!IsInterpreter(name)) {
+		return 1;
+	}
+	if (platform == Platform::Posix && IsPosixShell(name) && args.size() >= 3 && args[1] == "-c") {
+		return 3;
+	}
+	if (args.size() >= 2 && !args[1].empty() && !args[1].StartsWith("-") && !args[1].StartsWith("+")) {
+		return 2; // fixed script file; later arguments are data
+	}
+	return std::numeric_limits<size_t>::max(); // unsupported interpreter options: fail closed
+}
+bool IsSafeValue(const wxString &value, Platform platform)
+{
+	if (value.find(wxChar(0)) != wxString::npos) {
+		return false;
+	}
+	return platform != Platform::Windows || value.find_first_of("\"%!\r\n") == wxString::npos;
+}
+} // namespace
+
+wxArrayString Build(const wxString &command,
+	const std::vector<std::pair<wxString, wxString>> &values,
+	bool *substituted,
+	Platform platform,
+	const wxString *fallbackArgument)
 {
 	if (substituted != nullptr) {
 		*substituted = false;
 	}
-#ifdef __WINDOWS__
-	wxArrayString args = wxCmdLineParser::ConvertStringToArgs(command, wxCMD_LINE_SPLIT_DOS);
-#else
-	wxArrayString args = wxCmdLineParser::ConvertStringToArgs(command, wxCMD_LINE_SPLIT_UNIX);
-#endif
-	for (wxString &arg : args) {
+	if (command.find(wxChar(0)) != wxString::npos) {
+		return {};
+	}
+	wxArrayString args = wxCmdLineParser::ConvertStringToArgs(
+		command, platform == Platform::Windows ? wxCMD_LINE_SPLIT_DOS : wxCMD_LINE_SPLIT_UNIX);
+	if (args.IsEmpty() || args[0].empty()) {
+		return {};
+	}
+	const size_t protectedArgs = ProtectedArguments(args, platform);
+	bool didSubstitute = false;
+	for (size_t index = 0; index < args.size(); ++index) {
+		wxString &arg = args[index];
 		wxString expanded;
 		for (size_t i = 0; i < arg.length();) {
 			bool replaced = false;
@@ -51,16 +122,11 @@ wxArrayString Build(
 				for (const auto &value : values) {
 					if (!value.first.empty() &&
 						arg.Mid(i, value.first.length()) == value.first) {
-#ifdef __WINDOWS__
-						// CRT escaping cannot protect a quote from cmd.exe or a batch
-						// file. Reject the command rather than change the event data.
-						if (value.second.Find('"') != wxNOT_FOUND) {
+						if (index < protectedArgs ||
+							!IsSafeValue(value.second, platform)) {
 							return {};
 						}
-#endif
-						if (substituted != nullptr) {
-							*substituted = true;
-						}
+						didSubstitute = true;
 						expanded += value.second;
 						i += value.first.length();
 						replaced = true;
@@ -73,6 +139,15 @@ wxArrayString Build(
 			}
 		}
 		arg = expanded;
+	}
+	if (!didSubstitute && fallbackArgument != nullptr) {
+		if (args.size() < protectedArgs || !IsSafeValue(*fallbackArgument, platform)) {
+			return {};
+		}
+		args.Add(*fallbackArgument);
+	}
+	if (substituted != nullptr) {
+		*substituted = didSubstitute;
 	}
 	return args;
 }
@@ -110,6 +185,13 @@ bool RunDetached(const wxString &description, const wxArrayString &args)
 {
 	if (args.IsEmpty() || args[0].empty()) {
 		return false;
+	}
+	// Embedded NULs would silently truncate argv entries or the Windows command
+	// string, invalidating every argument-boundary check performed above.
+	for (const wxString &arg : args) {
+		if (arg.find(wxChar(0)) != wxString::npos) {
+			return false;
+		}
 	}
 #ifndef __WINDOWS__
 	std::vector<wxWCharBuffer> buffers;

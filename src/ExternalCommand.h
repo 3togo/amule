@@ -31,11 +31,26 @@
 
 namespace ExternalCommand
 {
-// Parse the template once, then expand each placeholder once inside its argument.
-// Empty results also signal rejected Windows values containing a double quote.
+enum class Platform
+{
+	Posix,
+	Windows
+};
+#ifdef __WINDOWS__
+constexpr Platform NativePlatform = Platform::Windows;
+#else
+constexpr Platform NativePlatform = Platform::Posix;
+#endif
+
+// Parse before expansion. Reject substituted executables, embedded NULs, unsafe
+// interpreter positions, and Windows shell/batch substitution. The platform can
+// be selected explicitly to validate both policies on either build host. If no
+// placeholder is used, fallbackArgument is validated as data and appended.
 wxArrayString Build(const wxString &command,
 	const std::vector<std::pair<wxString, wxString>> &values,
-	bool *substituted = nullptr);
+	bool *substituted = nullptr,
+	Platform platform = NativePlatform,
+	const wxString *fallbackArgument = nullptr);
 
 // Serialize arguments with Windows C runtime quoting, including trailing backslashes.
 wxString BuildWindowsCommandLine(const wxArrayString &args);

@@ -189,14 +189,17 @@ several placeholders inside one quoted argument:
 notify-send "aMule" "Finished %NAME (%SIZE bytes)"
 ```
 
+aMule rejects placeholders in the executable name and embedded NUL characters.
 Keep the executable and option names fixed. If the receiving program supports
 `--` to end option parsing, use it before untrusted values so a value starting
 with `-` cannot become an option.
 
-An explicit shell or interpreter (`sh -c`, `cmd /c`, `python -c`, etc.) still
-interprets its code argument. Do not put event placeholders into that code:
-file names and chat sender names can come from other users. On POSIX, pass them
-as positional arguments instead:
+aMule rejects substitution into recognized interpreter code or script filenames.
+For POSIX shells, the supported inline form is exactly `sh -c` (or another
+recognized POSIX shell with `-c`) followed by fixed code. Put values in positional
+arguments after that code. Other recognized interpreters should run a fixed script
+file followed by data arguments; interpreter options combined with placeholders
+are rejected. For example:
 
 ```sh
 sh -c 'mv -- "$1" "/archive/$2-$3"' _ %FILE %HASH %NAME
@@ -205,14 +208,19 @@ sh -c 'mv -- "$1" "/archive/$2-$3"' _ %FILE %HASH %NAME
 Here `_` supplies the shell's `$0`, and `%FILE`, `%HASH`, and `%NAME` become `$1`,
 `$2`, and `$3`. Always quote positional arguments in the script.
 
-On Windows, aMule skips the command and logs a launch failure if a substituted
-value contains a double quote (`"`), because C runtime escaping cannot protect
-it from `cmd.exe` or `.bat`/`.cmd` files. Other arguments are serialized with
-Windows C runtime escaping, including trailing backslashes. Prefer a program
-that accepts separate arguments: `cmd.exe` still expands `%VAR%` inside values
-and can interpret shell punctuation when values are embedded in its script.
-The quote safeguard does not make a shell script safe: environment expansion
-can introduce shell syntax again.
+On Windows, commands using placeholders with `cmd`, `.bat`/`.cmd` files, or
+PowerShell are rejected, even for values that look harmless.
+[`cmd.exe`](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/cmd) can expand
+`%VAR%` and delayed `!VAR!` references into new shell syntax; quoting alone does
+not protect these commands. Use a native program that accepts data arguments.
+Substituted Windows values containing `"`, `%`, `!`, CR, or LF are also rejected.
+Other arguments retain Windows C runtime escaping, including trailing backslashes.
+Rejected commands follow the existing launch-failure logging path.
+
+These checks recognize common interpreters and wrappers; they cannot establish
+how an arbitrary executable, renamed interpreter, or custom script uses its
+arguments. Use programs and fixed scripts that treat event values as data.
+Never evaluate those values as code inside the receiving program.
 
 
 ## Troubleshooting
