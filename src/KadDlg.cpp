@@ -24,6 +24,12 @@
 //
 
 #include "KadDlg.h"
+#include "KadLookupView.h"
+#ifdef CLIENT_GUI
+#include "libs/ec/cpp/RemoteConnect.h"
+#else
+#include "kademlia/kademlia/SearchManager.h"
+#endif
 #include "muuli_wdr.h"
 #include "OScopeCtrl.h"
 #include "OtherFunctions.h"
@@ -68,6 +74,29 @@ void CKadDlg::Init()
 	SetGraphColors();
 
 	UpdateConnectButton();
+	auto *diagnostics = new wxButton(this, wxID_ANY, _("Lookup diagnostics"));
+	GetSizer()->Add(diagnostics, 0, wxALL, 5);
+	diagnostics->Bind(wxEVT_BUTTON, [this](wxCommandEvent &event) {
+		if (!m_lookupView) {
+			m_lookupView = new CKadLookupView(this);
+		}
+		m_lookupView->Show();
+		m_lookupView->Raise();
+#ifdef CLIENT_GUI
+		auto *button = static_cast<wxButton *>(event.GetEventObject());
+		if (!button->IsEnabled()) {
+			return;
+		}
+		button->Disable();
+		m_lookupView->SetSnapshot(_("Requesting Kad lookup diagnostics…"));
+		CECPacket request(EC_OP_GET_KAD_LOOKUPS);
+		theApp->m_connect->SendRequest(new CKadLookupReply(m_lookupView.get(), button), &request);
+#else
+  (void)event;
+  m_lookupView->SetSnapshot(Kademlia::CSearchManager::GetLookupDiagnostics());
+#endif
+	});
+	Layout();
 }
 
 void CKadDlg::UpdateConnectButton()

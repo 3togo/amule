@@ -39,6 +39,8 @@ there client on the eMule forum..
 #include <wx/wx.h>
 
 #include "Search.h"
+#include "../utils/LookupDiagnostics.h"
+#include "../../GetTickCount.h"
 #include <common/Macros.h>
 
 #include "Indexed.h"
@@ -138,12 +140,23 @@ void CSearchManager::DeleteSearch(SearchMap::iterator it)
 	// query the registry, so no entry may point at an object being destroyed.
 	auto search = std::move(it->second);
 	m_searches.erase(it);
+	// Diagnostics must never prevent search cleanup or retain an object in the registry.
+	try {
+		RememberLookup(*search);
+	} catch (...) {
+	}
 }
 
 void CSearchManager::StopAllSearches()
 {
 	SearchMap stopped;
 	stopped.swap(m_searches);
+	for (const auto &item : stopped) {
+		try {
+			RememberLookup(*item.second);
+		} catch (...) {
+		}
+	}
 	// Every search is invisible before the first destructor invokes a callback.
 }
 
@@ -199,18 +212,12 @@ CSearch *CSearchManager::PrepareFindKeywords(const wxString &keyword,
 		// GonoszTopi - seconded
 		KadGetKeywordHash(wstrKeyword, &s->m_target);
 
-		// Stop any existing search for the same target so a new one can start.
-		if (m_searches.find(s->m_target) != m_searches.end()) {
-			SearchMap::iterator it = m_searches.find(s->m_target);
-			if (it != m_searches.end()) {
-				AddDebugLogLineN(logSearch,
-					CFormat("Stopping existing Kad search for keyword '%s' to start a "
-						"new one") %
-						wstrKeyword);
-				m_searches.erase(it);
-			}
-		}
+		// Kad routes replies by target. Never preempt another client's search.
 		s->SetSearchTermData(searchTermsDataSize, searchTermsData);
+		if (m_searches.find(s->m_target) != m_searches.end()) {
+			throw wxString(_("Kademlia: Search keyword is already on search list: ")) +
+				wstrKeyword;
+		}
 
 		// Inc our searchID
 		// If called from external client use predefined search id
@@ -618,3 +625,48 @@ void CSearchManager::CancelNodeFWCheckUDPSearch()
 	}
 }
 // File_checked_for_headers
+
+namespace
+{
+std::deque<LookupSnapshot> s_recentLookups;
+}
+
+void CSearchManager::RememberLookup(const CSearch &search)
+{
+	if (search.GetLookupTrace().Peers().empty()) {
+		return;
+	}
+	if (s_recentLookups.size() == 16) {
+		s_recentLookups.pop_front();
+	}
+	s_recentLookups.push_back({ search.GetSearchTypes(),
+		search.GetTarget().ToHexString(),
+		search.GetLookupStarted(),
+		::GetTickCount64(),
+		search.GetLookupTrace() });
+}
+
+wxString CSearchManager::GetLookupDiagnostics()
+{
+	std::vector<LookupSnapshot> active;
+	for (const auto &item : m_searches) {
+		if (active.size() == 17) {
+			break;
+		}
+		const auto &search = *item.second;
+		active.push_back({ search.GetSearchTypes(),
+			search.GetTarget().ToHexString(),
+			search.GetLookupStarted(),
+			0,
+			search.GetLookupTrace() });
+	}
+	return FormatLookupDiagnostics(active, s_recentLookups, ::GetTickCount64());
+}
+
+void CSearchManager::ProcessResultReply(const CUInt128 &target, uint32_t fromIP, uint16_t fromPort)
+{
+	const auto found = m_searches.find(target);
+	if (found != m_searches.end()) {
+		found->second->m_lookupTrace.ItemReply({ fromIP, fromPort }, ::GetTickCount64());
+	}
+}

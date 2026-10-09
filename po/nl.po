@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
-"PO-Revision-Date: 2026-10-07 16:27+0000\n"
+"POT-Creation-Date: 2026-10-07 00:28-0400\n"
+"PO-Revision-Date: 2026-10-08 11:09+0000\n"
 "Last-Translator: Marcel Pol <marcel@timelord.nl>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "Language: nl\n"
@@ -3266,6 +3266,14 @@ msgstr "Kon nieuw bestand %s niet hernoemen, update wordt gestopt."
 msgid "IP filter is ready"
 msgstr "IP-filter is klaar"
 
+#: src/KadDlg.cpp
+msgid "Lookup diagnostics"
+msgstr ""
+
+#: src/KadDlg.cpp
+msgid "Requesting Kad lookup diagnostics…"
+msgstr ""
+
 #: src/KadDlg.cpp src/muuli_wdr.cpp src/StatisticsDlg.cpp
 msgid "Current"
 msgstr "Huidige"
@@ -3310,6 +3318,18 @@ msgstr "Dat zal uw huidige nodes verwijderen en de Kademlia verbinding opnieuw s
 #: src/KadDlg.cpp
 msgid "Continue?"
 msgstr "Verder gaan?"
+
+#: src/KadLookupView.h
+msgid "Kad lookup diagnostics"
+msgstr ""
+
+#: src/KadLookupView.h
+msgid "The core does not support Kad lookup diagnostics."
+msgstr ""
+
+#: src/KadLookupView.h
+msgid "Connection lost. Reconnect and request lookup diagnostics again."
+msgstr ""
 
 #: src/kademlia/kademlia/SearchManager.cpp
 msgid "Kademlia: search keyword too short"
@@ -6629,7 +6649,7 @@ msgstr "Kon de registratie van de URL-afhandelaar niet verwijderen."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "macOS does not let an application stop being the default handler. To stop aMule opening these, make another application the default."
-msgstr "macOS staat niet toe dat een app niet langer de standaard behandelaar is. Om te voorkomen dat aMule deze opent maakt u een andere app de standaard."
+msgstr "macOS staat niet toe dat een app niet langer de standaard afhandelaar is. Om te voorkomen dat aMule deze opent maakt u een andere app de standaard."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The web server and aMule API require external connections to be enabled."
@@ -6932,7 +6952,7 @@ msgstr "Min grootte moet kleiner zijn dan max grootte. Max grootte wordt genegee
 
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
 msgid "Main"
-msgstr "Standaard"
+msgstr "Hoofdcategorie"
 
 #: src/SearchList.cpp
 #, c-format
@@ -7061,7 +7081,7 @@ msgstr "Doorzoek eD2k-servers en Kad door gebruik te maken van welk netwerk besc
 msgid "running"
 msgstr "Draaiend"
 
-#: src/SearchProgressReport.cpp
+#: src/SearchProgressReport.cpp src/kademlia/utils/LookupDiagnostics.cpp
 msgid "finished"
 msgstr "voltooid"
 
@@ -9710,6 +9730,56 @@ msgstr "aMule lijkt te worden uitgevoerd. Sluit het en voer het verwijderprogram
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Gebruikersgegevens op $APPDATA\\aMule worden verwijderd..."
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, c-format
+msgid "Lookup %s (type %u, %s): %u peers, %u overdue routing requests, %u omitted records\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, fuzzy
+msgid "active"
+msgstr "Actief"
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, c-format
+msgid "  %s [%s]: %u routing requests, %u replies, last RTT %u ms, %u item requests, %u result packets, %u result records\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, c-format
+msgid "  +%u ms: %s referred %s (%s)\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+msgid "closer to target"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, fuzzy
+msgid "no closer to target"
+msgstr "Onbekende doelchat"
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+msgid ""
+"Overdue means a routing request unanswered for at least 3 seconds; late replies may still arrive. Result records are received records, not unique files. Only bounded recent history is retained.\n"
+"\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+msgid "Additional active lookups omitted.\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, fuzzy
+msgid "No Kad lookup history available."
+msgstr "geen opties beschikbaar"
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+msgid ""
+"\n"
+"Diagnostic output truncated.\n"
+msgstr ""
 
 #~ msgid "Kad protocol version"
 #~ msgstr "Kad-protocolversie"

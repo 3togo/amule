@@ -43,6 +43,7 @@ there client on the eMule forum..
 #include <vector>
 
 #include "SearchManager.h"
+#include "../utils/LookupTrace.h"
 
 class CKnownFile;
 class CTag;
@@ -59,6 +60,9 @@ class CSearch
 	friend class CSearchManager;
 
 public:
+	const CLookupTrace &GetLookupTrace() const noexcept { return m_lookupTrace; }
+	uint64_t GetLookupStarted() const noexcept { return m_lookupStarted; }
+
 	uint32_t GetSearchID() const noexcept { return m_searchID; }
 	void SetSearchID(uint32_t id) noexcept
 	{
@@ -173,6 +177,8 @@ private:
 
 	uint8_t GetRequestContactCount() const;
 
+	CLookupTrace m_lookupTrace;
+	uint64_t m_lookupStarted;
 	bool m_stopping;
 	time_t m_created;
 	uint32_t m_type;

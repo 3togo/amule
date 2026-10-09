@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-07 00:28-0400\n"
 "PO-Revision-Date: 2026-10-07 16:28+0000\n"
 "Last-Translator: Hallvor Brunstad <Hallvor_1976@yahoo.com>\n"
 "Language-Team: <i18n-nn@lister.ping.uio.no>\n"
@@ -3268,6 +3268,14 @@ msgstr "Greidde ikkje å endre namn på den nye %s-fila, avbryt oppdatering."
 msgid "IP filter is ready"
 msgstr "IP-filteret er klart"
 
+#: src/KadDlg.cpp
+msgid "Lookup diagnostics"
+msgstr ""
+
+#: src/KadDlg.cpp
+msgid "Requesting Kad lookup diagnostics…"
+msgstr ""
+
 #: src/KadDlg.cpp src/muuli_wdr.cpp src/StatisticsDlg.cpp
 msgid "Current"
 msgstr "Novérande"
@@ -3312,6 +3320,18 @@ msgstr "Å gjere dette vil fjerne dine novérande noder og starte Kademlia på n
 #: src/KadDlg.cpp
 msgid "Continue?"
 msgstr "Halde fram?"
+
+#: src/KadLookupView.h
+msgid "Kad lookup diagnostics"
+msgstr ""
+
+#: src/KadLookupView.h
+msgid "The core does not support Kad lookup diagnostics."
+msgstr ""
+
+#: src/KadLookupView.h
+msgid "Connection lost. Reconnect and request lookup diagnostics again."
+msgstr ""
 
 #: src/kademlia/kademlia/SearchManager.cpp
 msgid "Kademlia: search keyword too short"
@@ -7083,7 +7103,7 @@ msgstr ""
 msgid "running"
 msgstr "Køyrer"
 
-#: src/SearchProgressReport.cpp
+#: src/SearchProgressReport.cpp src/kademlia/utils/LookupDiagnostics.cpp
 #, fuzzy
 msgid "finished"
 msgstr "Finsk"
@@ -9734,6 +9754,56 @@ msgstr "aMule ser ut til å køyre. Lat att aMule og køyr avinstallasjonsprogra
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Fjernar brukardata på $APPDATA\\aMule..."
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, c-format
+msgid "Lookup %s (type %u, %s): %u peers, %u overdue routing requests, %u omitted records\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, fuzzy
+msgid "active"
+msgstr "Aktiv"
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, c-format
+msgid "  %s [%s]: %u routing requests, %u replies, last RTT %u ms, %u item requests, %u result packets, %u result records\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, c-format
+msgid "  +%u ms: %s referred %s (%s)\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+msgid "closer to target"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, fuzzy
+msgid "no closer to target"
+msgstr "(Ukjent namn)"
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+msgid ""
+"Overdue means a routing request unanswered for at least 3 seconds; late replies may still arrive. Result records are received records, not unique files. Only bounded recent history is retained.\n"
+"\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+msgid "Additional active lookups omitted.\n"
+msgstr ""
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+#, fuzzy
+msgid "No Kad lookup history available."
+msgstr "ingen val tilgjengelege"
+
+#: src/kademlia/utils/LookupDiagnostics.cpp
+msgid ""
+"\n"
+"Diagnostic output truncated.\n"
+msgstr ""
 
 #, fuzzy
 #~ msgid "Kad protocol version"

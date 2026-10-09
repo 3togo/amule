@@ -677,6 +677,32 @@ TEST(Refresher, ChatSessionWithoutANameFallsBackToAddress)
 	ASSERT_EQUALS(std::string("IP: 10.0.0.1 Port: 4662"), cache[0].DisplayName());
 }
 
+TEST(Refresher, RleCountingPassHandlesRunsAndLiterals)
+{
+	// An initially empty decoder must count both runs and literal bytes before
+	// allocating, then decode the whole frame on its second pass.
+	RLE_Data decoder(0, false);
+	const uint8 frame[] = { 7, 7, 3, 9, 4, 4, 2, 5 };
+	const uint8 expected[] = { 7, 7, 7, 9, 4, 4, 5 };
+	const uint8 *decoded = decoder.Decode(frame, sizeof(frame));
+	ASSERT_EQUALS(int(sizeof(expected)), decoder.Size());
+	ASSERT_TRUE(decoded != nullptr);
+	for (size_t i = 0; i < sizeof(expected); ++i) {
+		ASSERT_EQUALS(expected[i], decoded[i]);
+	}
+	// Shrinking and resetting must leave the next counting pass usable.
+	const uint8 literal[] = { 6 };
+	decoded = decoder.Decode(literal, sizeof(literal));
+	ASSERT_EQUALS(1, decoder.Size());
+	ASSERT_EQUALS(uint8(6), decoded[0]);
+	decoder.ResetEncoder();
+	decoded = decoder.Decode(literal, sizeof(literal));
+	ASSERT_EQUALS(1, decoder.Size());
+	ASSERT_EQUALS(uint8(6), decoded[0]);
+	ASSERT_TRUE(decoder.Decode(nullptr, 0) == nullptr);
+	ASSERT_EQUALS(0, decoder.Size());
+}
+
 TEST(Refresher, SharedKnownFileDecodesAvailability)
 {
 	std::map<std::uint32_t, PartFileEncoderData> rle_state;
