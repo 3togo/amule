@@ -713,6 +713,10 @@ bool PrefsUnifiedDlg::TransferToWindow()
 		}
 	}
 
+#ifdef CLIENT_GUI
+	UpdateUserEventControls();
+#endif
+
 	// The memory-mapped-I/O checkbox is only meaningful when the core we drive supports
 	// mmap: the local build on monolithic (MMAP_SUPPORTED), or the daemon's EC-advertised
 	// capability on the remote GUI. Hide it otherwise.
@@ -1070,6 +1074,14 @@ bool PrefsUnifiedDlg::TransferFromWindow()
 	thePrefs::SetGeoIPUpdateRequested(
 		thePrefs::IsGeoIPEnabled() && (geoipSourceChanged || geoipCredChanged));
 #endif
+	// GUI commands are local; changing them starts a new event subscription.
+	for (unsigned int i = 0; i < CUserEvents::GetCount(); ++i) {
+		const int base = USEREVENTS_FIRST_ID + i * USEREVENTS_IDS_PER_EVENT;
+		if (CfgChanged(base + 3) || CfgChanged(base + 4)) {
+			theApp->ResetUserEventSubscription();
+			break;
+		}
+	}
 	// Send the user's changes to the core.
 	theApp->glob_prefs->SendChangesToRemote();
 #ifdef GEOIP_GUI
@@ -1707,7 +1719,7 @@ void PrefsUnifiedDlg::OnCheckBoxChange(wxCommandEvent &event)
 		id < USEREVENTS_FIRST_ID + (int)CUserEvents::GetCount() * USEREVENTS_IDS_PER_EVENT) {
 		// The corresponding text control always has
 		// an ID one greater than the checkbox
-		FindWindow(id + 1)->Enable(value);
+		FindWindow(id + 1)->Enable(value && FindWindow(id)->IsEnabled());
 		return;
 	}
 
@@ -2645,6 +2657,18 @@ void PrefsUnifiedDlg::CreateEventPanels(const int idx, const wxString &vars, wxW
 
 	item7->Add(item10, wxSizerFlags().Expand().CenterVertical().Border(wxALL, 0));
 
+#ifdef CLIENT_GUI
+	// EC preferences do not carry user commands. Keep the local saved values, but
+	// do not offer controls that appear to configure the connected daemon.
+	item9->Disable();
+	item12->Disable();
+	item7->Add(new wxStaticText(item8,
+			   wxID_ANY,
+			   _("Configure core commands in the daemon's amule.conf and restart amuled.\n"
+			     "These settings are not sent to the daemon.")),
+		wxSizerFlags().Border(wxALL, 5));
+#endif
+
 	wxCheckBox *item14 = new wxCheckBox(item8,
 		USEREVENTS_FIRST_ID + idx * USEREVENTS_IDS_PER_EVENT + 3,
 		_("Enable command execution on GUI"),
@@ -2673,6 +2697,23 @@ void PrefsUnifiedDlg::CreateEventPanels(const int idx, const wxString &vars, wxW
 
 	item7->Add(item15, wxSizerFlags().Expand().CenterVertical().Border(wxALL, 0));
 
+#ifdef CLIENT_GUI
+	// Chat sessions are raised locally by ChatSelector. The other events are
+	// delivered through the capability-gated EC user-event feed.
+	if (idx != CUserEvents::NewChatSession) {
+		m_remoteEventNotes.resize(CUserEvents::GetCount(), nullptr);
+		wxStaticText *note = new wxStaticText(
+			item8, wxID_ANY, _("This daemon does not support GUI commands for this event."));
+		m_remoteEventNotes[idx] = note;
+		item7->Add(note, wxSizerFlags().Border(wxALL, 5));
+		const bool supported = theApp->m_connect->ServerSupportsUserEvents();
+		item14->Enable(supported);
+		item17->Enable(supported &&
+			       CUserEvents::IsGUICommandEnabled(static_cast<CUserEvents::EventType>(idx)));
+		note->Show(!supported);
+	}
+#endif
+
 	wxStaticText *item13 = new wxStaticText(item8,
 		-1,
 		_("The following variables will be replaced:") + vars,
@@ -2686,6 +2727,25 @@ void PrefsUnifiedDlg::CreateEventPanels(const int idx, const wxString &vars, wxW
 	IDC_PREFS_EVENTS_PAGE->Hide(idx + 1);
 	RefreshPreferencesPage(parent);
 }
+
+#ifdef CLIENT_GUI
+void PrefsUnifiedDlg::UpdateUserEventControls()
+{
+	const bool supported = theApp->m_connect->ServerSupportsUserEvents();
+	for (unsigned int i = 0; i < CUserEvents::GetCount(); ++i) {
+		const int base = USEREVENTS_FIRST_ID + i * USEREVENTS_IDS_PER_EVENT;
+		FindWindow(base + 1)->Disable();
+		FindWindow(base + 2)->Disable();
+		const bool guiSupported = supported || i == CUserEvents::NewChatSession;
+		FindWindow(base + 3)->Enable(guiSupported);
+		FindWindow(base + 4)->Enable(guiSupported && CUserEvents::IsGUICommandEnabled(
+								     static_cast<CUserEvents::EventType>(i)));
+		if (i < m_remoteEventNotes.size() && m_remoteEventNotes[i]) {
+			m_remoteEventNotes[i]->Show(!supported);
+		}
+	}
+}
+#endif
 
 namespace
 {

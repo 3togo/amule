@@ -46,6 +46,7 @@ class wxDataViewListCtrl;
 class wxDataViewColumn;
 class wxDataViewEvent;
 class wxShowEvent;
+class wxStaticText;
 
 class wxCommandEvent;
 class wxListEvent;
@@ -81,6 +82,10 @@ public:
 	bool TransferToWindow();
 
 protected:
+#ifdef CLIENT_GUI
+	std::vector<wxStaticText *> m_remoteEventNotes;
+	void UpdateUserEventControls();
+#endif
 	/// True if the Cfg with this id has changed.
 	bool CfgChanged(int id);
 

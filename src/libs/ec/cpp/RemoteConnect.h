@@ -69,7 +69,8 @@ public:
 		bool canChatPeerHash = false,
 		bool canAEAD = false,
 		const std::vector<uint8_t> &clientNonce = std::vector<uint8_t>(),
-		const std::vector<uint8_t> &clientPubKey = std::vector<uint8_t>());
+		const std::vector<uint8_t> &clientPubKey = std::vector<uint8_t>(),
+		bool canUserEvents = false);
 };
 
 class CECAuthPacket : public CECPacket
@@ -264,6 +265,9 @@ private:
 	// include one with no unique GUI_ID. Distinct from m_serverChatSessions: a client
 	// that predates the hash tag would merge two such sessions under one legacy id.
 	bool m_serverChatPeerHash;
+	bool m_canUserEvents = false;
+	bool m_serverUserEvents = false;
+	uint64 m_userEventBaseline = 0;
 
 	void WriteDoneAndQueueEmpty();
 
@@ -326,6 +330,9 @@ public:
 	//! See m_serverChatPeerHash. False means: address and list chat sessions by
 	//! GUI_ID only, exactly as a build that predates the hash tag would.
 	bool ServerSupportsChatPeerHash() const { return m_serverChatPeerHash; }
+	void SetCanUserEvents(bool enabled) { m_canUserEvents = enabled; }
+	bool ServerSupportsUserEvents() const { return m_serverUserEvents; }
+	uint64 UserEventBaseline() const { return m_userEventBaseline; }
 
 	bool ServerSupportsSharedDirsConfig() const { return m_serverSharedDirsConfig; }
 

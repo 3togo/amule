@@ -63,6 +63,8 @@
 #include "Preferences.h" // Needed for CPreferences
 #include "Logger.h"
 #include "GuiEvents.h"     // Needed for Notify_* macros
+#include "UserEvents.h"
+#include <ec/cpp/ECUserEvents.h>
 #include "Statistics.h"    // Needed for theStats
 #include "KnownFileList.h" // Needed for CKnownFileList
 #include "Friend.h"
@@ -538,6 +540,8 @@ private:
 	// Same rule as m_chatActive, for EC_TAG_CAN_CHAT_PEER_HASH: a connection that omits
 	// it must never be sent, or address, a session with no unique GUI_ID.
 	bool m_chatPeerHashActive;
+	bool m_userEventsActive = false;
+	uint64 m_userEventBaseline = 0;
 	// File ECIDs sent in the previous response for each EC request path, diffed against
 	// the current snapshot to compute the removal list emitted to partial-update-capable
 	// clients. Tracked per-path because amulegui uses EC_OP_GET_UPDATE while amuleweb
@@ -1152,6 +1156,7 @@ const CECPacket *CECServerSocket::Authenticate(const CECPacket *request)
 					m_chatPeerHashActive = true;
 				}
 				m_haveNotificationSupport = request->GetTagByName(EC_TAG_CAN_NOTIFY) != NULL;
+				m_userEventsActive = request->GetTagByName(EC_TAG_CAN_USER_EVENTS) != nullptr;
 				AddDebugLogLineN(logEC,
 					CFormat("Client capabilities: ZLIB: %s  UTF8 numbers: %s  Push "
 						"notification: %s  Large tag count: %s  Partial update: %s") %
@@ -1311,6 +1316,10 @@ const CECPacket *CECServerSocket::Authenticate(const CECPacket *request)
 				// here starts over. Old clients ignore the tag; new clients against an old
 				// daemon start over every reconnect, which is correct if wasteful.
 				response->AddTag(CECTag(EC_TAG_SESSION_ID, GetEcSessionId()));
+				if (m_userEventsActive) {
+					m_userEventBaseline = CUserEvents::RemoteEvents().Latest();
+					response->AddTag(CECTag(EC_TAG_CAN_USER_EVENTS, m_userEventBaseline));
+				}
 				if (m_partialUpdateActive) {
 					// Confirm partial-update mode so the client switches off its bulk
 					// "missing == deleted" fallback and expects explicit
@@ -3974,6 +3983,16 @@ CECPacket *CECServerSocket::ProcessRequest2(const CECPacket *request)
 		response = Get_EC_Response_Search_Results_Download(request);
 		break;
 	// Preferences
+	case EC_OP_GET_USER_EVENTS: {
+		const CECTag *cursor = request->GetTagByName(EC_TAG_USER_EVENT_CURSOR);
+		if (!m_userEventsActive || (cursor && !cursor->IsInt())) {
+			response = new CECPacket(EC_OP_FAILED);
+			break;
+		}
+		const uint64 after = std::max(m_userEventBaseline, cursor ? cursor->GetInt() : uint64(0));
+		response = new CECPacket(CUserEvents::RemoteEvents().Read(after, !cursor));
+		break;
+	}
 	case EC_OP_GET_PREFERENCES:
 		response = new CEC_Prefs_Packet(
 			request->GetTagByNameSafe(EC_TAG_SELECT_PREFS)->GetInt(), request->GetDetailLevel());

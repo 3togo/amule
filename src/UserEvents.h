@@ -27,6 +27,9 @@
 
 #include <wx/intl.h> // Needed for wxTRANSLATE
 
+struct CUserEventData;
+class CUserEventStream;
+
 #ifdef _MSC_VER
 #define ATTR(x)
 #else
@@ -112,6 +115,10 @@ public:
 	 * call site or creating a parameter list per event -- more lists to keep in sync by hand.
 	 */
 	static void ProcessEvent(enum EventType event, const void *object);
+
+	// Remote delivery executes only a locally configured GUI command.
+	static void ProcessRemoteEvent(const CUserEventData &data);
+	static CUserEventStream &RemoteEvents();
 
 	/**
 	 * The number of defined user events.

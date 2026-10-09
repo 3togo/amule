@@ -23,6 +23,7 @@
 //
 
 #include "UserEvents.h"
+#include <ec/cpp/ECUserEvents.h>
 
 #include <common/Format.h>
 #include "AppImageEnv.h" // Needed for GetSanitizedExecEnv
@@ -131,17 +132,31 @@ wxString &CUserEvents::GetGUICommandVar(const unsigned int event)
 	case CUserEvents::ID: { \
 		VARS break; \
 	}
-#define USEREVENTS_REPLACE_VAR(VAR, DESC, CODE) command.Replace("%" VAR, CODE);
-static void ExecuteCommand(enum CUserEvents::EventType event, const void *object, const wxString &cmd)
+#define USEREVENTS_REPLACE_VAR(VAR, DESC, CODE) data.variables.emplace_back(VAR, CODE);
+static CUserEventData SnapshotEvent(enum CUserEvents::EventType event, const void *object)
 {
-	// This variable is needed by the USEREVENTS_EVENTLIST macro.
-	wxString command = cmd;
+	CUserEventData data;
 	switch (event) {
 		USEREVENTS_EVENTLIST()
-		/* This macro expands to handle all user event types. Example:
-		   case CUserEvents::NewChatSession:
-		       command.Replace( "%SENDER", *((wxString*)object) );
-		       break; */
+	}
+	return data;
+}
+#undef USEREVENTS_EVENT
+#undef USEREVENTS_REPLACE_VAR
+
+static void ExecuteCommand(enum CUserEvents::EventType event,
+	const CUserEventData &data,
+	const wxString &cmd,
+	bool remote = false)
+{
+	wxString command = cmd;
+	if (remote) {
+		command = ExpandUserEventCommand(cmd, data);
+	} else {
+		// Preserve the existing replacement order for locally raised events.
+		for (const auto &variable : data.variables) {
+			command.Replace("%" + variable.first, variable.second);
+		}
 	}
 	if (!command.empty()) {
 		// Inside an AppImage, run the user command with a sanitized environment so it loads
@@ -163,15 +178,40 @@ void CUserEvents::ProcessEvent(enum EventType event, const void *object)
 {
 	wxCHECK_RET(CheckIndex(event), "CUserEvents::ProcessEvent: event index out of range");
 	wxCHECK_RET(object != NULL, "CUserEvents::ProcessEvent: NULL object");
+	CUserEventData data = SnapshotEvent(event, object);
+	data.key = s_EventList[event].key;
 
 #ifndef CLIENT_GUI
+	// Capture even when the daemon's Core command is disabled: a connected GUI
+	// may independently have its own command enabled for this event.
+	RemoteEvents().Add(data);
 	if (s_EventList[event].core_enabled) {
-		ExecuteCommand(event, object, s_EventList[event].core_command);
+		ExecuteCommand(event, data, s_EventList[event].core_command);
 	}
 #endif
 #ifndef AMULE_DAEMON
 	if (s_EventList[event].gui_enabled) {
-		ExecuteCommand(event, object, s_EventList[event].gui_command);
+		ExecuteCommand(event, data, s_EventList[event].gui_command);
 	}
+#endif
+}
+
+CUserEventStream &CUserEvents::RemoteEvents()
+{
+	static CUserEventStream events;
+	return events;
+}
+
+void CUserEvents::ProcessRemoteEvent(const CUserEventData &data)
+{
+#ifndef AMULE_DAEMON
+	for (unsigned int i = 0; i < GetCount(); ++i) {
+		if (data.key == s_EventList[i].key && s_EventList[i].gui_enabled) {
+			ExecuteCommand(static_cast<EventType>(i), data, s_EventList[i].gui_command, true);
+			return;
+		}
+	}
+#else
+	(void)data;
 #endif
 }

@@ -7,6 +7,7 @@ add_library (ec STATIC
 	ECSocket.cpp
 	ECTag.cpp
 	ECUInt128.cpp
+	ECUserEvents.cpp
 	RemoteConnect.cpp
 )
 
