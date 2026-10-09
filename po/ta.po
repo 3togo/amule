@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule GIT\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 12:59+0900\n"
 "PO-Revision-Date: 2026-10-07 16:32+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
@@ -1711,11 +1711,6 @@ msgstr[1] ""
 #: src/CorruptionBlackBox.cpp
 #, c-format
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
-msgstr ""
-
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
 msgstr ""
 
 #: src/DataToText.cpp

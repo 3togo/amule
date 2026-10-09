@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 12:59+0900\n"
 "PO-Revision-Date: 2026-10-07 16:24+0000\n"
 "Last-Translator: Dévai Tamás <devait@vnet.hu>\n"
 "Language-Team: aMule Team <https://github.com/amule-org/amule>\n"
@@ -1748,11 +1748,6 @@ msgstr[1] "%u comments"
 #, c-format
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
-
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Failed to load country data for '%s'."
 
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
@@ -9658,6 +9653,10 @@ msgstr "aMule appears to be running. Please close it and re-run the uninstaller.
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Removing user data at $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Failed to load country data for '%s'."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

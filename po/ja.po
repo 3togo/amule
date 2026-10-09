@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 12:59+0900\n"
 "PO-Revision-Date: 2026-10-07 16:27+0000\n"
 "Last-Translator: \n"
 "Language-Team: Japanese\n"
@@ -1762,11 +1762,6 @@ msgstr[0] "%u個のコメントがあります"
 #, c-format
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "クライアント %s を接続禁止にしました（送信した破損データ：%s／合計：%s／ファイル：'%s'）"
-
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "'%s' の国データのロードに失敗しました。"
 
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
@@ -9673,6 +9668,10 @@ msgstr "aMule が実行中のようです。終了してからアンインスト
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "$APPDATA\\aMule のユーザデータを削除しています…"
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "'%s' の国データのロードに失敗しました。"
 
 #, fuzzy
 #~ msgid "Kad protocol version"

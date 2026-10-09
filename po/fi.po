@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 12:59+0900\n"
 "PO-Revision-Date: 2026-10-07 16:25+0000\n"
 "Last-Translator: Tapio Rantala <tapio.rantala@iki.fi>\n"
 "Language-Team: aMule Team <https://github.com/amule-org/amule>\n"
@@ -1776,11 +1776,6 @@ msgstr[1] "%u kommenttia"
 #, c-format
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Estettiin asiakas %s, lähetti turmeltunutta dataa %s yhteismäärästä %s tiedostolle '%s'"
-
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Valtiotietojen lataus osoitteesta '%s' epäonnistui."
 
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
@@ -9731,6 +9726,10 @@ msgstr "aMule vaikuttaa olevan käynnissä. Sulje se ja suorita asennuksen poist
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Poistetaan käyttäjätietoja kohteesta $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Valtiotietojen lataus osoitteesta '%s' epäonnistui."
 
 #, fuzzy
 #~ msgid "Kad protocol version"
