@@ -77,7 +77,7 @@ const int USEREVENTS_FIRST_ID = 11500; /* Some safe GUI ID to start from */
 		wxTRANSLATE("Out of space"), \
 		USEREVENTS_REPLACE_VAR("PARTITION", \
 			wxTRANSLATE("Disk partition."), \
-			wxString(static_cast<const wxChar *>(object)))) \
+			*static_cast<const wxString *>(object))) \
 	USEREVENTS_EVENT(ErrorOnCompletion, \
 		wxTRANSLATE("Error on completion"), \
 		USEREVENTS_REPLACE_VAR("FILE", \
