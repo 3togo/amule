@@ -238,14 +238,44 @@ sh -c 'mv -- "$1" "/archive/$2-$3"' _ %FILE %HASH %NAME
 Here `_` supplies the shell's `$0`, and `%FILE`, `%HASH`, and `%NAME` become `$1`,
 `$2`, and `$3`. Always quote positional arguments in the script.
 
-On Windows, commands using placeholders with `cmd`, `.bat`/`.cmd` files, or
-PowerShell are rejected, even for values that look harmless.
-[`cmd.exe`](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/cmd) can expand
-`%VAR%` and delayed `!VAR!` references into new shell syntax; quoting alone does
-not protect these commands. Use a native program that accepts data arguments.
-Substituted Windows values containing `"`, `%`, `!`, CR, or LF are also rejected.
-Other arguments retain Windows C runtime escaping, including trailing backslashes.
-Rejected commands follow the existing launch-failure logging path.
+On Windows, native programs receive literal arguments using Windows C runtime
+escaping. Characters such as `%`, `!`, and quotes remain data for these programs;
+filenames such as `100% Hits.mp3` and `Help!.avi` work for event commands and previews.
+
+For `cmd.exe` and `.bat`/`.cmd` targets, aMule rejects substituted values containing
+`"`, `%`, `!`, CR, or LF. Those characters can change quoting, expand environment
+variables, or introduce another command. Other punctuation, including `&`, `|`,
+`<`, `>`, and `^`, stays inside quoted data arguments. The filter also checks
+literal prefixes and suffixes surrounding placeholders.
+
+aMule explicitly invokes the OS command processor for batch files and adds an
+outer quote pair with `/d /s` so `cmd` removes only that pair, preserving each
+argument's quotes. Backslashes are kept literal for batch files and builtins;
+native children retain CRT quoting.
+
+Use a fixed command token with separate values, for example `cmd /d /c echo %SENDER`.
+Do not put a placeholder inside a combined command string such as
+`cmd /c "echo %SENDER"`; it is code, and aMule refuses it. Compound command
+strings, user-specified `/s`, dispatch builtins (`call`, `start`, `for`, `if`),
+and nested interpreters with event data are unsupported; put that logic in a
+fixed batch file instead.
+PowerShell and the other prohibited launchers still refuse substituted values.
+Existing Windows short-path aliases are expanded before interpreter checks.
+
+Batch authors must quote positional values when using them, just as POSIX scripts
+quote `"$1"`. For example, a template `C:\scripts\on-complete.cmd %FILE %HASH %SIZE`
+passes three arguments to a batch file that can use:
+
+```bat
+@echo off
+native-tool.exe "%~1" "%~2" "%~3"
+```
+
+Do not re-evaluate event values using `call`, another `cmd /c`, or an interpreter.
+[`cmd.exe`](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/cmd)
+expands `%VAR%` and delayed `!VAR!` references, which is why those values are refused.
+Validation refusals log that the command was not run and give the reason;
+a missing executable or another spawn failure retains the launch-failure message.
 
 These checks recognize common interpreters and wrappers; they cannot establish
 how an arbitrary executable, renamed interpreter, or custom script uses its

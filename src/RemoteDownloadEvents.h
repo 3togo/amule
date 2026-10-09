@@ -15,8 +15,11 @@
 class CRemoteDownloadEvents
 {
 public:
-	bool Observe(uint32_t id, uint8_t status)
+	bool Observe(uint32_t id, uint8_t status, bool hasStatus = true)
 	{
+		if (!hasStatus) {
+			return false;
+		}
 		const auto inserted = m_statuses.emplace(id, status);
 		if (inserted.second) {
 			return false;

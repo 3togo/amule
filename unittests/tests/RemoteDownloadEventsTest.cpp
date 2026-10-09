@@ -85,3 +85,16 @@ TEST(RemoteDownloadEvents, FilesHaveIndependentBaselines)
 	ASSERT_FALSE(events.Observe(1, PS_COMPLETE));
 	ASSERT_FALSE(events.Observe(2, PS_COMPLETE));
 }
+
+TEST(RemoteDownloadEvents, MissingStatusDoesNotInventOrAdvanceABaseline)
+{
+	CRemoteDownloadEvents events;
+	// A metadata-only first packet leaves the proxy at its default PS_EMPTY.
+	ASSERT_FALSE(events.Observe(1, PS_EMPTY, false));
+	ASSERT_FALSE(events.Observe(1, PS_COMPLETE));
+	ASSERT_FALSE(events.Observe(2, PS_READY));
+	// An update without a status cannot consume a completion transition.
+	ASSERT_FALSE(events.Observe(2, PS_COMPLETE, false));
+	ASSERT_TRUE(events.Observe(2, PS_COMPLETE));
+	ASSERT_FALSE(events.Observe(2, PS_COMPLETE));
+}

@@ -2776,19 +2776,48 @@ msgstr "%.2f KiB/s"
 msgid "OK"
 msgstr "OK"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed command token followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Pré-visualização"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "ERRO: Falha ao executar o tocador de mídia externo! Comando: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr "O tocador de vídeo configurado não foi encontrado: %s"
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "ERRO: Falha ao executar o tocador de mídia externo! Comando: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -8935,6 +8964,11 @@ msgstr "Continuando uploads para o arquivo: %s"
 #, c-format
 msgid "Suspending upload of file: %s"
 msgstr "Suspendendo uploads para o arquivo: %s"
+
+#: src/UserEvents.cpp
+#, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
 
 #: src/UserEvents.cpp
 #, c-format

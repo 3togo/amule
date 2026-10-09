@@ -175,6 +175,22 @@ TEST(UserEventCommand, WindowsEscapesBackslashesBeforeQuotes)
 		ExternalCommand::BuildWindowsCommandLine(args));
 }
 
+TEST(UserEventCommand, WindowsShellQuotingKeepsInnerQuotesAndLiteralBackslashes)
+{
+	const auto args = ExternalCommand::Build("cmd /c echo %SENDER",
+		{ { "%SENDER", "x&echo INJECTED\\" } },
+		nullptr,
+		ExternalCommand::Platform::Windows);
+	ASSERT_EQUALS(wxString("\"cmd\" /d /s /c \"echo \"x&echo INJECTED\\\"\""),
+		ExternalCommand::BuildWindowsCommandLine(args));
+	const auto batch = ExternalCommand::Build("fixed.cmd %SENDER",
+		{ { "%SENDER", "x|echo INJECTED\\" } },
+		nullptr,
+		ExternalCommand::Platform::Windows);
+	ASSERT_TRUE(ExternalCommand::BuildWindowsCommandLine(batch).EndsWith(
+		" /d /s /c \"\"fixed.cmd\" \"x|echo INJECTED\\\"\""));
+}
+
 #ifdef __WINDOWS__
 TEST(UserEventCommand, WindowsNativeArgumentRoundTrip)
 {
@@ -183,6 +199,8 @@ TEST(UserEventCommand, WindowsNativeArgumentRoundTrip)
 	args.Add("C:\\folder with spaces\\");
 	args.Add("sender\\\" --extra");
 	args.Add("two\\\\\"quotes\"");
+	args.Add("C:\\music\\100% Hits.mp3");
+	args.Add("C:\\videos\\Help!.avi");
 	args.Add("");
 	int count = 0;
 	wchar_t **parsed =
@@ -227,7 +245,7 @@ TEST(UserEventCommand, RejectQuotesBeforeCmdOrBatchCanInterpretThem)
 		for (const wxString &command : { wxString("cmd /c echo %SENDER"),
 			     wxString("on-chat.bat %SENDER"),
 			     wxString("on-chat.cmd fixed%SENDER"),
-			     wxString("notify.exe %SENDER %SENDER") }) {
+			     wxString("on-chat.cmd %SENDER %SENDER") }) {
 			ASSERT_TRUE(ExternalCommand::Build(command,
 				{ { "%SENDER", value } },
 				nullptr,
@@ -285,21 +303,27 @@ TEST(UserEventCommand, RejectEmbeddedNulBeforeAnyArgumentCanBeTruncated)
 	ASSERT_FALSE(ExternalCommand::RunDetached("NUL value", args));
 }
 
-TEST(UserEventCommand, WindowsShellsAndBatchFilesCannotReceiveSubstitutedValues)
+TEST(UserEventCommand, WindowsShellsAndBatchFilesAllowOnlyLiteralData)
 {
 	for (const wxString &command : { wxString("cmd /c echo %SENDER"),
-		     wxString("\"C:\\Windows\\System32\\CMD.EXE\" /c \"echo %SENDER\""),
+		     wxString("\"C:\\Windows\\System32\\CMD.EXE\" /d /c echo %SENDER"),
 		     wxString("on-chat.BAT %SENDER"),
-		     wxString("on-chat.CmD %SENDER"),
-		     wxString("powershell -Command %SENDER"),
-		     wxString("pwsh -File fixed.ps1 %SENDER"),
-		     wxString("mshta %SENDER"),
-		     wxString("rundll32 %SENDER") }) {
-		for (const wxString &value : { wxString("safe-looking"),
-			     wxString("%EVIL%"),
+		     wxString("on-chat.CmD prefix-%SENDER"),
+		     wxString("\"on-chat.CmD. \" %SENDER"),
+		     wxString("\"CMD.EXE. \" /c echo %SENDER") }) {
+		for (const wxString &value :
+			{ wxString("safe-looking"), wxString("x&echo INJECTED"), wxString("x|<>^()") }) {
+			ASSERT_FALSE(ExternalCommand::Build(command,
+				{ { "%SENDER", value } },
+				nullptr,
+				ExternalCommand::Platform::Windows)
+					     .IsEmpty());
+		}
+		for (const wxString &value : { wxString("%EVIL%"),
 			     wxString("!EVIL!"),
-			     wxString("x&echo INJECTED"),
-			     wxString("x\r\necho INJECTED") }) {
+			     wxString("x\"&echo INJECTED"),
+			     wxString("x\r"),
+			     wxString("x\n") }) {
 			ASSERT_TRUE(ExternalCommand::Build(command,
 				{ { "%SENDER", value } },
 				nullptr,
@@ -307,25 +331,161 @@ TEST(UserEventCommand, WindowsShellsAndBatchFilesCannotReceiveSubstitutedValues)
 					    .IsEmpty());
 		}
 	}
-}
-
-TEST(UserEventCommand, WindowsExpansionSyntaxIsRejectedEvenForOtherLaunchers)
-{
-	for (const wxString &value :
-		{ wxString("%EVIL%"), wxString("!EVIL!"), wxString("x\r"), wxString("x\n") }) {
-		ASSERT_TRUE(ExternalCommand::Build("notify.exe %SENDER",
-			{ { "%SENDER", value } },
+	for (const wxString &command : { wxString("cmd /c %SENDER"),
+		     wxString("cmd /c \"echo %SENDER\""),
+		     wxString("cmd /c \"echo fixed\" %SENDER"),
+		     wxString("cmd /s /c echo %SENDER"),
+		     wxString("cmd /c powershell -Command %SENDER"),
+		     wxString("cmd /c python3 -c %SENDER"),
+		     wxString("cmd /c cmd /c %SENDER"),
+		     wxString("cmd /c call %SENDER"),
+		     wxString("cmd /c start fixed-title %SENDER"),
+		     wxString("cmd /c for %SENDER"),
+		     wxString("cmd /c if %SENDER"),
+		     wxString("cmd /c echo prefix%SENDER%EVIL%"),
+		     wxString("powershell -Command %SENDER"),
+		     wxString("pwsh -File fixed.ps1 %SENDER") }) {
+		ASSERT_TRUE(ExternalCommand::Build(command,
+			{ { "%SENDER", "safe-looking" } },
 			nullptr,
 			ExternalCommand::Platform::Windows)
 				    .IsEmpty());
 	}
-	const auto args = ExternalCommand::Build("notify.exe %SENDER",
-		{ { "%SENDER", "literal & | ; backslash\\" } },
+}
+
+TEST(UserEventCommand, NativeWindowsProgramsKeepPercentExclamationAndQuotesLiteral)
+{
+	for (const wxString &value : { wxString("C:\\music\\100% Hits.mp3"),
+		     wxString("C:\\videos\\Help!.avi"),
+		     wxString("x\"&echo INJECTED"),
+		     wxString("literal & | < > ^ %EVIL% !EVIL!\r\n") }) {
+		const auto args = ExternalCommand::Build("player.exe %FILE",
+			{ { "%FILE", value } },
+			nullptr,
+			ExternalCommand::Platform::Windows);
+		ASSERT_EQUALS(size_t(2), args.size());
+		ASSERT_EQUALS(value, args[1]);
+		const auto fallback = ExternalCommand::Build(
+			"player.exe", {}, nullptr, ExternalCommand::Platform::Windows, &value);
+		ASSERT_EQUALS(size_t(2), fallback.size());
+		ASSERT_EQUALS(value, fallback[1]);
+	}
+}
+
+TEST(UserEventCommand, NativeExeWithCmdInItsFilenameIsNotABatchFile)
+{
+	const auto args = ExternalCommand::Build("player.cmd.exe %FILE",
+		{ { "%FILE", "100% Hits!" } },
 		nullptr,
 		ExternalCommand::Platform::Windows);
 	ASSERT_EQUALS(size_t(2), args.size());
-	ASSERT_EQUALS(wxString("literal & | ; backslash\\"), args[1]);
 }
+
+TEST(UserEventCommand, RefusalReasonsDistinguishValidationFromLaunchErrors)
+{
+	using Reason = ExternalCommand::RejectionReason;
+	Reason reason = Reason::EmbeddedNul;
+	ASSERT_FALSE(ExternalCommand::Build("missing-program.exe %NAME",
+		{ { "%NAME", "100% Hits!" } },
+		nullptr,
+		ExternalCommand::Platform::Windows,
+		nullptr,
+		&reason)
+			     .IsEmpty());
+	ASSERT_TRUE(reason == Reason::None); // missing executable is a later launch failure
+	ASSERT_TRUE(ExternalCommand::DescribeRejection(reason).empty());
+	ASSERT_TRUE(ExternalCommand::Build("%NAME",
+		{ { "%NAME", "program" } },
+		nullptr,
+		ExternalCommand::Platform::Windows,
+		nullptr,
+		&reason)
+			    .IsEmpty());
+	ASSERT_TRUE(reason == Reason::ExecutableSubstitution);
+	ASSERT_FALSE(ExternalCommand::DescribeRejection(reason).empty());
+	ASSERT_TRUE(ExternalCommand::Build("cmd /c echo %NAME",
+		{ { "%NAME", "%EVIL%" } },
+		nullptr,
+		ExternalCommand::Platform::Windows,
+		nullptr,
+		&reason)
+			    .IsEmpty());
+	ASSERT_TRUE(reason == Reason::UnsafeWindowsShellValue);
+	ASSERT_TRUE(ExternalCommand::Build("sh -c %NAME",
+		{ { "%NAME", "echo hostile" } },
+		nullptr,
+		ExternalCommand::Platform::Posix,
+		nullptr,
+		&reason)
+			    .IsEmpty());
+	ASSERT_TRUE(reason == Reason::InterpreterSubstitution);
+	wxString nul = "before";
+	nul += wxChar(0);
+	ASSERT_TRUE(ExternalCommand::Build("notify %NAME",
+		{ { "%NAME", nul } },
+		nullptr,
+		ExternalCommand::Platform::Posix,
+		nullptr,
+		&reason)
+			    .IsEmpty());
+	ASSERT_TRUE(reason == Reason::EmbeddedNul);
+	ASSERT_TRUE(
+		ExternalCommand::Build("", {}, nullptr, ExternalCommand::Platform::Posix, nullptr, &reason)
+			.IsEmpty());
+	ASSERT_TRUE(reason == Reason::EmptyCommand);
+}
+
+#ifdef __WINDOWS__
+TEST(UserEventCommand, WindowsShortPathCannotHidePowerShell)
+{
+	const wxFileName powershell(
+		wxGetOSDirectory() + "\\System32\\WindowsPowerShell\\v1.0\\powershell.exe");
+	if (powershell.FileExists()) {
+		const wxString shortPath = powershell.GetShortPath();
+		ASSERT_TRUE(ExternalCommand::Build(
+			"\"" + shortPath + "\" -Command %SENDER", { { "%SENDER", "Write-Output INJECTED" } })
+				    .IsEmpty());
+	}
+}
+
+TEST(UserEventCommand, NativeCmdAndBatchCannotExecuteASecondCommandFromData)
+{
+	wxString cmd;
+	if (!wxGetEnv("COMSPEC", &cmd)) {
+		cmd = "cmd.exe";
+	}
+	const wxString temporary = wxFileName::CreateTempFileName("amule-event-batch-");
+	wxFileName batch(temporary);
+	batch.SetExt("cmd");
+	wxRemoveFile(temporary);
+	{
+		wxFFile script(batch.GetFullPath(), "wb");
+		ASSERT_TRUE(script.IsOpened());
+		ASSERT_TRUE(script.Write("@echo off\r\necho \"%~1\"\r\n"));
+	}
+	for (const wxString &command :
+		{ "\"" + cmd + "\" /d /c echo %SENDER", "\"" + batch.GetFullPath() + "\" %SENDER" }) {
+		for (const wxString &value : { wxString("x&echo INJECTED"),
+			     wxString("x|echo INJECTED"),
+			     wxString("x>NUL"),
+			     wxString("x<NUL"),
+			     wxString("x^&echo INJECTED"),
+			     wxString("x&echo INJECTED\\"),
+			     wxString("(x)|echo INJECTED"),
+			     wxString("") }) {
+			const auto args = ExternalCommand::Build(command, { { "%SENDER", value } });
+			ASSERT_FALSE(args.IsEmpty());
+			wxArrayString output, errors;
+			const long status = wxExecute(
+				ExternalCommand::BuildWindowsCommandLine(args), output, errors, wxEXEC_SYNC);
+			ASSERT_EQUALS(0L, status);
+			ASSERT_EQUALS(size_t(1), output.size());
+			ASSERT_EQUALS("\"" + value + "\"", output[0]);
+		}
+	}
+	wxRemoveFile(batch.GetFullPath());
+}
+#endif
 
 TEST(UserEventCommand, InterpreterCodeAndScriptNamesMustRemainFixed)
 {
@@ -366,15 +526,18 @@ TEST(UserEventCommand, PlayerFallbackUsesTheSameSafetyChecksAsPlaceholders)
 	ASSERT_EQUALS(size_t(2), args.size()); // placeholder: do not append again
 	ASSERT_TRUE(ExternalCommand::Build("sh -c", {}, nullptr, ExternalCommand::Platform::Posix, &target)
 			    .IsEmpty());
-	ASSERT_TRUE(ExternalCommand::Build(
+	ASSERT_FALSE(ExternalCommand::Build(
 		"cmd /c echo", {}, nullptr, ExternalCommand::Platform::Windows, &target)
-			    .IsEmpty());
-	ASSERT_TRUE(ExternalCommand::Build(
+			     .IsEmpty());
+	ASSERT_FALSE(ExternalCommand::Build(
 		"on-chat.cmd", {}, nullptr, ExternalCommand::Platform::Windows, &target)
-			    .IsEmpty());
+			     .IsEmpty());
 	const wxString expansion = "C:\\downloads\\%EVIL%.avi";
-	ASSERT_TRUE(ExternalCommand::Build(
+	ASSERT_FALSE(ExternalCommand::Build(
 		"player.exe", {}, nullptr, ExternalCommand::Platform::Windows, &expansion)
+			     .IsEmpty());
+	ASSERT_TRUE(ExternalCommand::Build(
+		"cmd /c echo", {}, nullptr, ExternalCommand::Platform::Windows, &expansion)
 			    .IsEmpty());
 	wxString nul = target;
 	nul += wxChar(0);

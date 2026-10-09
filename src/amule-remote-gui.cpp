@@ -3332,8 +3332,8 @@ void CKnownFilesRem::ProcessItemUpdatePartfile(const CEC_PartFile_Tag *tag, CPar
 	// An incremental tag can omit status. Do not let the proxy's default PS_EMPTY
 	// establish a baseline before the daemon has sent a real status. All metadata,
 	// including download activity time, is decoded before executing the command.
-	if (tag->GetTagByName(EC_TAG_PARTFILE_STATUS) &&
-		m_downloadEvents.Observe(file->ECID(), file->status)) {
+	if (m_downloadEvents.Observe(
+		    file->ECID(), file->status, tag->GetTagByName(EC_TAG_PARTFILE_STATUS) != nullptr)) {
 		CUserEvents::ProcessEvent(CUserEvents::DownloadCompleted, file);
 	}
 }
