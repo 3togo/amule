@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-08 13:42+0900\n"
 "PO-Revision-Date: 2026-10-07 16:27+0000\n"
 "Last-Translator: Hyunju Kang <rexington@gmail.com>\n"
 "Language-Team: Korean <hoenny@daum.net>\n"
@@ -5166,6 +5166,25 @@ msgstr "올려주기 대기열 크기: 5000 클라이언트"
 #: src/muuli_wdr.cpp
 msgid "Server connection refresh interval: Disable"
 msgstr "서버 연결 갱신 간격: 사용않함"
+
+#: src/muuli_wdr.cpp
+msgid "Experimental"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Enable experimental ED2K accelerated file publication"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid ""
+"Testing is discouraged for normal use. Interoperability and server-load testing\n"
+"are incomplete; this may cause server disconnections. Enable only for\n"
+"controlled testing with a compatible server. Disabled by default."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Configure this experimental option on the daemon host."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Disable computer's timed standby mode"
