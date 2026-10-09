@@ -18,69 +18,101 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
-// Country flags are libmaxminddb-free: they map an ISO code to an embedded PNG via the art
-// provider, so this is compiled unconditionally into every GUI -- amulegui, which gets codes over
-// EC, and monolithic amule. Only the resolver producing the codes is gated on ENABLE_IP2COUNTRY.
+// Country-code resolution stays in the core; this cache is shared by both GUIs.
 #include "CountryFlags.h"
-#include "Logger.h"          // For AddLogLine*
-#include <common/Format.h>   // For CFormat()
-#include "icons/icon_data.h" // For amule_get_all_icons()
+#include "icons/icon_data.h"
 
-#include <wx/artprov.h> // For wxArtProvider::GetBitmap
-#include <wx/intl.h>
+#include <wx/mstream.h>
+#include <cmath>
+#include <cstring>
 
-#include <cstring> // For strncmp
-
-CCountryFlags::CCountryFlags() = default;
-
-void CCountryFlags::LoadFlags()
+namespace
 {
-	// Walk the embedded icon table and pick out anything named "flag_<code>". The table is
-	// built by src/icons/embed_icons.py from src/icons/flags/<code>.png at compile time;
-	// CamuleArtProvider, registered in CamuleGuiApp::OnInit, hands back a decoded wxBitmap for
-	// each.
-	int icon_count = 0;
-	const struct AMuleIconEntry *icons = amule_get_all_icons(&icon_count);
-	const char flag_prefix[] = "flag_";
-	const size_t flag_prefix_len = sizeof(flag_prefix) - 1;
-
-	for (int i = 0; i < icon_count; ++i) {
-		const char *name = icons[i].name;
-		if (strncmp(name, flag_prefix, flag_prefix_len) != 0) {
-			continue;
+const AMuleIconEntry *FindFlag(const wxString &code)
+{
+	// Index the fixed embedded inventory once; unknown network codes never grow it.
+	static const auto entries = [] {
+		std::map<wxString, const AMuleIconEntry *> result;
+		int count = 0;
+		const auto icons = amule_get_all_icons(&count);
+		for (int i = 0; i < count; ++i) {
+			if (std::strncmp(icons[i].name, "flag_", 5) == 0) {
+				result.emplace(wxString::FromUTF8(icons[i].name + 5), &icons[i]);
+			}
 		}
-		const wxString code = wxString(name + flag_prefix_len, wxConvISO8859_1);
-		const wxString art_id = wxString::Format("amule:%s", name);
-		const wxImage flag = wxArtProvider::GetBitmap(art_id).ConvertToImage();
-
-		if (!flag.IsOk()) {
-			// Reuse the existing catalog string (avoid a new msgid).
-			AddLogLineC(CFormat(_("Failed to load country data for '%s'.")) % code);
-			continue;
-		}
-		if (code == "unknown") {
-			m_unknown = flag;
-		}
-		m_flags[code] = flag;
-	}
-
-	AddDebugLogLineN(logGeneral,
-		CFormat("Loaded %d flag bitmaps.") %
-			m_flags.size()); // there's never just one - no plural needed
+		return result;
+	}();
+	const auto found = entries.find(code);
+	const auto fallback = entries.find("unknown");
+	return found != entries.end()      ? found->second
+	       : fallback != entries.end() ? fallback->second
+					   : nullptr;
 }
+} // namespace
 
-const wxImage &CCountryFlags::GetFlag(const wxString &code)
+wxBitmap CCountryFlags::GetFlag(const wxString &code, const wxSize &logicalSize, double contentScale)
 {
-	if (!m_loaded) {
-		// First call happens during list drawing, well after the app's
-		// OnInit pushed CamuleArtProvider -- so the flag art resolves now.
-		LoadFlags();
-		m_loaded = true;
+	if (logicalSize.x <= 0 || logicalSize.y <= 0 || !std::isfinite(contentScale) || contentScale <= 0) {
+		return wxNullBitmap;
 	}
-	std::map<wxString, wxImage>::const_iterator it = m_flags.find(code);
-	if (it != m_flags.end()) {
-		return it->second;
+	const auto entry = FindFlag(code);
+	if (!entry) {
+		return wxNullBitmap;
 	}
-	// Empty or unrecognised code -> the "??" placeholder flag.
-	return m_unknown;
+	const wxString key = wxString::FromUTF8(entry->name);
+	auto it = m_flags.find(key);
+	if (it == m_flags.end()) {
+		FlagArtwork artwork;
+		const unsigned char *data[] = { entry->png_data, entry->png2x_data, entry->png3x_data };
+		const unsigned int lengths[] = { entry->png_len, entry->png2x_len, entry->png3x_len };
+		for (size_t i = 0; i < artwork.images.size(); ++i) {
+			if (!data[i] || !lengths[i]) {
+				continue;
+			}
+			wxMemoryInputStream stream(data[i], lengths[i]);
+			auto &image = artwork.images[i];
+			image.LoadFile(stream, wxBITMAP_TYPE_PNG);
+			if (image.IsOk() && !image.HasAlpha()) {
+				image.InitAlpha();
+			}
+		}
+		it = m_flags.emplace(key, artwork).first;
+	}
+	auto &artwork = it->second;
+	const auto sizeKey = std::make_tuple(logicalSize.x, logicalSize.y, contentScale);
+	const auto cached = artwork.bitmaps.find(sizeKey);
+	if (cached != artwork.bitmaps.end()) {
+		return cached->second;
+	}
+	const wxSize pixels(wxRound(logicalSize.x * contentScale), wxRound(logicalSize.y * contentScale));
+	if (pixels.x <= 0 || pixels.y <= 0) {
+		return wxNullBitmap;
+	}
+	const wxImage *source = nullptr;
+	for (const auto &image : artwork.images) {
+		if (!image.IsOk()) {
+			continue;
+		}
+		source = &image;
+		if (image.GetWidth() >= pixels.x && image.GetHeight() >= pixels.y) {
+			break;
+		}
+	}
+	if (!source) {
+		return wxNullBitmap;
+	}
+	const wxImage image = source->GetSize() == pixels
+				      ? *source
+				      : source->Scale(pixels.x, pixels.y, wxIMAGE_QUALITY_HIGH);
+	wxBitmap bitmap(image);
+	if (bitmap.IsOk()) {
+		// SetScaleFactor may copy pixel data. Do it only for a new scale, then
+		// share the completed bitmap on subsequent list-cell draws.
+		bitmap.SetScaleFactor(contentScale);
+		if (artwork.bitmaps.size() >= 8) {
+			artwork.bitmaps.erase(artwork.bitmaps.begin());
+		}
+		artwork.bitmaps.emplace(sizeKey, bitmap);
+	}
+	return bitmap;
 }

@@ -84,6 +84,7 @@ if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 		# (Python3 missing → use the file as committed). See
 		# src/CMakeLists.txt for the resolution.
 		CamuleArtProvider.cpp
+		MenuIcons.cpp
 		${AMULE_ICON_DATA_C}
 		AddFriend.cpp
 		amule-gui.cpp
@@ -138,7 +139,7 @@ if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 		# Obj-C++ helper for AppKit access (NSApp activation policy
 		# toggle for "minimize to tray" — drops the Dock icon while
 		# the main window is hidden so no Dock thumbnail is left).
-		list (APPEND GUI_SOURCES MacAppHelper.mm)
+		list (APPEND GUI_SOURCES MacAppHelper.mm MenuIcons_mac.mm)
 	endif()
 endif()
 

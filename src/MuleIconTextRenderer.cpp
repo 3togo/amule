@@ -52,11 +52,22 @@ bool CMuleIconTextRenderer::Render(wxRect cell, wxDC *dc, int state)
 
 	const wxIcon &icon = m_value.GetIcon();
 	if (icon.IsOk()) {
+#ifdef __WXMSW__
+		// HICON is already native: avoid converting it to a bitmap per cell.
+		const wxSize size = icon.GetSize();
+#else
+		const wxBitmap bitmap(icon);
+		const wxSize size = bitmap.GetLogicalSize();
+#endif
 		// Centred vertically: the icon is a fixed size while the row height
 		// follows the font, so the two rarely match.
-		const int y = cell.y + std::max(0, (cell.height - icon.GetHeight()) / 2);
+		const int y = cell.y + std::max(0, (cell.height - size.y) / 2);
+#ifdef __WXMSW__
 		dc->DrawIcon(icon, cell.x, y);
-		xoffset = icon.GetWidth() + kIconTextGap;
+#else
+		dc->DrawBitmap(bitmap, cell.x, y, true);
+#endif
+		xoffset = size.x + kIconTextGap;
 	}
 
 	// A row with no icon passes xoffset 0 and starts at the cell edge -- the
@@ -74,8 +85,13 @@ wxSize CMuleIconTextRenderer::GetSize() const
 
 	const wxIcon &icon = m_value.GetIcon();
 	if (icon.IsOk()) {
-		size.x += icon.GetWidth() + kIconTextGap;
-		size.y = std::max(size.y, icon.GetHeight());
+#ifdef __WXMSW__
+		const wxSize iconSize = icon.GetSize();
+#else
+		const wxSize iconSize = wxBitmap(icon).GetLogicalSize();
+#endif
+		size.x += iconSize.x + kIconTextGap;
+		size.y = std::max(size.y, iconSize.y);
 	}
 	return size;
 }

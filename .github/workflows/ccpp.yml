@@ -32,6 +32,8 @@ permissions:
   pull-requests: write
 
 env:
+  # Do not count a skipped artwork test as native GUI coverage.
+  AMULE_ICON_TEST_REQUIRE_GUI: "1"
   CCACHE_DIR: ${{ github.workspace }}/.ccache
   CCACHE_MAXSIZE: 500M
 
