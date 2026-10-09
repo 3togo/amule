@@ -714,7 +714,13 @@ bool PrefsUnifiedDlg::TransferToWindow()
 	}
 
 #ifdef CLIENT_GUI
-	UpdateUserEventControls();
+	// Cfg transfer can re-enable command fields from saved checkbox values.
+	for (unsigned int i = 0; i < CUserEvents::GetCount(); ++i) {
+		const int base = USEREVENTS_FIRST_ID + i * USEREVENTS_IDS_PER_EVENT;
+		for (int offset = 1; offset <= 4; ++offset) {
+			FindWindow(base + offset)->Disable();
+		}
+	}
 #endif
 
 	// The memory-mapped-I/O checkbox is only meaningful when the core we drive supports
@@ -1074,18 +1080,6 @@ bool PrefsUnifiedDlg::TransferFromWindow()
 	thePrefs::SetGeoIPUpdateRequested(
 		thePrefs::IsGeoIPEnabled() && (geoipSourceChanged || geoipCredChanged));
 #endif
-	// GUI commands are local; changing them starts a new event subscription.
-	for (unsigned int i = 0; i < CUserEvents::GetCount(); ++i) {
-		// Chat is raised locally and has no remote subscription.
-		if (i == CUserEvents::NewChatSession) {
-			continue;
-		}
-		const int base = USEREVENTS_FIRST_ID + i * USEREVENTS_IDS_PER_EVENT;
-		if (CfgChanged(base + 3) || CfgChanged(base + 4)) {
-			theApp->ResetUserEventSubscription();
-			break;
-		}
-	}
 	// Send the user's changes to the core.
 	theApp->glob_prefs->SendChangesToRemote();
 #ifdef GEOIP_GUI
@@ -2661,18 +2655,6 @@ void PrefsUnifiedDlg::CreateEventPanels(const int idx, const wxString &vars, wxW
 
 	item7->Add(item10, wxSizerFlags().Expand().CenterVertical().Border(wxALL, 0));
 
-#ifdef CLIENT_GUI
-	// EC preferences do not carry user commands. Keep the local saved values, but
-	// do not offer controls that appear to configure the connected daemon.
-	item9->Disable();
-	item12->Disable();
-	item7->Add(new wxStaticText(item8,
-			   wxID_ANY,
-			   _("Configure core commands in the daemon's amule.conf and restart amuled.\n"
-			     "These settings are not sent to the daemon.")),
-		wxSizerFlags().Border(wxALL, 5));
-#endif
-
 	wxCheckBox *item14 = new wxCheckBox(item8,
 		USEREVENTS_FIRST_ID + idx * USEREVENTS_IDS_PER_EVENT + 3,
 		_("Enable command execution on GUI"),
@@ -2702,20 +2684,15 @@ void PrefsUnifiedDlg::CreateEventPanels(const int idx, const wxString &vars, wxW
 	item7->Add(item15, wxSizerFlags().Expand().CenterVertical().Border(wxALL, 0));
 
 #ifdef CLIENT_GUI
-	// Chat sessions are raised locally by ChatSelector. The other events are
-	// delivered through the capability-gated EC user-event feed.
-	if (idx != CUserEvents::NewChatSession) {
-		m_remoteEventNotes.resize(CUserEvents::GetCount(), nullptr);
-		wxStaticText *note = new wxStaticText(
-			item8, wxID_ANY, _("This daemon does not support GUI commands for this event."));
-		m_remoteEventNotes[idx] = note;
-		item7->Add(note, wxSizerFlags().Border(wxALL, 5));
-		const bool supported = theApp->m_connect->ServerSupportsUserEvents();
-		item14->Enable(supported);
-		item17->Enable(supported &&
-			       CUserEvents::IsGUICommandEnabled(static_cast<CUserEvents::EventType>(idx)));
-		note->Show(!supported);
-	}
+	item9->Disable();
+	item12->Disable();
+	item14->Disable();
+	item17->Disable();
+	item7->Add(new wxStaticText(item8,
+			   wxID_ANY,
+			   _("Core commands must be configured in the daemon's amule.conf.\n"
+			     "GUI commands run only with a local core.")),
+		wxSizerFlags().Border(wxALL, 5));
 #endif
 
 	wxStaticText *item13 = new wxStaticText(item8,
@@ -2731,25 +2708,6 @@ void PrefsUnifiedDlg::CreateEventPanels(const int idx, const wxString &vars, wxW
 	IDC_PREFS_EVENTS_PAGE->Hide(idx + 1);
 	RefreshPreferencesPage(parent);
 }
-
-#ifdef CLIENT_GUI
-void PrefsUnifiedDlg::UpdateUserEventControls()
-{
-	const bool supported = theApp->m_connect->ServerSupportsUserEvents();
-	for (unsigned int i = 0; i < CUserEvents::GetCount(); ++i) {
-		const int base = USEREVENTS_FIRST_ID + i * USEREVENTS_IDS_PER_EVENT;
-		FindWindow(base + 1)->Disable();
-		FindWindow(base + 2)->Disable();
-		const bool guiSupported = supported || i == CUserEvents::NewChatSession;
-		FindWindow(base + 3)->Enable(guiSupported);
-		FindWindow(base + 4)->Enable(guiSupported && CUserEvents::IsGUICommandEnabled(
-								     static_cast<CUserEvents::EventType>(i)));
-		if (i < m_remoteEventNotes.size() && m_remoteEventNotes[i]) {
-			m_remoteEventNotes[i]->Show(!supported);
-		}
-	}
-}
-#endif
 
 namespace
 {

@@ -1297,7 +1297,7 @@ void CDownloadQueue::CheckDiskspace(const CPath &path)
 		return;
 	} else if (free < min) {
 		const wxString partition = path.GetRaw();
-		CUserEvents::ProcessEvent(CUserEvents::OutOfDiskSpace, &partition);
+		CUserEvents::ProcessEvent(CUserEvents::OutOfDiskSpace, partition.wx_str());
 	}
 
 	for (FileQueue::size_type i = 0; i < m_filelist.size(); ++i) {

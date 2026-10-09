@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-09 03:26+0000\n"
+"POT-Creation-Date: 2026-10-09 08:05+0000\n"
 "PO-Revision-Date: 2026-10-07 16:28+0000\n"
 "Last-Translator: Hallvor Brunstad <Hallvor_1976@yahoo.com>\n"
 "Language-Team: <i18n-nn@lister.ping.uio.no>\n"
@@ -6842,12 +6842,6 @@ msgid "Core command:"
 msgstr "Kjernekommando:"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Configure core commands in the daemon's amule.conf and restart amuled.\n"
-"These settings are not sent to the daemon."
-msgstr ""
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "Enable command execution on GUI"
 msgstr "Aktivér kommandokøyring på drakt"
 
@@ -6856,7 +6850,9 @@ msgid "GUI command:"
 msgstr "Draktkommando:"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "This daemon does not support GUI commands for this event."
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"GUI commands run only with a local core."
 msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp

@@ -70,8 +70,7 @@ CECLoginPacket::CECLoginPacket(const wxString &client,
 	bool canChatPeerHash,
 	bool canAEAD,
 	const std::vector<uint8_t> &clientNonce,
-	const std::vector<uint8_t> &clientPubKey,
-	bool canUserEvents)
+	const std::vector<uint8_t> &clientPubKey)
 : CECPacket(EC_OP_AUTH_REQ)
 {
 	AddTag(CECTag(EC_TAG_CLIENT_NAME, client));
@@ -138,9 +137,6 @@ CECLoginPacket::CECLoginPacket(const wxString &client,
 	// unique GUI_ID. Only meaningful alongside canChatSessions.
 	if (canChatPeerHash)
 		AddTag(CECEmptyTag(EC_TAG_CAN_CHAT_PEER_HASH));
-	if (canUserEvents) {
-		AddTag(CECEmptyTag(EC_TAG_CAN_USER_EVENTS));
-	}
 	// Transport encryption: our ciphers in preference order, our half of the
 	// derivation salt, and our ephemeral public key. A daemon that does not know
 	// these tags ignores them and the session stays in clear. The public key needs no
@@ -229,8 +225,6 @@ void CRemoteConnect::SetCapabilities(bool canZLIB, bool canUTF8numbers, bool can
 bool CRemoteConnect::ConnectToCore(
 	const wxString &host, int port, const wxString &pass, const wxString &client, const wxString &version)
 {
-	m_serverUserEvents = false;
-	m_userEventBaseline = 0;
 	m_connectionPassword = pass;
 	// The salted challenge below overwrites m_connectionPassword with a value that
 	// goes on the wire, so capture the usable key material first.
@@ -323,8 +317,7 @@ bool CRemoteConnect::ConnectToCore(
 			m_canChatPeerHash,
 			m_canAEAD,
 			m_aeadClientNonce,
-			m_aeadEphPub,
-			m_canUserEvents);
+			m_aeadEphPub);
 
 		CSmartPtr<const CECPacket> getSalt(SendRecvPacket(&login_req));
 		m_ec_state = EC_REQ_SENT;
@@ -386,8 +379,7 @@ void CRemoteConnect::OnConnect()
 			m_canChatPeerHash,
 			m_canAEAD,
 			m_aeadClientNonce,
-			m_aeadEphPub,
-			m_canUserEvents);
+			m_aeadEphPub);
 		CECSocket::SendPacket(&login_req);
 
 		m_ec_state = EC_REQ_SENT;
@@ -748,12 +740,6 @@ bool CRemoteConnect::ProcessAuthPacket(const CECPacket *reply)
 			// hash tag would.
 			if (reply->GetTagByName(EC_TAG_CAN_CHAT_PEER_HASH)) {
 				m_serverChatPeerHash = true;
-			}
-			if (const CECTag *events = reply->GetTagByName(EC_TAG_CAN_USER_EVENTS)) {
-				if (m_canUserEvents && events->IsInt()) {
-					m_serverUserEvents = true;
-					m_userEventBaseline = events->GetInt();
-				}
 			}
 			// Server serves EC_OP_SEARCH_LIST. Old daemons omit the echo and the client
 			// must not send the opcode: it lands in ProcessRequest2's unknown-opcode

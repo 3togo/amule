@@ -27,9 +27,6 @@
 
 #include <wx/intl.h> // Needed for wxTRANSLATE
 
-struct CUserEventData;
-class CUserEventStream;
-
 #ifdef _MSC_VER
 #define ATTR(x)
 #else
@@ -80,7 +77,7 @@ const int USEREVENTS_FIRST_ID = 11500; /* Some safe GUI ID to start from */
 		wxTRANSLATE("Out of space"), \
 		USEREVENTS_REPLACE_VAR("PARTITION", \
 			wxTRANSLATE("Disk partition."), \
-			*static_cast<const wxString *>(object))) \
+			wxString(static_cast<const wxChar *>(object)))) \
 	USEREVENTS_EVENT(ErrorOnCompletion, \
 		wxTRANSLATE("Error on completion"), \
 		USEREVENTS_REPLACE_VAR("FILE", \
@@ -115,10 +112,6 @@ public:
 	 * call site or creating a parameter list per event -- more lists to keep in sync by hand.
 	 */
 	static void ProcessEvent(enum EventType event, const void *object);
-
-	// Remote delivery executes only a locally configured GUI command.
-	static void ProcessRemoteEvent(const CUserEventData &data);
-	static CUserEventStream &RemoteEvents();
 
 	/**
 	 * The number of defined user events.

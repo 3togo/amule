@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-09 03:26+0000\n"
+"POT-Creation-Date: 2026-10-09 08:05+0000\n"
 "PO-Revision-Date: 2026-10-08 11:09+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
@@ -6826,12 +6826,6 @@ msgid "Core command:"
 msgstr "核心命令："
 
 #: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Configure core commands in the daemon's amule.conf and restart amuled.\n"
-"These settings are not sent to the daemon."
-msgstr ""
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "Enable command execution on GUI"
 msgstr "在图形界面端启用执行命令"
 
@@ -6840,9 +6834,10 @@ msgid "GUI command:"
 msgstr "图形界面命令："
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
-msgid "This daemon does not support GUI commands for this event."
-msgstr "已连接的 daemon 不支持 All 搜索类型。"
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"GUI commands run only with a local core."
+msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule GIT\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-09 03:26+0000\n"
+"POT-Creation-Date: 2026-10-09 08:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -6656,12 +6656,6 @@ msgid "Core command:"
 msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Configure core commands in the daemon's amule.conf and restart amuled.\n"
-"These settings are not sent to the daemon."
-msgstr ""
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "Enable command execution on GUI"
 msgstr ""
 
@@ -6670,7 +6664,9 @@ msgid "GUI command:"
 msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "This daemon does not support GUI commands for this event."
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"GUI commands run only with a local core."
 msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp

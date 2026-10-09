@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-09 03:26+0000\n"
+"POT-Creation-Date: 2026-10-09 08:05+0000\n"
 "PO-Revision-Date: 2026-10-07 16:29+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
@@ -6886,12 +6886,6 @@ msgstr "Включить выполнение команд в ядре"
 msgid "Core command:"
 msgstr "Команда ядра:"
 
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Configure core commands in the daemon's amule.conf and restart amuled.\n"
-"These settings are not sent to the daemon."
-msgstr ""
-
 # никто ни в жизни не поймет переведенную аббревиатуру
 #: src/PrefsUnifiedDlg.cpp
 msgid "Enable command execution on GUI"
@@ -6902,9 +6896,10 @@ msgid "GUI command:"
 msgstr "Команда граф. интерфейса:"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
-msgid "This daemon does not support GUI commands for this event."
-msgstr "Подключённый демон не поддерживает поиск «Все»."
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"GUI commands run only with a local core."
+msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"

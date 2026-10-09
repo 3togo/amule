@@ -33,7 +33,6 @@
 				  // Reload(yieldCb) shim -- matches the daemon-side
 				  // signature added in PrefsUnifiedDlg's commit path.
 #include <ec/cpp/RemoteConnect.h> // Needed for CRemoteConnect
-#include <ec/cpp/ECUserEvents.h>
 
 #include "Statistics.h"
 #include "Preferences.h"
@@ -828,19 +827,6 @@ private:
 	std::vector<CChatPeer> m_sessions;
 };
 
-class CUserEventsHandlerRem : public CECPacketHandlerBase
-{
-public:
-	void HandlePacket(const CECPacket *packet) override;
-	void AbortPendingRequest() override { m_subscription.Abort(); }
-	void Reset(uint64 baseline) { m_subscription.Reset(baseline); }
-	void Start(uint64 baseline);
-	void Poll(CRemoteConnect *connection);
-
-private:
-	CUserEventSubscription m_subscription;
-};
-
 class CStatTreeRem : public CECPacketHandlerBase
 {
 	virtual void HandlePacket(const CECPacket *);
@@ -1041,11 +1027,9 @@ class CamuleRemoteGuiApp : public wxApp, public CamuleGuiBase, public CamuleAppC
 	CStatsUpdaterRem m_stats_updater;
 	CServerInfoHandlerRem m_serverinfo_handler;
 	CChatMsgHandlerRem m_chatmsg_handler;
-	CUserEventsHandlerRem m_userevents_handler;
 
 public:
 	void Startup();
-	void ResetUserEventSubscription() { m_userevents_handler.Reset(m_connect->UserEventBaseline()); }
 
 	/// The main window came back from the taskbar/tray. If a reconnect has been running
 	/// quietly behind it, this is the moment to show the dialog -- the user can see the

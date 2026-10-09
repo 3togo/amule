@@ -24,7 +24,6 @@
 
 #include <algorithm>             // Needed for std::min
 #include "libs/ec/cpp/ECCrypt.h" // Needed for ECCrypt::CipherName
-#include "UserEvents.h"
 
 #include <wx/ipc.h>
 #include <wx/cmdline.h>  // Needed for wxCmdLineParser
@@ -451,7 +450,6 @@ void CamuleRemoteGuiApp::OnPollTimer(wxTimerEvent &)
 			}
 			m_connect->SendRequest(&m_chatmsg_handler, &chat_req);
 		}
-		m_userevents_handler.Poll(m_connect);
 		// Back to the roots
 		request_step = 0;
 		break;
@@ -600,7 +598,6 @@ bool CamuleRemoteGuiApp::OnInit()
 	// amulegui addresses and lists chat sessions by hash, including one with no unique
 	// GUI_ID. An old daemon will not echo it and amulegui falls back to GUI_ID only.
 	m_connect->SetCanChatPeerHash(true);
-	m_connect->SetCanUserEvents(true);
 	// The ForceZLIB override is read from the connection dialog (see
 	// ShowConnectionDialog) so the user's checkbox choice in this session overrides the
 	// persisted /EC/ForceZLIB value.
@@ -719,7 +716,6 @@ void CamuleRemoteGuiApp::ResetEcConnect()
 	m_connect->SetCanMultiSearch(true);
 	m_connect->SetCanChatSessions(true);
 	m_connect->SetCanChatPeerHash(true);
-	m_connect->SetCanUserEvents(true);
 }
 
 void CamuleRemoteGuiApp::OnECConnection(wxEvent &event)
@@ -911,7 +907,6 @@ void CamuleRemoteGuiApp::FinishReconnect(int result)
 
 	if (result == wxID_OK) {
 		AddLogLineCS(_("Reconnected to the remote core."));
-		m_userevents_handler.Start(m_connect->UserEventBaseline());
 
 		// The daemon may have been upgraded while we were away, so re-read
 		// the version rather than leaving the pre-drop one on screen.
@@ -1102,7 +1097,6 @@ void CamuleRemoteGuiApp::OnNotifyEvent(CMuleGUIEvent &evt)
 
 void CamuleRemoteGuiApp::Startup()
 {
-	m_userevents_handler.Start(m_connect->UserEventBaseline());
 
 	if (dialog->SaveUserPass()) {
 		wxConfig::Get()->Write("/EC/Host", dialog->Host());
@@ -1250,42 +1244,6 @@ void CamuleRemoteGuiApp::AddServerMessageLine(wxString &msg)
 	// happens in CServerInfoHandlerRem::HandlePacket; by the time we land here `msg` is a
 	// single new line, ready to append.
 	amuledlg->AddServerMessageLine(msg);
-}
-
-namespace
-{
-uint32 EnabledRemoteUserEvents()
-{
-	uint32 enabled = 0;
-	for (unsigned int i = 0; i < CUserEvents::GetCount(); ++i) {
-		if (i != CUserEvents::NewChatSession &&
-			CUserEvents::IsGUICommandEnabled(static_cast<CUserEvents::EventType>(i))) {
-			enabled |= uint32(1) << i;
-		}
-	}
-	return enabled;
-}
-} // namespace
-
-void CUserEventsHandlerRem::Start(uint64 baseline)
-{
-	m_subscription.Reset(baseline, EnabledRemoteUserEvents());
-}
-
-void CUserEventsHandlerRem::Poll(CRemoteConnect *connection)
-{
-	CECPacket request(EC_OP_GET_USER_EVENTS);
-	if (m_subscription.BeginPoll(
-		    EnabledRemoteUserEvents(), connection->ServerSupportsUserEvents(), request)) {
-		connection->SendRequest(this, &request);
-	}
-}
-
-void CUserEventsHandlerRem::HandlePacket(const CECPacket *packet)
-{
-	for (const CUserEventData &data : m_subscription.Read(*packet, EnabledRemoteUserEvents())) {
-		CUserEvents::ProcessRemoteEvent(data);
-	}
 }
 
 void CServerInfoHandlerRem::HandlePacket(const CECPacket *packet)
