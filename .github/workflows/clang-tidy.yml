@@ -51,7 +51,7 @@ permissions:
 env:
   CCACHE_DIR: ${{ github.workspace }}/.ccache
   CCACHE_MAXSIZE: 500M
-  LLVM_VERSION: '21'
+  LLVM_VERSION: '18'
 
   # clang-tidy result cache (ctcache). The whole-tree Tier-1 job runs the
   # Clang Static Analyzer over every TU -- path-sensitive and slow. ctcache
