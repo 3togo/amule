@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-08 13:42+0900\n"
-"PO-Revision-Date: 2026-10-07 16:31+0000\n"
+"PO-Revision-Date: 2026-10-08 11:09+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
 "Language: zh_CN\n"
@@ -4742,11 +4742,11 @@ msgstr "断线后自动重连"
 
 #: src/muuli_wdr.cpp
 msgid "File repair hashes over Kad"
-msgstr ""
+msgstr "Kad 网络文件修复哈希"
 
 #: src/muuli_wdr.cpp
 msgid "Share and use file repair hashes (AICH) over Kad"
-msgstr ""
+msgstr "分享并使用 Kad 网络文件修复哈希（AICH）"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -4758,10 +4758,17 @@ msgid ""
 "\n"
 "Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
+"与其他 Kad 节点分享文件修复哈希并从 Kad 搜索学习它们。这些哈希可以帮助 aMule 无需再次下载完整部分就修复损坏的下载数据。只有当足够数量的独立对等方报告相同哈希时 aMule 才使用该哈希进行修复。\n"
+"\n"
+"非常老的 Kad 客户端 (eMule 0.49b 前) 可能丢失包含这些哈希的搜索结果。如注意到丢失结果，试着关闭此选项。\n"
+"\n"
+"关闭此选项会在下次保存时丢弃存储在你的 Kad 索引中的结果。重新打开会再次收集它们。\n"
+"\n"
+"技术细节：启用这个会通告 Kad 协议版本 0x0a 并添加 AICH 哈希到关键词发布和搜索结果。"
 
 #: src/muuli_wdr.cpp
 msgid "Ignore repair hashes from Kad nodes too old to support them"
-msgstr ""
+msgstr "忽略来自不支持修复哈希的过老的 Kad 节点的修复哈希"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -4771,6 +4778,11 @@ msgid ""
 "\n"
 "Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
+"仅在启用了分享并使用 Kad 网络文件修复哈希选项时应用。忽略报告 Kad 版本太老不支持此类哈希的节点所发布的哈希。\n"
+"\n"
+"节点报告的版本可能过时或不准确， 因此这可能丢弃有效哈希并使得被接受的哈希不可信。版本未知的节点仍被接受。\n"
+"\n"
+"技术细节：拒绝来自通告的 Kad 协议版本低于 0x09 的节点的 AICH 发布哈希。"
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"

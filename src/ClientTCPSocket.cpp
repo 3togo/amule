@@ -404,8 +404,10 @@ bool CClientTCPSocket::ProcessPacket(const uint8_t *buffer, uint32 size, uint8 o
 			throw;
 		}
 
-		if (thePrefs::ParanoidFilter() && !IsLowID(m_client->GetUserIDHybrid()) &&
-			(GetRemoteIP() != wxUINT32_SWAP_ALWAYS(m_client->GetUserIDHybrid()))) {
+		if (thePrefs::ParanoidFilter() &&
+			PeerAddressing::ParanoidHelloMismatch(m_remoteAddress,
+				IsLowID(m_client->GetUserIDHybrid()),
+				wxUINT32_SWAP_ALWAYS(m_client->GetUserIDHybrid()))) {
 			wxString reason = "Client claims a different IP from the one we received the hello "
 					  "packet from: ";
 			reason += Uint32toStringIP(wxUINT32_SWAP_ALWAYS(m_client->GetUserIDHybrid())) +
