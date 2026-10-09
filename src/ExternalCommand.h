@@ -67,7 +67,7 @@ wxArrayString Build(const wxString &command,
 	const wxString *fallbackArgument = nullptr,
 	RejectionReason *rejection = nullptr);
 
-// Serialize arguments with Windows C runtime quoting, including trailing backslashes.
+// Use CRT quoting for native programs, and explicit outer quoting for cmd/batch.
 wxString BuildWindowsCommandLine(const wxArrayString &args);
 
 // Spawn asynchronously using the AppImage-safe environment. False means no child

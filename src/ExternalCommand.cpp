@@ -30,6 +30,8 @@
 #include <limits>
 
 #include <wx/cmdline.h>
+#include <wx/filefn.h>
+#include <wx/filename.h>
 #include <wx/intl.h>
 #include <wx/utils.h>
 
@@ -46,6 +48,25 @@ wxString NormalizedProgramPath(const wxString &path, Platform platform)
 		while (normalized.EndsWith(".") || normalized.EndsWith(" ")) {
 			normalized.RemoveLast();
 		}
+#ifdef __WINDOWS__
+		// Expand existing 8.3 aliases before recognizing interpreters. Otherwise
+		// a standard powers~1.exe path could bypass the PowerShell restriction.
+		wxString candidate = normalized;
+		if (!wxFileExists(candidate) && wxFileName(candidate).GetExt().empty()) {
+			candidate += ".exe"; // CreateProcess appends this extension too
+		}
+		wxString resolved = candidate;
+		if (!wxFileExists(resolved) && normalized.Find('\\') == wxNOT_FOUND &&
+			normalized.Find('/') == wxNOT_FOUND) {
+			wxString searchPath;
+			if (wxGetEnv("PATH", &searchPath)) {
+				wxFindFileInPath(&resolved, searchPath, candidate);
+			}
+		}
+		if (wxFileExists(resolved)) {
+			normalized = wxFileName(resolved).GetLongPath();
+		}
+#endif
 	}
 	return normalized;
 }
@@ -257,8 +278,8 @@ wxArrayString Build(const wxString &command,
 	}
 	const bool appendFallback = !didSubstitute && fallbackArgument != nullptr;
 	if ((didSubstitute || appendFallback) && commandShell) {
-		for (size_t i = 1; i < args.size(); ++i) {
-			const RejectionReason reason = ValidateValue(args[i], true);
+		for (const wxString &arg : args) {
+			const RejectionReason reason = ValidateValue(arg, true);
 			if (reason != RejectionReason::None) {
 				return reject(reason);
 			}
@@ -293,7 +314,7 @@ wxArrayString Build(const wxString &command,
 // Windows CreateProcess accepts a string, and wxWidgets 3.2/3.3.1's argv overload
 // does not double backslashes before embedded quotes or the closing quote.
 // Quote each argument using the Windows C runtime rules instead.
-wxString BuildWindowsCommandLine(const wxArrayString &args)
+static wxString QuoteCrtArguments(const wxArrayString &args)
 {
 	wxString command;
 	for (const wxString &arg : args) {
@@ -316,6 +337,64 @@ wxString BuildWindowsCommandLine(const wxArrayString &args)
 		command += '"';
 	}
 	return command;
+}
+
+// cmd strips its outermost quotes. Give it a sacrificial outer pair so each
+// argument's quotes survive, and use /s to make that stripping deterministic.
+wxString BuildWindowsCommandLine(const wxArrayString &args)
+{
+	if (args.IsEmpty() || !IsWindowsCommandShell(args[0], Platform::Windows)) {
+		return QuoteCrtArguments(args);
+	}
+	for (const wxString &arg : args) {
+		if (ValidateValue(arg, true) != RejectionReason::None) {
+			// Only fixed, user-authored templates can reach this path through Build.
+			return QuoteCrtArguments(args);
+		}
+	}
+	const bool cmd = ProgramName(args[0], Platform::Windows) == "cmd";
+	const size_t first = cmd ? CmdCommandIndex(args) : 0;
+	if (first >= args.size()) {
+		return QuoteCrtArguments(args);
+	}
+	wxString shell;
+	if (cmd) {
+		shell = QuoteCrtArguments(wxArrayString{ args[0] }) + " /d /s";
+		for (size_t i = 1; i < first; ++i) {
+			shell += " " + args[i];
+		}
+	} else {
+#ifdef __WINDOWS__
+		// Avoid implicit batch dispatch and PATH/COMSPEC lookup: select the OS shell.
+		shell = QuoteCrtArguments(wxArrayString{ wxGetOSDirectory() + "\\System32\\cmd.exe" });
+#else
+		shell = "\"cmd.exe\""; // portable serializer regression coverage
+#endif
+		shell += " /d /s /c";
+	}
+	const wxString target = args[first].Lower();
+	const wxString builtins =
+		"|echo|echo.|break|cd|chdir|cls|color|copy|date|del|dir|erase|exit|assoc|ftype|md|mkdir|"
+		"mklink|move|path|pause|popd|prompt|pushd|rd|ren|rename|rmdir|set|setlocal|endlocal|"
+		"shift|time|title|type|ver|verify|vol|";
+	const bool builtin = builtins.Contains("|" + target + "|");
+	const bool rawQuotes = IsWindowsCommandShell(args[first], Platform::Windows) || builtin;
+	shell += " \"";
+	for (size_t i = first; i < args.size(); ++i) {
+		if (i != first) {
+			shell += ' ';
+		}
+		// cmd/batch arguments use literal backslashes; native children still
+		// need CRT escaping of backslashes before their closing quotes.
+		if (i == first && builtin) {
+			shell += args[i]; // fixed builtin token; cmd does not use CRT parsing
+		} else {
+			shell += rawQuotes ? "\"" + args[i] + "\""
+					   : QuoteCrtArguments(wxArrayString{ args[i] });
+		}
+	}
+	shell += '\"';
+	return shell;
 }
 
 // Preserve non-ASCII arguments and use host libraries when running inside an AppImage.

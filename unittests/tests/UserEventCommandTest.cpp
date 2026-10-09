@@ -175,6 +175,22 @@ TEST(UserEventCommand, WindowsEscapesBackslashesBeforeQuotes)
 		ExternalCommand::BuildWindowsCommandLine(args));
 }
 
+TEST(UserEventCommand, WindowsShellQuotingKeepsInnerQuotesAndLiteralBackslashes)
+{
+	const auto args = ExternalCommand::Build("cmd /c echo %SENDER",
+		{ { "%SENDER", "x&echo INJECTED\\" } },
+		nullptr,
+		ExternalCommand::Platform::Windows);
+	ASSERT_EQUALS(wxString("\"cmd\" /d /s /c \"echo \"x&echo INJECTED\\\"\""),
+		ExternalCommand::BuildWindowsCommandLine(args));
+	const auto batch = ExternalCommand::Build("fixed.cmd %SENDER",
+		{ { "%SENDER", "x|echo INJECTED\\" } },
+		nullptr,
+		ExternalCommand::Platform::Windows);
+	ASSERT_TRUE(ExternalCommand::BuildWindowsCommandLine(batch).EndsWith(
+		" /d /s /c \"\"fixed.cmd\" \"x|echo INJECTED\\\"\""));
+}
+
 #ifdef __WINDOWS__
 TEST(UserEventCommand, WindowsNativeArgumentRoundTrip)
 {
@@ -420,6 +436,18 @@ TEST(UserEventCommand, RefusalReasonsDistinguishValidationFromLaunchErrors)
 }
 
 #ifdef __WINDOWS__
+TEST(UserEventCommand, WindowsShortPathCannotHidePowerShell)
+{
+	const wxFileName powershell(
+		wxGetOSDirectory() + "\\System32\\WindowsPowerShell\\v1.0\\powershell.exe");
+	if (powershell.FileExists()) {
+		const wxString shortPath = powershell.GetShortPath();
+		ASSERT_TRUE(ExternalCommand::Build(
+			"\"" + shortPath + "\" -Command %SENDER", { { "%SENDER", "Write-Output INJECTED" } })
+				    .IsEmpty());
+	}
+}
+
 TEST(UserEventCommand, NativeCmdAndBatchCannotExecuteASecondCommandFromData)
 {
 	wxString cmd;
@@ -442,6 +470,8 @@ TEST(UserEventCommand, NativeCmdAndBatchCannotExecuteASecondCommandFromData)
 			     wxString("x>NUL"),
 			     wxString("x<NUL"),
 			     wxString("x^&echo INJECTED"),
+			     wxString("x&echo INJECTED\\"),
+			     wxString("(x)|echo INJECTED"),
 			     wxString("") }) {
 			const auto args = ExternalCommand::Build(command, { { "%SENDER", value } });
 			ASSERT_FALSE(args.IsEmpty());

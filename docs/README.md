@@ -218,11 +218,19 @@ variables, or introduce another command. Other punctuation, including `&`, `|`,
 `<`, `>`, and `^`, stays inside quoted data arguments. The filter also checks
 literal prefixes and suffixes surrounding placeholders.
 
+aMule explicitly invokes the OS command processor for batch files and adds an
+outer quote pair with `/d /s` so `cmd` removes only that pair, preserving each
+argument's quotes. Backslashes are kept literal for batch files and builtins;
+native children retain CRT quoting.
+
 Use a fixed command token with separate values, for example `cmd /d /c echo %SENDER`.
 Do not put a placeholder inside a combined command string such as
-`cmd /c "echo %SENDER"`; it is code, and aMule refuses it. Compound command strings, `/s`, dispatch builtins (`call`, `start`, `for`, `if`), and nested interpreters
-with event data are unsupported; put that logic in a fixed batch file instead.
+`cmd /c "echo %SENDER"`; it is code, and aMule refuses it. Compound command
+strings, user-specified `/s`, dispatch builtins (`call`, `start`, `for`, `if`),
+and nested interpreters with event data are unsupported; put that logic in a
+fixed batch file instead.
 PowerShell and the other prohibited launchers still refuse substituted values.
+Existing Windows short-path aliases are expanded before interpreter checks.
 
 Batch authors must quote positional values when using them, just as POSIX scripts
 quote `"$1"`. For example, a template `C:\scripts\on-complete.cmd %FILE %HASH %SIZE`
