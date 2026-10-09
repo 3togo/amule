@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-09 11:02+0000\n"
 "PO-Revision-Date: 2026-10-07 16:29+0000\n"
 "Last-Translator: Angelescu Constantin <titus0818@yahoo.com>\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -1781,11 +1781,6 @@ msgstr[2] "%u de comentarii"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Client interzis %s pentru trimiterea %s date corupte a %s total pentru fișierul '%s'"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "A eșuat încărcarea datei țării pentru '%s'."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Automat [Sc]"
@@ -2785,19 +2780,48 @@ msgstr ""
 msgid "OK"
 msgstr "Bine"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed command token followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Previzualizare fișier"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "EROARE: A eșuat execuția playerului media extern! Comanda: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr ""
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "EROARE: A eșuat execuția playerului media extern! Comanda: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6885,6 +6909,13 @@ msgid "GUI command:"
 msgstr "Comandă GUI:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "Următoarele variabile vor fi înlocuite:"
 
@@ -9028,6 +9059,11 @@ msgstr "Se suspendă încărcarea fișierului: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "A eșuat executarea comenzii '%s' la evenimentul '%s'."
 
@@ -9036,7 +9072,8 @@ msgid "Download completed"
 msgstr "Descărcare completă"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "Calea completă la fișier."
 
 #: src/UserEvents.h
@@ -9074,6 +9111,10 @@ msgstr "Partiție disc."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Eroare la finalizare"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "Calea completă la fișier."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9785,6 +9826,10 @@ msgstr "Se pare că aMule rulează. Închideți-l și rulați din nou dezinstala
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Se elimină datele utilizatorului de la $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "A eșuat încărcarea datei țării pentru '%s'."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

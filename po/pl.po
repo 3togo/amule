@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-09 11:02+0000\n"
 "PO-Revision-Date: 2026-10-07 16:28+0000\n"
 "Last-Translator: Michał Trzebiatowski <hippie_1968@hotmail.com>\n"
 "Language-Team: translationproject.org/team/pl.html <translation-team-pl@lists.sourceforge.net>\n"
@@ -1788,11 +1788,6 @@ msgstr[2] "%u komentarzy"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Zbanowany klient %s za wysyłanie %s uszkodzonych danych z %s dla pliku '%s'"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Nie można połączyć się z serwerem pobrania HTTPNie powiodło się pobranie GeoIP.dat z %s"
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Auto [Ni]"
@@ -2792,19 +2787,48 @@ msgstr ""
 msgid "OK"
 msgstr "OK"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed command token followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Podgląd pliku"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "BŁĄD: Nie udało się uruchomić zewnętrznego odtwarzacza! Komenda: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr ""
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "BŁĄD: Nie udało się uruchomić zewnętrznego odtwarzacza! Komenda: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6882,6 +6906,13 @@ msgid "GUI command:"
 msgstr "Komenda GUI:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "Następujące zmienne zostaną zastąpione:"
 
@@ -9026,6 +9057,11 @@ msgstr "Wstrzymywanie wysyłania pliku: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "Nie powiodło się wykonanie komendy '%s' przy zdarzeniu '%s'."
 
@@ -9034,7 +9070,8 @@ msgid "Download completed"
 msgstr "Pobieranie zakończone"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "Pełna ścieżka do pliku."
 
 #: src/UserEvents.h
@@ -9072,6 +9109,10 @@ msgstr "Partycja dysku."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Błąd podczas ukończenia"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "Pełna ścieżka do pliku."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9783,6 +9824,10 @@ msgstr "aMule wydaje się być uruchomiony. Zamknij go i uruchom ponownie dezins
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Usuwanie danych użytkownika w $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Nie można połączyć się z serwerem pobrania HTTPNie powiodło się pobranie GeoIP.dat z %s"
 
 #, fuzzy
 #~ msgid "Kad protocol version"

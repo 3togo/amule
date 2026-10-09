@@ -13,8 +13,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
-"PO-Revision-Date: 2026-10-07 16:31+0000\n"
+"POT-Creation-Date: 2026-10-09 11:02+0000\n"
+"PO-Revision-Date: 2026-10-08 11:09+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
 "Language: zh_CN\n"
@@ -1782,11 +1782,6 @@ msgstr[1] "%u 条评论"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "封禁了客户端 %s，发送了 %s 受损的数据，共发送 %s （文件 “%s”）"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "加载 \"%s\" 的地区数据失败。"
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "自动 [低]"
@@ -2777,19 +2772,48 @@ msgstr "%.2f KiB/s"
 msgid "OK"
 msgstr "确定"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed command token followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "文件预览"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "错误: 无法运行外部媒体播放器！ 命令: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr "未找到配置好的视频播放器：%s"
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "错误: 无法运行外部媒体播放器！ 命令: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -4742,11 +4766,11 @@ msgstr "断线后自动重连"
 
 #: src/muuli_wdr.cpp
 msgid "File repair hashes over Kad"
-msgstr ""
+msgstr "Kad 网络文件修复哈希"
 
 #: src/muuli_wdr.cpp
 msgid "Share and use file repair hashes (AICH) over Kad"
-msgstr ""
+msgstr "分享并使用 Kad 网络文件修复哈希（AICH）"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -4758,10 +4782,17 @@ msgid ""
 "\n"
 "Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
+"与其他 Kad 节点分享文件修复哈希并从 Kad 搜索学习它们。这些哈希可以帮助 aMule 无需再次下载完整部分就修复损坏的下载数据。只有当足够数量的独立对等方报告相同哈希时 aMule 才使用该哈希进行修复。\n"
+"\n"
+"非常老的 Kad 客户端 (eMule 0.49b 前) 可能丢失包含这些哈希的搜索结果。如注意到丢失结果，试着关闭此选项。\n"
+"\n"
+"关闭此选项会在下次保存时丢弃存储在你的 Kad 索引中的结果。重新打开会再次收集它们。\n"
+"\n"
+"技术细节：启用这个会通告 Kad 协议版本 0x0a 并添加 AICH 哈希到关键词发布和搜索结果。"
 
 #: src/muuli_wdr.cpp
 msgid "Ignore repair hashes from Kad nodes too old to support them"
-msgstr ""
+msgstr "忽略来自不支持修复哈希的过老的 Kad 节点的修复哈希"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -4771,6 +4802,11 @@ msgid ""
 "\n"
 "Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
+"仅在启用了分享并使用 Kad 网络文件修复哈希选项时应用。忽略报告 Kad 版本太老不支持此类哈希的节点所发布的哈希。\n"
+"\n"
+"节点报告的版本可能过时或不准确， 因此这可能丢弃有效哈希并使得被接受的哈希不可信。版本未知的节点仍被接受。\n"
+"\n"
+"技术细节：拒绝来自通告的 Kad 协议版本低于 0x09 的节点的 AICH 发布哈希。"
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"
@@ -6820,6 +6856,13 @@ msgstr "在图形界面端启用执行命令"
 #: src/PrefsUnifiedDlg.cpp
 msgid "GUI command:"
 msgstr "图形界面命令："
+
+#: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
@@ -8927,6 +8970,11 @@ msgstr "暂停上传此文件: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "无法执行命令 '%s' 于 '%s' 事件。"
 
@@ -8935,7 +8983,8 @@ msgid "Download completed"
 msgstr "下载已完成"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "文件的完整路径。"
 
 #: src/UserEvents.h
@@ -8973,6 +9022,10 @@ msgstr "磁盘分区。"
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "最后阶段出错"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "文件的完整路径。"
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9690,6 +9743,10 @@ msgstr "aMule 似乎正在运行。请将其关闭并重新运行卸载程序。
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "正在删除 $APPDATA\\aMule 中的用户数据..."
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "加载 \"%s\" 的地区数据失败。"
 
 #~ msgid "Kad protocol version"
 #~ msgstr "Kad 协议版本"

@@ -913,19 +913,25 @@ void CSearchDlg::OnSearchAdded(wxUIntPtr searchID, const wxString &name, uint32 
 	if (GetSearchList(searchID)) {
 		return; // already have a tab for it
 	}
+	// Remote discovery supplies an integer kind. Reject unknown values (including
+	// EC_SEARCH_WEB at 3) before converting it to the core's SearchType.
+	if (kind > AllSearch || kind == 3) {
+		return;
+	}
+	const SearchType type = static_cast<SearchType>(kind);
 	// Labelled like any other tab -- "(0)" hit count, "!" for a Kad search -- since it is the
 	// same kind of thing and needs no separate vocabulary. Unselected: it appears unprompted, so
 	// it must not pull the selection away from what the user is doing. Synchronous, matching its
 	// mirror Search_Removed -> CloseSearchTab: both run from wherever the core changed the
 	// search set, including inside EC packet handling.
-	CreateNewTab(((kind == KadSearch || kind == AllSearch) ? "!" : "") +
-			     GetSearchTypeTag(static_cast<SearchType>(kind)) + name + " (0)",
+	CreateNewTab(((type == KadSearch || type == AllSearch) ? "!" : "") + GetSearchTypeTag(type) + name +
+			     " (0)",
 		searchID,
 		false,
-		static_cast<SearchType>(kind));
+		type);
 	if (CSearchListCtrl *page = GetSearchList(searchID)) {
-		page->SetSearchTabLabel(GetSearchTypeTag(static_cast<SearchType>(kind)) + name);
-		page->SetSearchRunning(kind == KadSearch || kind == AllSearch);
+		page->SetSearchTabLabel(GetSearchTypeTag(type) + name);
+		page->SetSearchRunning(type == KadSearch || type == AllSearch);
 	}
 }
 

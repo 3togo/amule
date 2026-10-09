@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-09 11:02+0000\n"
 "PO-Revision-Date: 2026-10-07 16:25+0000\n"
 "Last-Translator: Tapio Rantala <tapio.rantala@iki.fi>\n"
 "Language-Team: aMule Team <https://github.com/amule-org/amule>\n"
@@ -1777,11 +1777,6 @@ msgstr[1] "%u kommenttia"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Estettiin asiakas %s, lähetti turmeltunutta dataa %s yhteismäärästä %s tiedostolle '%s'"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Valtiotietojen lataus osoitteesta '%s' epäonnistui."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Auto [Ma]"
@@ -2778,19 +2773,48 @@ msgstr ""
 msgid "OK"
 msgstr "OK"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed command token followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Tiedoston esikatselu"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "VIRHE: Ulkoista mediatoistinta ei voitu käynnistää! Komento: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr ""
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "VIRHE: Ulkoista mediatoistinta ei voitu käynnistää! Komento: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6849,6 +6873,13 @@ msgid "GUI command:"
 msgstr "Graafisen käyttöliittymän komento:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "Seuraavat muuttujat korvataan:"
 
@@ -8974,6 +9005,11 @@ msgstr "Keskeytetään tiedoston %s lähetys"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "Komennon '%s' suoritus epäonnistui tapahtuman '%s' yhteydessä."
 
@@ -8982,7 +9018,8 @@ msgid "Download completed"
 msgstr "Lataus valmistunut"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "Koko polku tiedostoon."
 
 #: src/UserEvents.h
@@ -9020,6 +9057,10 @@ msgstr "Levyosio."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Virhe viimeistellessä"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "Koko polku tiedostoon."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9731,6 +9772,10 @@ msgstr "aMule vaikuttaa olevan käynnissä. Sulje se ja suorita asennuksen poist
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Poistetaan käyttäjätietoja kohteesta $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Valtiotietojen lataus osoitteesta '%s' epäonnistui."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

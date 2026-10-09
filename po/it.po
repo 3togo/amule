@@ -19,8 +19,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule 2.3.3\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
-"PO-Revision-Date: 2026-10-07 19:34+0000\n"
+"POT-Creation-Date: 2026-10-09 11:02+0000\n"
+"PO-Revision-Date: 2026-10-09 07:35+0000\n"
 "Last-Translator: got3nks <got3nks@users.noreply.github.com>\n"
 "Language-Team: SebastianoPistore.info@protonmail.ch\n"
 "Language: it\n"
@@ -215,7 +215,7 @@ msgid ""
 "\n"
 "The file is deleted and no longer shared. This cannot be undone."
 msgstr ""
-"Sei certo di voler eliminare '%s' dal disco?\n"
+"Sei sicuro di voler eliminare '%s' dal disco?\n"
 "\n"
 "File: %s\n"
 "\n"
@@ -234,7 +234,7 @@ msgid ""
 "%s\n"
 "The files are deleted and no longer shared. This cannot be undone."
 msgstr ""
-"Sei certo di voler eliminare dal disco i %i file selezionati?\n"
+"Sei sicuro di voler eliminare dal disco i %i file selezionati?\n"
 "\n"
 "%s\n"
 "I file vengono eliminati e non sono più condivisi. L'operazione non può essere annullata."
@@ -1792,11 +1792,6 @@ msgstr[1] "%u commenti"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Client %s bannato per aver spedito %s dati corrotti di %s totali, per il file '%s'"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Impossibile caricare i dati delle nazioni da '%s'."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Auto [Bassa]"
@@ -2787,19 +2782,48 @@ msgstr "%.2f KiB/s"
 msgid "OK"
 msgstr "OK"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed command token followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Anteprima"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "ERRORE: Impossibile eseguire il lettore multimediale esterno! Comando: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr "Il lettore video configurato non è stato trovato: %s"
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "ERRORE: Impossibile eseguire il lettore multimediale esterno! Comando: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6844,6 +6868,13 @@ msgid "GUI command:"
 msgstr "Comando GUI:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "Le seguenti variabili saranno sostituite:"
 
@@ -8953,6 +8984,11 @@ msgstr "Sospensione invio del file: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "Impossibile eseguire il comando '%s' per l'evento '%s'."
 
@@ -8961,7 +8997,8 @@ msgid "Download completed"
 msgstr "Download completato"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "Il percorso completo del file."
 
 #: src/UserEvents.h
@@ -8999,6 +9036,10 @@ msgstr "Partizione disco."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Errore nel completamento"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "Il percorso completo del file."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9716,6 +9757,10 @@ msgstr "Sembra che aMule sia in esecuzione. Chiudilo e riavvia il programma di d
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Rimozione dei dati utente in $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Impossibile caricare i dati delle nazioni da '%s'."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

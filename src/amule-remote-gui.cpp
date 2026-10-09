@@ -62,6 +62,7 @@
 #include "Friend.h"
 #include "GetTickCount.h" // Needed for GetTickCount64
 #include "GuiEvents.h"
+#include "UserEvents.h"
 #include "OtherFunctions.h" // Needed for IP_FROM_GUI_ID / PORT_FROM_GUI_ID
 #ifdef GEOIP_GUI
 #include "IP2Country.h" // Needed for IP2Country
@@ -2240,6 +2241,7 @@ void CSharedFilesRem::CopyFileList(std::vector<CKnownFile *> &out_list) const
 void CKnownFilesRem::DeleteItem(CKnownFile *file)
 {
 	uint32 id = file->ECID();
+	m_downloadEvents.Forget(id);
 	// Broadcast to every subscriber that holds a raw CKnownFile* to this object --
 	// CUpDownClient::m_uploadingfile / m_reqfile, CGenericClientListCtrl's own list, and
 	// the open-dialog registry. Subscribers strip their refs using pointer-value
@@ -2514,6 +2516,8 @@ void CSharedFilesRem::SetFilePrio(CKnownFile *file, uint8 prio)
 
 void CKnownFilesRem::ArmReconnectReconcile()
 {
+	// The next statuses are a snapshot, not transitions observed while connected.
+	m_downloadEvents.Reset();
 	m_reconnectReconcile = true;
 
 	// A reconnect opens a fresh EC session. The daemon keeps its RLE gap/part/req-status
@@ -2532,6 +2536,7 @@ void CKnownFilesRem::ArmReconnectReconcile()
 
 void CKnownFilesRem::ResetForNewDaemonSession()
 {
+	m_downloadEvents.Reset();
 	CRemoteContainer<CKnownFile, uint32, CEC_SharedFile_Tag>::ResetForNewSession();
 
 	// Back to the state a cold boot starts in: the next reply is a full library snapshot
@@ -3323,6 +3328,13 @@ void CKnownFilesRem::ProcessItemUpdatePartfile(const CEC_PartFile_Tag *tag, CPar
 		if (theApp->amuledlg) {
 			theApp->amuledlg->m_sharedfileswnd->sharedfilesctrl->ShowFile(file);
 		}
+	}
+	// An incremental tag can omit status. Do not let the proxy's default PS_EMPTY
+	// establish a baseline before the daemon has sent a real status. All metadata,
+	// including download activity time, is decoded before executing the command.
+	if (m_downloadEvents.Observe(
+		    file->ECID(), file->status, tag->GetTagByName(EC_TAG_PARTFILE_STATUS) != nullptr)) {
+		CUserEvents::ProcessEvent(CUserEvents::DownloadCompleted, file);
 	}
 }
 

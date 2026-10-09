@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-09 11:02+0000\n"
 "PO-Revision-Date: 2026-10-07 16:24+0000\n"
 "Last-Translator: Dimitris <dgalanak@yahoo.com>\n"
 "Language-Team: Greek\n"
@@ -1776,11 +1776,6 @@ msgstr[1] "%u σχόλια"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Ο πελάτης %s αποκλείστηκε επειδή έστειλε %s φθαρμένα δεδομένα από σύνολο %s για το αρχείο '%s'"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Αποτυχία φόρτωσης δεδομένων χώρας για '%s'."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Αυτόματη [Χαμηλή]"
@@ -2776,19 +2771,48 @@ msgstr ""
 msgid "OK"
 msgstr "Εντάξει"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed command token followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Προεπισκόπηση αρχείου"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "ΣΦΑΛΜΑ: Αποτυχία εκτέλεσης του εξωτερικού προγράμματος εμφάνισης πολυμέσων! Εντολή: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr ""
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "ΣΦΑΛΜΑ: Αποτυχία εκτέλεσης του εξωτερικού προγράμματος εμφάνισης πολυμέσων! Εντολή: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6846,6 +6870,13 @@ msgid "GUI command:"
 msgstr "Εντολή γραφικού περιβάλλοντος:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "Οι παρακάτω μεταβλητές θα αντικατασταθούν:"
 
@@ -8978,6 +9009,11 @@ msgstr "Αναστολή ανεβάσματος του αρχείου: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "Αποτυχία εκτέλεσης εντολής '%s' στο συμβάν '%s'."
 
@@ -8986,7 +9022,8 @@ msgid "Download completed"
 msgstr "Το κατέβασμα ολοκληρώθηκε"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "Η πλήρης διαδρομή του αρχείου"
 
 #: src/UserEvents.h
@@ -9024,6 +9061,10 @@ msgstr "Κατάτμηση δίσκου"
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Σφάλμα κατά την ολοκλήρωση"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "Η πλήρης διαδρομή του αρχείου"
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9735,6 +9776,10 @@ msgstr "Το aMule φαίνεται να εκτελείται. Κλείστε τ
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Αφαίρεση δεδομένων χρήστη στο $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Αποτυχία φόρτωσης δεδομένων χώρας για '%s'."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

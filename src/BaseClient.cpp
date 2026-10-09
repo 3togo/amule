@@ -99,6 +99,12 @@ static wxString empty_name = "[Empty User Name]";
 //	members of CUpDownClient
 //	which are used by down and uploading functions
 
+CProtocolPeerIdentity CUpDownClient::GetProtocolPeerIdentity() const
+{
+	return CProtocolPeerIdentity::FromClientState(
+		m_nUserIDHybrid, HasLowID(), m_userAddress, m_dwServerIP, m_nServerPort);
+}
+
 CUpDownClient::CUpDownClient(CClientTCPSocket *sender)
 {
 #ifdef __DEBUG__

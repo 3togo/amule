@@ -434,8 +434,8 @@ if (BUILD_MONOLITHIC)
 		)
 
 		set (AMULE_ICNS "${CMAKE_SOURCE_DIR}/platforms/MacOSX/amule.icns")
-		target_sources (amule PRIVATE ${AMULE_ICNS})
-		set_source_files_properties (${AMULE_ICNS} PROPERTIES
+		target_sources (amule PRIVATE ${AMULE_ICNS} "${CMAKE_SOURCE_DIR}/docs/THIRDPARTY.md")
+		set_source_files_properties (${AMULE_ICNS} "${CMAKE_SOURCE_DIR}/docs/THIRDPARTY.md" PROPERTIES
 			MACOSX_PACKAGE_LOCATION "Resources"
 		)
 
@@ -463,6 +463,16 @@ if (BUILD_MONOLITHIC)
 				-json "{\"NSAllowsArbitraryLoads\": true}"
 				"$<TARGET_BUNDLE_CONTENT_DIR:amule>/Info.plist"
 			COMMENT "Opting aMule.app out of App Transport Security"
+			VERBATIM
+		)
+
+		# Shown in the macOS 15+ Local Network prompt. UPnP discovery and LAN
+		# peers need that permission.
+		add_custom_command (TARGET amule POST_BUILD
+			COMMAND /usr/bin/plutil -replace NSLocalNetworkUsageDescription
+				-string "aMule uses your local network to open its ports on your router (UPnP) and to exchange files with computers on your network."
+				"$<TARGET_BUNDLE_CONTENT_DIR:amule>/Info.plist"
+			COMMENT "Declaring aMule.app's local network use"
 			VERBATIM
 		)
 
@@ -673,8 +683,8 @@ if (BUILD_REMOTEGUI)
 		)
 
 		set (AMULEGUI_ICNS "${CMAKE_SOURCE_DIR}/platforms/MacOSX/amule.icns")
-		target_sources (amulegui PRIVATE ${AMULEGUI_ICNS})
-		set_source_files_properties (${AMULEGUI_ICNS} PROPERTIES
+		target_sources (amulegui PRIVATE ${AMULEGUI_ICNS} "${CMAKE_SOURCE_DIR}/docs/THIRDPARTY.md")
+		set_source_files_properties (${AMULEGUI_ICNS} "${CMAKE_SOURCE_DIR}/docs/THIRDPARTY.md" PROPERTIES
 			MACOSX_PACKAGE_LOCATION "Resources"
 		)
 
@@ -694,6 +704,15 @@ if (BUILD_REMOTEGUI)
 				-json "{\"NSAllowsArbitraryLoads\": true}"
 				"$<TARGET_BUNDLE_CONTENT_DIR:amulegui>/Info.plist"
 			COMMENT "Opting aMuleGUI.app out of App Transport Security"
+			VERBATIM
+		)
+
+		# A daemon on another computer on the LAN needs the Local Network permission.
+		add_custom_command (TARGET amulegui POST_BUILD
+			COMMAND /usr/bin/plutil -replace NSLocalNetworkUsageDescription
+				-string "aMuleGUI uses your local network to connect to an aMule daemon on another computer on your network."
+				"$<TARGET_BUNDLE_CONTENT_DIR:amulegui>/Info.plist"
+			COMMENT "Declaring aMuleGUI.app's local network use"
 			VERBATIM
 		)
 

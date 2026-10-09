@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-09 11:02+0000\n"
 "PO-Revision-Date: 2026-10-07 16:29+0000\n"
 "Last-Translator: Luís Picciochi Oliveira <Pitxyoki@Gmail.com>\n"
 "Language-Team: Portuguese <traduz@debianpt.org>\n"
@@ -1783,11 +1783,6 @@ msgstr[1] "%u comentários"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Cliente %s banido por ter enviado %s dados corrompidos de um total de %s para o ficheiro '%s'"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Falha ao carregar dados de país para '%s'."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Automática [Baixa]"
@@ -2784,19 +2779,48 @@ msgstr ""
 msgid "OK"
 msgstr "OK"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed command token followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Pré-visualização do ficheiro"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "ERRO: Erro na execução do leitor multimédia externo! Comando: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr ""
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "ERRO: Erro na execução do leitor multimédia externo! Comando: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6855,6 +6879,13 @@ msgid "GUI command:"
 msgstr "Comando da interface gráfica:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "As seguintes variáveis serão substituídas:"
 
@@ -8981,6 +9012,11 @@ msgstr "A suspender upload do ficheiro: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "A execução do comando '%s' no evento '%s' falhou."
 
@@ -8989,7 +9025,8 @@ msgid "Download completed"
 msgstr "Download concluído"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "O caminho completo para o ficheiro."
 
 #: src/UserEvents.h
@@ -9027,6 +9064,10 @@ msgstr "Partição de disco."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Erro ao completar"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "O caminho completo para o ficheiro."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9738,6 +9779,10 @@ msgstr "O aMule parece estar em execução. Feche-o e execute novamente o desins
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "A remover os dados do utilizador em $APPDATA\\aMule..."
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Falha ao carregar dados de país para '%s'."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
-"PO-Revision-Date: 2026-10-07 16:27+0000\n"
+"POT-Creation-Date: 2026-10-09 11:02+0000\n"
+"PO-Revision-Date: 2026-10-08 11:09+0000\n"
 "Last-Translator: Marcel Pol <marcel@timelord.nl>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "Language: nl\n"
@@ -1781,11 +1781,6 @@ msgstr[1] "%u commentaren"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Client %s geband voor het sturen van %s beschadigde gegeven van in totaal %s voor het bestand '%s'"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Kon landgegevens niet laden voor '%s'."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Auto [La]"
@@ -2777,19 +2772,48 @@ msgstr "%.2f KiB/s"
 msgid "OK"
 msgstr "OK"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed command token followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Voorbeeld"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "FOUT: Opstarten externe mediaspeler mislukt! Commando: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr "De ingestelde videospeler werd niet gevonden: %s"
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "FOUT: Opstarten externe mediaspeler mislukt! Commando: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6629,7 +6653,7 @@ msgstr "Kon de registratie van de URL-afhandelaar niet verwijderen."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "macOS does not let an application stop being the default handler. To stop aMule opening these, make another application the default."
-msgstr "macOS staat niet toe dat een app niet langer de standaard behandelaar is. Om te voorkomen dat aMule deze opent maakt u een andere app de standaard."
+msgstr "macOS staat niet toe dat een app niet langer de standaard afhandelaar is. Om te voorkomen dat aMule deze opent maakt u een andere app de standaard."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The web server and aMule API require external connections to be enabled."
@@ -6835,6 +6859,13 @@ msgid "GUI command:"
 msgstr "GUI commando:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "De volgende variabelen worden vervangen:"
 
@@ -6932,7 +6963,7 @@ msgstr "Min grootte moet kleiner zijn dan max grootte. Max grootte wordt genegee
 
 #: src/SearchDlg.cpp src/SearchListCtrl.cpp
 msgid "Main"
-msgstr "Standaard"
+msgstr "Hoofdcategorie"
 
 #: src/SearchList.cpp
 #, c-format
@@ -8944,6 +8975,11 @@ msgstr "Stoppen van upload van bestand: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "Kon commando '%s' niet uitvoeren bij gebeurtenis '%s'."
 
@@ -8952,7 +8988,8 @@ msgid "Download completed"
 msgstr "Download voltooid"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "Het volledige pad naar het bestand."
 
 # re-check this
@@ -8993,6 +9030,10 @@ msgstr "Schijfpartitie."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Fout bij completeren"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "Het volledige pad naar het bestand."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9710,6 +9751,10 @@ msgstr "aMule lijkt te worden uitgevoerd. Sluit het en voer het verwijderprogram
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Gebruikersgegevens op $APPDATA\\aMule worden verwijderd..."
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Kon landgegevens niet laden voor '%s'."
 
 #~ msgid "Kad protocol version"
 #~ msgstr "Kad-protocolversie"

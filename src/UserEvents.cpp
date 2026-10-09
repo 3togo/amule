@@ -23,16 +23,12 @@
 //
 
 #include "UserEvents.h"
+#include "ExternalCommand.h"
 
 #include <common/Format.h>
-#include "AppImageEnv.h" // Needed for GetSanitizedExecEnv
 #include "Logger.h"
 #include "Preferences.h"
 #include "PartFile.h"
-#include "TerminationProcess.h" // Needed for CTerminationProcess
-
-#include <wx/process.h>
-#include <wx/utils.h> // Needed for wxExecuteEnv
 
 #define USEREVENTS_EVENT(ID, NAME, VARS) { #ID, NAME, false, "", false, "" },
 static struct
@@ -131,31 +127,29 @@ wxString &CUserEvents::GetGUICommandVar(const unsigned int event)
 	case CUserEvents::ID: { \
 		VARS break; \
 	}
-#define USEREVENTS_REPLACE_VAR(VAR, DESC, CODE) command.Replace("%" VAR, CODE);
+#define USEREVENTS_REPLACE_VAR(VAR, DESC, CODE) values.emplace_back("%" VAR, CODE);
 static void ExecuteCommand(enum CUserEvents::EventType event, const void *object, const wxString &cmd)
 {
 	// This variable is needed by the USEREVENTS_EVENTLIST macro.
-	wxString command = cmd;
+	std::vector<std::pair<wxString, wxString>> values;
 	switch (event) {
 		USEREVENTS_EVENTLIST()
 		/* This macro expands to handle all user event types. Example:
 		   case CUserEvents::NewChatSession:
-		       command.Replace( "%SENDER", *((wxString*)object) );
+		       values.emplace_back("%SENDER", *static_cast<const wxString *>(object));
 		       break; */
 	}
-	if (!command.empty()) {
-		// Inside an AppImage, run the user command with a sanitized environment so it loads
-		// system libraries rather than the bundled ones (#334); a no-op copy elsewhere.
-		CTerminationProcess *p = new CTerminationProcess(cmd);
-		wxExecuteEnv execEnv;
-		const bool sanitized = AppImageEnv::GetSanitizedExecEnv(execEnv);
-		if (!wxExecute(command, wxEXEC_ASYNC, p, sanitized ? &execEnv : nullptr)) {
-			// If wxExecute fails, we need to delete the CTerminationProcess
-			// otherwise it will leak.
-			delete p;
-			AddLogLineC(CFormat(_("Failed to execute command '%s' on '%s' event.")) % command %
-				    s_EventList[event].name);
-		}
+	ExternalCommand::RejectionReason rejection;
+	const wxArrayString args = ExternalCommand::Build(
+		cmd, values, nullptr, ExternalCommand::NativePlatform, nullptr, &rejection);
+	if (!cmd.empty() && rejection != ExternalCommand::RejectionReason::None) {
+		AddLogLineC(CFormat(_("Command '%s' was not run on '%s' event: %s")) % cmd %
+			    s_EventList[event].name % ExternalCommand::DescribeRejection(rejection));
+		return;
+	}
+	if (!cmd.empty() && !ExternalCommand::RunDetached(cmd, args)) {
+		AddLogLineC(CFormat(_("Failed to execute command '%s' on '%s' event.")) % cmd %
+			    s_EventList[event].name);
 	}
 }
 

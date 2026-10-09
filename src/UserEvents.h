@@ -39,6 +39,14 @@
 
 const int USEREVENTS_FIRST_ID = 11500; /* Some safe GUI ID to start from */
 
+// EC does not carry GetFullName(): the remote proxy stores a .part.met basename.
+// Supply no path rather than executing a local command with that misleading value.
+#ifdef CLIENT_GUI
+#define USEREVENTS_COMPLETED_FILE_PATH(object) wxEmptyString
+#else
+#define USEREVENTS_COMPLETED_FILE_PATH(object) static_cast<const CPartFile *>(object)->GetFullName().GetRaw()
+#endif
+
 /**
  * Macro listing all the events.
  *
@@ -52,10 +60,8 @@ const int USEREVENTS_FIRST_ID = 11500; /* Some safe GUI ID to start from */
 	USEREVENTS_EVENT(DownloadCompleted, \
 		wxTRANSLATE("Download completed"), \
 		USEREVENTS_REPLACE_VAR("FILE", \
-			wxTRANSLATE("The full path to the file."), \
-			static_cast<const CPartFile *>(object) \
-				->GetFullName() \
-				.GetRaw()) USEREVENTS_REPLACE_VAR("NAME", \
+			wxTRANSLATE("The full path to the file (empty in remote GUI mode)."), \
+			USEREVENTS_COMPLETED_FILE_PATH(object)) USEREVENTS_REPLACE_VAR("NAME", \
 			wxTRANSLATE("The name of the file without path component."), \
 			static_cast<const CPartFile *>(object)->GetFileName().GetRaw()) \
 			USEREVENTS_REPLACE_VAR("HASH", \

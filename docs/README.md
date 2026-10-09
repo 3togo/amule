@@ -171,6 +171,118 @@ aMule's search also supports filtering by these categories — click the
 type dropdown in the search panel.
 
 
+## Passing event values to commands
+
+### Event commands
+
+In the monolithic aMule application, Preferences → Events configures Core and
+GUI commands. With a remote `amulegui`, Core command controls are disabled:
+Core commands must be configured in the daemon's `amule.conf`. Restart `amuled`
+after editing its event command settings. Remote GUI preferences are not sent
+to the daemon.
+
+The "New chat session" event is raised locally by `amulegui`, so its GUI command
+and `%SENDER` variable remain available with a remote core. "Download completed"
+also runs its GUI command locally when `amulegui` observes a known download change
+to complete. Downloads already complete when first seen, including the initial
+sync and the first sync after a reconnect, do not trigger commands. Each GUI sees
+its own transitions; a completion cleared by another client before the next poll
+can be missed.
+
+Remote completion commands support `%NAME`, `%HASH`, `%SIZE`, and `%DLACTIVETIME`.
+`%FILE` expands to an empty string in remote GUI mode: EC does not supply a reliable
+full path for the local download proxy, and the file lives on the daemon's host.
+For example, a local desktop notification can use:
+
+```sh
+notify-send "aMule" "Finished %NAME (%SIZE bytes)"
+```
+
+"Error on completion" and "Out of space" remain daemon-only with a remote core,
+and their GUI controls are disabled. EC's error status also covers failures
+unrelated to completion, so it cannot reliably identify the completion error
+event; daemon free-space checks are not visible to the GUI.
+
+Event command templates are split into arguments before `%FILE`, `%NAME`,
+`%HASH`, `%SIZE`, `%DLACTIVETIME`, `%SENDER`, or `%PARTITION` is substituted.
+Each value stays inside its original argument, including spaces and shell
+punctuation. Quote fixed paths in the template using the native command syntax;
+placeholders do not need extra quoting to keep substituted spaces intact.
+Existing commands that relied on a placeholder expanding into multiple arguments
+must be rewritten with those arguments explicitly in the template.
+
+For example, pass several values as separate arguments to a script, or combine
+several placeholders inside one quoted argument:
+
+```sh
+/home/me/bin/on-complete.sh %FILE %HASH %SIZE
+notify-send "aMule" "Finished %NAME (%SIZE bytes)"
+```
+
+aMule rejects placeholders in the executable name and embedded NUL characters.
+Keep the executable and option names fixed. If the receiving program supports
+`--` to end option parsing, use it before untrusted values so a value starting
+with `-` cannot become an option.
+
+aMule rejects substitution into recognized interpreter code or script filenames.
+For POSIX shells, the supported inline form is exactly `sh -c` (or another
+recognized POSIX shell with `-c`) followed by fixed code. Put values in positional
+arguments after that code. Other recognized interpreters should run a fixed script
+file followed by data arguments; interpreter options combined with placeholders
+are rejected. For example:
+
+```sh
+sh -c 'mv -- "$1" "/archive/$2-$3"' _ %FILE %HASH %NAME
+```
+
+Here `_` supplies the shell's `$0`, and `%FILE`, `%HASH`, and `%NAME` become `$1`,
+`$2`, and `$3`. Always quote positional arguments in the script.
+
+On Windows, native programs receive literal arguments using Windows C runtime
+escaping. Characters such as `%`, `!`, and quotes remain data for these programs;
+filenames such as `100% Hits.mp3` and `Help!.avi` work for event commands and previews.
+
+For `cmd.exe` and `.bat`/`.cmd` targets, aMule rejects substituted values containing
+`"`, `%`, `!`, CR, or LF. Those characters can change quoting, expand environment
+variables, or introduce another command. Other punctuation, including `&`, `|`,
+`<`, `>`, and `^`, stays inside quoted data arguments. The filter also checks
+literal prefixes and suffixes surrounding placeholders.
+
+aMule explicitly invokes the OS command processor for batch files and adds an
+outer quote pair with `/d /s` so `cmd` removes only that pair, preserving each
+argument's quotes. Backslashes are kept literal for batch files and builtins;
+native children retain CRT quoting.
+
+Use a fixed command token with separate values, for example `cmd /d /c echo %SENDER`.
+Do not put a placeholder inside a combined command string such as
+`cmd /c "echo %SENDER"`; it is code, and aMule refuses it. Compound command
+strings, user-specified `/s`, dispatch builtins (`call`, `start`, `for`, `if`),
+and nested interpreters with event data are unsupported; put that logic in a
+fixed batch file instead.
+PowerShell and the other prohibited launchers still refuse substituted values.
+Existing Windows short-path aliases are expanded before interpreter checks.
+
+Batch authors must quote positional values when using them, just as POSIX scripts
+quote `"$1"`. For example, a template `C:\scripts\on-complete.cmd %FILE %HASH %SIZE`
+passes three arguments to a batch file that can use:
+
+```bat
+@echo off
+native-tool.exe "%~1" "%~2" "%~3"
+```
+
+Do not re-evaluate event values using `call`, another `cmd /c`, or an interpreter.
+[`cmd.exe`](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/cmd)
+expands `%VAR%` and delayed `!VAR!` references, which is why those values are refused.
+Validation refusals log that the command was not run and give the reason;
+a missing executable or another spawn failure retains the launch-failure message.
+
+These checks recognize common interpreters and wrappers; they cannot establish
+how an arbitrary executable, renamed interpreter, or custom script uses its
+arguments. Use programs and fixed scripts that treat event values as data.
+Never evaluate those values as code inside the receiving program.
+
+
 ## Troubleshooting
 
 * **"LowID"** — your ports aren't reachable. See the
