@@ -1909,8 +1909,15 @@ wxSizer *PreferencesDirectoriesTab( wxWindow *parent, bool call_fit, bool set_si
     itemSDAddRow->Add( itemSDRemove, wxSizerFlags().CenterVertical().Border(wxLEFT, 4) );
     item9->Add( itemSDAddRow, wxSizerFlags().Expand().Border(wxTOP, 4) );
 #else
-    wxStaticText *item11 = new wxStaticText( item10, -1, _("(Right click on folder icon for recursive share)"), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE );
+    wxStaticText *item11 = new wxStaticText( item10, -1, _("Double-click or right-click: share or unshare this folder and all subfolders. Ctrl+double-click: this folder only."), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE );
+    item11->Wrap( item10->FromDIP(420) );
     item9->Add( item11, 0, wxALIGN_CENTER, 0 );
+    wxStaticText *item11Legend = new wxStaticText( item10, -1, _("Bold: shared. Bold italic: recursive share root. Red folder: shared subfolders or recursive coverage."), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE );
+    item11Legend->Wrap( item10->FromDIP(420) );
+    item9->Add( item11Legend, 0, wxALIGN_CENTER, 0 );
+    wxStaticText *item11NewFolders = new wxStaticText( item10, -1, _("New subfolders are shared automatically under recursive shares when automatic rescan is on."), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE );
+    item11NewFolders->Wrap( item10->FromDIP(420) );
+    item9->Add( item11NewFolders, 0, wxALIGN_CENTER, 0 );
 
     CDirectoryTreeCtrl *item12 = new CDirectoryTreeCtrl(item10, IDC_SHARESELECTOR, wxPoint(0,0), wxSize(100,100), wxSUNKEN_BORDER|wxTR_DEFAULT_STYLE|wxTR_HIDE_ROOT );
     wxASSERT( item12 );
@@ -1919,9 +1926,10 @@ wxSizer *PreferencesDirectoriesTab( wxWindow *parent, bool call_fit, bool set_si
     wxCheckBox *item13 = new wxCheckBox( item10, IDC_SHAREHIDDENFILES, _("Share hidden files"), wxDefaultPosition, wxDefaultSize, 0 );
     item13->SetValue( TRUE );
     item9->Add( item13, 0, wxALIGN_CENTER_VERTICAL, 0 );
-    // Auto-rescan toggle. When on, the fs-watcher reflects changes in the shared dirs without a
-    // manual reload; new subdirs created under any path in the tree above are auto-shared.
+    // Auto-rescan reflects changes without a manual reload. Only recursive shares include
+    // newly created subfolders; explicitly shared folders do not grow their share set.
     wxCheckBox *itemAutoRescan = new wxCheckBox( item10, IDC_AUTO_RESCAN_SHARED, _("Automatically rescan shared folders for changes"), wxDefaultPosition, wxDefaultSize, 0 );
+    itemAutoRescan->SetToolTip(_("New subfolders are shared automatically only under recursively shared folders."));
     itemAutoRescan->SetValue( TRUE );
     item9->Add( itemAutoRescan, 0, wxALIGN_CENTER_VERTICAL, 0 );
     // Follow-symlinks toggle. Default on to preserve historical behaviour; off makes the iterator

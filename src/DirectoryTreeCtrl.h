@@ -41,15 +41,16 @@ public:
 	CDirectoryTreeCtrl(wxWindow *parent, int id, const wxPoint &pos, wxSize siz, int flags);
 	virtual ~CDirectoryTreeCtrl();
 
-	// Get all explicitly shared directories. Single right-click is "recursive", double-click is
-	// "this dir only"; this returns only the directories the user marked individually.
+	// Get explicitly shared directories, including entries loaded from existing preferences.
+	// Ordinary double-click and right-click create recursive roots; Ctrl+double-click
+	// preserves the folder-only action.
 	void GetSharedDirectories(PathList *list);
 	// set list of explicitly-shared directories
 	void SetSharedDirectories(PathList *list);
 
 	// Recursive-share intents: roots the user wants to share along with every descendant. The
 	// descendant enumeration is deferred to the PrefsUnifiedDlg apply path, having once run
-	// synchronously inside OnRButtonDown and frozen the UI on large trees.
+	// synchronously from the tree click handler and frozen the UI on large trees.
 	void GetRecursiveSharedDirectories(PathList *list);
 	void SetRecursiveSharedDirectories(PathList *list);
 
@@ -98,18 +99,16 @@ private:
 	// Recursive-share intent helpers. These aren't `const` because
 	// GetKey() may resolve cwd for relative paths via wxGetCwd().
 	bool IsRecursiveShare(const CPath &path);
-	bool IsInsideRecursiveShare(const CPath &path);
+	bool IsInsideRecursiveShare(const CPath &path, bool includeExcluded = false);
 	void AddRecursiveShare(const CPath &path);
 	void DelRecursiveShare(const CPath &path);
-	// Sweep all m_lstShared entries that are descendants of `root`. Used by OnRButtonDown's
-	// unshare path, so a recursive share whose flat descendants survived a previous Prefs
-	// session is fully removed by right-clicking the root again, without expanding every subdir
-	// to find them.
+	// Remove explicit and recursive selections below `root` without expanding the tree.
 	void DelSharesUnder(const CPath &root);
 
 	void OnItemExpanding(wxTreeEvent &evt);
 	void OnRButtonDown(wxTreeEvent &evt);
 	void OnItemActivated(wxTreeEvent &evt);
+	void ToggleRecursiveShare(wxTreeItemId hItem);
 
 	typedef std::pair<wxString, CPath> SharedMapItem;
 	typedef std::map<wxString, CPath> SharedMap;
@@ -136,7 +135,7 @@ private:
 	// because the tree control's default font is not fully resolved until after the ctor runs.
 	wxFont GetRecursiveFont();
 	// Toggle the italic-bold marker on a single tree item. Called from AddChildItem on initial
-	// render and from the right-click toggle paths, so the visual stays in sync with
+	// render and from the click toggle paths, so the visual stays in sync with
 	// m_lstSharedRecursive on every transition.
 	void ApplyRecursiveMark(wxTreeItemId hItem, bool isRecursive);
 	wxFont m_fontRecursiveRoot;

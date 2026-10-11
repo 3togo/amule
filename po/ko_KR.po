@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-11 01:02-0400\n"
 "PO-Revision-Date: 2026-10-07 16:27+0000\n"
 "Last-Translator: Hyunju Kang <rexington@gmail.com>\n"
 "Language-Team: Korean <hoenny@daum.net>\n"
@@ -1960,11 +1960,16 @@ msgid "Unknown or bad tempfile format."
 msgstr "알수없거나 나쁜 임시 파일 형식입니다."
 
 #: src/DirectoryTreeCtrl.cpp
-msgid "This directory is part of a recursive share. To remove it, un-share or modify the recursive share root above it."
+msgid "This directory is a recursive share root or lies below one. Unshare the root before changing only this folder."
 msgstr ""
 
 #: src/DirectoryTreeCtrl.cpp
-msgid "Cannot unshare inside a recursive share"
+#, fuzzy
+msgid "Cannot change one folder inside a recursive share"
+msgstr "(하위폴더 전체를 공유하려면 폴더 아이콘상에서 오른쪽 버튼을 클릭)"
+
+#: src/DirectoryTreeCtrl.cpp
+msgid "This directory is beneath a recursive share root. To remove it, un-share or modify the recursive share root above it."
 msgstr ""
 
 #: src/DirectoryTreeCtrl.cpp
@@ -4974,8 +4979,16 @@ msgid "Remove"
 msgstr "삭제"
 
 #: src/muuli_wdr.cpp
-msgid "(Right click on folder icon for recursive share)"
-msgstr "(하위폴더 전체를 공유하려면 폴더 아이콘상에서 오른쪽 버튼을 클릭)"
+msgid "Double-click or right-click: share or unshare this folder and all subfolders. Ctrl+double-click: this folder only."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Bold: shared. Bold italic: recursive share root. Red folder: shared subfolders or recursive coverage."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "New subfolders are shared automatically under recursive shares when automatic rescan is on."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Share hidden files"
@@ -4984,6 +4997,10 @@ msgstr "숨은파일 공유"
 #: src/muuli_wdr.cpp
 msgid "Automatically rescan shared folders for changes"
 msgstr "공유 폴더 변경 사항 자동 재검사"
+
+#: src/muuli_wdr.cpp
+msgid "New subfolders are shared automatically only under recursively shared folders."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Follow symbolic links in shared folders"

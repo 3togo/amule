@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-11 01:02-0400\n"
 "PO-Revision-Date: 2026-10-07 16:25+0000\n"
 "Last-Translator: Tapio Rantala <tapio.rantala@iki.fi>\n"
 "Language-Team: aMule Team <https://github.com/amule-org/amule>\n"
@@ -1962,11 +1962,16 @@ msgid "Unknown or bad tempfile format."
 msgstr "Tuntematon tai käyttökelvoton väliaikaistiedostomuoto."
 
 #: src/DirectoryTreeCtrl.cpp
-msgid "This directory is part of a recursive share. To remove it, un-share or modify the recursive share root above it."
+msgid "This directory is a recursive share root or lies below one. Unshare the root before changing only this folder."
 msgstr ""
 
 #: src/DirectoryTreeCtrl.cpp
-msgid "Cannot unshare inside a recursive share"
+#, fuzzy
+msgid "Cannot change one folder inside a recursive share"
+msgstr "(Klikkaa oikealla painikkeella kansion kuvaketta jakaaksesi rekursiivisesti)"
+
+#: src/DirectoryTreeCtrl.cpp
+msgid "This directory is beneath a recursive share root. To remove it, un-share or modify the recursive share root above it."
 msgstr ""
 
 #: src/DirectoryTreeCtrl.cpp
@@ -4976,8 +4981,16 @@ msgid "Remove"
 msgstr "Poista"
 
 #: src/muuli_wdr.cpp
-msgid "(Right click on folder icon for recursive share)"
-msgstr "(Klikkaa oikealla painikkeella kansion kuvaketta jakaaksesi rekursiivisesti)"
+msgid "Double-click or right-click: share or unshare this folder and all subfolders. Ctrl+double-click: this folder only."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Bold: shared. Bold italic: recursive share root. Red folder: shared subfolders or recursive coverage."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "New subfolders are shared automatically under recursive shares when automatic rescan is on."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Share hidden files"
@@ -4986,6 +4999,10 @@ msgstr "Jaa piilotiedostot"
 #: src/muuli_wdr.cpp
 msgid "Automatically rescan shared folders for changes"
 msgstr "Skannaa jaetut kansiot automaattisesti muutosten varalta"
+
+#: src/muuli_wdr.cpp
+msgid "New subfolders are shared automatically only under recursively shared folders."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Follow symbolic links in shared folders"

@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-11 01:02-0400\n"
 "PO-Revision-Date: 2026-10-07 19:28+0000\n"
 "Last-Translator: minterior <minterior@gmail.com>\n"
 "Language-Team: Català\n"
@@ -1968,12 +1968,19 @@ msgid "Unknown or bad tempfile format."
 msgstr "Format de fitxer temporal desconegut o defectuós."
 
 #: src/DirectoryTreeCtrl.cpp
-msgid "This directory is part of a recursive share. To remove it, un-share or modify the recursive share root above it."
+#, fuzzy
+msgid "This directory is a recursive share root or lies below one. Unshare the root before changing only this folder."
 msgstr "Aquest directori forma part d'una compartició recursiva. Per eliminar-lo, deixeu de compartir o modifiqueu l'arrel de la compartició recursiva que hi ha per sobre."
 
 #: src/DirectoryTreeCtrl.cpp
-msgid "Cannot unshare inside a recursive share"
+#, fuzzy
+msgid "Cannot change one folder inside a recursive share"
 msgstr "No es pot deixar de compartir dins d'una compartició recursiva"
+
+#: src/DirectoryTreeCtrl.cpp
+#, fuzzy
+msgid "This directory is beneath a recursive share root. To remove it, un-share or modify the recursive share root above it."
+msgstr "Aquest directori forma part d'una compartició recursiva. Per eliminar-lo, deixeu de compartir o modifiqueu l'arrel de la compartició recursiva que hi ha per sobre."
 
 #: src/DirectoryTreeCtrl.cpp
 msgid "Cannot modify inside a recursive share"
@@ -4978,8 +4985,16 @@ msgid "Remove"
 msgstr "Esborra"
 
 #: src/muuli_wdr.cpp
-msgid "(Right click on folder icon for recursive share)"
-msgstr "(Per a compartir recursivament feu clic dret sobre el directori)"
+msgid "Double-click or right-click: share or unshare this folder and all subfolders. Ctrl+double-click: this folder only."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Bold: shared. Bold italic: recursive share root. Red folder: shared subfolders or recursive coverage."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "New subfolders are shared automatically under recursive shares when automatic rescan is on."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Share hidden files"
@@ -4988,6 +5003,10 @@ msgstr "Comparteix els fitxers ocults"
 #: src/muuli_wdr.cpp
 msgid "Automatically rescan shared folders for changes"
 msgstr "Torna a examinar automàticament les carpetes compartides per detectar-hi canvis"
+
+#: src/muuli_wdr.cpp
+msgid "New subfolders are shared automatically only under recursively shared folders."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Follow symbolic links in shared folders"
@@ -9706,6 +9725,9 @@ msgstr "Sembla que l'aMule s'està executant. Tanqueu-lo i torneu a executar el 
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "S'estan eliminant les dades d'usuari a $APPDATA\\aMule..."
+
+#~ msgid "(Right click on folder icon for recursive share)"
+#~ msgstr "(Per a compartir recursivament feu clic dret sobre el directori)"
 
 #~ msgid "Kad protocol version"
 #~ msgstr "Versió del protocol Kad"

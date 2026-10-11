@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-11 01:02-0400\n"
 "PO-Revision-Date: 2026-10-07 16:29+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
@@ -1989,12 +1989,19 @@ msgid "Unknown or bad tempfile format."
 msgstr "Неизвестный или нарушенный формат временного файла."
 
 #: src/DirectoryTreeCtrl.cpp
-msgid "This directory is part of a recursive share. To remove it, un-share or modify the recursive share root above it."
+#, fuzzy
+msgid "This directory is a recursive share root or lies below one. Unshare the root before changing only this folder."
 msgstr "Этот каталог входит в рекурсивную публикацию. Чтобы удалить его, отмените публикацию или измените корневой каталог выше."
 
 #: src/DirectoryTreeCtrl.cpp
-msgid "Cannot unshare inside a recursive share"
+#, fuzzy
+msgid "Cannot change one folder inside a recursive share"
 msgstr "Нельзя отменить публикацию внутри рекурсивной публикации"
+
+#: src/DirectoryTreeCtrl.cpp
+#, fuzzy
+msgid "This directory is beneath a recursive share root. To remove it, un-share or modify the recursive share root above it."
+msgstr "Этот каталог входит в рекурсивную публикацию. Чтобы удалить его, отмените публикацию или измените корневой каталог выше."
 
 #: src/DirectoryTreeCtrl.cpp
 msgid "Cannot modify inside a recursive share"
@@ -5019,8 +5026,16 @@ msgid "Remove"
 msgstr "Удалить"
 
 #: src/muuli_wdr.cpp
-msgid "(Right click on folder icon for recursive share)"
-msgstr "(ПКМ по значку каталога для рекурсивной публикации)"
+msgid "Double-click or right-click: share or unshare this folder and all subfolders. Ctrl+double-click: this folder only."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Bold: shared. Bold italic: recursive share root. Red folder: shared subfolders or recursive coverage."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "New subfolders are shared automatically under recursive shares when automatic rescan is on."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Share hidden files"
@@ -5029,6 +5044,10 @@ msgstr "Публиковать скрытые файлы"
 #: src/muuli_wdr.cpp
 msgid "Automatically rescan shared folders for changes"
 msgstr "Автоматически проверять изменения в общих папках"
+
+#: src/muuli_wdr.cpp
+msgid "New subfolders are shared automatically only under recursively shared folders."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Follow symbolic links in shared folders"
@@ -9795,6 +9814,9 @@ msgstr "Похоже, что aMule запущен. Закройте его и п
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Удаление пользовательских данных в $APPDATA\\aMule…"
+
+#~ msgid "(Right click on folder icon for recursive share)"
+#~ msgstr "(ПКМ по значку каталога для рекурсивной публикации)"
 
 #~ msgid "Kad protocol version"
 #~ msgstr "Версия протокола Kad"
