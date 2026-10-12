@@ -542,6 +542,18 @@ private:
 	//! most-recently-started search). Pruned in RemoveResults.
 	std::map<uint32_t, SearchType> m_searchKinds;
 
+	//! Per-search result-source attribution: how many results each network delivered.
+	//! Used to verify AllSearch actually returns results from all networks.
+	struct ResultSourceCounts
+	{
+		size_t tcp = 0;
+		size_t udp = 0;
+		size_t kad = 0;
+		size_t total() const { return tcp + udp + kad; }
+	};
+	std::map<uint32_t, ResultSourceCounts> m_resultSourceCounts;
+	void LogResultSourceCounts(uint32_t searchID, const wxString &context);
+
 	//! For AllSearch, a Kad search is started alongside the ed2k one under a separate
 	//! Kad-assigned ID. This maps that Kad ID back to the ed2k ID that owns the tab, so
 	//! KademliaSearchKeyword results land in the right bucket. Pruned in RemoveResults.
