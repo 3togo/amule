@@ -39,10 +39,15 @@ there client on the eMule forum..
 #ifndef INDEXED_H
 #define INDEXED_H
 
+#include <functional>
+#include <vector>
+
 #include "SearchManager.h"
 #include "Entry.h"
+#include "../utils/BackgroundLoad.h"
 
 class wxArrayString;
+class CFile;
 
 typedef std::list<Kademlia::CEntry *> CKadEntryPtrList;
 
@@ -116,6 +121,12 @@ class CIndexed
 
 public:
 	CIndexed();
+	CIndexed(const wxString &directory, const CUInt128 &kadID);
+	using LoadState = CBackgroundLoad<std::unique_ptr<CIndexed>>::State;
+	void ProcessIndexLoad();
+	bool IsReady() const noexcept { return m_loadState == LoadState::Ready; }
+	LoadState GetLoadState() const noexcept { return m_loadState; }
+	CKeyEntry *CreateKeyEntry() { return new CKeyEntry(m_publishTracking); }
 	~CIndexed();
 
 	bool AddKeyword(const CUInt128 &keyWordID,
@@ -153,15 +164,43 @@ public:
 	uint32_t m_totalIndexLoad;
 
 private:
+	CIndexed(const wxString &directory, const CUInt128 &kadID, bool worker);
+	std::shared_ptr<CKeyEntry::PublishTracking> m_publishTracking;
+	std::unique_ptr<CBackgroundLoad<std::unique_ptr<CIndexed>>> m_loader;
+	LoadState m_loadState;
+	bool m_worker;
+	CUInt128 m_kadID;
+	enum class IndexPart
+	{
+		Load,
+		Keyword,
+		Source
+	};
+	std::vector<wxString> m_failedFiles;
+	std::vector<wxString> m_preservedFiles;
+	const wxString &PathOf(IndexPart part) const;
+	void ClearPart(IndexPart part);
+	void ReadLoadFile(const std::atomic<bool> &cancel);
+	void ReadKeywordFile(const std::atomic<bool> &cancel);
+	void ReadKeywordEntry(CFile &file,
+		uint32_t version,
+		const CUInt128 &keyID,
+		const CUInt128 &sourceID,
+		const std::atomic<bool> &cancel);
+	void ReadSourceFile(const std::atomic<bool> &cancel);
+	void ReadSourceEntry(CFile &file, const CUInt128 &keyID, const CUInt128 &sourceID);
+	void SaveIndexFile(const wxString &path, const std::function<void(CFile &)> &write);
+	void Clear();
+	void WriteFile();
 	time_t m_lastClean;
 	KeyHashMap m_Keyword_map;
 	SrcHashMap m_Sources_map;
 	SrcHashMap m_Notes_map;
 	LoadMap m_Load_map;
-	static wxString m_sfilename;
-	static wxString m_kfilename;
-	static wxString m_loadfilename;
-	void ReadFile();
+	wxString m_sfilename;
+	wxString m_kfilename;
+	wxString m_loadfilename;
+	void ReadFile(const std::atomic<bool> &cancel);
 	void Clean();
 };
 

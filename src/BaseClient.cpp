@@ -23,6 +23,7 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "KadCallbackPolicy.h"
 #include <wx/wx.h>
 #include <wx/mstream.h>
 #include <wx/tokenzr.h>
@@ -79,6 +80,8 @@
 #include "FriendList.h"      // Needed for CFriendList
 #include "Statistics.h"      // Needed for theStats
 #include "ClientUDPSocket.h"
+#include "AddressFamilyPolicy.h" // Needed for AddressFamilyPolicy::Permits
+#include "ContactDialPolicy.h"   // Needed for DecideContactRoute
 #include "Logger.h"
 #include "DataToText.h" // Needed for GetSoftName()
 #include "GuiEvents.h"  // Needed for Notify_
@@ -98,6 +101,12 @@ static wxString empty_name = "[Empty User Name]";
 
 //	members of CUpDownClient
 //	which are used by down and uploading functions
+
+CProtocolPeerIdentity CUpDownClient::GetProtocolPeerIdentity() const
+{
+	return CProtocolPeerIdentity::FromClientState(
+		m_nUserIDHybrid, HasLowID(), m_userAddress, m_dwServerIP, m_nServerPort);
+}
 
 CUpDownClient::CUpDownClient(CClientTCPSocket *sender)
 {
@@ -165,6 +174,8 @@ void CUpDownClient::Init()
 	m_linkedDebug = false;
 #endif
 	m_bAddNextConnect = false;
+	m_dialingIPv6 = false;
+	m_unansweredIPv6Address = CNetworkAddress::Absent();
 	credits = NULL;
 	m_byChatstate = MS_NONE;
 	m_nKadState = KS_NONE;
@@ -1259,10 +1270,12 @@ void CUpDownClient::SendHelloTypePacket(CMemFile *data)
 #endif
 	// direct callback is only possible if connected to kad, tcp firewalled and verified UDP open (for
 	// example on a full cone NAT)
+	const bool udpFirewalled = Kademlia::CUDPFirewallTester::IsFirewalledUDP(true);
 	const uint32 uDirectUDPCallback =
-		(Kademlia::CKademlia::IsRunning() && Kademlia::CKademlia::IsFirewalled() &&
-			!Kademlia::CUDPFirewallTester::IsFirewalledUDP(true) &&
-			Kademlia::CUDPFirewallTester::IsVerified())
+		(Kademlia::CKademlia::IsRunning() &&
+			Kademlia::DirectCallbackAvailable(Kademlia::CKademlia::IsFirewalled(),
+				udpFirewalled,
+				Kademlia::CUDPFirewallTester::IsVerified()))
 			? 1
 			: 0;
 
@@ -1424,6 +1437,13 @@ bool CUpDownClient::Disconnected(const wxString &DEBUG_ONLY(strReason), bool bFr
 		theApp->uploadqueue->RemoveFromUploadQueue(this);
 	}
 
+	// Nothing verifies that a native IPv6 peer accepts inbound connections: keep its queue place
+	// and let it get its slot through its own next connection, like a LowID.
+	if (m_dialingIPv6 && GetUploadState() == US_CONNECTING) {
+		m_unansweredIPv6Address = GetConnectAddress();
+		theApp->uploadqueue->RequeueUnreachable(this);
+	}
+
 	if (GetDownloadState() == DS_DOWNLOADING) {
 		SetDownloadState(DS_ONQUEUE);
 	} else {
@@ -1497,6 +1517,8 @@ bool CUpDownClient::Disconnected(const wxString &DEBUG_ONLY(strReason), bool bFr
 		Notify_ChatConnResult(false, GetChatPeer(), "");
 	}
 
+	m_dialingIPv6 = false;
+
 	// Delete socket
 	if (!bFromSocket && m_socket) {
 		wxASSERT(theApp->listensocket->IsValidSocket(m_socket));
@@ -1569,6 +1591,29 @@ bool CUpDownClient::IsRedialAllowed() const
 	       PeerAddressing::CanOpenConnection(contactAddress, IsConnected());
 }
 
+EContactRoute CUpDownClient::ContactRoute() const
+{
+	SContactFacts facts;
+	facts.contactAddress = ContactAddress();
+	facts.socketConnected = IsConnected();
+#ifdef ENABLE_IPV6
+	facts.ipv6Built = true;
+#endif
+	facts.familyPermitted = AddressFamilyPolicy::Permits(facts.contactAddress);
+	facts.proxyEnabled = thePrefs::GetProxyData()->m_proxyEnable;
+	const EContactRoute route = DecideContactRoute(facts);
+	// Connect() dials GetConnectAddress(), so it must be the address the filter and ban checks saw.
+	if (route == EContactRoute::DialIPv6 && GetConnectAddress() != facts.contactAddress) {
+		return EContactRoute::Refuse;
+	}
+	return route;
+}
+
+bool CUpDownClient::IsCallableIPv6Contact() const
+{
+	return ContactRoute() == EContactRoute::DialIPv6 && GetConnectAddress() != m_unansweredIPv6Address;
+}
+
 // Re-check the standing reasons to refuse this peer, disconnecting it on a hit:
 // incompatible obfuscation settings, a filtered IP, a banned IP. Returns Contacting when
 // the peer is clean -- "carry on" rather than "we sent something" -- and ClientDeleted or
@@ -1628,7 +1673,7 @@ EContactResult CUpDownClient::CheckContactPreconditions()
 		}
 		return EContactResult::Declined;
 	}
-	if (!PeerAddressing::CanOpenConnection(contactAddress, IsConnected())) {
+	if (ContactRoute() == EContactRoute::Refuse) {
 		if (Disconnected("Outbound IPv6 connections unavailable")) {
 			Safe_Delete();
 			return EContactResult::ClientDeleted;
@@ -1655,6 +1700,8 @@ EContactResult CUpDownClient::TryToContact(bool bIgnoreMaxCon)
 		refused != EContactResult::Contacting) {
 		return refused;
 	}
+	// Every callback route carries IPv4 only, so a native IPv6 contact skips them and is dialled.
+	const bool dialIPv6 = ContactRoute() == EContactRoute::DialIPv6;
 
 	if (GetKadState() == KS_QUEUED_FWCHECK) {
 		SetKadState(KS_CONNECTING_FWCHECK);
@@ -1662,7 +1709,7 @@ EContactResult CUpDownClient::TryToContact(bool bIgnoreMaxCon)
 		SetKadState(KS_CONNECTING_FWCHECK_UDP);
 	}
 
-	if (HasLowID()) {
+	if (HasLowID() && !dialIPv6) {
 		if (!theApp->CanDoCallback(GetServerIP(), GetServerPort())) {
 			// We cannot do a callback!
 			if (GetDownloadState() == DS_CONNECTING) {
@@ -1752,7 +1799,7 @@ EContactResult CUpDownClient::TryToContact(bool bIgnoreMaxCon)
 			GetUserHash().GetHash(),
 			false,
 			0);
-	} else if (HasLowID()) { // LOWID
+	} else if (HasLowID() && !dialIPv6) { // LOWID
 		// Set where a packet actually goes out. Several of the paths below reach the end having
 		// sent nothing -- a source we are merely queued at, a peer that is not a download source, a
 		// Kad lookup that fails to start -- and reporting those as Contacting let a browse of them
@@ -1922,11 +1969,23 @@ bool CUpDownClient::Connect()
 		} else {
 			m_socket->SetConnectionEncryption(false, NULL, false);
 		}
+#ifdef ENABLE_IPV6
+		const CNetworkAddress &connectAddress = GetConnectAddress();
+		if (connectAddress.IsIPv6() && !connectAddress.IsIPv4Mapped()) {
+			AddDebugLogLineN(logClient,
+				CFormat("Trying to connect to [%s]:%u") % connectAddress.ToWxString() %
+					static_cast<unsigned int>(GetUserPort()));
+			m_dialingIPv6 = true;
+			m_socket->ConnectIPv6(connectAddress, GetUserPort(), false);
+			return true;
+		}
+#endif
 		amuleIPV4Address tmp;
 		tmp.Hostname(GetConnectIP());
 		tmp.Service(GetUserPort());
 		AddDebugLogLineN(logClient,
 			"Trying to connect to " + Uint32_16toStringIP_Port(GetConnectIP(), GetUserPort()));
+		m_dialingIPv6 = false;
 		m_socket->Connect(tmp, false);
 		// We should send hello packets AFTER connecting!
 		// so I moved it to OnConnect
@@ -1977,6 +2036,7 @@ void CUpDownClient::ConnectionEstablished()
 	// debug thing for myself -- check the connection_reason definition.
 
 	m_hasbeenobfuscatinglately = (m_socket && m_socket->IsConnected() && m_socket->IsObfusicating());
+	m_dialingIPv6 = false;
 
 #ifdef __DEBUG__
 	if (!connection_reason.IsEmpty()) {

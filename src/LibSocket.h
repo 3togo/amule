@@ -30,6 +30,7 @@
 #include "Types.h"
 #include <memory> // shared_ptr for CAsioUDPSocketImpl ownership
 class amuleIPV4Address;
+class CMuleUDPSocket;
 
 // Socket flags (unused in ASIO implementation, just provide the names)
 enum
@@ -57,6 +58,14 @@ enum
 	MULE_SOCKET_LOST
 };
 
+// Which address families a listening socket binds for. Scoped so a string literal passed for the
+// bind-interface overload of CLibSocketServer cannot convert to it.
+enum class ListenerFamilies
+{
+	FromAddress, // Exactly the family of the given address
+	FromPolicy   // Widen the IPv4 wildcard per AddressFamilyPolicy::Configured()
+};
+
 // Abstraction class for a library TCP socket: either a wxSocket or an ASIO socket.
 
 // Client TCP socket
@@ -72,6 +81,10 @@ public:
 	// wx Stuff
 	void Notify(bool);
 	bool Connect(const amuleIPV4Address &adr, bool wait);
+#ifdef ENABLE_IPV6
+	// IPv4 and IPv4-mapped targets are refused here; they keep using Connect().
+	bool ConnectIPv6(const CNetworkAddress &target, uint16 port, bool wait);
+#endif
 	// Bound the synchronous connect to `ms` milliseconds (0 = no bound, the default). Only
 	// affects the blocking connect path used by the synchronous EC clients (amulecmd); the
 	// async path is unaffected.
@@ -177,6 +190,13 @@ public:
 	void OnStreamLost() override;
 	void OnFlushRequested() override;
 
+#ifdef ENABLE_IPV6
+
+protected:
+	// For a subclass that refuses an IPv6 connect itself, so the refusal still reaches OnConnect().
+	bool RefuseConnectIPv6(const CNetworkAddress &target, uint16 port);
+#endif
+
 private:
 	// Replace the internal socket. Takes ownership of the passed shared_ptr.
 	void LinkSocketImpl(std::shared_ptr<class CAsioSocketImpl>);
@@ -200,7 +220,9 @@ private:
 class CLibSocketServer
 {
 public:
-	CLibSocketServer(const amuleIPV4Address &adr, int flags);
+	CLibSocketServer(const amuleIPV4Address &adr,
+		int flags,
+		ListenerFamilies families = ListenerFamilies::FromAddress);
 	// Bind the acceptor to a specific network interface (empty = any), independent of the
 	// global bind-to-interface pin set via SetSocketBindInterface(). Used by the EC listener so
 	// external-control traffic can live on a different interface than ed2k/Kad.
@@ -215,6 +237,9 @@ public:
 	virtual void OnAccept() {}
 
 	bool IsOk() const;
+	// Host the acceptor is actually bound to ("[::]" for IPv6, dotted quad for IPv4, empty when
+	// not listening); a policy-following listener can bind a different family than requested.
+	wxString BoundHost() const;
 	// Replace only the listening acceptor. Existing accepted CLibSocket instances remain
 	// independent and continue their connections.
 	bool Rebind(const amuleIPV4Address &adr);
@@ -234,6 +259,8 @@ private:
 	// shared_ptr for the same reason as CLibSocket::m_aSocket -- pending
 	// async_accept completions must keep the impl alive past wrapper death.
 	std::shared_ptr<class CAsioSocketServerImpl> m_aServer;
+	// Kept here because Rebind() replaces m_aServer.
+	ListenerFamilies m_listenerFamilies;
 };
 
 // UDP socket
@@ -242,7 +269,8 @@ class CLibUDPSocket
 	friend class CAsioUDPSocketImpl;
 
 public:
-	CLibUDPSocket(amuleIPV4Address &address, int flags);
+	// The handler comes in here because the first read is posted before the constructor returns.
+	CLibUDPSocket(amuleIPV4Address &address, int flags, CMuleUDPSocket *handler);
 	virtual ~CLibUDPSocket();
 
 	// wx Stuff
@@ -252,7 +280,6 @@ public:
 	int LastError() const;
 	void Close();
 	void Destroy();
-	void SetClientData(class CMuleUDPSocket *);
 
 	// Not needed here
 	bool Notify(bool) { return true; }

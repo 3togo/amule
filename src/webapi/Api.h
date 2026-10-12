@@ -196,11 +196,9 @@ private:
 	// containment). Falls back to index.html for extension-less paths so SPA deep links work.
 	// Never requires auth -- the shell is public, its API calls still gated.
 	CHttpServer::Response ServeStaticFile(const CHttpServer::Request &, const std::string &url_path);
-	// Country-flag artwork for `country_code`. `url_path` must be "/flags/<cc>.png" with two
-	// lowercase ASCII letters, or "/flags/unknown.png" for the "??" placeholder; the bytes come
-	// from the embedded icon table's "flag_<cc>" entry, so nothing touches the file system. 404
-	// for any other shape and for codes the famfamfam set has no artwork for. Never requires
-	// auth -- the artwork is public either way.
+	// Public embedded country PNGs: /flags/<code>.png, @2x.png and @3x.png.
+	// Accept lowercase alpha-2 codes or unknown; missing or malformed names are 404.
+
 	CHttpServer::Response ServeCountryFlag(const CHttpServer::Request &, const std::string &url_path);
 	// Rescan shared directories -- amuled re-walks the configured share roots.
 	// Parameterless EC op (EC_OP_SHAREDFILES_RELOAD).

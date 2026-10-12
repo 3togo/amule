@@ -9,7 +9,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
+<<<<<<< HEAD
 "POT-Creation-Date: 2026-10-08 13:42+0900\n"
+=======
+"POT-Creation-Date: 2026-10-09 12:39+0000\n"
+>>>>>>> 5c5cdd9f881f2c80c98a3c0e18ef7193c1e170e6
 "PO-Revision-Date: 2026-10-07 16:30+0000\n"
 "Last-Translator: \n"
 "Language-Team: Turkish <li@li.org>\n"
@@ -397,7 +401,7 @@ msgstr "İKAZ: '%s' ağ arayüzüne bağlama yapılamadı - trafik varsayılan y
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
 msgstr "Bir yapılandırma değişikliği nedeniyle dil ayarınız 'Sistem Varsayılanı'na çevrildi. Üzgünüm. Vallahi…"
 
-#: src/amule.cpp src/CatDialog.cpp src/ServerList.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/CatDialog.cpp src/ServerListCtrl.cpp
 msgid "Info"
 msgstr "Bilgi"
 
@@ -1767,11 +1771,6 @@ msgstr[1] "%u adet yorum"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "%s istemcisi %s kadar veriyi %s toplamda '%s' dosyasında gönderdiği için yasaklandı."
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "'%s' için ülke verisi yüklenemedi."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Oto (Düş)"
@@ -2357,6 +2356,10 @@ msgid "server not found: %s"
 msgstr "sunucu bulunamadı: %s"
 
 #: src/ExternalConn.cpp
+msgid "You are connected to the server you are trying to delete. please disconnect first."
+msgstr "Silmeye çalıştığınız sunucuya bağlı durumdasınız. Lütfen, öncelikle bağlantıyı kesiniz."
+
+#: src/ExternalConn.cpp
 msgid "need to define server to be removed"
 msgstr "çıkarılacak sunucunun tanımlanması gerekli"
 
@@ -2763,19 +2766,48 @@ msgstr "%.2f KiB/s"
 msgid "OK"
 msgstr "Tamam"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Dosya ön izlemesi"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "HATA: harici ortam oynatıcısını çalıştırma başarısız! Komut: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr "Yapılandırılmış video çalıcı bulunamadı: %s"
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "HATA: harici ortam oynatıcısını çalıştırma başarısız! Komut: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6834,6 +6866,13 @@ msgid "GUI command:"
 msgstr "Arayüz komutu:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "Şu girdiler değiştirilecek:"
 
@@ -7242,6 +7281,14 @@ msgid "Server.met file corrupt, found invalid versiontag: 0x%x, size %i"
 msgstr "Server.met dosyası bozuk, geçersiz sürüm eki bulundu: 0x%x, size %i"
 
 #: src/ServerList.cpp
+msgid "Error: the file 'server.met' is corrupted: "
+msgstr "Hata: 'server.met' dosyası bozuk: "
+
+#: src/ServerList.cpp
+msgid "IO error while reading 'server.met': "
+msgstr "'server.met' dosyası okumada IO hatası: "
+
+#: src/ServerList.cpp
 #, c-format
 msgid "%i server in server.met found"
 msgid_plural "%i servers in server.met found"
@@ -7254,14 +7301,6 @@ msgid "%d server added"
 msgid_plural "%d servers added"
 msgstr[0] "%d adet sunucu eklendi"
 msgstr[1] "%d adet sunucu eklendi"
-
-#: src/ServerList.cpp
-msgid "Error: the file 'server.met' is corrupted: "
-msgstr "Hata: 'server.met' dosyası bozuk: "
-
-#: src/ServerList.cpp
-msgid "IO error while reading 'server.met': "
-msgstr "'server.met' dosyası okumada IO hatası: "
 
 #: src/ServerList.cpp
 #, c-format
@@ -7282,10 +7321,6 @@ msgstr "Sunucu eklenmedi: Listede IP:Portu [%s:%d] eşleşen bir sunucu bulundu.
 #, c-format
 msgid "Server added: Server at [%s:%d] using the name '%s'."
 msgstr "Sunucu eklendi: [%s:%d] adresindeki sunucu '%s' adını kullanıyor."
-
-#: src/ServerList.cpp
-msgid "You are connected to the server you are trying to delete. please disconnect first."
-msgstr "Silmeye çalıştığınız sunucuya bağlı durumdasınız. Lütfen, öncelikle bağlantıyı kesiniz."
 
 #: src/ServerList.cpp
 #, c-format
@@ -8947,6 +8982,11 @@ msgstr "Şu dosya için gönderimler bekletiliyor: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "'%s' komutunun '%s' olayında çalıştırılması başarısız oldu."
 
@@ -8955,7 +8995,8 @@ msgid "Download completed"
 msgstr "İndirme tamamlandı"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "Dosyanın tam konumu."
 
 #: src/UserEvents.h
@@ -8993,6 +9034,10 @@ msgstr "Disk bölümü."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Tamamlama sırasında hata"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "Dosyanın tam konumu."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9710,6 +9755,28 @@ msgstr "aMule çalışmakta gibi görünüyor. Lütfen onu kapatıp kurulum prog
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Kullanıcı verileri $APPDATA\\aMule konumunda kaldırılıyor…"
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not read %s. It was renamed to %s.bad, and a new index will be saved at shutdown."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not preserve the unreadable index %s as %s.bad. Its original file will not be overwritten."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not load its saved index. Existing index files were preserved."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not save an index. The previous copy of that file was preserved."
+msgstr ""
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "'%s' için ülke verisi yüklenemedi."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

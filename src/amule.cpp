@@ -72,6 +72,9 @@
 #include "kademlia/kademlia/Kademlia.h"
 #include "kademlia/kademlia/Prefs.h"
 #include "kademlia/kademlia/UDPFirewallTester.h"
+#ifdef ENABLE_IPV6
+#include "AddressFamilyPolicy.h" // Needed for AddressFamilyPolicy::SetConfigured
+#endif
 #include "CanceledFileList.h"
 #include "ClientCreditsList.h"    // Needed for CClientCreditsList
 #include "ClientList.h"           // Needed for CClientList
@@ -585,6 +588,32 @@ static bool ServerMetHasServers(const wxString &path)
 	}
 }
 
+#ifdef ENABLE_IPV6
+// Logged directly because the network summary is only logged when ReinitializeNetwork() fails, and
+// this setting has no widget to show its effect.
+static void LogAddressFamilies(const wxString &listenerHost)
+{
+	const long setting = thePrefs::GetAddressFamiliesSetting();
+	const std::optional<AddressFamilyPolicy::Families> families =
+		AddressFamilyPolicy::FamiliesFromSetting(setting);
+	if (!families) {
+		AddLogLineCS(CFormat("Address families: unsupported AddressFamilies value %li in amule.conf, "
+				     "using IPv4 only") %
+			     setting);
+		return;
+	}
+	if (*families != AddressFamilyPolicy::Families::DualStack) {
+		return;
+	}
+	wxString line = "Address families: IPv4 and IPv6";
+	if (!listenerHost.IsEmpty()) {
+		line << CFormat(", ed2k TCP listener on %s:%u") % listenerHost %
+				static_cast<unsigned int>(thePrefs::GetPort());
+	}
+	AddLogLineNS(line);
+}
+#endif
+
 // Application initialization
 bool CamuleApp::OnInit()
 {
@@ -708,6 +737,14 @@ bool CamuleApp::OnInit()
 			    bindInterface);
 		break;
 	}
+
+#ifdef ENABLE_IPV6
+	// Read only here: changing it later would let the next listener Rebind() move to another
+	// family without a restart.
+	AddressFamilyPolicy::SetConfigured(
+		AddressFamilyPolicy::FamiliesFromSetting(thePrefs::GetAddressFamiliesSetting())
+			.value_or(AddressFamilyPolicy::Families::IPv4Only));
+#endif
 
 	// The temp / incoming directories are validated and created further down, after the
 	// first-run wizard has had a chance to point them somewhere else.
@@ -927,6 +964,9 @@ bool CamuleApp::OnInit()
 		AddLogLineNS("\n");
 		AddLogLineNS(msg);
 	}
+#ifdef ENABLE_IPV6
+	LogAddressFamilies(listensocket ? listensocket->BoundHost() : wxString());
+#endif
 
 	// The GitHub version check and the server.met auto-update used to fire from here,
 	// before the partfile load and shared-file scan below. On busy setups the wxWebSession
@@ -1543,8 +1583,12 @@ bool CamuleApp::ReinitializeNetwork(wxString *msg)
 	// from other clients and client-to-client source exchange. Default is 4662.
 	myaddr[2] = myaddr[1];
 	myaddr[2].Service(thePrefs::GetPort());
-	listensocket = new CListenSocket(myaddr[2]);
-	*msg << CFormat("*** TCP socket (TCP) listening on %s:%u\n") % ip %
+	listensocket = new CListenSocket(myaddr[2], nullptr, ListenerFamilies::FromPolicy);
+	wxString listenHost = listensocket->BoundHost();
+	if (listenHost.IsEmpty()) {
+		listenHost = ip;
+	}
+	*msg << CFormat("*** TCP socket (TCP) listening on %s:%u\n") % listenHost %
 			(unsigned int)(thePrefs::GetPort());
 	// Notify(true) has already been called to the ListenSocket, so events may
 	// be already coming in.
@@ -1744,7 +1788,9 @@ void RefreshLocalPublicIPv6Addresses()
 {
 	std::vector<CPublicIPv6Corroboration::Address> local;
 	for (const NetworkInterface &iface : DetectNetworkInterfaces()) {
-		local.insert(local.end(), iface.ipv6.begin(), iface.ipv6.end());
+		for (const NetworkInterfaceIPv6 &address : iface.ipv6) {
+			local.push_back(address.bytes);
+		}
 	}
 	// Publishing the set is only half of it: the same call re-validates an already adopted
 	// reflection against the addresses we still hold, which is how a prefix renumber gets
@@ -2735,6 +2781,7 @@ void CamuleApp::OnFinishedCompletion(CCompletionEvent &evt)
 	completed->CompleteFileEnded(evt.ErrorOccurred(), evt.GetFullPath());
 	if (evt.ErrorOccurred()) {
 		CUserEvents::ProcessEvent(CUserEvents::ErrorOnCompletion, completed);
+		return;
 	}
 
 	// Check if we should execute an script/app/whatever.
@@ -3193,6 +3240,11 @@ uint32 CamuleApp::GetKadIndexedNotes() const
 uint32 CamuleApp::GetKadIndexedLoad() const
 {
 	return Kademlia::CKademlia::GetIndexed()->m_totalIndexLoad;
+}
+
+bool CamuleApp::IsKadIndexReady() const
+{
+	return Kademlia::CKademlia::IsRunning() && Kademlia::CKademlia::GetIndexed()->IsReady();
 }
 
 // True IP of machine

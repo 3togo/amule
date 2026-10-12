@@ -14,7 +14,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
+<<<<<<< HEAD
 "POT-Creation-Date: 2026-10-08 13:42+0900\n"
+=======
+"POT-Creation-Date: 2026-10-09 12:39+0000\n"
+>>>>>>> 5c5cdd9f881f2c80c98a3c0e18ef7193c1e170e6
 "PO-Revision-Date: 2026-10-07 16:31+0000\n"
 "Last-Translator: Wayne Su <mstarmstar@gmail.com>\n"
 "Language-Team: \n"
@@ -395,7 +399,7 @@ msgstr "警告：無法繫結至網路介面「%s」 - 流量可能會透過預�
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
 msgstr "對不起，由於版本變更，您的地區設定已經被變更爲系統預設值。"
 
-#: src/amule.cpp src/CatDialog.cpp src/ServerList.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/CatDialog.cpp src/ServerListCtrl.cpp
 msgid "Info"
 msgstr "資訊"
 
@@ -1771,11 +1775,6 @@ msgstr[0] "%u 個註解"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "已封鎖客戶端 %s：因傳送 %s (總計 %s ) 損壞資料 (檔案 %s )"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "無法自 %s 下載國家資料。"
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "自動 [低]"
@@ -2360,6 +2359,10 @@ msgid "server not found: %s"
 msgstr "找不到伺服器：%s "
 
 #: src/ExternalConn.cpp
+msgid "You are connected to the server you are trying to delete. please disconnect first."
+msgstr "現在正連線到要刪除的伺服器。請先中斷連線。"
+
+#: src/ExternalConn.cpp
 msgid "need to define server to be removed"
 msgstr "必須指定要刪除的伺服器"
 
@@ -2771,19 +2774,48 @@ msgstr ""
 msgid "OK"
 msgstr "OK"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "檔案預覽"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "錯誤：無法執行媒體播放器！指令：「 %s 」"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr ""
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "錯誤：無法執行媒體播放器！指令：「 %s 」"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6838,6 +6870,13 @@ msgid "GUI command:"
 msgstr "圖形界面端指令："
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr ""
 "使用以下變數：\n"
@@ -7252,6 +7291,14 @@ msgid "Server.met file corrupt, found invalid versiontag: 0x%x, size %i"
 msgstr "server.met 檔案損壞，發現無效的版本標記：0x%x, 大小 %i"
 
 #: src/ServerList.cpp
+msgid "Error: the file 'server.met' is corrupted: "
+msgstr "錯誤:  server.met 檔案已經損壞: "
+
+#: src/ServerList.cpp
+msgid "IO error while reading 'server.met': "
+msgstr "讀取 server.met 時發生 IO 錯誤："
+
+#: src/ServerList.cpp
 #, c-format
 msgid "%i server in server.met found"
 msgid_plural "%i servers in server.met found"
@@ -7262,14 +7309,6 @@ msgstr[0] "在 server.met 中找到 %i 個伺服器"
 msgid "%d server added"
 msgid_plural "%d servers added"
 msgstr[0] "已加入 %d 個伺服器"
-
-#: src/ServerList.cpp
-msgid "Error: the file 'server.met' is corrupted: "
-msgstr "錯誤:  server.met 檔案已經損壞: "
-
-#: src/ServerList.cpp
-msgid "IO error while reading 'server.met': "
-msgstr "讀取 server.met 時發生 IO 錯誤："
 
 #: src/ServerList.cpp
 #, c-format
@@ -7290,10 +7329,6 @@ msgstr "未加入伺服器：%s:%d 已在伺服器清單中。"
 #, c-format
 msgid "Server added: Server at [%s:%d] using the name '%s'."
 msgstr "已加入伺服器：[%s:%d]  名稱 %s 。"
-
-#: src/ServerList.cpp
-msgid "You are connected to the server you are trying to delete. please disconnect first."
-msgstr "現在正連線到要刪除的伺服器。請先中斷連線。"
 
 #: src/ServerList.cpp
 #, c-format
@@ -8946,6 +8981,11 @@ msgstr "暫停上傳檔案：%s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "無法執行指令「 %s 」(事件：%s )。"
 
@@ -8954,7 +8994,8 @@ msgid "Download completed"
 msgstr "下載完畢"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "檔案的完整路徑。"
 
 #: src/UserEvents.h
@@ -8992,6 +9033,10 @@ msgstr "磁碟分割區。"
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "有錯誤發生於完成"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "檔案的完整路徑。"
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9704,6 +9749,28 @@ msgstr "aMule 似乎正在執行中。請將其關閉後重新執行解除安裝
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "正在移除位於 $APPDATA\\aMule 的使用者資料……"
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not read %s. It was renamed to %s.bad, and a new index will be saved at shutdown."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not preserve the unreadable index %s as %s.bad. Its original file will not be overwritten."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not load its saved index. Existing index files were preserved."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not save an index. The previous copy of that file was preserved."
+msgstr ""
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "無法自 %s 下載國家資料。"
 
 #, fuzzy
 #~ msgid "Kad protocol version"

@@ -64,6 +64,7 @@
 
 #ifndef CLIENT_GUI
 #include "RandomFunctions.h"
+#include "UserHash.h"
 #include "PlatformSpecific.h" // Needed for PlatformSpecific::GetMaxConnections()
 #include "SharedFileList.h"   // Needed for theApp->sharedfiles->Reload()
 #endif
@@ -97,6 +98,9 @@ uint32 CPreferences::s_maxdownload;
 uint32 CPreferences::s_slotallocation;
 wxString CPreferences::s_Addr;
 wxString CPreferences::s_NetworkInterface;
+#ifdef ENABLE_IPV6
+long CPreferences::s_addressFamiliesSetting;
+#endif
 uint16 CPreferences::s_port;
 uint16 CPreferences::s_udpport;
 bool CPreferences::s_UDPEnable;
@@ -931,11 +935,15 @@ CPreferences::CPreferences()
 		}
 	}
 
-	if (s_userhash.IsEmpty()) {
-		for (int i = 0; i < 8; i++) {
-			RawPokeUInt16(s_userhash.GetHash() + (i * 2), rand());
-		}
-
+#ifndef CLIENT_GUI
+	const bool newHash = IsBadUserHash(s_userhash);
+	CreateUserHash(s_userhash);
+#else
+	// The remote GUI uses the core's hash, which arrives over EC. It still writes the file
+	// once: that first save also creates remote.conf, owner-only.
+	const bool newHash = !wxFileExists(fullpath);
+#endif
+	if (newHash) {
 		// Persist only preferences.dat and amule.conf here. A full Save() would also call
 		// SaveSharedFolders() against still-empty in-memory lists, truncating any
 		// shareddir-*.dat files a pre-launch script may have populated.
@@ -1391,6 +1399,10 @@ void CPreferences::BuildItemList(const wxString &appdir)
 	s_MiscList.push_back(MkCfg_Int("/eMule/AllcatType", s_allcatFilter, 0));
 
 	s_MiscList.push_back(MkCfg_Int("/eMule/SmartIdState", s_smartidstate, 0));
+
+#ifdef ENABLE_IPV6
+	s_MiscList.push_back(MkCfg_Int("/eMule/AddressFamilies", s_addressFamiliesSetting, 0));
+#endif
 
 	s_MiscList.push_back(new Cfg_Bool("/eMule/DropSlowSources", s_DropSlowSources, false));
 

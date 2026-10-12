@@ -9,7 +9,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
+<<<<<<< HEAD
 "POT-Creation-Date: 2026-10-08 13:42+0900\n"
+=======
+"POT-Creation-Date: 2026-10-09 12:39+0000\n"
+>>>>>>> 5c5cdd9f881f2c80c98a3c0e18ef7193c1e170e6
 "PO-Revision-Date: 2026-10-07 16:26+0000\n"
 "Last-Translator: Sebastiano Pistore <sebastiano.pistore.info@aol.com>\n"
 "Language-Team: https://github.com/amule-org/amule <forum@aMule.org>\n"
@@ -381,7 +385,7 @@ msgstr ""
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
 msgstr ""
 
-#: src/amule.cpp src/CatDialog.cpp src/ServerList.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/CatDialog.cpp src/ServerListCtrl.cpp
 msgid "Info"
 msgstr "Info"
 
@@ -1768,11 +1772,6 @@ msgstr[2] ""
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr ""
 
-#: src/CountryFlags.cpp
-#, fuzzy, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Neuspjesno citanje kreditnog fajla"
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Auto [Ni]"
@@ -2360,6 +2359,10 @@ msgid "server not found: %s"
 msgstr ""
 
 #: src/ExternalConn.cpp
+msgid "You are connected to the server you are trying to delete. please disconnect first."
+msgstr ""
+
+#: src/ExternalConn.cpp
 msgid "need to define server to be removed"
 msgstr ""
 
@@ -2744,18 +2747,47 @@ msgstr ""
 msgid "OK"
 msgstr "OK"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgid "Media-player command '%s' was not run: %s"
 msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
+msgstr ""
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
 msgstr ""
 
 #: src/FileLaunch.cpp
@@ -6857,6 +6889,13 @@ msgid "GUI command:"
 msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr ""
 
@@ -7267,6 +7306,16 @@ msgid "Server.met file corrupt, found invalid versiontag: 0x%x, size %i"
 msgstr ""
 
 #: src/ServerList.cpp
+#, fuzzy
+msgid "Error: the file 'server.met' is corrupted: "
+msgstr "Greska: fajl server.met je koruptan"
+
+#: src/ServerList.cpp
+#, fuzzy
+msgid "IO error while reading 'server.met': "
+msgstr "Neocekivana fajl greska prilikom pisanja %s : %s"
+
+#: src/ServerList.cpp
 #, fuzzy, c-format
 msgid "%i server in server.met found"
 msgid_plural "%i servers in server.met found"
@@ -7281,16 +7330,6 @@ msgid_plural "%d servers added"
 msgstr[0] "%d servera dodato"
 msgstr[1] "%d servera dodato"
 msgstr[2] ""
-
-#: src/ServerList.cpp
-#, fuzzy
-msgid "Error: the file 'server.met' is corrupted: "
-msgstr "Greska: fajl server.met je koruptan"
-
-#: src/ServerList.cpp
-#, fuzzy
-msgid "IO error while reading 'server.met': "
-msgstr "Neocekivana fajl greska prilikom pisanja %s : %s"
 
 #: src/ServerList.cpp
 #, c-format
@@ -7310,10 +7349,6 @@ msgstr ""
 #: src/ServerList.cpp
 #, c-format
 msgid "Server added: Server at [%s:%d] using the name '%s'."
-msgstr ""
-
-#: src/ServerList.cpp
-msgid "You are connected to the server you are trying to delete. please disconnect first."
 msgstr ""
 
 #: src/ServerList.cpp
@@ -8963,6 +8998,11 @@ msgstr ""
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr ""
 
@@ -8971,7 +9011,7 @@ msgid "Download completed"
 msgstr ""
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr ""
 
 #: src/UserEvents.h
@@ -9008,6 +9048,10 @@ msgstr ""
 
 #: src/UserEvents.h
 msgid "Error on completion"
+msgstr ""
+
+#: src/UserEvents.h
+msgid "The full path to the file."
 msgstr ""
 
 #: src/utils/aLinkCreator/src/alcc.cpp
@@ -9705,6 +9749,28 @@ msgstr ""
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not read %s. It was renamed to %s.bad, and a new index will be saved at shutdown."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not preserve the unreadable index %s as %s.bad. Its original file will not be overwritten."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not load its saved index. Existing index files were preserved."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not save an index. The previous copy of that file was preserved."
+msgstr ""
+
+#, fuzzy, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Neuspjesno citanje kreditnog fajla"
 
 #, fuzzy
 #~ msgid "Ratio"

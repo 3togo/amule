@@ -52,7 +52,12 @@ uint32 Assemble(const uint8_t *buffer,
 	uint32 remaining = size;
 	uint32 accounted = 0;
 	uint32 overhead = 0;
+<<<<<<< HEAD
 	// Preserve the adaptive chunk size and tail merging of the original builders.
+=======
+	// Packet size follows the slot's speed: rate / 8 is about 125 ms of data. The 10 KiB floor
+	// covers a slot whose rate is still 0, and a peer requests at most EMBLOCKSIZE at a time.
+>>>>>>> 5c5cdd9f881f2c80c98a3c0e18ef7193c1e170e6
 	const uint32 chunkSize =
 		std::min(std::max(uploadDatarate / 8u, 10240u), static_cast<uint32>(EMBLOCKSIZE));
 	uint32 packetSize = (remaining <= chunkSize + 2600u) ? remaining : chunkSize;
@@ -97,7 +102,11 @@ uint32 Assemble(const uint8_t *buffer,
 			payloadSize = originalSize - accounted;
 		}
 		accounted += payloadSize;
+<<<<<<< HEAD
 		// The old compressed builder counts 24 even for the 28-byte I64 header.
+=======
+		// 24 even for the 28-byte I64 header, as eMule counts it.
+>>>>>>> 5c5cdd9f881f2c80c98a3c0e18ef7193c1e170e6
 		const uint32 packetOverhead = compressed ? 24 : headerSize;
 		overhead += packetOverhead;
 		if (recordOverhead) {
@@ -110,6 +119,10 @@ uint32 Assemble(const uint8_t *buffer,
 }
 } // namespace
 
+<<<<<<< HEAD
+=======
+// eMule 0.70b ref: CUploadDiskIOThread::CreateStandardPackets()
+>>>>>>> 5c5cdd9f881f2c80c98a3c0e18ef7193c1e170e6
 uint32 UploadPacketBuilder::Standard(const uint8_t *buffer,
 	uint64 startOffset,
 	uint64 endOffset,
@@ -131,6 +144,10 @@ uint32 UploadPacketBuilder::Standard(const uint8_t *buffer,
 		recordOverhead);
 }
 
+<<<<<<< HEAD
+=======
+// eMule 0.70b ref: CUploadDiskIOThread::CreatePackedPackets()
+>>>>>>> 5c5cdd9f881f2c80c98a3c0e18ef7193c1e170e6
 uint32 UploadPacketBuilder::Packed(const uint8_t *buffer,
 	uint64 startOffset,
 	uint64 endOffset,
@@ -142,7 +159,11 @@ uint32 UploadPacketBuilder::Packed(const uint8_t *buffer,
 	const uint32 size = static_cast<uint32>(endOffset - startOffset);
 	uLongf packedSize = size + 300;
 	CScopedArray<uint8_t> output(packedSize);
+<<<<<<< HEAD
 	// Retain level 1 and the standard-packet fallback when compression does not help.
+=======
+	// Level 1, as eMule 0.70b: 4-12% larger than level 9 on typical blocks, but 1.5-2.5x faster.
+>>>>>>> 5c5cdd9f881f2c80c98a3c0e18ef7193c1e170e6
 	if (compress2(output.get(), &packedSize, buffer, size, 1) != Z_OK || size <= packedSize) {
 		return Standard(
 			buffer, startOffset, endOffset, packets, fileHash, uploadDatarate, recordOverhead);

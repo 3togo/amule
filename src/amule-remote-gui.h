@@ -25,6 +25,7 @@
 #ifndef AMULE_REMOTE_GUI_H
 #define AMULE_REMOTE_GUI_H
 
+#include "RemoteDownloadEvents.h"
 #include "SearchEd2kSlot.h"
 #include "SearchStartRequests.h"
 #include <functional>             // std::function for the CSharedFilesRem
@@ -554,6 +555,8 @@ class CKnownFilesRem : public CRemoteContainer<CKnownFile, uint32, CEC_SharedFil
 {
 	CKnownFile *CreateKnownFile(const CEC_SharedFile_Tag *tag, CKnownFile *file = NULL);
 	CPartFile *CreatePartFile(const CEC_PartFile_Tag *tag);
+
+	CRemoteDownloadEvents m_downloadEvents;
 
 	bool m_initialUpdate; // improved handling for first data transfer
 
@@ -1131,6 +1134,7 @@ public:
 	uint32 GetKadIndexedKeywords() const { return theStats::GetKadIndexedKeywords(); }
 	uint32 GetKadIndexedNotes() const { return theStats::GetKadIndexedNotes(); }
 	uint32 GetKadIndexedLoad() const { return theStats::GetKadIndexedLoad(); }
+	bool IsKadIndexReady() const { return theStats::IsKadIndexReady(); }
 	const CUInt128 &GetKadID() const { return m_kadID; }
 	// True IP of machine
 	uint32 GetKadIPAddress() const { return theStats::GetKadIPAddress(); }

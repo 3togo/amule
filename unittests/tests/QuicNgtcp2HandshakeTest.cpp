@@ -43,8 +43,6 @@
 #include <ngtcp2/ngtcp2_crypto.h>
 #include <ngtcp2/ngtcp2_crypto_gnutls.h>
 
-#include <netinet/in.h>
-
 #include <array>
 #include <memory>
 #include <mutex>
@@ -101,8 +99,8 @@ int Ngtcp2NewConnectionId(ngtcp2_conn *, ngtcp2_cid *cid, uint8_t *token, size_t
 // sa_family, so "no real path" still has to be a real, zero-address AF_INET endpoint.
 void InitZeroPath(ngtcp2_path_storage &path)
 {
-	sockaddr_in addr = {};
-	addr.sin_family = AF_INET;
+	ngtcp2_sockaddr_in addr = {};
+	addr.sin_family = NGTCP2_AF_INET;
 	ngtcp2_path_storage_init(&path,
 		reinterpret_cast<ngtcp2_sockaddr *>(&addr),
 		sizeof(addr),
@@ -943,4 +941,41 @@ TEST(QuicNgtcp2Handshake, CloseDrainsAQueueSpanningManyPacketsBeforeEndingTheStr
 
 	ASSERT_EQUALS(payload.size(), client.Received().size());
 	ASSERT_TRUE(client.Received() == payload);
+}
+
+TEST(QuicNgtcp2Handshake, FlushesAtOneTimestampSendABurstNotOnePacket)
+{
+	// ngtcp2 1.13 and later always pace a packet written at the same timestamp after
+	// ngtcp2_conn_update_pkt_tx_time(). The engine called it after every packet, so it got one
+	// packet out per datagram or tick: about a hundredth of the throughput older ngtcp2 gave.
+	CQuicEphemeralCredentials credentials;
+	CQuicTlsPolicy policy{ &credentials };
+	uint64_t nowMs = 0;
+	auto sink = std::make_shared<CollectingSink>();
+	auto engine = CreateProductionQuicNgtcp2Engine();
+	CQuicNgtcp2Factory factory(policy, sink, engine, kTestServerIdentity, [&nowMs] { return nowMs; });
+	AcceptingAcceptor acceptor;
+	factory.SetAcceptor(&acceptor);
+
+	CTestQuicClient client;
+	ASSERT_TRUE(client.Init());
+	std::unique_ptr<IQuicConnection> connection;
+	ASSERT_TRUE(DriveHandshake(client, factory, *sink, connection, nowMs));
+	ASSERT_TRUE(ExchangeEaqn1Proof(client, connection, *sink, nowMs));
+	ASSERT_TRUE(acceptor.accepted != nullptr);
+
+	const std::vector<uint8_t> data(32 * 1024, 0x5a);
+	ASSERT_EQUALS(static_cast<uint32_t>(data.size()),
+		acceptor.accepted->Write(data.data(), static_cast<uint32_t>(data.size())));
+	// What the socket's flush requests do within one event: flush again while that gets
+	// something out. nowMs does not move.
+	for (int round = 0; round < 64; ++round) {
+		const size_t before = sink->sent.size();
+		acceptor.accepted->Flush();
+		if (sink->sent.size() == before) {
+			break;
+		}
+	}
+	// The initial congestion window alone admits about ten full packets.
+	ASSERT_TRUE(sink->sent.size() >= 5);
 }

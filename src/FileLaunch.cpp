@@ -24,9 +24,6 @@
 
 #include "FileLaunch.h" // Interface declarations
 
-#include <vector> // Needed for std::vector
-
-#include <wx/cmdline.h>  // Needed for wxCmdLineParser::ConvertStringToArgs
 #include <wx/filename.h> // Needed for wxFileName::IsFileExecutable
 #include <wx/msgdlg.h>   // Needed for wxMessageBox
 #include <wx/utils.h>    // Needed for wxExecute, wxLaunchDefaultApplication
@@ -37,7 +34,7 @@
 #include "MacAppHelper.h" // Needed for mac_reveal_in_finder
 #endif
 
-#include "AppImageEnv.h" // Needed for GetSanitizedExecEnv
+#include "ExternalCommand.h" // Needed for template expansion and RunDetached
 #ifdef CLIENT_GUI
 #include "amule.h" // Needed for theApp->glob_prefs (ApplyPathMapping)
 #endif
@@ -51,52 +48,6 @@
 namespace
 {
 
-// Hand an argument vector to the desktop, with the AppImage-safe environment when we are inside a
-// bundle: AppRun prepends the bundle's lib/bin directories to the child's search paths, and a host
-// program that inherits them loads our older bundled libraries and dies on an undefined symbol
-// (#334).
-//
-// A vector rather than a command string on purpose: the path crosses untouched, so a name with
-// spaces or quotes needs no escaping and cannot be re-split by the shell-style parser wxExecute
-// applies to strings. The wide overload keeps non-ASCII names intact, which mb_str() would mangle
-// under a C locale.
-bool RunDetached(const wxString &description, const std::vector<wxString> &args)
-{
-	std::vector<wxWCharBuffer> buffers;
-	std::vector<const wchar_t *> argv;
-	buffers.reserve(args.size()); // no reallocation, so the pointers below stay valid
-	argv.reserve(args.size() + 1);
-	for (const wxString &arg : args) {
-		buffers.emplace_back(arg.wc_str());
-		argv.push_back(buffers.back().data());
-	}
-	argv.push_back(nullptr);
-
-	CTerminationProcess *process = new CTerminationProcess(description);
-	wxExecuteEnv execEnv;
-	const bool sanitized = AppImageEnv::GetSanitizedExecEnv(execEnv);
-	long ret = 0;
-	try {
-		ret = wxExecute(argv.data(), wxEXEC_ASYNC, process, sanitized ? &execEnv : nullptr);
-	} catch (...) {
-		// wxExecute throws, rather than returning an error, when the environment it has to
-		// hand the child is unusable -- a working directory that no longer exists, for one.
-		// Uncaught it unwinds out of the menu handler and wx terminates the application
-		// cleanly: no signal, no backtrace, no crash report.
-		delete process;
-		return false;
-	}
-	if (ret <= 0) {
-		delete process;
-		return false;
-	}
-	// True means the child was spawned, not that it did anything useful: an async wxExecute
-	// returns the pid as soon as the fork succeeds, so a failed exec (no xdg-open installed,
-	// say) is not reported here. macOS and Windows do surface a failure, since neither reaches
-	// the desktop opener this way.
-	return true;
-}
-
 // Log a launch failure, and put it in front of the user when the caller has no
 // second option to fall through to.
 void Fail(const wxString &message, wxWindow *parent, bool reportModally)
@@ -109,13 +60,10 @@ void Fail(const wxString &message, wxWindow *parent, bool reportModally)
 
 // Hand the path to the user's configured player.
 //
-// The template is split into arguments ONCE, with wxCmdLineParser, and the placeholders are
-// substituted inside the resulting arguments -- so the path and the bare name each cross as a
-// single argv entry whatever they contain. The old code appended the path to a command string and
-// let wxExecute re-split it, so a remote-supplied filename could inject arguments: `x\'
-// --script=/tmp/evil.lua \'.avi` becomes a separate --script argument, and mpv and vlc execute
-// scripts given that way. Escaping the quotes was the previous defence and was itself bypassable;
-// not building a string removes the class.
+// The shared helper parses the template before inserting file values. The full path,
+// bare name, and historic $file alias each stay in one argument, and placeholder
+// text inside a filename is not expanded again. Explicit shell scripts still need
+// positional arguments, as described for event commands in docs/README.md.
 //
 // `reportModally` is for the caller that has nothing to fall back to: a failure it only logs is,
 // from the user's side, the same silent nothing this removes.
@@ -124,17 +72,16 @@ bool LaunchWithPlayer(const wxString &player, const CPath &path, wxWindow *paren
 	const wxString target = path.GetRaw();
 	const wxString name = path.GetFullName().GetRaw();
 
-	// ConvertStringToArgs defaults to DOS rules, which is wrong everywhere but Windows: it
-	// leaves single quotes literal and does not honour backslash escapes, so an existing `mpv
-	// -fs '%PARTFILE'` silently stops working. Windows genuinely needs DOS, since UNIX rules
-	// would eat the backslashes in C:\Program Files\...
-#ifdef __WINDOWS__
-	wxArrayString parts = wxCmdLineParser::ConvertStringToArgs(player, wxCMD_LINE_SPLIT_DOS);
-#else
-	wxArrayString parts = wxCmdLineParser::ConvertStringToArgs(player, wxCMD_LINE_SPLIT_UNIX);
-#endif
+	ExternalCommand::RejectionReason rejection;
+	wxArrayString parts = ExternalCommand::Build(player,
+		{ { "%PARTFILE", target }, { "%PARTNAME", name }, { "$file", target } },
+		nullptr,
+		ExternalCommand::NativePlatform,
+		&target,
+		&rejection);
 	if (parts.IsEmpty()) {
-		Fail(CFormat(_("ERROR: Failed to execute external media-player! Command: '%s'")) % player,
+		Fail(CFormat(_("Media-player command '%s' was not run: %s")) % player %
+				ExternalCommand::DescribeRejection(rejection),
 			parent,
 			reportModally);
 		return false;
@@ -157,41 +104,7 @@ bool LaunchWithPlayer(const wxString &player, const CPath &path, wxWindow *paren
 		return false;
 	}
 
-	std::vector<wxString> argv;
-	argv.reserve(parts.GetCount() + 1);
-	bool substituted = false;
-	for (const wxString &part : parts) {
-		// One pass: a value that happens to contain a placeholder (a file named
-		// "x%PARTNAME.avi") must not have it expanded again by a later rule.
-		wxString arg;
-		arg.reserve(part.length());
-		for (size_t i = 0; i < part.length();) {
-			if (part.compare(i, 9, "%PARTFILE") == 0) {
-				arg += target;
-				i += 9;
-				substituted = true;
-			} else if (part.compare(i, 9, "%PARTNAME") == 0) {
-				arg += name;
-				i += 9;
-				substituted = true;
-			} else if (part.compare(i, 5, "$file") == 0) {
-				// The historic spelling of %PARTFILE.
-				arg += target;
-				i += 5;
-				substituted = true;
-			} else {
-				arg += part[i];
-				++i;
-			}
-		}
-		argv.push_back(arg);
-	}
-	// No placeholder anywhere: the player takes the file as its last argument.
-	if (!substituted) {
-		argv.push_back(target);
-	}
-
-	if (!RunDetached(player, argv)) {
+	if (!ExternalCommand::RunDetached(player, parts)) {
 		Fail(CFormat(_("ERROR: Failed to execute external media-player! Command: '%s'")) % player,
 			parent,
 			reportModally);
@@ -217,7 +130,10 @@ bool OpenWithDesktop(const CPath &path)
 #else
 	// Linux/BSD: xdg-open, via wxExecute so the AppImage-safe environment can be passed. Inside
 	// Flatpak this is the portal shim, which forwards to the host's handler.
-	return RunDetached(CFormat("xdg-open %s") % target, { "xdg-open", target });
+	wxArrayString args;
+	args.Add("xdg-open");
+	args.Add(target);
+	return ExternalCommand::RunDetached(CFormat("xdg-open %s") % target, args);
 #endif
 }
 
@@ -387,7 +303,10 @@ void Reveal(const CKnownFile *file, wxWindow *WXUNUSED(parent))
 	// desktop agrees on. Selecting it would mean the FileManager1 D-Bus interface, which not
 	// every file manager implements.
 	const wxString directory = path.GetPath().GetRaw();
-	ok = RunDetached(CFormat("xdg-open %s") % directory, { "xdg-open", directory });
+	wxArrayString args;
+	args.Add("xdg-open");
+	args.Add(directory);
+	ok = ExternalCommand::RunDetached(CFormat("xdg-open %s") % directory, args);
 #endif
 
 	if (!ok) {

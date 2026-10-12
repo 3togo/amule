@@ -10,7 +10,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
+<<<<<<< HEAD
 "POT-Creation-Date: 2026-10-08 13:42+0900\n"
+=======
+"POT-Creation-Date: 2026-10-09 12:39+0000\n"
+>>>>>>> 5c5cdd9f881f2c80c98a3c0e18ef7193c1e170e6
 "PO-Revision-Date: 2026-10-07 16:27+0000\n"
 "Last-Translator: Hyunju Kang <rexington@gmail.com>\n"
 "Language-Team: Korean <hoenny@daum.net>\n"
@@ -391,7 +395,7 @@ msgstr "경고: 네트워크 인터페이스 '%s'에 바인딩할 수 없습니�
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
 msgstr "지역정보(로케일)가 설정 변경으로 인해 시스템 기본값으로 변경되었습니다. 죄송합니다."
 
-#: src/amule.cpp src/CatDialog.cpp src/ServerList.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/CatDialog.cpp src/ServerListCtrl.cpp
 msgid "Info"
 msgstr "정보"
 
@@ -1775,11 +1779,6 @@ msgstr[1] "%u개의 의견"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "클라이언트 %s을(를) 차단했습니다: %s의 손상된 데이터(총 %s 중, 파일 '%s')를 전송했습니다"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "'%s'에 대한 국가 데이터를 불러오지 못했습니다."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "자동[낮음]"
@@ -2365,6 +2364,10 @@ msgid "server not found: %s"
 msgstr "서버가 발견되지 않음: %s"
 
 #: src/ExternalConn.cpp
+msgid "You are connected to the server you are trying to delete. please disconnect first."
+msgstr "삭제하려고하는 서버에 접속되어있습니다. 부디 먼저 연결을 끊으세요."
+
+#: src/ExternalConn.cpp
 msgid "need to define server to be removed"
 msgstr "제거할 서버의 정의가 필요합니다."
 
@@ -2776,19 +2779,48 @@ msgstr ""
 msgid "OK"
 msgstr "확인"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "미리보기"
 
 #: src/FileLaunch.cpp
-#, fuzzy, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "오류: 외부 재생기를 실행하지 못했습니다."
+#, c-format
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr ""
+
+#: src/FileLaunch.cpp
+#, fuzzy, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "오류: 외부 재생기를 실행하지 못했습니다."
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6861,6 +6893,13 @@ msgid "GUI command:"
 msgstr "GUI 명령어:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "다음 변수들은 교체됩니다.:"
 
@@ -7273,6 +7312,14 @@ msgid "Server.met file corrupt, found invalid versiontag: 0x%x, size %i"
 msgstr "Server.met 파일이 손상됨, 유효하지 않는 버젼정보를 발견함: 0x%x, size %i"
 
 #: src/ServerList.cpp
+msgid "Error: the file 'server.met' is corrupted: "
+msgstr "오류: 'server.met' 파일이 손상되었습니다: "
+
+#: src/ServerList.cpp
+msgid "IO error while reading 'server.met': "
+msgstr "'server.met' 파일을 읽는 중 입출력 오류: "
+
+#: src/ServerList.cpp
 #, c-format
 msgid "%i server in server.met found"
 msgid_plural "%i servers in server.met found"
@@ -7285,14 +7332,6 @@ msgid "%d server added"
 msgid_plural "%d servers added"
 msgstr[0] "%d개의 서버가 추가됨"
 msgstr[1] "%d개의 서버가 추가됨"
-
-#: src/ServerList.cpp
-msgid "Error: the file 'server.met' is corrupted: "
-msgstr "오류: 'server.met' 파일이 손상되었습니다: "
-
-#: src/ServerList.cpp
-msgid "IO error while reading 'server.met': "
-msgstr "'server.met' 파일을 읽는 중 입출력 오류: "
 
 #: src/ServerList.cpp
 #, c-format
@@ -7313,10 +7352,6 @@ msgstr "서버 추가되지 않음: IP:포트[%s:%d]와 같은 서버가 목록�
 #, c-format
 msgid "Server added: Server at [%s:%d] using the name '%s'."
 msgstr "서버 추가됨: [%s:%d]서버 '%s'이름을 사용"
-
-#: src/ServerList.cpp
-msgid "You are connected to the server you are trying to delete. please disconnect first."
-msgstr "삭제하려고하는 서버에 접속되어있습니다. 부디 먼저 연결을 끊으세요."
 
 #: src/ServerList.cpp
 #, c-format
@@ -8983,6 +9018,11 @@ msgstr "파일의 올려주기를 정지합니다: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "'%s' 명령을 '%s' 이벤트에서 실행하지 못했습니다."
 
@@ -8991,7 +9031,8 @@ msgid "Download completed"
 msgstr "내려받기 완료"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "파일의 전체 경로입니다."
 
 #: src/UserEvents.h
@@ -9029,6 +9070,10 @@ msgstr "디스크 파티션입니다."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "완료 시 오류"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "파일의 전체 경로입니다."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9742,6 +9787,28 @@ msgstr "aMule이 실행 중인 것 같습니다. 종료한 다음 제거 프로�
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "$APPDATA\\aMule의 사용자 데이터를 제거하는 중..."
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not read %s. It was renamed to %s.bad, and a new index will be saved at shutdown."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not preserve the unreadable index %s as %s.bad. Its original file will not be overwritten."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not load its saved index. Existing index files were preserved."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not save an index. The previous copy of that file was preserved."
+msgstr ""
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "'%s'에 대한 국가 데이터를 불러오지 못했습니다."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

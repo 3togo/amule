@@ -13,8 +13,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
+<<<<<<< HEAD
 "POT-Creation-Date: 2026-10-08 13:42+0900\n"
 "PO-Revision-Date: 2026-10-08 11:09+0000\n"
+=======
+"POT-Creation-Date: 2026-10-09 12:39+0000\n"
+"PO-Revision-Date: 2026-10-11 09:48+0000\n"
+>>>>>>> 5c5cdd9f881f2c80c98a3c0e18ef7193c1e170e6
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
 "Language: zh_CN\n"
@@ -416,7 +421,7 @@ msgstr "警告：无法绑定到网络接口“%s” − 流量可能经默认�
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
 msgstr "对不起，由于配置变动，您的地区设置已经变为系统默认值。"
 
-#: src/amule.cpp src/CatDialog.cpp src/ServerList.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/CatDialog.cpp src/ServerListCtrl.cpp
 msgid "Info"
 msgstr "信息"
 
@@ -1782,11 +1787,6 @@ msgstr[1] "%u 条评论"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "封禁了客户端 %s，发送了 %s 受损的数据，共发送 %s （文件 “%s”）"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "加载 \"%s\" 的地区数据失败。"
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "自动 [低]"
@@ -2371,6 +2371,10 @@ msgid "server not found: %s"
 msgstr "找不到服务器：%s"
 
 #: src/ExternalConn.cpp
+msgid "You are connected to the server you are trying to delete. please disconnect first."
+msgstr "您在连接您已决定删除的服务器，请断开连接。"
+
+#: src/ExternalConn.cpp
 msgid "need to define server to be removed"
 msgstr "必须定义需删除的服务器"
 
@@ -2777,19 +2781,48 @@ msgstr "%.2f KiB/s"
 msgid "OK"
 msgstr "确定"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr "命令没有可执行文件。"
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr "命令模板或变量包含一个 NUL 字符。"
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr "事件值不能选该执行文件。"
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr "事件值将被用作程序解释器代码、脚本名或不支持的启动器变量。"
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr "一个 command-shell 变量包含双引号、百分比符号、感叹号或换行符。"
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
+msgstr "cmd.exe 需要固定的内置程序或显式的 .exe、 .com、 或 .bat 目标，后面跟着单独的数据变量。"
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "文件预览"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "错误: 无法运行外部媒体播放器！ 命令: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr "媒体播放器命令 “%s” 未运行：%s"
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr "未找到配置好的视频播放器：%s"
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "错误: 无法运行外部媒体播放器！ 命令: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6853,6 +6886,16 @@ msgid "GUI command:"
 msgstr "图形界面命令："
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+"必须在 daemon 的 amule.conf 文件中配置核心命令。\n"
+"聊天和观察到的下载完成项支持远端核心的 GUI 命令。\n"
+"已完成的下载不在首次运行或重连时运行命令。"
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "以下变量将被替换："
 
@@ -7254,6 +7297,14 @@ msgid "Server.met file corrupt, found invalid versiontag: 0x%x, size %i"
 msgstr "Server.met 文件损坏，发现错误的版本标记：0x%x，大小 %i"
 
 #: src/ServerList.cpp
+msgid "Error: the file 'server.met' is corrupted: "
+msgstr "错误: 文件 'server.met' 已经损坏: "
+
+#: src/ServerList.cpp
+msgid "IO error while reading 'server.met': "
+msgstr "读取“server.met”时发生 IO 错误: "
+
+#: src/ServerList.cpp
 #, c-format
 msgid "%i server in server.met found"
 msgid_plural "%i servers in server.met found"
@@ -7266,14 +7317,6 @@ msgid "%d server added"
 msgid_plural "%d servers added"
 msgstr[0] "新增%d个服务器"
 msgstr[1] "新增%d个服务器"
-
-#: src/ServerList.cpp
-msgid "Error: the file 'server.met' is corrupted: "
-msgstr "错误: 文件 'server.met' 已经损坏: "
-
-#: src/ServerList.cpp
-msgid "IO error while reading 'server.met': "
-msgstr "读取“server.met”时发生 IO 错误: "
 
 #: src/ServerList.cpp
 #, c-format
@@ -7294,10 +7337,6 @@ msgstr "没有添加服务器： 服务器列表中已有[%s:%d]"
 #, c-format
 msgid "Server added: Server at [%s:%d] using the name '%s'."
 msgstr "成功添加服务器：[%s:%d] 服务器名为 '%s'。"
-
-#: src/ServerList.cpp
-msgid "You are connected to the server you are trying to delete. please disconnect first."
-msgstr "您在连接您已决定删除的服务器，请断开连接。"
 
 #: src/ServerList.cpp
 #, c-format
@@ -8958,6 +8997,11 @@ msgstr "暂停上传此文件: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr "命令 “%s” 没有在 “%s” 事件时运行：%s"
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "无法执行命令 '%s' 于 '%s' 事件。"
 
@@ -8966,8 +9010,8 @@ msgid "Download completed"
 msgstr "下载已完成"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
-msgstr "文件的完整路径。"
+msgid "The full path to the file (empty in remote GUI mode)."
+msgstr "文件的完整路径 （远程 GUI 模式下为空）。"
 
 #: src/UserEvents.h
 msgid "The name of the file without path component."
@@ -9004,6 +9048,10 @@ msgstr "磁盘分区。"
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "最后阶段出错"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "文件的完整路径。"
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9721,6 +9769,28 @@ msgstr "aMule 似乎正在运行。请将其关闭并重新运行卸载程序。
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "正在删除 $APPDATA\\aMule 中的用户数据..."
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not read %s. It was renamed to %s.bad, and a new index will be saved at shutdown."
+msgstr "Kad 无法读取 %s。它被重命名为 %s.bad。将在关机时保存新的索引。"
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not preserve the unreadable index %s as %s.bad. Its original file will not be overwritten."
+msgstr "Kad 无法将不可读的 %s 索引保留为 %s.bad。其原始文件不会被覆盖。"
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not load its saved index. Existing index files were preserved."
+msgstr "Kad 无法加载其已保存的索引。现有的索引文件被保留。"
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not save an index. The previous copy of that file was preserved."
+msgstr "Kad 无法保存索引。该文件之前的副本被保留。"
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "加载 \"%s\" 的地区数据失败。"
 
 #~ msgid "Kad protocol version"
 #~ msgstr "Kad 协议版本"

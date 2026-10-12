@@ -14,8 +14,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
+<<<<<<< HEAD
 "POT-Creation-Date: 2026-10-08 13:42+0900\n"
 "PO-Revision-Date: 2026-10-08 20:54+0000\n"
+=======
+"POT-Creation-Date: 2026-10-09 12:39+0000\n"
+"PO-Revision-Date: 2026-10-11 09:38+0000\n"
+>>>>>>> 5c5cdd9f881f2c80c98a3c0e18ef7193c1e170e6
 "Last-Translator: minterior <minterior@gmail.com>\n"
 "Language-Team: Català\n"
 "Language: ca\n"
@@ -417,7 +422,7 @@ msgstr "AVÍS: no s'ha pogut vincular a la interfície de xarxa «%s»; el tràn
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
 msgstr "S'ha establert l'idioma Predeterminat del Sistema a causa d'un canvi de configuració. Disculpeu."
 
-#: src/amule.cpp src/CatDialog.cpp src/ServerList.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/CatDialog.cpp src/ServerListCtrl.cpp
 msgid "Info"
 msgstr "Informació"
 
@@ -1783,11 +1788,6 @@ msgstr[1] "%u comentaris"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "S'ha expulsat el client %s per haver enviat %s dades corruptes d'un total de %s del fitxer '%s'"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "No s'han pogut carregar les dades de país per a '%s'."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Auto [Ba]"
@@ -2372,6 +2372,10 @@ msgid "server not found: %s"
 msgstr "no s'ha trobat el servidor: %s"
 
 #: src/ExternalConn.cpp
+msgid "You are connected to the server you are trying to delete. please disconnect first."
+msgstr "Esteu connectat al servidor què intenteu eliminar. Si us plau, primer desconnecteu-vos."
+
+#: src/ExternalConn.cpp
 msgid "need to define server to be removed"
 msgstr "és necessari definir el servidor a esborrar"
 
@@ -2778,19 +2782,48 @@ msgstr "%.2f KiB/s"
 msgid "OK"
 msgstr "OK"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr "L'ordre no té cap executable."
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr "La plantilla de l'ordre o un argument contenen un caràcter NUL."
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr "Un valor d'esdeveniment no pot seleccionar l'executable."
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr "Un valor d'esdeveniment s'utilitzaria com a codi de l'intèrpret, com a nom d'script o com a argument del llançador no admès."
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr "Un argument de l'intèrpret d'ordres conté cometes dobles, un signe de percentatge, un signe d'exclamació o un salt de línia."
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
+msgstr "cmd.exe requereix una ordre interna fixa o un destí .exe, .com, .bat o .cmd explícit seguit d'arguments de dades separats."
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Previsualització"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "ERROR: No s'ha pogut executar un reproductor multimèdia extern! Ordre: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr "No s'ha executat l'ordre del reproductor multimèdia «%s»: %s"
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr "No s'ha trobat el reproductor de vídeo configurat: %s"
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "ERROR: No s'ha pogut executar un reproductor multimèdia extern! Ordre: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6854,6 +6887,16 @@ msgid "GUI command:"
 msgstr "Ordre de la IGU:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+"Les ordres del nucli s'han de configurar a l'amule.conf del dimoni.\n"
+"El xat i les baixades completades observades admeten ordres de la IGU amb un nucli remot.\n"
+"Les baixades ja completades no executen ordres en la primera sincronització ni en reconnectar-se."
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "Les següents variables seran reemplaçades:"
 
@@ -7255,6 +7298,14 @@ msgid "Server.met file corrupt, found invalid versiontag: 0x%x, size %i"
 msgstr "Fitxer server.met corrupte, s'ha trobat una etiqueta de versió invàlida: 0x%x, mida %i"
 
 #: src/ServerList.cpp
+msgid "Error: the file 'server.met' is corrupted: "
+msgstr "Error: el fitxer 'server.met' està corrupte: "
+
+#: src/ServerList.cpp
+msgid "IO error while reading 'server.met': "
+msgstr "Error d'E/S mentre es llegia el fitxer 'server.met': "
+
+#: src/ServerList.cpp
 #, c-format
 msgid "%i server in server.met found"
 msgid_plural "%i servers in server.met found"
@@ -7267,14 +7318,6 @@ msgid "%d server added"
 msgid_plural "%d servers added"
 msgstr[0] "%d servidor afegit"
 msgstr[1] "%d servidors afegits"
-
-#: src/ServerList.cpp
-msgid "Error: the file 'server.met' is corrupted: "
-msgstr "Error: el fitxer 'server.met' està corrupte: "
-
-#: src/ServerList.cpp
-msgid "IO error while reading 'server.met': "
-msgstr "Error d'E/S mentre es llegia el fitxer 'server.met': "
 
 #: src/ServerList.cpp
 #, c-format
@@ -7295,10 +7338,6 @@ msgstr "No s'ha afegit el servidor: S'ha trobat un servidor amb IP:Port [%s:%d] 
 #, c-format
 msgid "Server added: Server at [%s:%d] using the name '%s'."
 msgstr "S'ha afegit un Servidor: [%s:%d] s'està usant el nom '%s'."
-
-#: src/ServerList.cpp
-msgid "You are connected to the server you are trying to delete. please disconnect first."
-msgstr "Esteu connectat al servidor què intenteu eliminar. Si us plau, primer desconnecteu-vos."
 
 #: src/ServerList.cpp
 #, c-format
@@ -8962,6 +9001,11 @@ msgstr "S'està suspenent la pujada del fitxer: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr "No s'ha executat l'ordre «%s» en l'esdeveniment «%s»: %s"
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "Error en executar l'ordre '%s' per a l'esdeveniment '%s'."
 
@@ -8970,8 +9014,8 @@ msgid "Download completed"
 msgstr "Descàrrega completada"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
-msgstr "La ruta completa al fitxer."
+msgid "The full path to the file (empty in remote GUI mode)."
+msgstr "La ruta completa al fitxer (buida en el mode d'IGU remota)."
 
 #: src/UserEvents.h
 msgid "The name of the file without path component."
@@ -9008,6 +9052,10 @@ msgstr "Partició de disc."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Error completant"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "La ruta completa al fitxer."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9725,6 +9773,28 @@ msgstr "Sembla que l'aMule s'està executant. Tanqueu-lo i torneu a executar el 
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "S'estan eliminant les dades d'usuari a $APPDATA\\aMule..."
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not read %s. It was renamed to %s.bad, and a new index will be saved at shutdown."
+msgstr "Kad no ha pogut llegir %s. S'ha canviat el nom a %s.bad i es desarà un índex nou en tancar."
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not preserve the unreadable index %s as %s.bad. Its original file will not be overwritten."
+msgstr "Kad no ha pogut conservar l'índex il·legible %s com a %s.bad. El fitxer original no se sobreescriurà."
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not load its saved index. Existing index files were preserved."
+msgstr "Kad no ha pogut carregar l'índex desat. S'han conservat els fitxers d'índex existents."
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not save an index. The previous copy of that file was preserved."
+msgstr "Kad no ha pogut desar un índex. S'ha conservat la còpia anterior d'aquest fitxer."
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "No s'han pogut carregar les dades de país per a '%s'."
 
 #~ msgid "Kad protocol version"
 #~ msgstr "Versió del protocol Kad"

@@ -1,9 +1,59 @@
+# Shared application anchors for headless tests that link production core code.
+function (add_application_test_stubs target)
+	target_sources (${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ApplicationTestStubs.cpp)
+	if (ENABLE_UPNP)
+		# CamuleApp's destructor needs the complete UPnP mapping type.
+		target_include_directories (${target} PRIVATE
+			$<TARGET_PROPERTY:UPNP::Shared,INTERFACE_INCLUDE_DIRECTORIES>)
+	endif()
+endfunction()
+
+find_package (Python3 QUIET COMPONENTS Interpreter)
+if (Python3_Interpreter_FOUND)
+	add_test (NAME IntegrationFixtureUnitTest
+		COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/IntegrationFixtureUnitTest.py
+	)
+endif ()
+
 add_test (NAME QuicCMakeConfigTest
 	COMMAND ${CMAKE_COMMAND}
 		-DAMULE_SOURCE_DIR=${CMAKE_SOURCE_DIR}
 		-DTEST_BINARY_DIR=${CMAKE_BINARY_DIR}/quic-cmake-contract
 		-P ${CMAKE_CURRENT_SOURCE_DIR}/QuicCMakeConfigTest.cmake
 )
+
+# Native icon rendering needs wx core and a display (skipped if unavailable).
+if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
+	add_executable (IconArtworkTest
+		IconArtworkTest.cpp
+		${CMAKE_SOURCE_DIR}/src/CamuleArtProvider.cpp
+		${CMAKE_SOURCE_DIR}/src/CountryFlags.cpp
+		${CMAKE_SOURCE_DIR}/src/MenuIcons.cpp
+		${CMAKE_SOURCE_DIR}/src/icons/icon_data.c
+	)
+	target_include_directories (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	target_link_libraries (IconArtworkTest PRIVATE wxWidgets::CORE)
+	if (WIN32)
+		# wx core imports Common Controls v6 entry points. Match the GUI's
+		# activation context and DPI awareness before the DLL loader runs.
+		target_sources (IconArtworkTest PRIVATE IconArtworkTest.rc)
+		target_include_directories (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR})
+	endif()
+	if (APPLE)
+		target_sources (IconArtworkTest PRIVATE ${CMAKE_SOURCE_DIR}/src/MenuIcons_mac.mm)
+		target_link_libraries (IconArtworkTest PRIVATE "-framework AppKit")
+	endif()
+	add_test (NAME IconArtworkTest COMMAND IconArtworkTest)
+	set_tests_properties (IconArtworkTest PROPERTIES SKIP_RETURN_CODE 77 LABELS "gui")
+	if (UNIX AND NOT APPLE)
+		add_test (NAME IconArtworkDarkTest COMMAND IconArtworkTest)
+		add_test (NAME IconArtworkHighContrastTest COMMAND IconArtworkTest)
+		set_tests_properties (IconArtworkDarkTest PROPERTIES
+			ENVIRONMENT "GTK_THEME=Adwaita:dark" SKIP_RETURN_CODE 77 LABELS "gui")
+		set_tests_properties (IconArtworkHighContrastTest PROPERTIES
+			ENVIRONMENT "GTK_THEME=HighContrast" SKIP_RETURN_CODE 77 LABELS "gui")
+	endif()
+endif()
 
 # The checked-in lexer and native IPv6 rule store, without the application.
 add_executable (IPFilterIPv6Test
@@ -21,6 +71,12 @@ target_include_directories (IPFilterIPv6Test PRIVATE
 )
 target_link_libraries (IPFilterIPv6Test muleunit mulecommon ${Boost_LIBRARIES})
 
+# Callback and buddy eligibility without a running Kad instance.
+add_executable (KadCallbackPolicyTest KadCallbackPolicyTest.cpp)
+add_test (NAME KadCallbackPolicyTest COMMAND KadCallbackPolicyTest)
+target_include_directories (KadCallbackPolicyTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (KadCallbackPolicyTest muleunit mulecommon)
+
 # The Kad firewall state across an hourly recheck, with the clock passed in.
 add_executable (KadFirewallRecheckTest KadFirewallRecheckTest.cpp)
 add_test (NAME KadFirewallRecheckTest COMMAND KadFirewallRecheckTest)
@@ -29,6 +85,46 @@ target_include_directories (KadFirewallRecheckTest PRIVATE
 	${CMAKE_SOURCE_DIR}/src/include
 )
 target_link_libraries (KadFirewallRecheckTest muleunit mulecommon)
+
+# Production UDP verification queries with a deterministic clock.
+add_executable (KadUDPFirewallIntegrationTest
+	KadUDPFirewallIntegrationTest.cpp
+	${CMAKE_SOURCE_DIR}/src/kademlia/kademlia/UDPFirewallTester.cpp
+	${CMAKE_SOURCE_DIR}/src/kademlia/routing/Contact.cpp
+	${CMAKE_SOURCE_DIR}/src/kademlia/utils/UInt128.cpp
+	${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp
+)
+target_compile_definitions (KadUDPFirewallIntegrationTest PRIVATE AMULE_DAEMON)
+target_include_directories (KadUDPFirewallIntegrationTest PRIVATE
+	${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include
+	${CMAKE_SOURCE_DIR}/src/libs ${CMAKE_BINARY_DIR}/src/libs
+	${CMAKE_BINARY_DIR}/src/libs/ec/cpp
+)
+add_application_test_stubs (KadUDPFirewallIntegrationTest)
+target_link_libraries (KadUDPFirewallIntegrationTest muleunit mulecommon wxWidgets::BASE CRYPTOPP::CRYPTOPP)
+add_test (NAME KadUDPFirewallIntegrationTest COMMAND KadUDPFirewallIntegrationTest)
+
+# Tagged protocol identity is pure value semantics and does not require live clients.
+add_executable (ProtocolPeerIdentityTest ProtocolPeerIdentityTest.cpp)
+add_test (NAME ProtocolPeerIdentityTest COMMAND ProtocolPeerIdentityTest)
+target_include_directories (ProtocolPeerIdentityTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (ProtocolPeerIdentityTest muleunit mulecommon)
+
+# The done-list cap, without live clients.
+add_executable (UploadBlockListsTest UploadBlockListsTest.cpp)
+add_test (NAME UploadBlockListsTest COMMAND UploadBlockListsTest)
+target_include_directories (UploadBlockListsTest PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/libs)
+target_link_libraries (UploadBlockListsTest muleunit mulecommon)
+
+add_executable (DeadSourceKeyTest DeadSourceKeyTest.cpp)
+add_test (NAME DeadSourceKeyTest COMMAND DeadSourceKeyTest)
+target_include_directories (DeadSourceKeyTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (DeadSourceKeyTest muleunit mulecommon)
+
+add_executable (AdvertisedIPv6Test AdvertisedIPv6Test.cpp)
+add_test (NAME AdvertisedIPv6Test COMMAND AdvertisedIPv6Test)
+target_include_directories (AdvertisedIPv6Test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (AdvertisedIPv6Test muleunit mulecommon)
 
 # Credit identity and wait ownership run without the application. The test supplies
 # a deterministic GetTickCount64; do not link the production clock into this target.
@@ -414,6 +510,32 @@ target_link_libraries (CTagTest
 	muleunit
 )
 
+# server.met reading, including files older aMule versions wrote with one tag too many declared
+# for a server without a version. Same TU set as CTagTest.
+add_executable (ServerMetTest
+	ServerMetTest.cpp
+	${CMAKE_SOURCE_DIR}/src/ServerMet.cpp
+	${CMAKE_SOURCE_DIR}/src/SafeFile.cpp
+	${CMAKE_SOURCE_DIR}/src/MemFile.cpp
+	${CMAKE_SOURCE_DIR}/src/Tag.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+)
+
+add_test (NAME ServerMetTest
+	COMMAND ServerMetTest
+)
+
+target_include_directories (ServerMetTest
+	PRIVATE ${CMAKE_BINARY_DIR}
+	PRIVATE ${CMAKE_SOURCE_DIR}/src
+	PRIVATE ${CMAKE_SOURCE_DIR}/src/include
+)
+
+target_link_libraries (ServerMetTest
+	muleunit
+)
+
 # CValueMap is the incremental-update filter behind every EC tag that carries a
 # value map. Its failure mode is silence -- a field wrongly judged unchanged
 # just stops updating in the GUI -- so the contract is pinned here rather than
@@ -702,6 +824,54 @@ target_include_directories (PeerAddressingTest
 )
 
 target_link_libraries (PeerAddressingTest
+	muleunit
+	${Boost_LIBRARIES}
+)
+
+# How a client is contacted, decided without the application.
+add_executable (ContactDialPolicyTest
+	ContactDialPolicyTest.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+	${CMAKE_SOURCE_DIR}/src/NetworkAddress.cpp
+)
+
+add_test (NAME ContactDialPolicyTest
+	COMMAND ContactDialPolicyTest
+)
+
+target_include_directories (ContactDialPolicyTest
+	PRIVATE ${CMAKE_BINARY_DIR}
+	PRIVATE ${CMAKE_SOURCE_DIR}/src
+	PRIVATE ${CMAKE_SOURCE_DIR}/src/include
+	PRIVATE ${Boost_INCLUDE_DIR}
+)
+
+target_link_libraries (ContactDialPolicyTest
+	muleunit
+	${Boost_LIBRARIES}
+)
+
+# Which address a Kad source result is contacted on, without the application.
+add_executable (KadSourceAddressPolicyTest
+	KadSourceAddressPolicyTest.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+	${CMAKE_SOURCE_DIR}/src/NetworkAddress.cpp
+)
+
+add_test (NAME KadSourceAddressPolicyTest
+	COMMAND KadSourceAddressPolicyTest
+)
+
+target_include_directories (KadSourceAddressPolicyTest
+	PRIVATE ${CMAKE_BINARY_DIR}
+	PRIVATE ${CMAKE_SOURCE_DIR}/src
+	PRIVATE ${CMAKE_SOURCE_DIR}/src/include
+	PRIVATE ${Boost_INCLUDE_DIR}
+)
+
+target_link_libraries (KadSourceAddressPolicyTest
 	muleunit
 	${Boost_LIBRARIES}
 )
@@ -1214,6 +1384,29 @@ target_include_directories (LanguageListTest
 )
 
 target_link_libraries (LanguageListTest
+	muleunit
+	mulecommon
+	CRYPTOPP::CRYPTOPP
+)
+
+add_executable (UserHashTest
+	UserHashTest.cpp
+	${CMAKE_SOURCE_DIR}/src/UserHash.cpp
+	${CMAKE_SOURCE_DIR}/src/RandomFunctions.cpp
+	${CMAKE_SOURCE_DIR}/src/kademlia/utils/UInt128.cpp
+)
+
+add_test (NAME UserHashTest
+	COMMAND UserHashTest
+)
+
+target_include_directories (UserHashTest
+	PRIVATE ${CMAKE_BINARY_DIR}
+	PRIVATE ${CMAKE_SOURCE_DIR}/src
+	PRIVATE ${CMAKE_SOURCE_DIR}/src/include
+)
+
+target_link_libraries (UserHashTest
 	muleunit
 	mulecommon
 	CRYPTOPP::CRYPTOPP
@@ -2103,15 +2296,22 @@ option (ENABLE_INTEGRATION_TESTS
 	"Register tests that run real aMule programs on loopback. Timing-sensitive, so off for package builds"
 	OFF)
 if (ENABLE_INTEGRATION_TESTS AND BUILD_DAEMON AND UNIX AND NOT APPLE)
-	find_package (Python3 QUIET COMPONENTS Interpreter)
 	if (Python3_Interpreter_FOUND)
 		add_test (NAME LogfilePathIntegrationTest
 			COMMAND ${Python3_EXECUTABLE}
 				${CMAKE_CURRENT_SOURCE_DIR}/LogfilePathIntegrationTest.py $<TARGET_FILE:amuled>
 		)
+		add_test (NAME KadIndexLifecycleECTest
+			COMMAND ${Python3_EXECUTABLE}
+				${CMAKE_CURRENT_SOURCE_DIR}/KadIndexLifecycleECTest.py $<TARGET_FILE:amuled>
+		)
 		add_test (NAME AllSearchIntegrationTest
 			COMMAND ${Python3_EXECUTABLE}
 				${CMAKE_CURRENT_SOURCE_DIR}/AllSearchIntegrationTest.py $<TARGET_FILE:amuled>
+		)
+		add_test (NAME ShareWatcherMoveIntegrationTest
+			COMMAND ${Python3_EXECUTABLE}
+				${CMAKE_CURRENT_SOURCE_DIR}/ShareWatcherMoveIntegrationTest.py $<TARGET_FILE:amuled>
 		)
 		if (BUILD_AMULEAPI AND BUILD_AMULECMD)
 			add_test (NAME AllSearchClientCapabilityTest
@@ -2168,17 +2368,11 @@ target_include_directories (AICHSearchResultTest PRIVATE
 	${CMAKE_SOURCE_DIR}/src/libs ${CMAKE_BINARY_DIR}/src/libs
 	${CMAKE_BINARY_DIR}/src/libs/ec/cpp
 )
-if (ENABLE_UPNP)
-	# AICHSearchResultStubs.cpp defines CamuleApp::~CamuleApp(), whose
-	# m_upnpMappings member (std::vector<CUPnPPortMapping>) needs the complete
-	# UPnPBase.h, which in turn includes <upnp.h> from libupnp. The test links
-	# mulecommon (not muleappcommon), so it does not inherit that include path.
-	target_include_directories (AICHSearchResultTest PRIVATE
-		$<TARGET_PROPERTY:UPNP::Shared,INTERFACE_INCLUDE_DIRECTORIES>)
-endif()
+add_application_test_stubs (AICHSearchResultTest)
 target_link_libraries (AICHSearchResultTest muleunit mulecommon wxWidgets::BASE CRYPTOPP::CRYPTOPP)
 add_test (NAME AICHSearchResultTest COMMAND AICHSearchResultTest)
 
+<<<<<<< HEAD
 add_executable (OfferFilesPolicyTest
 	OfferFilesPolicyTest.cpp
 	${CMAKE_SOURCE_DIR}/src/OfferFilesPolicy.cpp
@@ -2206,3 +2400,49 @@ if (ENABLE_INTEGRATION_TESTS AND BUILD_DAEMON AND OFFERFILES_INTEROP_SERVER)
 	)
 	set_tests_properties (OfferFilesInteropTest PROPERTIES TIMEOUT 360 LABELS "integration")
 endif()
+=======
+find_package (Threads REQUIRED)
+add_executable (BackgroundLoadTest BackgroundLoadTest.cpp)
+add_test (NAME BackgroundLoadTest COMMAND BackgroundLoadTest)
+target_include_directories (BackgroundLoadTest PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (BackgroundLoadTest muleunit mulecommon Threads::Threads)
+
+add_executable (IndexedLoadTest
+	IndexedLoadTest.cpp
+	${CMAKE_SOURCE_DIR}/src/kademlia/kademlia/Indexed.cpp
+	${CMAKE_SOURCE_DIR}/src/kademlia/kademlia/Entry.cpp
+	${CMAKE_SOURCE_DIR}/src/kademlia/kademlia/AICHHashList.cpp
+	${CMAKE_SOURCE_DIR}/src/kademlia/utils/UInt128.cpp
+	${CMAKE_SOURCE_DIR}/src/GetTickCount.cpp
+	${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp
+	KadPrefsStub.cpp
+)
+add_test (NAME IndexedLoadTest COMMAND IndexedLoadTest)
+target_include_directories (IndexedLoadTest PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include ${Boost_INCLUDE_DIR})
+target_link_libraries (IndexedLoadTest muleunit muleappcommon mulecommon Threads::Threads)
+
+# Event values are untrusted: verify they cannot become additional arguments or
+# shell syntax when passed as positional parameters to a configured shell.
+add_executable (UserEventCommandTest
+	UserEventCommandTest.cpp
+	${CMAKE_SOURCE_DIR}/src/ExternalCommand.cpp
+	${CMAKE_SOURCE_DIR}/src/AppImageEnv.cpp
+	${CMAKE_SOURCE_DIR}/src/TerminationProcess.cpp
+	${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp
+)
+add_test (NAME UserEventCommandTest COMMAND UserEventCommandTest)
+target_include_directories (UserEventCommandTest PRIVATE
+	${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include
+)
+target_link_libraries (UserEventCommandTest muleunit mulecommon wxWidgets::BASE)
+
+if (WIN32)
+	target_link_libraries (UserEventCommandTest shell32)
+endif()
+
+# EC session baselines suppress completion commands during initial sync/reconnect.
+add_executable (RemoteDownloadEventsTest RemoteDownloadEventsTest.cpp)
+add_test (NAME RemoteDownloadEventsTest COMMAND RemoteDownloadEventsTest)
+target_include_directories (RemoteDownloadEventsTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (RemoteDownloadEventsTest muleunit mulecommon)
+>>>>>>> 5c5cdd9f881f2c80c98a3c0e18ef7193c1e170e6

@@ -39,6 +39,8 @@
 
 using namespace Kademlia;
 
+CUDPVerificationExpiry CUDPFirewallTester::m_verificationExpiry;
+
 bool CUDPFirewallTester::m_firewalledUDP = false;
 bool CUDPFirewallTester::m_firewalledLastStateUDP = false;
 bool CUDPFirewallTester::m_isFWVerifiedUDP = false;
@@ -51,14 +53,40 @@ uint64_t CUDPFirewallTester::m_lastSucceededTime = 0;
 CUDPFirewallTester::PossibleClientList CUDPFirewallTester::m_possibleTestClients;
 CUDPFirewallTester::UsedClientList CUDPFirewallTester::m_usedTestClients;
 
+bool CUDPFirewallTester::IsVerified()
+{
+	if (CKademlia::IsRunningInLANMode()) {
+		return true;
+	}
+	CheckVerificationExpiry(::GetTickCount64());
+	return m_isFWVerifiedUDP;
+}
+
+void CUDPFirewallTester::CheckVerificationExpiry(uint64_t now)
+{
+	if (m_verificationExpiry.ShouldExpire(now) && m_isFWVerifiedUDP) {
+		m_isFWVerifiedUDP = false;
+		AddDebugLogLineN(logKadUdpFwTester,
+			"UDP verification expired: consecutive inconclusive rechecks or maximum age reached");
+		if (m_lastSucceededTime != 0) {
+			AddDebugLogLineN(logKadUdpFwTester,
+				CFormat("Last successful UDP check was %u seconds ago") %
+					((now - m_lastSucceededTime) / 1000));
+		}
+		theApp->ShowConnectionState();
+	}
+}
+
 bool CUDPFirewallTester::IsFirewalledUDP(bool lastStateIfTesting)
 {
 	if (CKademlia::IsRunningInLANMode()) {
 		return false;
 	}
+	const uint64_t now = ::GetTickCount64();
+	CheckVerificationExpiry(now);
 	if (!m_timedOut && IsFWCheckUDPRunning()) {
-		if (!m_firewalledUDP && CKademlia::IsFirewalled() &&
-			m_testStart != 0 && ::GetTickCount64() - m_testStart > MIN2MS(6) && !m_isFWVerifiedUDP /*For now we don't allow to get firewalled by timeouts if we have succeeded a test before, might be changed later*/) {
+		if (!m_firewalledUDP && CKademlia::IsFirewalled() && m_testStart != 0 &&
+			now - m_testStart > CUDPVerificationExpiry::kRoundTimeoutMs && !m_isFWVerifiedUDP) {
 			AddDebugLogLineN(logKadUdpFwTester,
 				"Timeout: Setting UDP status to firewalled after being unable to get results "
 				"for 6 minutes");
@@ -86,12 +114,14 @@ void CUDPFirewallTester::SetUDPFWCheckResult(
 		return;
 	}
 
+	const uint64_t now = ::GetTickCount64();
+
 	// check if we actually requested a firewallcheck from this client
 	bool requested = false;
 	for (UsedClientList::iterator it = m_usedTestClients.begin(); it != m_usedTestClients.end(); ++it) {
-		if (it->contact.GetIPAddress() == fromIP) {
+		if (it->contact.GetIPAddress() == fromIP && it->currentRound) {
 			if (!IsFWCheckUDPRunning() && !m_firewalledUDP && m_isFWVerifiedUDP &&
-				m_lastSucceededTime + SEC2MS(10) > ::GetTickCount64() &&
+				m_lastSucceededTime + SEC2MS(10) > now &&
 				incomingPort == CKademlia::GetPrefs()->GetInternKadPort() &&
 				CKademlia::GetPrefs()->GetUseExternKadPort()) {
 				// Our test already finished in the last 10 seconds as open, but
@@ -147,9 +177,11 @@ void CUDPFirewallTester::SetUDPFWCheckResult(
 	if (!testCancelled) {
 		m_fwChecksFinishedUDP++;
 		if (succeeded) { // one positive result is enough
+			m_lastSucceededTime = now;
 			m_testStart = 0;
 			m_firewalledUDP = false;
 			m_isFWVerifiedUDP = true;
+			m_verificationExpiry.RecordResult(now);
 			m_timedOut = false;
 			m_fwChecksFinishedUDP = UDP_FIREWALLTEST_CLIENTSTOASK; // don't do any more tests
 			m_fwChecksRunningUDP = 0;      // all other tests are cancelled
@@ -176,6 +208,7 @@ void CUDPFirewallTester::SetUDPFWCheckResult(
 			AddDebugLogLineN(logKadUdpFwTester, "New KAD Firewallstate (UDP): Firewalled");
 			m_firewalledUDP = true;
 			m_isFWVerifiedUDP = true;
+			m_verificationExpiry.RecordResult(now);
 			m_timedOut = false;
 			theApp->ShowConnectionState();
 			m_possibleTestClients.clear(); // clear list, keep used clients list though
@@ -193,8 +226,23 @@ void CUDPFirewallTester::SetUDPFWCheckResult(
 	QueryNextClient();
 }
 
+void CUDPFirewallTester::RetireTestClients()
+{
+	for (auto &client : m_usedTestClients) {
+		client.currentRound = false;
+	}
+}
+
 void CUDPFirewallTester::ReCheckFirewallUDP(bool setUnverified)
 {
+	const uint64_t now = ::GetTickCount64();
+	// Account for an overdue previous round even if no state query polled it.
+	CheckVerificationExpiry(now);
+	RetireTestClients();
+	if (setUnverified) {
+		m_verificationExpiry.Reset();
+	}
+	m_verificationExpiry.Start(now);
 	if (m_fwChecksRunningUDP != 0) {
 		// Entering a fresh UDP firewall test while the previous one is still bookkeeping
 		// in-flight requests. Common on Kad restart after a system suspend/resume (#384):
@@ -207,8 +255,7 @@ void CUDPFirewallTester::ReCheckFirewallUDP(bool setUnverified)
 	}
 	m_fwChecksRunningUDP = 0;
 	m_fwChecksFinishedUDP = 0;
-	m_lastSucceededTime = 0;
-	m_testStart = ::GetTickCount64();
+	m_testStart = now;
 	m_timedOut = false;
 	m_firewalledLastStateUDP = m_firewalledUDP;
 	m_isFWVerifiedUDP = (m_isFWVerifiedUDP && !setUnverified);
@@ -223,12 +270,15 @@ void CUDPFirewallTester::Connected()
 		CSearchManager::FindNodeFWCheckUDP(); // start a lookup for a random node to find suitable IPs
 		m_nodeSearchStarted = true;
 		m_testStart = ::GetTickCount64();
+		m_verificationExpiry.Start(m_testStart);
 		m_timedOut = false;
 	}
 }
 
 void CUDPFirewallTester::Reset()
 {
+	RetireTestClients();
+	m_verificationExpiry.Reset();
 	m_firewalledUDP = false;
 	m_firewalledLastStateUDP = false;
 	m_isFWVerifiedUDP = false;

@@ -4,9 +4,8 @@
 #
 # The peer / server `country_code` on /clients and /servers is only half
 # the story; this route is where a frontend gets the matching artwork.
-# The bytes come from the icon table compiled into the binary (the same
-# famfamfam set the desktop GUI draws), so the assertions here are about
-# the route's shape rather than any file on disk:
+# The bytes come from the embedded icon table (the same PNGs the desktop
+# GUI draws). These assertions cover the public route and caching contract:
 #
 #   * a known code returns a PNG with the right Content-Type,
 #   * the response is cacheable — ETag + Cache-Control — and honours
@@ -17,11 +16,11 @@
 #   * the "unknown" placeholder (the "??" flag the desktop falls back
 #     to for an unresolved code) is reachable under the same route,
 #   * anything else that is not exactly two lowercase ASCII letters +
-#     .png is a 404, including uppercase, wrong length, traversal
+#     an optional @2x / @3x suffix and .png is a 404, including uppercase, wrong length, traversal
 #     attempts and a well-formed code the set has no artwork for,
 #   * non-safe methods are 405,
-#   * it works with `[Server]/StaticRoot` unset — nothing here reads
-#     the file system.
+#   * it works with `[Server]/StaticRoot` unset — artwork has its own
+#     embedded artwork; it never reads files.
 #
 # Usage:
 #   amuleapi --config-dir=/tmp/amuleapi-regtest &
@@ -100,8 +99,7 @@ case "$CT" in
 	*) _fail "/flags/de.png Content-Type" "expected image/png, got: ${CT:-<none>}" ;;
 esac
 
-# The famfamfam flags are 16x11 8-bit colormap PNGs, a few hundred bytes
-# each. Check the 8-byte PNG signature so a future refactor that returns
+# The flag PNG fallbacks are compact raster images. Check the 8-byte PNG signature so a future refactor that returns
 # the wrong table entry (or an empty body) fails loudly here.
 SIG=$(od -An -tx1 -N8 "$CURL_BODY_FILE" | tr -d ' \n')
 if [ "$SIG" = "89504e470d0a1a0a" ]; then
@@ -224,6 +222,36 @@ done
 # a future auth gate on the route can't slip through unnoticed.
 _curl -H "Authorization: Bearer not-a-real-token" "$HOST/flags/fr.png"
 _assert_status 200 "GET /flags/fr.png with a bogus bearer is still served"
+
+# --- 10. Density variants preserve validation and caching. --------
+for scale in 2 3; do
+    for code in us an unknown; do
+        _curl "$HOST/flags/$code@${scale}x.png"
+        _assert_status 200 "GET $code @${scale}x"
+        case "$(_header content-type)" in
+            image/png*) _pass "@${scale}x PNG Content-Type" ;;
+            *) _fail "@${scale}x Content-Type" ;;
+        esac
+        DIMS=$(od -An -tu1 -j16 -N8 "$CURL_BODY_FILE" | xargs)
+        EXPECTED="0 0 0 $((16*scale)) 0 0 0 $((12*scale))"
+        if [ "$DIMS" = "$EXPECTED" ]; then _pass "@${scale}x dimensions"; else _fail "@${scale}x dimensions" "$DIMS"; fi
+        DENSITY_ETAG=$(_header etag)
+        if [ -n "$DENSITY_ETAG" ]; then
+            _curl -H "If-None-Match: $DENSITY_ETAG" "$HOST/flags/$code@${scale}x.png"
+            _assert_status 304 "@${scale}x matching ETag"
+            if [ "$CURL_SIZE" = 0 ]; then _pass "density 304 empty"; else _fail "density 304 body"; fi
+        else _fail "density ETag missing"; fi
+        _curl -I "$HOST/flags/$code@${scale}x.png"
+        _assert_status 200 "HEAD @${scale}x"
+        if [ "$CURL_SIZE" = 0 ]; then _pass "density HEAD empty"; else _fail "density HEAD body"; fi
+    done
+    _curl -X POST "$HOST/flags/us@${scale}x.png"
+    _assert_status 405 "POST density refused"
+done
+for target in us.svg us@1x.png us@4x.png us@2X.png us@2x@3x.png DE@2x.png zz@3x.png unknown@4x.png; do
+    _curl "$HOST/flags/$target"
+    _assert_status 404 "unsupported flag name $target"
+done
 
 # --- Summary. -----------------------------------------------------
 echo

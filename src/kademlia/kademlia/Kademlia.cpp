@@ -43,6 +43,7 @@ there client on the eMule forum..
 #include "Defines.h"
 #include "Indexed.h"
 #include "UDPFirewallTester.h"
+#include "UDPVerificationExpiry.h"
 #ifdef ENABLE_KAD_NODE_PROTECTION
 #include "../net/FastKad.h"
 #include "../net/SafeKad.h"
@@ -104,7 +105,8 @@ void CKademlia::Start(CPrefs *prefs)
 	m_statusUpdate = time(NULL);
 	m_bigTimer = time(NULL);
 	// First Firewall check is done on connect, init next check.
-	m_nextFirewallCheck = time(NULL) + (HR2S(1));
+	m_nextFirewallCheck =
+		time(nullptr) + static_cast<time_t>(CUDPVerificationExpiry::kRecheckIntervalMs / 1000);
 	// Find a buddy after the first 5mins of starting the client.
 	// We wait just in case it takes a bit for the client to determine firewall status..
 	m_nextFindBuddy = time(NULL) + (MIN2S(5));
@@ -172,6 +174,8 @@ void CKademlia::Process()
 	if (instance == NULL || !m_running) {
 		return;
 	}
+
+	instance->m_indexed->ProcessIndexLoad();
 
 	time_t now = time(NULL);
 	uint32_t maxUsers = 0;
@@ -354,7 +358,8 @@ void CKademlia::RecheckFirewalled()
 		// Delay the next buddy search to at least 5 minutes after our firewallcheck so we are sure to
 		// be still firewalled
 		m_nextFindBuddy = (m_nextFindBuddy < MIN2S(5) + now) ? MIN2S(5) + now : m_nextFindBuddy;
-		m_nextFirewallCheck = HR2S(1) + now;
+		m_nextFirewallCheck =
+			now + static_cast<time_t>(CUDPVerificationExpiry::kRecheckIntervalMs / 1000);
 	}
 }
 

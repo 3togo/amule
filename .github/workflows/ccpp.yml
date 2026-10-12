@@ -24,6 +24,10 @@ on:
       - 'scripts/check-unique-ids.py'
       - '.github/workflows/ccpp.yml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref == 'refs/heads/master' && github.sha || '' }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   # cache-save-newest lists the repository's caches and deletes the generations
@@ -32,6 +36,8 @@ permissions:
   pull-requests: write
 
 env:
+  # Do not count a skipped artwork test as native GUI coverage.
+  AMULE_ICON_TEST_REQUIRE_GUI: "1"
   CCACHE_DIR: ${{ github.workspace }}/.ccache
   CCACHE_MAXSIZE: 500M
 
@@ -88,6 +94,7 @@ env:
     mingw-w64-clang-x86_64-gettext
     mingw-w64-clang-x86_64-libgd
     mingw-w64-clang-x86_64-libmaxminddb
+    mingw-w64-clang-x86_64-ngtcp2
     mingw-w64-clang-x86_64-ninja
     mingw-w64-clang-x86_64-pkgconf
     mingw-w64-clang-x86_64-readline
@@ -136,7 +143,7 @@ env:
   # Integration tests start and restart real processes. Run them separately
   # on Ubuntu outside the fast unit-test time budget, with 300 s each so a hung daemon
   # still fails the job. AllSearchIntegrationTest takes about 15 s on the runners.
-  ctest_fast_exclude: '^(CredentialsTest|AmuleApiConfigTest|AllSearchIntegrationTest|AllSearchClientCapabilityTest|LogfilePathIntegrationTest)$'
+  ctest_fast_exclude: '^(CredentialsTest|AmuleApiConfigTest|AllSearchIntegrationTest|AllSearchClientCapabilityTest|LogfilePathIntegrationTest|KadIndexLifecycleECTest|ShareWatcherMoveIntegrationTest)$'
 
 jobs:
   # Window IDs in muuli_wdr.h and each EC enum in the .abstract files must not repeat a value. Two
@@ -205,7 +212,7 @@ jobs:
           xvfb-run -a ctest ${{ env.ctest_flags }} --timeout 10 -E '${{ env.ctest_fast_exclude }}' &&
           xvfb-run -a ctest ${{ env.ctest_flags }} --timeout 60 -R '${{ env.ctest_kdf_tests }}'
       - name: run integration tests
-        run: ctest ${{ env.ctest_flags }} --timeout 300 --no-tests=error -R '^(AllSearch(Integration|ClientCapability)|LogfilePathIntegration)Test$'
+        run: ctest ${{ env.ctest_flags }} --timeout 300 --no-tests=error -R '^(AllSearch(Integration|ClientCapability)|LogfilePathIntegration|KadIndexLifecycleEC|ShareWatcherMoveIntegration)Test$'
       # amuleapi_curl_smoke drives these two against a live daemon rather than
       # compiling its own copy. Release only: the smoke times SSE windows, and
       # a Debug daemon makes those flaky.
@@ -245,12 +252,17 @@ jobs:
   # those would cost far more than it tells us, since these switches change no
   # platform-dependent code.
   build_cmake_ubuntu_experimental:
-    name: Build CMake Ubuntu Experimental (${{ matrix.build_type }})
+    name: Build CMake Ubuntu Experimental (${{ matrix.build_type }}, ngtcp2 ${{ matrix.ngtcp2 }})
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        build_type: [Debug, Release]
+        # QUIC has to work on the pinned ngtcp2 and on the latest one.
+        include:
+          - build_type: Debug
+            ngtcp2: pinned
+          - build_type: Release
+            ngtcp2: latest
     steps:
       - uses: actions/checkout@v7
       - name: restore ccache
@@ -264,6 +276,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ${{ env.cmake_ubuntu_deps }}
       - uses: ./.github/actions/ngtcp2
+        with:
+          release: ${{ matrix.ngtcp2 }}
       - name: create build system
         run: |
           cmake \
@@ -289,7 +303,7 @@ jobs:
           xvfb-run -a ctest ${{ env.ctest_flags }} --timeout 10 -E '${{ env.ctest_fast_exclude }}' &&
           xvfb-run -a ctest ${{ env.ctest_flags }} --timeout 60 -R '${{ env.ctest_kdf_tests }}'
       - name: run integration tests
-        run: ctest ${{ env.ctest_flags }} --timeout 300 --no-tests=error -R '^(AllSearch(Integration|ClientCapability)|LogfilePathIntegration)Test$'
+        run: ctest ${{ env.ctest_flags }} --timeout 300 --no-tests=error -R '^(AllSearch(Integration|ClientCapability)|LogfilePathIntegration|KadIndexLifecycleEC|ShareWatcherMoveIntegration)Test$'
 
   # Configures with the oldest CMake that CMakeLists.txt declares, so the floor stays
   # true. Configure only: the build itself does not depend on the CMake version.
@@ -557,9 +571,15 @@ jobs:
         # Windows silently and be found by whoever first turned the switch on
         # there. One leg is enough to compile it, and keeps the cost of a
         # snapshot that does not build on Windows to a single job.
+        #
+        # ENABLE_QUIC rides on the same leg for the same reason: nothing else
+        # builds the QUIC sources and their tests on Windows. ngtcp2 comes from
+        # MSYS2 here, not from the source build pinned for the Linux jobs. Both
+        # legs install it: setup-msys2 caches per package list, and a second list
+        # costs a second ~0.4 GB cache entry against the repo's 10 GB limit.
         include:
           - build_type: Debug
-            extra_config_flags: -DENABLE_UTP=YES
+            extra_config_flags: -DENABLE_UTP=YES -DENABLE_QUIC=YES
           - build_type: Release
             extra_config_flags: ""
     defaults:

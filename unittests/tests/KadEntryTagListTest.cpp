@@ -59,6 +59,10 @@ static const uint32_t SENTINEL = 0xA1C4DEADu;
 class CTestKeyEntry : public CKeyEntry
 {
 public:
+	explicit CTestKeyEntry(std::shared_ptr<PublishTracking> tracking = {})
+	: CKeyEntry(std::move(tracking))
+	{
+	}
 	void AddTestPublisher(uint32_t ip)
 	{
 		if (m_publishingIPs == NULL) {
@@ -299,4 +303,24 @@ TEST(KadEntryTagList, DisabledProtocolPreservesLegacyPublishTags)
 	deleteTagPtrListEntries(&tags);
 	ASSERT_EQUALS(1u, publishTags);
 	ASSERT_EQUALS(0u, (unsigned)entry.GetAICHHashCount());
+}
+
+TEST(KadEntryTagList, IndexOwnedPublisherCountsAreIsolated)
+{
+	auto live = std::make_shared<CKeyEntry::PublishTracking>();
+	auto loading = std::make_shared<CKeyEntry::PublishTracking>();
+	{
+		CTestKeyEntry first(live), second(live), worker(loading);
+		first.AddTestPublisher(0x01020304);
+		second.AddTestPublisher(0x01020305);
+		worker.AddTestPublisher(0x01020306);
+		ASSERT_EQUALS(2u, live->at(0x01020300));
+		ASSERT_EQUALS(1u, loading->at(0x01020300));
+		first.RecalculateTrustNow();
+		worker.RecalculateTrustNow();
+		ASSERT_EQUALS(5.0, first.GetTrustValue());
+		ASSERT_EQUALS(10.0, worker.GetTrustValue());
+	}
+	ASSERT_TRUE(live->empty());
+	ASSERT_TRUE(loading->empty());
 }
