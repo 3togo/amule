@@ -24,6 +24,7 @@
 //
 
 #include "ClientList.h" // Interface declarations.
+#include "KadCallbackPolicy.h"
 
 #include "BrowseManager.h"
 
@@ -471,6 +472,31 @@ CUpDownClient *CClientList::FindClientByIP(const CNetworkAddress &address, uint1
 	return NULL;
 }
 
+CUpDownClient *CClientList::FindClientByProtocolPeerIdentity(const CProtocolPeerIdentity &identity)
+{
+	// HighID and LowID clients sit in m_clientList under the hybrid the identity was built from;
+	// a HighID source has no user address until its hello, so m_ipList would miss it.
+	CUpDownClient *match = nullptr;
+	bool ambiguous = false;
+	const auto consider = [&](const CClientRef &entry) {
+		CUpDownClient *client = entry.GetClient();
+		if (client->GetProtocolPeerIdentity() != identity)
+			return;
+		ambiguous = ambiguous || match != nullptr;
+		match = client;
+	};
+	if (const auto hybrid = identity.TryGetUserIDHybrid()) {
+		for (auto range = m_clientList.equal_range(*hybrid); range.first != range.second;
+			++range.first)
+			consider(range.first->second);
+	} else if (identity.GetKind() == CProtocolPeerIdentity::Kind::NativeIPv6) {
+		for (auto range = m_ipList.equal_range(identity.Address()); range.first != range.second;
+			++range.first)
+			consider(range.first->second);
+	}
+	return ambiguous ? nullptr : match;
+}
+
 CUpDownClient *CClientList::FindClientByIP(uint32 clientip)
 {
 	return FindClientByIP(CNetworkAddress::FromIPv4NetworkOrderOrAbsent(clientip));
@@ -660,8 +686,11 @@ void CClientList::Process()
 	// We either never had a buddy, or lost our buddy..
 	if (buddy == Disconnected) {
 		if (m_nBuddyStatus != Disconnected || m_pBuddy.IsLinked()) {
-			if (Kademlia::CKademlia::IsRunning() && theApp->IsFirewalled() &&
-				Kademlia::CUDPFirewallTester::IsFirewalledUDP(true)) {
+			const bool udpFirewalled = Kademlia::CUDPFirewallTester::IsFirewalledUDP(true);
+			if (Kademlia::CKademlia::IsRunning() &&
+				Kademlia::NeedsBuddy(theApp->IsFirewalled(),
+					udpFirewalled,
+					Kademlia::CUDPFirewallTester::IsVerified())) {
 				// We are a lowID client and we just lost our buddy.
 				// Go ahead and instantly try to find a new buddy.
 				Kademlia::CKademlia::GetPrefs()->SetFindBuddy();
@@ -673,9 +702,11 @@ void CClientList::Process()
 	}
 
 	if (Kademlia::CKademlia::IsConnected()) {
+		const bool udpFirewalled = Kademlia::CUDPFirewallTester::IsFirewalledUDP(true);
 		// we only need a buddy if direct callback is not available
-		if (Kademlia::CKademlia::IsFirewalled() &&
-			Kademlia::CUDPFirewallTester::IsFirewalledUDP(true)) {
+		if (Kademlia::NeedsBuddy(Kademlia::CKademlia::IsFirewalled(),
+			    udpFirewalled,
+			    Kademlia::CUDPFirewallTester::IsVerified())) {
 			// Kad buddies do not work with RequireCrypt, so it is disabled here. Buddy
 			// connections themselves have supported obfuscation since eMule 0.49a, but
 			// callback requests do not, so we could not answer one under RequireCrypt.

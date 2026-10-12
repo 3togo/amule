@@ -36,6 +36,7 @@ Any mod that changes anything within the Kademlia side will not be allowed to ad
 there client on the eMule forum..
 */
 
+#include "../../KadCallbackPolicy.h"
 #include "Prefs.h"
 
 #include <common/MD5Sum.h>
@@ -200,8 +201,10 @@ uint8_t CPrefs::GetMyConnectOptions(bool encryption, bool callback)
 	// direct callback is only possible if connected to kad, tcp firewalled and verified UDP open (for
 	// example on a full cone NAT)
 
-	return ((callback && theApp->IsFirewalled() && CKademlia::IsRunning() &&
-			!CUDPFirewallTester::IsFirewalledUDP(true) && CUDPFirewallTester::IsVerified())
+	const bool udpFirewalled = CUDPFirewallTester::IsFirewalledUDP(true);
+	return ((callback && CKademlia::IsRunning() &&
+			DirectCallbackAvailable(
+				theApp->IsFirewalled(), udpFirewalled, CUDPFirewallTester::IsVerified()))
 			       ? 0x08
 			       : 0) |
 	       ((thePrefs::IsClientCryptLayerRequired() && encryption) ? 0x04 : 0) |

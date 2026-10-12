@@ -32,10 +32,13 @@
 
 #include <wx/thread.h>
 
+#include "UploadPacketBuilder.h"
 #include "Types.h"
-#include "FileArea.h" // Needed for CFileArea
+#include "FileArea.h"    // Needed for CFileArea
+#include <common/Path.h> // Needed for CPath
 
 class CPacket;
+class CPartFile;
 class CUpDownClient;
 
 // Mirrors eMule's OpenOvFile_Struct (UploadDiskIOThread.h:20-28). HANDLE hFile is replaced with
@@ -49,24 +52,21 @@ struct OpenFile_Struct
 	bool bCompress; // true if this file type should be compressed
 };
 
-struct Requested_Block_Struct;
-
 // Mirrors eMule's OverlappedEx_Struct (UploadDiskIOThread.h:32-41)
 // OVERLAPPED removed -- reads are synchronous on this thread via CFileArea.
 struct ReadRequest_Struct
 {
-	OpenFile_Struct *pFileStruct;
-	CUpDownClient *pClient;
-	uint64 uStartOffset;
-	uint64 uEndOffset;
-	Requested_Block_Struct *pBlock; // the block this IO is for (set in StartCreateNextBlockPackage)
+	OpenFile_Struct *pFileStruct = nullptr; // set once the read is committed
+	// The client's ECID, not its pointer: the read runs without the uploading-list lock, and a
+	// freed client's address can be reused by a new one.
+	uint32 clientId = 0;
+	uint8 ucMD4FileHash[16];
+	uint64 uStartOffset = 0;
+	uint64 uEndOffset = 0;
+	CPartFile *pPartFile = nullptr; // pinned for the read; null for a complete file
+	CPath path;                     // complete file only
 	CFileArea area;                 // holds read buffer; replaces BYTE* pBuffer + OVERLAPPED
 };
-
-// Packet + payload-size pair, used by the static packet-creation helpers. Mirrors eMule's
-// CPacketList + Packet::uStatsPayLoad approach; aMule's CPacket has no uStatsPayLoad member, so we
-// carry the value alongside the pointer.
-typedef std::list<std::pair<CPacket *, uint32>> CPacketList;
 
 // Port of eMule's CUploadDiskIOThread (UploadDiskIOThread.h:48-86). Windows primitives replaced
 // with wxWidgets equivalents:
@@ -87,7 +87,7 @@ public:
 	void SocketNeedsMoreData();       // eMule ref: UploadDiskIOThread.h:56
 
 	// eMule ref: UploadDiskIOThread.h:72-73 -- static packet creation helpers
-	// uploadDatarate (bytes/s) scales per-packet chunk size (10 KiB floor, 128 KiB ceiling).
+	// uploadDatarate (bytes/s) scales per-packet chunk size (10 KiB floor, EMBLOCKSIZE ceiling).
 	static void CreateStandardPackets(const uint8_t *buffer,
 		uint64 startOffset,
 		uint64 endOffset,
@@ -104,9 +104,21 @@ public:
 private:
 	void *Entry() override; // replaces RunProc/RunInternal
 
-	void StartCreateNextBlockPackage(CUpDownClient *client); // eMule ref: line 185
-	void ReadCompletionRoutine(ReadRequest_Struct *req);     // eMule ref: line 369
-	bool ReleaseOpenFile(OpenFile_Struct *pFileStruct);      // eMule ref: line 498
+	enum ReadResult
+	{
+		READ_OK,
+		READ_DEFERRED,
+		READ_FAILED,
+		READ_OPEN_FAILED
+	};
+
+	// StartCreateNextBlockPackage runs each block through PrepareRead, ReadBlock, CommitRead.
+	void StartCreateNextBlockPackage(uint32 clientId); // eMule ref: line 185
+	ReadRequest_Struct *PrepareRead(uint32 clientId);
+	static ReadResult ReadBlock(ReadRequest_Struct *req);
+	bool CommitRead(ReadRequest_Struct *req, ReadResult result);
+	void ReadCompletionRoutine(ReadRequest_Struct *req); // eMule ref: line 369
+	bool ReleaseOpenFile(OpenFile_Struct *pFileStruct);  // eMule ref: line 498
 
 	std::atomic<bool> m_bRun{ false }; // eMule ref: m_bRun (line 77)
 	bool m_bSignalThrottler;           // eMule ref: m_bSignalThrottler (line 78)

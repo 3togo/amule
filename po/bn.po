@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule GIT\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-09 12:39+0000\n"
 "PO-Revision-Date: 2026-10-07 16:31+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
@@ -386,7 +386,7 @@ msgstr "সতর্কতা: নেটওয়ার্ক ইন্টার
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
 msgstr "কনফিগারেশন পরিবর্তনের কারণে আপনার লোকেল সিস্টেম ডিফল্টে পরিবর্তন করা হয়েছে। দুঃখিত।"
 
-#: src/amule.cpp src/CatDialog.cpp src/ServerList.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/CatDialog.cpp src/ServerListCtrl.cpp
 msgid "Info"
 msgstr "তথ্য"
 
@@ -1752,11 +1752,6 @@ msgstr[1] "%uটি মন্তব্য"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "ক্লায়েন্ট %s নিষিদ্ধ করা হয়েছে, কারণ এটি %s ক্ষতিগ্রস্ত ডেটা পাঠিয়েছে (মোট %s), ফাইল: '%s'"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "'%s' এর জন্য দেশের তথ্য লোড করতে ব্যর্থ হয়েছে।"
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "স্বয়ংক্রিয় [নিম্ন]"
@@ -2342,6 +2337,10 @@ msgid "server not found: %s"
 msgstr "সার্ভার পাওয়া যায়নি: %s"
 
 #: src/ExternalConn.cpp
+msgid "You are connected to the server you are trying to delete. please disconnect first."
+msgstr "আপনি যে সার্ভারটি মুছতে চাইছেন তার সাথে আপনি সংযুক্ত আছেন। অনুগ্রহ করে প্রথমে সংযোগ বিচ্ছিন্ন করুন।"
+
+#: src/ExternalConn.cpp
 msgid "need to define server to be removed"
 msgstr "মুছে ফেলার জন্য সার্ভার নির্দিষ্ট করা প্রয়োজন"
 
@@ -2748,18 +2747,47 @@ msgstr ""
 msgid "OK"
 msgstr "ঠিক আছে"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "ফাইল প্রিভিউ"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgid "Media-player command '%s' was not run: %s"
 msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
+msgstr ""
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
 msgstr ""
 
 #: src/FileLaunch.cpp
@@ -6796,6 +6824,13 @@ msgid "GUI command:"
 msgstr "GUI কমান্ড:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "নিম্নলিখিত ভেরিয়েবলগুলো প্রতিস্থাপিত হবে:"
 
@@ -7199,6 +7234,14 @@ msgid "Server.met file corrupt, found invalid versiontag: 0x%x, size %i"
 msgstr "server.met ফাইল ক্ষতিগ্রস্ত, অবৈধ versiontag পাওয়া গেছে: 0x%x, আকার %i"
 
 #: src/ServerList.cpp
+msgid "Error: the file 'server.met' is corrupted: "
+msgstr "ত্রুটি: 'server.met' ফাইলটি ক্ষতিগ্রস্ত: "
+
+#: src/ServerList.cpp
+msgid "IO error while reading 'server.met': "
+msgstr "'server.met' পড়ার সময় IO ত্রুটি: "
+
+#: src/ServerList.cpp
 #, c-format
 msgid "%i server in server.met found"
 msgid_plural "%i servers in server.met found"
@@ -7211,14 +7254,6 @@ msgid "%d server added"
 msgid_plural "%d servers added"
 msgstr[0] "%dটি সার্ভার যোগ করা হয়েছে"
 msgstr[1] "%dটি সার্ভার যোগ করা হয়েছে"
-
-#: src/ServerList.cpp
-msgid "Error: the file 'server.met' is corrupted: "
-msgstr "ত্রুটি: 'server.met' ফাইলটি ক্ষতিগ্রস্ত: "
-
-#: src/ServerList.cpp
-msgid "IO error while reading 'server.met': "
-msgstr "'server.met' পড়ার সময় IO ত্রুটি: "
 
 #: src/ServerList.cpp
 #, c-format
@@ -7239,10 +7274,6 @@ msgstr "সার্ভার যোগ করা হয়নি: মিলে 
 #, c-format
 msgid "Server added: Server at [%s:%d] using the name '%s'."
 msgstr "সার্ভার যোগ করা হয়েছে: [%s:%d] এ থাকা সার্ভারটি '%s' নাম ব্যবহার করছে।"
-
-#: src/ServerList.cpp
-msgid "You are connected to the server you are trying to delete. please disconnect first."
-msgstr "আপনি যে সার্ভারটি মুছতে চাইছেন তার সাথে আপনি সংযুক্ত আছেন। অনুগ্রহ করে প্রথমে সংযোগ বিচ্ছিন্ন করুন।"
 
 #: src/ServerList.cpp
 #, c-format
@@ -8904,6 +8935,11 @@ msgstr "ফাইলের আপলোড স্থগিত করা হচ�
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr ""
 
@@ -8912,7 +8948,8 @@ msgid "Download completed"
 msgstr "ডাউনলোড সম্পন্ন হয়েছে"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "ফাইলের সম্পূর্ণ পাথ।"
 
 #: src/UserEvents.h
@@ -8950,6 +8987,10 @@ msgstr "ডিস্ক পার্টিশন।"
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "সমাপ্তিতে ত্রুটি"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "ফাইলের সম্পূর্ণ পাথ।"
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9661,6 +9702,28 @@ msgstr "aMule চলছে বলে মনে হচ্ছে। অনুগ�
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "$APPDATA\\aMule-এ ব্যবহারকারীর ডেটা অপসারণ করা হচ্ছে…"
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not read %s. It was renamed to %s.bad, and a new index will be saved at shutdown."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not preserve the unreadable index %s as %s.bad. Its original file will not be overwritten."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not load its saved index. Existing index files were preserved."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not save an index. The previous copy of that file was preserved."
+msgstr ""
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "'%s' এর জন্য দেশের তথ্য লোড করতে ব্যর্থ হয়েছে।"
 
 #, fuzzy
 #~ msgid "Kad protocol version"

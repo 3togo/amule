@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2026-10-02 08:36+0800\n"
-"PO-Revision-Date: 2026-10-07 16:32+0000\n"
+"PO-Revision-Date: 2026-10-09 02:19+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
 "Language: zh_Hans\n"
@@ -35,7 +35,7 @@ msgstr ""
 #: amule.1.in
 #, no-wrap
 msgid "aMule v@PACKAGE_VERSION@"
-msgstr ""
+msgstr "aMule v@PACKAGE_VERSION@"
 
 #. type: TH
 #: amule.1.in
@@ -174,7 +174,7 @@ msgstr ""
 #. type: Plain text
 #: amule.1.in amulecmd.1.in amuled.1.in amulegui.1.in amuleweb.1.in ed2k.1.in
 msgid "Displays the current version number."
-msgstr ""
+msgstr "显示当前版本号。"
 
 #. type: Plain text
 #: amule.1.in amulecmd.1.in amuled.1.in amulegui.1.in amuleweb.1.in ed2k.1.in

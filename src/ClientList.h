@@ -39,6 +39,7 @@
 class CUpDownClient;
 class CClientTCPSocket;
 class CMD4Hash;
+class CProtocolPeerIdentity;
 namespace Kademlia
 {
 class CContact;
@@ -147,6 +148,12 @@ public:
 	 */
 	CUpDownClient *FindClientByIP(uint32 clientip);
 	CUpDownClient *FindClientByIP(const CNetworkAddress &address);
+
+	/**
+	 * The one listed client whose GetProtocolPeerIdentity() equals @p identity, or null when there is
+	 * none or more than one. HighID and LowID are looked up by hybrid ID, native IPv6 by address.
+	 */
+	CUpDownClient *FindClientByProtocolPeerIdentity(const CProtocolPeerIdentity &identity);
 
 	/**
 	 * Finds a client with the specified ECID.

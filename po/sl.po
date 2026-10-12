@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-09 12:39+0000\n"
 "PO-Revision-Date: 2026-10-07 16:29+0000\n"
 "Last-Translator: Jure Repinc <jlp@holodeck1.com>\n"
 "Language-Team: Slovenian\n"
@@ -394,7 +394,7 @@ msgstr "OPOZORILO: vezava na omrežni vmesnik »%s« ni uspela - promet lahko za
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
 msgstr "Vaše področne nastavitve so bile spremenjene na sistemsko privzete zaradi spremembe v nastavitvah. Oprostite."
 
-#: src/amule.cpp src/CatDialog.cpp src/ServerList.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/CatDialog.cpp src/ServerListCtrl.cpp
 msgid "Info"
 msgstr "Podatki"
 
@@ -1798,11 +1798,6 @@ msgstr[3] "%u komentarji"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Izločil odjemalca %s, ker je poslal %s pokvarjenih podatkov od skupno %s za datoteko »%s«"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Nalaganje državnih podatkov za »%s« ni uspelo."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Samod. [Ni]"
@@ -2393,6 +2388,10 @@ msgid "server not found: %s"
 msgstr "strežnika ni mogoče najti: %s"
 
 #: src/ExternalConn.cpp
+msgid "You are connected to the server you are trying to delete. please disconnect first."
+msgstr "Povezani ste na strežnik, ki ga poskušate izbrisati. Prosimo, najprej prekinite povezavo."
+
+#: src/ExternalConn.cpp
 msgid "need to define server to be removed"
 msgstr "morate navesti strežnik za odstranitev"
 
@@ -2804,19 +2803,48 @@ msgstr ""
 msgid "OK"
 msgstr "V redu"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Ogled datoteke"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "NAPAKA: Ni bilo mogoče zagnati zunanjega predvajalnika. Ukaz: »%s«"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr ""
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "NAPAKA: Ni bilo mogoče zagnati zunanjega predvajalnika. Ukaz: »%s«"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6917,6 +6945,13 @@ msgid "GUI command:"
 msgstr "Ukaz vmesnika:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "Sledeče spremenljivke bodo nadomeščene:"
 
@@ -7332,6 +7367,14 @@ msgid "Server.met file corrupt, found invalid versiontag: 0x%x, size %i"
 msgstr "Datoteka server.met je pokvarjena, napačna oznaka različice: 0x%x, velikost %i"
 
 #: src/ServerList.cpp
+msgid "Error: the file 'server.met' is corrupted: "
+msgstr "Napaka: datoteka »server.met« je pokvarjena: "
+
+#: src/ServerList.cpp
+msgid "IO error while reading 'server.met': "
+msgstr "Vhodno/izhodna napaka med branjem »server.met«: "
+
+#: src/ServerList.cpp
 #, c-format
 msgid "%i server in server.met found"
 msgid_plural "%i servers in server.met found"
@@ -7348,14 +7391,6 @@ msgstr[0] "%d strežnikov dodanih"
 msgstr[1] "%d strežnik dodan"
 msgstr[2] "%d strežnika dodana"
 msgstr[3] "%d strežniki dodani"
-
-#: src/ServerList.cpp
-msgid "Error: the file 'server.met' is corrupted: "
-msgstr "Napaka: datoteka »server.met« je pokvarjena: "
-
-#: src/ServerList.cpp
-msgid "IO error while reading 'server.met': "
-msgstr "Vhodno/izhodna napaka med branjem »server.met«: "
 
 #: src/ServerList.cpp
 #, c-format
@@ -7376,10 +7411,6 @@ msgstr "Strežnik ni bil dodan: Strežnik z IP:vrata [%s:%d] že obstaja na sezn
 #, c-format
 msgid "Server added: Server at [%s:%d] using the name '%s'."
 msgstr "Strežnik dodan: Strežnik na [%s:%d], z imenom »%s«."
-
-#: src/ServerList.cpp
-msgid "You are connected to the server you are trying to delete. please disconnect first."
-msgstr "Povezani ste na strežnik, ki ga poskušate izbrisati. Prosimo, najprej prekinite povezavo."
 
 #: src/ServerList.cpp
 #, c-format
@@ -9074,6 +9105,11 @@ msgstr "Ustavljanje pošiljanja za datoteko: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "Ni bilo mogoče izvesti ukaza »%s« za dogodek »%s«."
 
@@ -9082,7 +9118,8 @@ msgid "Download completed"
 msgstr "Prejemanje zaključeno"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "Polna pot datoteke."
 
 #: src/UserEvents.h
@@ -9120,6 +9157,10 @@ msgstr "Razdelek diska."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Napaka pri zaključevanju"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "Polna pot datoteke."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9831,6 +9872,28 @@ msgstr "Videti je, da se aMule izvaja. Zaprite ga in znova zaženite odstranitve
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Odstranjevanje uporabniških podatkov na $APPDATA\\aMule..."
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not read %s. It was renamed to %s.bad, and a new index will be saved at shutdown."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not preserve the unreadable index %s as %s.bad. Its original file will not be overwritten."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not load its saved index. Existing index files were preserved."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not save an index. The previous copy of that file was preserved."
+msgstr ""
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Nalaganje državnih podatkov za »%s« ni uspelo."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

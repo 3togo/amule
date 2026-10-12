@@ -395,6 +395,9 @@ public:
 
 	/* Interface */
 	bool Connect(amuleIPV4Address &address, bool wait);
+#ifdef ENABLE_IPV6
+	bool ConnectIPv6(const CNetworkAddress &target, uint16 port, bool wait);
+#endif
 	uint32 Read(void *buffer, wxUint32 nbytes);
 	uint32 Write(const void *buffer, wxUint32 nbytes);
 
@@ -410,7 +413,8 @@ public:
 	/* Constructor */
 	CSocketServerProxy(amuleIPV4Address &address,
 		muleSocketFlags flags = MULE_SOCKET_NONE,
-		const CProxyData *proxyData = NULL);
+		const CProxyData *proxyData = nullptr,
+		ListenerFamilies families = ListenerFamilies::FromAddress);
 
 private:
 	wxMutex m_socketLocker;
@@ -496,6 +500,15 @@ inline bool Socks5CommandReplyOk(const char *reply, uint32 available, bool udpAs
 	       reply[1] == SOCKS5_REPLY_SUCCEED && (!udpAssociate || reply[3] == SOCKS5_ATYP_IPV4_ADDRESS);
 }
 
+/** Whether a SOCKS4 command reply grants the request. DSTPORT and DSTIP are not checked: the client
+ * ignores them in a CONNECT reply, the only command aMule sends over SOCKS4, and Tor sends both as
+ * zero.
+ */
+inline bool Socks4CommandReplyOk(const char *reply, uint32 available)
+{
+	return available >= 8 && reply[0] == SOCKS4_REPLY_CODE && reply[1] == SOCKS4_REPLY_GRANTED;
+}
+
 /** Where relayed datagrams come from. RFC 1928 leaves BND.ADDR unspecified to mean "the address
  * you reached the proxy at", so pinning the port alone would accept any host.
  */
@@ -519,8 +532,9 @@ class CDatagramSocketProxy : public CLibUDPSocket
 public:
 	/* Constructor */
 	CDatagramSocketProxy(amuleIPV4Address &address,
-		muleSocketFlags flags = MULE_SOCKET_NONE,
-		const CProxyData *proxyData = NULL);
+		muleSocketFlags flags,
+		const CProxyData *proxyData,
+		CMuleUDPSocket *handler);
 
 	/* Destructor */
 	~CDatagramSocketProxy();

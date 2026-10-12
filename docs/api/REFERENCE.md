@@ -2028,11 +2028,11 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" \
 
 **Auth:** `ADMIN`
 
-Removes the server from amuled's list.
+Removes the server from amuled's list. A permanent server also loses its permanent flag, so it does not come back when amuled restarts.
 
 **Response:** `204 No Content`.
 
-**Errors:** `400 bad_request` (`{ecid}` is not a non-negative integer, or `{address}` is not a dotted quad with a port in 1–65535), `400 amuled_rejected`, `404 not_found` (well-formed but no such server), `503 ec_unavailable`.
+**Errors:** `400 bad_request` (`{ecid}` is not a non-negative integer, or `{address}` is not a dotted quad with a port in 1–65535), `400 amuled_rejected` (amuled is connected to that server; disconnect first), `404 not_found` (well-formed but no such server), `503 ec_unavailable`.
 
 #### `PATCH /api/v1/servers/{ecid}` / `PATCH /api/v1/servers/by-address/{address}`
 
@@ -2589,8 +2589,8 @@ Standalone view of the Kad subtree from `/status`, plus the detail fields the st
 | `lan_mode` | bool \| null | `true` when the daemon is running Kad in LAN mode. It **forces both firewalled fields to `false`** regardless of any measurement, which is why it belongs beside them: a `false` on either flag is only meaningful once you have checked this one. `null` unless `state` is `connected`. |
 | `network.user_count` / `.file_count` | int \| null | Network-wide estimates for the whole Kad network, not counts belonging to this node. The same values `GET /api/v1/status` reports under `kad.network`. **`null` unless `state` is `connected`** - not a stale last estimate that would be indistinguishable from a live reading. |
 | `network.node_count` | int \| null | **This node's own routing table size** - how many Kad contacts it currently holds - *not* a network-wide figure like the two above. Saturates at 65535 (the daemon counts it in a `uint16`). **`null` unless `state` is `connected`**: routing contacts outlive the disconnect, so a non-zero count on a fully stopped Kad is not surfaced. |
-| `indexed.sources` / `.keywords` / `.notes` | int \| null | Kad-store counters: how many entries this node is holding for the network as a DHT participant. `null` unless `state` is `connected` - a `0` there would be a real count, indistinguishable from an idle but connected node. |
-| `indexed.load_percent` | int \| null | A **load figure, not a count**, despite sitting beside three counts: it is the Kad store's fill level. `null` unless `state` is `connected`, on the same gate as the three counters above. |
+| `indexed.sources` / `.keywords` / `.notes` | int \| null | Kad-store counters: how many entries this node is holding for the network as a DHT participant. `null` unless `state` is `connected`, and also `null` while the daemon is still loading its saved index after Kad starts - a `0` would be a real count, indistinguishable from an idle but connected node. |
+| `indexed.load_percent` | int \| null | **A count, not a percentage**, despite its name: how many keywords have a recorded publish delay, because the nodes that store them reported a high load. A delay that has run out stays counted until that keyword is published again. The desktop panel shows it as *Indexed load*. `null` on the same gate as the three counters above. |
 | `buddy.state` | string \| null | LowID-buddy state for NAT-traversal clients: `no_buddy` / `connecting` / `connected` (`unknown` only if the daemon ever ships a value outside its own enum). **`null` unless `state` is `connected`**, along with `buddy.ip` / `buddy.port`; a `no_buddy` there would be a real state rather than the absence of one. While connected with no buddy, `ip` / `port` are `0.0.0.0` / `0`. |
 
 ---
@@ -3165,12 +3165,25 @@ Trigger an on-demand Kad notes lookup for a search result you have not downloade
 
 The country-flag image for a `country_code`. `/clients`, `/servers` and their SSE diffs carry the ISO 3166-1 alpha-2 code (see [`GET /api/v1/clients`](#get-apiv1clients)); this is where the matching artwork comes from, so a frontend does not have to ship its own flag set.
 
-Note the path is deliberately **outside** `/api/v1/` — it is an image an `<img src>` points at, not a JSON resource, and it is versioned by the daemon build rather than by the API contract.
+Note the path is deliberately **outside** `/api/v1/` — it is an image an `<img src>` points at, not a JSON resource, and it is versioned with the binary artwork rather than by the API contract.
 
-`{code}` must be exactly two **lowercase** ASCII letters, or the literal `unknown` for the "??" placeholder the desktop GUI falls back to when a code is empty or unrecognised. The bytes are the 16×11 famfamfam PNGs compiled into the daemon binary — the same artwork the desktop draws — so the route behaves identically whether or not `[Server]/StaticRoot` is set, and never touches the file system.
+The three embedded PNG densities are available at `/flags/{code}.png` (16×12),
+`/flags/{code}@2x.png` (32×24), and `/flags/{code}@3x.png` (48×36). All variants
+have identical country-code validation, GET/HEAD and caching behavior. SVG flag
+routes are not supported. The WebUI uses `srcset` and falls back to the 1x image
+when an older API does not provide higher densities.
+
+`{code}` must be exactly two **lowercase** ASCII letters, or the literal `unknown`
+for the "??" placeholder the desktop GUI uses for an empty or unrecognised code.
+The flag-icons PNGs and legacy `an`/`unknown` artwork are compiled into the binary,
+using the same images as the desktop. This route never reads the filesystem and
+works independently of `[Server]/StaticRoot`. Missing artwork returns 404;
+ETags are derived from the embedded response bytes.
 
 ```sh
 curl -s http://$HOST/flags/de.png -o de.png
+curl -s http://$HOST/flags/de@2x.png -o de@2x.png
+curl -s http://$HOST/flags/de@3x.png -o de@3x.png
 curl -s http://$HOST/flags/unknown.png -o unknown.png
 ```
 
@@ -3180,7 +3193,7 @@ Responses carry an `ETag` and honour `If-None-Match` with `304 Not Modified` lik
 
 The response is never `Content-Encoding: gzip` — a PNG is already entropy-coded, so the server skips compression for it.
 
-**Errors:** `404 not_found` for anything that is neither two lowercase letters nor `unknown` (uppercase, wrong length, digits, another extension), and for a well-formed code the famfamfam set has no artwork for — it covers 248 of the assignable alpha-2 codes, so a resolvable country can legitimately have no flag. Render the code as text, or fall back to `unknown.png`, in that case. `400 bad_request` for paths carrying traversal tokens, per [Path validation](#path-validation).
+**Errors:** `404 not_found` for anything that is neither two lowercase letters nor `unknown` (uppercase, wrong length, digits, another extension), and for a well-formed code the bundled set has no artwork for — a newer GeoIP database can legitimately return a code absent from the artwork. Render the code as text, or fall back to `unknown.png`, in that case. `400 bad_request` for paths carrying traversal tokens, per [Path validation](#path-validation).
 
 Clients whose country could not be resolved — GeoIP disabled, unsupported by the build, or a private/unmatched address — come back with `country_code: null`. There is no per-country image to request in that case; draw nothing, or `unknown.png` for parity with the desktop list.
 

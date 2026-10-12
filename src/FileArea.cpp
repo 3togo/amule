@@ -269,7 +269,8 @@ void CFileArea::ReadAt(CFileAutoClose &file, uint64 offset, size_t count)
 		m_length = offEnd - offStart;
 		void *p = mmap(NULL, m_length, PROT_READ, MAP_SHARED, file.fd(), offStart);
 		if (p != MAP_FAILED) {
-			m_file = &file;
+			// No m_file: a read mapping needs no fd once made, and the area can outlive file.
+			file.Unlock();
 			m_mmap_buffer = (uint8_t *)p;
 			m_buffer = m_mmap_buffer + (offset - offStart);
 
@@ -333,6 +334,20 @@ bool CFileArea::FlushAt(CFileAutoClose &file, uint64 offset, size_t count)
 	file.WriteAt(m_buffer, offset, count);
 	Close();
 	return true;
+}
+
+void CFileArea::Prefault()
+{
+#ifdef MMAP_SUPPORTED
+	if (m_mmap_buffer == nullptr || gs_pageSize <= 0) {
+		return;
+	}
+	// The mapping starts on a page boundary, so one read per page faults in all of it.
+	const volatile uint8_t *pages = m_mmap_buffer;
+	for (size_t off = 0; off < m_length; off += static_cast<size_t>(gs_pageSize)) {
+		(void)pages[off];
+	}
+#endif
 }
 
 void CFileArea::CheckError()

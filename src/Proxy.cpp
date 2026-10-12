@@ -835,14 +835,12 @@ void CSocks4StateMachine::process_process_command_reply(bool entry)
 	if (entry) {
 		m_lastReply = m_buffer[1];
 
-		// Process the server's reply
-		m_ok = m_ok && m_buffer[0] == SOCKS4_REPLY_CODE && m_buffer[1] == SOCKS4_REPLY_GRANTED;
+		m_ok = m_ok && Socks4CommandReplyOk(m_buffer, m_lastRead);
 		if (m_ok) {
-			const unsigned int portOffset = 2;
-			m_ok = m_proxyBoundAddressIPV4.Service(
-				ENDIAN_NTOHS(RawPeekUInt16(m_buffer + portOffset)));
-			const unsigned int addrOffset = 4;
-			m_ok = m_ok && m_proxyBoundAddressIPV4.Hostname(PeekUInt32(m_buffer + addrOffset));
+			// Informational, so neither result decides: Service() refuses port 0, and
+			// Hostname(uint32) refuses 0.0.0.0.
+			m_proxyBoundAddressIPV4.Service(ENDIAN_NTOHS(RawPeekUInt16(m_buffer + 2)));
+			m_proxyBoundAddressIPV4.Hostname(Uint32toStringIP(PeekUInt32(m_buffer + 4)));
 			m_proxyBoundAddress = &m_proxyBoundAddressIPV4;
 		}
 	}
@@ -1124,6 +1122,19 @@ bool CSocketClientProxy::Connect(amuleIPV4Address &address, bool wait)
 	return ok;
 }
 
+#ifdef ENABLE_IPV6
+bool CSocketClientProxy::ConnectIPv6(const CNetworkAddress &target, uint16 port, bool wait)
+{
+	wxMutexLocker lock(m_socketLocker);
+	// The proxy protocols here carry IPv4 only, so a configured proxy refuses IPv6 instead of
+	// being bypassed.
+	if (GetUseProxy()) {
+		return RefuseConnectIPv6(target, port);
+	}
+	return CLibSocket::ConnectIPv6(target, port, wait);
+}
+#endif
+
 uint32 CSocketClientProxy::Read(void *buffer, wxUint32 nbytes)
 {
 	wxMutexLocker lock(m_socketLocker);
@@ -1138,17 +1149,20 @@ uint32 CSocketClientProxy::Write(const void *buffer, wxUint32 nbytes)
 
 // CSocketServerProxy
 
-CSocketServerProxy::CSocketServerProxy(amuleIPV4Address &address, muleSocketFlags flags, const CProxyData *)
-: CLibSocketServer(address, flags)
+CSocketServerProxy::CSocketServerProxy(
+	amuleIPV4Address &address, muleSocketFlags flags, const CProxyData *, ListenerFamilies families)
+: CLibSocketServer(address, flags, families)
 {
 	/* Maybe some day when socks6 is out... :) */
 }
 
 // CDatagramSocketProxy
 
-CDatagramSocketProxy::CDatagramSocketProxy(
-	amuleIPV4Address &address, muleSocketFlags flags, const CProxyData *proxyData)
-: CLibUDPSocket(address, flags)
+CDatagramSocketProxy::CDatagramSocketProxy(amuleIPV4Address &address,
+	muleSocketFlags flags,
+	const CProxyData *proxyData,
+	CMuleUDPSocket *handler)
+: CLibUDPSocket(address, flags, handler)
 , m_proxyTCPSocket(MULE_SOCKET_NOWAIT, proxyData, PROXY_CMD_UDP_ASSOCIATE, this)
 {
 	m_udpSocketOk = false;

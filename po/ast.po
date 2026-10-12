@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-09 12:39+0000\n"
 "PO-Revision-Date: 2026-10-07 16:22+0000\n"
 "Last-Translator: astur <malditoastur@gmail.com>\n"
 "Language-Team: Language ast <malditoastur@gmail.com>\n"
@@ -391,7 +391,7 @@ msgstr "AVISU: nun se pudo vincular a la interface de rede '%s' - el tráficu pu
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
 msgstr "La to llingua foi camudada a la de por defeutu del sistema, darréu d'un cambéu de configuración. Siéntolo."
 
-#: src/amule.cpp src/CatDialog.cpp src/ServerList.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/CatDialog.cpp src/ServerListCtrl.cpp
 msgid "Info"
 msgstr "Info"
 
@@ -1776,11 +1776,6 @@ msgstr[1] "%u comentarios"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Veceru %s baneáu por unviar %s datos toyíos de %s en total pal ficheru '%s'"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Falló la carga de datos de país pa '%s'."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Auto [Ba]"
@@ -2366,6 +2361,10 @@ msgid "server not found: %s"
 msgstr "sirvidor non amestáu: %s"
 
 #: src/ExternalConn.cpp
+msgid "You are connected to the server you are trying to delete. please disconnect first."
+msgstr "Tas coneutáu al sirvidor, que tentes desaniciar. Por favor desconéutate primero."
+
+#: src/ExternalConn.cpp
 msgid "need to define server to be removed"
 msgstr "necesites definir un sirvidor pa desanicialu"
 
@@ -2777,19 +2776,48 @@ msgstr ""
 msgid "OK"
 msgstr "Aceutar"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Previsualizar"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "ERROR: ¡Fallu al executar un reproductor de medios esternu! Comandu: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr ""
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "ERROR: ¡Fallu al executar un reproductor de medios esternu! Comandu: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6851,6 +6879,13 @@ msgid "GUI command:"
 msgstr "Comandu de la Interface: "
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "Les siguientes variables trocaránse:"
 
@@ -7263,6 +7298,14 @@ msgid "Server.met file corrupt, found invalid versiontag: 0x%x, size %i"
 msgstr "Ficheru server.met toyíu, alcontróse versión non válida: 0x%x, tamañu %i"
 
 #: src/ServerList.cpp
+msgid "Error: the file 'server.met' is corrupted: "
+msgstr "Error: el ficheru 'server.met' ta corruptu: "
+
+#: src/ServerList.cpp
+msgid "IO error while reading 'server.met': "
+msgstr "Error d'E/S al lleer 'server.met': "
+
+#: src/ServerList.cpp
 #, c-format
 msgid "%i server in server.met found"
 msgid_plural "%i servers in server.met found"
@@ -7275,14 +7318,6 @@ msgid "%d server added"
 msgid_plural "%d servers added"
 msgstr[0] "%d sirvidor amestáu"
 msgstr[1] "%d sirvidores amestaos"
-
-#: src/ServerList.cpp
-msgid "Error: the file 'server.met' is corrupted: "
-msgstr "Error: el ficheru 'server.met' ta corruptu: "
-
-#: src/ServerList.cpp
-msgid "IO error while reading 'server.met': "
-msgstr "Error d'E/S al lleer 'server.met': "
 
 #: src/ServerList.cpp
 #, c-format
@@ -7303,10 +7338,6 @@ msgstr "Sirvidor non amestáu: Sirvidor IP:Puertu [%s:%d] alcontráu na llista."
 #, c-format
 msgid "Server added: Server at [%s:%d] using the name '%s'."
 msgstr "Sirvidor amestáu: Sirvidor en [%s:%d] usando'l nome '%s'."
-
-#: src/ServerList.cpp
-msgid "You are connected to the server you are trying to delete. please disconnect first."
-msgstr "Tas coneutáu al sirvidor, que tentes desaniciar. Por favor desconéutate primero."
 
 #: src/ServerList.cpp
 #, c-format
@@ -8959,6 +8990,11 @@ msgstr "Suspendiendo xuba del ficheru: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "Fallu al executar el comandu '%s' nel eventu '%s'."
 
@@ -8967,7 +9003,8 @@ msgid "Download completed"
 msgstr "Descarga fecha ensembre"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "El camín completu al ficheru."
 
 #: src/UserEvents.h
@@ -9005,6 +9042,10 @@ msgstr "Partición de discu"
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Fallu completando"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "El camín completu al ficheru."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9716,6 +9757,28 @@ msgstr "Paez qu'aMule ta n'execución. Zárralu y vuelvi a executar el desinstal
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Desaniciando datos d'usuariu en $APPDATA\\aMule..."
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not read %s. It was renamed to %s.bad, and a new index will be saved at shutdown."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not preserve the unreadable index %s as %s.bad. Its original file will not be overwritten."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not load its saved index. Existing index files were preserved."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not save an index. The previous copy of that file was preserved."
+msgstr ""
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Falló la carga de datos de país pa '%s'."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

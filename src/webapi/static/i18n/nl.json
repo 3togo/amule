@@ -1,3 +1,6 @@
 {
-  "shared_detail_complete_src": "Complete bronnen"
+  "shared_detail_complete_src": "Complete bronnen",
+  "downloads_detail_tip_saved_ich": "Pakketten hersteld door ICH (Intelligente Corruptie Afhandeling) in plaats van ze opnieuw te downloaden.",
+  "downloads_detail_lost_corruption": "Verloren door beschadiging",
+  "prefs_group_ich": "Intelligente Corruptie Afhandeling (I.C.H.)"
 }

@@ -39,6 +39,7 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		SearchList.cpp
 		ServerConnect.cpp
 		ServerList.cpp
+		ServerMet.cpp
 		ServerSocket.cpp
 		ServerUDPSocket.cpp
 		SHAHashSet.cpp
@@ -47,6 +48,7 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON)
 		UploadBandwidthThrottler.cpp
 		UploadClient.cpp
 		UploadDiskIOThread.cpp
+		UploadPacketBuilder.cpp
 		UploadQueue.cpp
 		PartFileWriteThread.cpp
 		PartFileHashThread.cpp
@@ -84,6 +86,7 @@ if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 		# (Python3 missing → use the file as committed). See
 		# src/CMakeLists.txt for the resolution.
 		CamuleArtProvider.cpp
+		MenuIcons.cpp
 		${AMULE_ICON_DATA_C}
 		AddFriend.cpp
 		amule-gui.cpp
@@ -138,7 +141,7 @@ if (BUILD_MONOLITHIC OR BUILD_REMOTEGUI)
 		# Obj-C++ helper for AppKit access (NSApp activation policy
 		# toggle for "minimize to tray" — drops the Dock icon while
 		# the main window is hidden so no Dock thumbnail is left).
-		list (APPEND GUI_SOURCES MacAppHelper.mm)
+		list (APPEND GUI_SOURCES MacAppHelper.mm MenuIcons_mac.mm)
 	endif()
 endif()
 
@@ -152,6 +155,7 @@ if (BUILD_MONOLITHIC OR BUILD_DAEMON OR BUILD_REMOTEGUI)
 		ClientRef.cpp
 		ClientVersionString.cpp
 		ECSpecialMuleTags.cpp
+		ExternalCommand.cpp
 		GetTickCount.cpp
 		GuiEvents.cpp
 		HTTPDownload.cpp

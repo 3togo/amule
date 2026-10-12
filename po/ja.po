@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-09 12:39+0000\n"
 "PO-Revision-Date: 2026-10-07 16:27+0000\n"
 "Last-Translator: \n"
 "Language-Team: Japanese\n"
@@ -388,7 +388,7 @@ msgstr "警告：ネットワークインターフェイス '%s' にバインド
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
 msgstr "申し訳ありませんが、設定の変更を行ったため、あなたのロケールはシステム標準に変更されました。"
 
-#: src/amule.cpp src/CatDialog.cpp src/ServerList.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/CatDialog.cpp src/ServerListCtrl.cpp
 msgid "Info"
 msgstr "情報"
 
@@ -1763,11 +1763,6 @@ msgstr[0] "%u個のコメントがあります"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "クライアント %s を接続禁止にしました（送信した破損データ：%s／合計：%s／ファイル：'%s'）"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "'%s' の国データのロードに失敗しました。"
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "オート [Lo]"
@@ -2351,6 +2346,10 @@ msgid "server not found: %s"
 msgstr "サーバは見付かりませんでした： %s"
 
 #: src/ExternalConn.cpp
+msgid "You are connected to the server you are trying to delete. please disconnect first."
+msgstr "削除しようとするサーバには現在接続しています。先に切断を行ってください。"
+
+#: src/ExternalConn.cpp
 msgid "need to define server to be removed"
 msgstr "削除したいサーバを定義しなければなりません"
 
@@ -2762,19 +2761,48 @@ msgstr ""
 msgid "OK"
 msgstr "OK"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "ファイル・プレビュー"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "エラー：外部メディア・プレイヤーを実行できませんでした！コマンド：'%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr ""
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "エラー：外部メディア・プレイヤーを実行できませんでした！コマンド：'%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6809,6 +6837,13 @@ msgid "GUI command:"
 msgstr "GUIコマンド："
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "次の変数は置換されます："
 
@@ -7220,6 +7255,14 @@ msgid "Server.met file corrupt, found invalid versiontag: 0x%x, size %i"
 msgstr "server.metファイルは破損しています。不正なバージョン・タグが見つかりました：0x%x、サイズ %i"
 
 #: src/ServerList.cpp
+msgid "Error: the file 'server.met' is corrupted: "
+msgstr "エラー：ファイル 'server.met' が破損しています： "
+
+#: src/ServerList.cpp
+msgid "IO error while reading 'server.met': "
+msgstr "'server.met' の読み込み中に IO エラーが発生しました： "
+
+#: src/ServerList.cpp
 #, c-format
 msgid "%i server in server.met found"
 msgid_plural "%i servers in server.met found"
@@ -7230,14 +7273,6 @@ msgstr[0] "server.metに%i個のサーバが見つかりました"
 msgid "%d server added"
 msgid_plural "%d servers added"
 msgstr[0] "%d個のサーバが追加されました"
-
-#: src/ServerList.cpp
-msgid "Error: the file 'server.met' is corrupted: "
-msgstr "エラー：ファイル 'server.met' が破損しています： "
-
-#: src/ServerList.cpp
-msgid "IO error while reading 'server.met': "
-msgstr "'server.met' の読み込み中に IO エラーが発生しました： "
 
 #: src/ServerList.cpp
 #, c-format
@@ -7258,10 +7293,6 @@ msgstr "サーバは追加されていません：同じ[%s:%d]のIP:ポート�
 #, c-format
 msgid "Server added: Server at [%s:%d] using the name '%s'."
 msgstr "サーバは追加されました：[%s:%d]は'%s'という名前を使用しています。"
-
-#: src/ServerList.cpp
-msgid "You are connected to the server you are trying to delete. please disconnect first."
-msgstr "削除しようとするサーバには現在接続しています。先に切断を行ってください。"
 
 #: src/ServerList.cpp
 #, c-format
@@ -8916,6 +8947,11 @@ msgstr "ファイル %s のアップロードを一時停止します"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "イベント'%2$s'にコマンド'%1$s'を起動できませんでした。"
 
@@ -8924,7 +8960,8 @@ msgid "Download completed"
 msgstr "ダウンロード完了"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "ファイルのフルパス。"
 
 #: src/UserEvents.h
@@ -8962,6 +8999,10 @@ msgstr "ディスク・パーティション。"
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "完了中にエラー"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "ファイルのフルパス。"
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9673,6 +9714,28 @@ msgstr "aMule が実行中のようです。終了してからアンインスト
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "$APPDATA\\aMule のユーザデータを削除しています…"
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not read %s. It was renamed to %s.bad, and a new index will be saved at shutdown."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not preserve the unreadable index %s as %s.bad. Its original file will not be overwritten."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not load its saved index. Existing index files were preserved."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not save an index. The previous copy of that file was preserved."
+msgstr ""
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "'%s' の国データのロードに失敗しました。"
 
 #, fuzzy
 #~ msgid "Kad protocol version"

@@ -33,9 +33,6 @@
 #include <PartFile.h>
 #include <updownclient.h>
 #include <SearchList.h>
-#ifdef ENABLE_UPNP
-#include "UPnPBase.h" // Needed for CUPnPPortMapping (CamuleApp::m_upnpMappings)
-#endif
 
 using namespace muleunit;
 
@@ -85,7 +82,7 @@ wxString CUpDownClient::GetClientFullInfo()
 #include <CanceledFileList.h>
 #include <GuiEvents.h>
 
-uint32 CECID::s_IDCounter = 0;
+std::atomic<uint32> CECID::s_IDCounter{ 0 };
 bool CPreferences::s_filterLanIP = false;
 
 bool IsGoodIP(uint32, bool) noexcept
@@ -149,10 +146,6 @@ namespace
 }
 } // namespace
 
-CamuleApp::~CamuleApp()
-{
-	UnexpectedApplicationCall("CamuleApp::~CamuleApp");
-}
 CDownloadQueue::~CDownloadQueue()
 {
 	UnexpectedApplicationCall("CDownloadQueue::~CDownloadQueue");
@@ -166,36 +159,6 @@ CPartFile::~CPartFile()
 	UnexpectedApplicationCall("CPartFile::~CPartFile");
 }
 
-bool CamuleApp::OnInit()
-{
-	UnexpectedApplicationCall("CamuleApp::OnInit");
-}
-int CamuleApp::OnExit()
-{
-	UnexpectedApplicationCall("CamuleApp::OnExit");
-}
-#if wxUSE_ON_FATAL_EXCEPTION
-void CamuleApp::OnFatalException()
-{
-	UnexpectedApplicationCall("CamuleApp::OnFatalException");
-}
-#endif
-void CamuleApp::OnUnhandledException()
-{
-	UnexpectedApplicationCall("CamuleApp::OnUnhandledException");
-}
-void CamuleApp::OnAssertFailure(const wxChar *, int, const wxChar *, const wxChar *, const wxChar *)
-{
-	UnexpectedApplicationCall("CamuleApp::OnAssertFailure");
-}
-void CamuleApp::EnableIP2Country(bool, bool)
-{
-	UnexpectedApplicationCall("CamuleApp::EnableIP2Country");
-}
-int CamuleApp::InitGui(bool, wxString &)
-{
-	UnexpectedApplicationCall("CamuleApp::InitGui");
-}
 void CDownloadQueue::ObserverAdded(ObserverType *)
 {
 	UnexpectedApplicationCall("CDownloadQueue::ObserverAdded");

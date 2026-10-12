@@ -75,6 +75,9 @@
 #include "NetworkFunctions.h"                // Needed for Uint32toStringIP (Kad note author)
 #include <tags/FileTags.h>                   // Needed for TAG_FILERATING / TAG_DESCRIPTION
 #include "ThreadTasks.h"                     // Needed for CThreadScheduler and CVerifyLocalDataTask
+
+#include "kademlia/kademlia/UDPFirewallTester.h" // Needed for CUDPFirewallTester (PublishSrc)
+#include "KadCallbackPolicy.h"                   // Needed for NeedsBuddy / CanPublishSource
 #endif
 
 CFileStatistic::CFileStatistic(CKnownFile *parent)
@@ -1510,27 +1513,23 @@ bool CAbstractFile::RequestKadNoteSearch()
 
 bool CKnownFile::PublishSrc()
 {
-	uint32 lastBuddyIP = 0;
-
-	if (theApp->IsFirewalled()) {
+	const bool udpFirewalled = Kademlia::CUDPFirewallTester::IsFirewalledUDP(true);
+	const bool needsBuddy = Kademlia::NeedsBuddy(
+		theApp->IsFirewalled(), udpFirewalled, Kademlia::CUDPFirewallTester::IsVerified());
+	uint32 buddyIP = 0;
+	if (needsBuddy) {
 		CUpDownClient *buddy = theApp->clientlist->GetBuddy();
 		if (buddy) {
-			lastBuddyIP = theApp->clientlist->GetBuddy()->GetIP();
-			if (lastBuddyIP != m_lastBuddyIP) {
-				SetLastPublishTimeKadSrc(
-					(uint32)time(NULL) + KADEMLIAREPUBLISHTIMES, lastBuddyIP);
-				return true;
-			}
-		} else {
-			return false;
+			buddyIP = buddy->GetIP();
 		}
 	}
 
-	if (m_lastPublishTimeKadSrc > (uint32)time(NULL)) {
+	const uint32 now = static_cast<uint32>(time(nullptr));
+	if (!Kademlia::CanPublishSource(needsBuddy, buddyIP, m_lastBuddyIP, m_lastPublishTimeKadSrc, now)) {
 		return false;
 	}
 
-	SetLastPublishTimeKadSrc((uint32)time(NULL) + KADEMLIAREPUBLISHTIMES, lastBuddyIP);
+	SetLastPublishTimeKadSrc(now + KADEMLIAREPUBLISHTIMES, buddyIP);
 	return true;
 }
 

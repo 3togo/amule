@@ -37,6 +37,7 @@ there client on the eMule forum..
 */
 
 #include "Entry.h"
+#include <stdexcept>
 #include <common/Macros.h>
 #include <tags/FileTags.h>
 #include <protocol/kad/Constants.h>
@@ -48,8 +49,6 @@ there client on the eMule forum..
 #include "../../NetworkFunctions.h"
 
 using namespace Kademlia;
-
-CKeyEntry::GlobalPublishIPMap CKeyEntry::s_globalPublishIPs;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////// CEntry
@@ -224,8 +223,15 @@ void CEntry::WriteTagListInc(CFileDataIO *data, uint32_t increaseTagNumber)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////// CKeyEntry
-CKeyEntry::CKeyEntry()
+CKeyEntry::CKeyEntry(std::shared_ptr<PublishTracking> tracking)
+: m_publishTracking(std::move(tracking))
 {
+	// Standalone entries (including codec tests) share the historical default.
+	// An index supplies its own table, so a loading worker cannot touch live trust.
+	if (!m_publishTracking) {
+		static auto defaults = std::make_shared<PublishTracking>();
+		m_publishTracking = defaults;
+	}
 	m_publishingIPs = NULL;
 	m_trustValue = 0;
 	m_lastTrustValueCalc = 0;
@@ -390,8 +396,8 @@ void CKeyEntry::AdjustGlobalPublishTracking(uint32_t ip, bool increase, const wx
 	uint32_t count = 0;
 	bool found = false;
 	GlobalPublishIPMap::const_iterator it =
-		s_globalPublishIPs.find(ip & 0xFFFFFF00 /* /24 netmask, take care of endian if needed */);
-	if (it != s_globalPublishIPs.end()) {
+		m_publishTracking->find(ip & 0xFFFFFF00 /* /24 netmask, take care of endian if needed */);
+	if (it != m_publishTracking->end()) {
 		count = it->second;
 		found = true;
 	}
@@ -403,9 +409,9 @@ void CKeyEntry::AdjustGlobalPublishTracking(uint32_t ip, bool increase, const wx
 	}
 
 	if (count > 0) {
-		s_globalPublishIPs[ip & 0xFFFFFF00] = count;
+		(*m_publishTracking)[ip & 0xFFFFFF00] = count;
 	} else if (found) {
-		s_globalPublishIPs.erase(ip & 0xFFFFFF00);
+		m_publishTracking->erase(ip & 0xFFFFFF00);
 	} else {
 		wxFAIL;
 	}
@@ -420,6 +426,7 @@ void CKeyEntry::AdjustGlobalPublishTracking(uint32_t ip, bool increase, const wx
 
 void CKeyEntry::MergeIPsAndFilenames(CKeyEntry *fromEntry)
 {
+	wxASSERT(!fromEntry || fromEntry->m_publishTracking == m_publishTracking);
 	// Called when replacing a stored entry with a refreshed one: the tracked IPs and the
 	// different filenames are taken over from the old entry, and the rest is overwritten with
 	// the refreshed values. Not perfect for the taglist in some cases, but storing hundreds of
@@ -632,9 +639,9 @@ void CKeyEntry::ReCalculateTrustValue()
 	for (PublishingIPList::iterator it = m_publishingIPs->begin(); it != m_publishingIPs->end(); ++it) {
 		sPublishingIP curEntry = *it;
 		uint32_t count = 0;
-		GlobalPublishIPMap::const_iterator itMap = s_globalPublishIPs.find(
+		GlobalPublishIPMap::const_iterator itMap = m_publishTracking->find(
 			curEntry.m_ip & 0xFFFFFF00 /* /24 netmask, take care of endian if needed*/);
-		if (itMap != s_globalPublishIPs.end()) {
+		if (itMap != m_publishTracking->end()) {
 			count = itMap->second;
 		}
 		if (count > 0) {
@@ -737,8 +744,15 @@ void CKeyEntry::WritePublishTrackingDataToFile(CFileDataIO *data, bool includesA
 	}
 }
 
-void CKeyEntry::ReadPublishTrackingDataFromFile(CFileDataIO *data, bool includesAICH)
+void CKeyEntry::ReadPublishTrackingDataFromFile(
+	CFileDataIO *data, bool includesAICH, const std::atomic<bool> *cancel)
 {
+	auto checkCancelled = [cancel]() {
+		if (cancel && cancel->load()) {
+			throw std::runtime_error("Kad index loading cancelled");
+		}
+	};
+	checkCancelled();
 	// format: <AICH_HashCount 2><{<AICH Hash 20>} AICH_HashCount>
 	//         <Names_Count 4><{<Name string><PopularityIndex 4>} Names_Count>
 	//         <PublisherCount 4><{<IP 4><Time 4><AICH Idx 2>} PublisherCount>
@@ -751,6 +765,7 @@ void CKeyEntry::ReadPublishTrackingDataFromFile(CFileDataIO *data, bool includes
 	if (includesAICH) {
 		uint16_t hashCount = data->ReadUInt16();
 		for (uint16_t i = 0; i < hashCount; i++) {
+			checkCancelled();
 			CKadAICHHash hash;
 			data->Read(hash.data(), hash.size());
 			loadedHashes.push_back(hash);
@@ -760,6 +775,7 @@ void CKeyEntry::ReadPublishTrackingDataFromFile(CFileDataIO *data, bool includes
 	wxASSERT(m_filenames.empty());
 	uint32_t nameCount = data->ReadUInt32();
 	for (uint32_t i = 0; i < nameCount; i++) {
+		checkCancelled();
 		sFileNameEntry toAdd;
 		toAdd.m_filename = data->ReadString(true, 2);
 		toAdd.m_popularityIndex = data->ReadUInt32();
@@ -773,6 +789,7 @@ void CKeyEntry::ReadPublishTrackingDataFromFile(CFileDataIO *data, bool includes
 	uint32_t dbgLastTime = 0;
 #endif
 	for (uint32_t i = 0; i < ipCount; i++) {
+		checkCancelled();
 		sPublishingIP toAdd;
 		toAdd.m_ip = data->ReadUInt32();
 		wxASSERT(toAdd.m_ip != 0);

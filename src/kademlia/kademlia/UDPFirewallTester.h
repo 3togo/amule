@@ -28,6 +28,7 @@
 #define KADEMLIA_KADEMLIA_UDPFIREWALLTESTER_H
 
 #include "Kademlia.h"
+#include "UDPVerificationExpiry.h"
 #include "../routing/Contact.h"
 #include <list>
 
@@ -41,6 +42,7 @@ struct UsedClient_Struct
 {
 	CContact contact;
 	bool answered;
+	bool currentRound = true; // Retired entries remain to prevent reusing their IPs.
 };
 
 #define UDP_FIREWALLTEST_CLIENTSTOASK \
@@ -59,7 +61,7 @@ public:
 		return m_fwChecksFinishedUDP < UDP_FIREWALLTEST_CLIENTSTOASK &&
 		       !CKademlia::IsRunningInLANMode();
 	}
-	static bool IsVerified() noexcept { return m_isFWVerifiedUDP || CKademlia::IsRunningInLANMode(); }
+	static bool IsVerified();
 
 	static void AddPossibleTestContact(const CUInt128 &clientID,
 		uint32_t ip,
@@ -84,6 +86,10 @@ public:
 	static void QueryNextClient(); // try the next available client for the firewallcheck
 
 private:
+	friend class CUDPFirewallTesterFixture;
+	static void CheckVerificationExpiry(uint64_t now);
+	static void RetireTestClients();
+	static CUDPVerificationExpiry m_verificationExpiry;
 	// are we in search for testclients
 	static bool GetUDPCheckClientsNeeded() noexcept
 	{

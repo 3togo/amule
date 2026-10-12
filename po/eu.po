@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
-"POT-Creation-Date: 2026-10-06 19:09+0200\n"
+"POT-Creation-Date: 2026-10-09 12:39+0000\n"
 "PO-Revision-Date: 2026-10-07 16:25+0000\n"
 "Last-Translator: Piarres Beobide <pi@beobide.net>\n"
 "Language-Team: Euskara <librezale@librezale.org>\n"
@@ -392,7 +392,7 @@ msgstr "KONTUZ: ezin izan da '%s' sareko interfazera lotu - trafikoa bide lehene
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
 msgstr "Zure lokalak sistemako lehenetsira aldatu dira konfigurazio aldaketa bat dela eta. Barkatu."
 
-#: src/amule.cpp src/CatDialog.cpp src/ServerList.cpp src/ServerListCtrl.cpp
+#: src/amule.cpp src/CatDialog.cpp src/ServerListCtrl.cpp
 msgid "Info"
 msgstr "Argb"
 
@@ -1776,11 +1776,6 @@ msgstr[1] "%u iruzkin"
 msgid "Banned client %s for sending %s corrupt data of %s total for the file '%s'"
 msgstr "Baztertutako %s bezeroa %s datu hondatu bidaltzeagatik '%s' fitxategiaren osotasunaren %s"
 
-#: src/CountryFlags.cpp
-#, c-format
-msgid "Failed to load country data for '%s'."
-msgstr "Huts '%s'-ren estatu datuak kargatzean."
-
 #: src/DataToText.cpp
 msgid "Auto [Lo]"
 msgstr "Auto [Bax]"
@@ -2366,6 +2361,10 @@ msgid "server not found: %s"
 msgstr "ez da zerbitzaria aurkitu: %s"
 
 #: src/ExternalConn.cpp
+msgid "You are connected to the server you are trying to delete. please disconnect first."
+msgstr "Konektaturik zauden zerbitzaria ezabatu nahi duzu. Mesedez deskonektatu lehenik."
+
+#: src/ExternalConn.cpp
 msgid "need to define server to be removed"
 msgstr "ezabatzeko zerbitzaria ezarri behar da"
 
@@ -2777,19 +2776,48 @@ msgstr ""
 msgid "OK"
 msgstr "Ados"
 
+#: src/ExternalCommand.cpp
+msgid "The command has no executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "The command template or an argument contains a NUL character."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value cannot select the executable."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
+msgstr ""
+
+#: src/ExternalCommand.cpp
+msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
+msgstr ""
+
 #: src/FileLaunch.cpp
 msgid "File preview"
 msgstr "Fitxategi aurreikuspena"
 
 #: src/FileLaunch.cpp
 #, c-format
-msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr "ERROREA: Huts kanpo bideo erreproduzigailua abiaraztean! Komandoa: '%s'"
+msgid "Media-player command '%s' was not run: %s"
+msgstr ""
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
 msgstr ""
+
+#: src/FileLaunch.cpp
+#, c-format
+msgid "ERROR: Failed to execute external media-player! Command: '%s'"
+msgstr "ERROREA: Huts kanpo bideo erreproduzigailua abiaraztean! Komandoa: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
@@ -6847,6 +6875,13 @@ msgid "GUI command:"
 msgstr "Urruneko interfaze komandoa:"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid ""
+"Core commands must be configured in the daemon's amule.conf.\n"
+"Chat and observed download completions support GUI commands with a remote core.\n"
+"Already completed downloads do not run commands at first sync or reconnect."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The following variables will be replaced:"
 msgstr "Hurrengo aldagaiak aldatuko dira:"
 
@@ -7260,6 +7295,14 @@ msgid "Server.met file corrupt, found invalid versiontag: 0x%x, size %i"
 msgstr "Server.met fitxategia hondaturik dago, bertsio marka baliogabea aurkitu da: 0x%x, tamaina %i"
 
 #: src/ServerList.cpp
+msgid "Error: the file 'server.met' is corrupted: "
+msgstr "Errorea: 'server.met' fitxategia hondatua dago: "
+
+#: src/ServerList.cpp
+msgid "IO error while reading 'server.met': "
+msgstr "SI errorea 'server.met' fitxategia irakurtzean: "
+
+#: src/ServerList.cpp
 #, c-format
 msgid "%i server in server.met found"
 msgid_plural "%i servers in server.met found"
@@ -7272,14 +7315,6 @@ msgid "%d server added"
 msgid_plural "%d servers added"
 msgstr[0] "zerbitzari %d gehiturik"
 msgstr[1] "%d zerbitzari gehiturik"
-
-#: src/ServerList.cpp
-msgid "Error: the file 'server.met' is corrupted: "
-msgstr "Errorea: 'server.met' fitxategia hondatua dago: "
-
-#: src/ServerList.cpp
-msgid "IO error while reading 'server.met': "
-msgstr "SI errorea 'server.met' fitxategia irakurtzean: "
 
 #: src/ServerList.cpp
 #, c-format
@@ -7300,10 +7335,6 @@ msgstr "Zerbitzaria ez da gehitu: [%s:%d] IP:Ataka dun zerbitzaria aurkitu da ze
 #, c-format
 msgid "Server added: Server at [%s:%d] using the name '%s'."
 msgstr "Zerbitzaria gehiturik: [%s:%d] zerbitzaria '%s' izena erabiltzen."
-
-#: src/ServerList.cpp
-msgid "You are connected to the server you are trying to delete. please disconnect first."
-msgstr "Konektaturik zauden zerbitzaria ezabatu nahi duzu. Mesedez deskonektatu lehenik."
 
 #: src/ServerList.cpp
 #, c-format
@@ -8972,6 +9003,11 @@ msgstr "Fitxategiaren igoerak gelditzen: %s"
 
 #: src/UserEvents.cpp
 #, c-format
+msgid "Command '%s' was not run on '%s' event: %s"
+msgstr ""
+
+#: src/UserEvents.cpp
+#, c-format
 msgid "Failed to execute command '%s' on '%s' event."
 msgstr "Huts '%s' komandoa '%s' gertaeran exekutatzean."
 
@@ -8980,7 +9016,8 @@ msgid "Download completed"
 msgstr "Deskarga osatua"
 
 #: src/UserEvents.h
-msgid "The full path to the file."
+#, fuzzy
+msgid "The full path to the file (empty in remote GUI mode)."
 msgstr "Fitxategiaren bide osoa."
 
 #: src/UserEvents.h
@@ -9018,6 +9055,10 @@ msgstr "Disko partizioa."
 #: src/UserEvents.h
 msgid "Error on completion"
 msgstr "Errorea osatzean"
+
+#: src/UserEvents.h
+msgid "The full path to the file."
+msgstr "Fitxategiaren bide osoa."
 
 #: src/utils/aLinkCreator/src/alcc.cpp
 #, c-format
@@ -9729,6 +9770,28 @@ msgstr "Badirudi aMule exekutatzen ari dela. Mesedez, itxi eta exekutatu berriro
 #: packaging/windows/installer_strings.c
 msgid "Removing user data at $APPDATA\\aMule..."
 msgstr "Erabiltzailearen datuak kentzen $APPDATA\\aMule(e)n..."
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not read %s. It was renamed to %s.bad, and a new index will be saved at shutdown."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+#, c-format
+msgid "Kad could not preserve the unreadable index %s as %s.bad. Its original file will not be overwritten."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not load its saved index. Existing index files were preserved."
+msgstr ""
+
+#: src/kademlia/kademlia/Indexed.cpp
+msgid "Kad could not save an index. The previous copy of that file was preserved."
+msgstr ""
+
+#, c-format
+#~ msgid "Failed to load country data for '%s'."
+#~ msgstr "Huts '%s'-ren estatu datuak kargatzean."
 
 #, fuzzy
 #~ msgid "Kad protocol version"

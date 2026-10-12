@@ -26,6 +26,8 @@
 #ifndef UPDOWNCLIENT_H
 #define UPDOWNCLIENT_H
 
+#include <atomic>
+
 #include "Constants.h"    // Needed for ESourceFrom
 #include "GetTickCount.h" // Needed for GetTickCount64
 #include "MD4Hash.h"
@@ -40,6 +42,7 @@
 #include "BitVector.h"        // Needed for BitVector
 #include "ClientRef.h"        // Needed for debug defines
 #include "PeerCapabilities.h" // Needed for CPeerCapabilities
+#include "ProtocolPeerIdentity.h"
 
 #include <map>
 #include <wx/thread.h> // Needed for wxMutex
@@ -51,6 +54,7 @@ class CFriend;
 class CKnownFile;
 class CMemFile;
 class CAICHHash;
+enum class EContactRoute;
 
 enum EChatCaptchaState
 {
@@ -212,6 +216,7 @@ public:
 	void SetIP(uint32 val);
 	void SetUserAddress(const CNetworkAddress &address);
 	const CNetworkAddress &GetUserAddress() const { return m_userAddress; }
+	CProtocolPeerIdentity GetProtocolPeerIdentity() const;
 	uint32 GetIP() const { return m_userAddress.ToIPv4NetworkOrderOrZero(); }
 	bool HasLowID() const { return IsLowID(m_nUserIDHybrid); }
 	/**
@@ -302,6 +307,15 @@ public:
 	//! Whether a socket whose stream died may be dialled again over TCP: every refusal
 	//! CheckContactPreconditions() makes, asked without acting on the answer.
 	bool IsRedialAllowed() const;
+	//! Whether this client is callable by dialling its native IPv6 address, unless that address
+	//! already failed to answer a callback dial.
+	bool IsCallableIPv6Contact() const;
+
+private:
+	//! How this client is reached: Refuse exactly where CheckContactPreconditions() declines it.
+	EContactRoute ContactRoute() const;
+
+public:
 	void ProcessSharedFileList(const uint8_t *pachPacket, uint32 nSize, wxString &pszDirectory);
 	void SendSharedDirectories();
 	void SendSharedFilesOfDirectory(const wxString &strReqDir);
@@ -732,8 +746,9 @@ private:
 	CFriend *m_Friend;
 
 	uint64 m_nTransferredUp;
-	sint64 m_nCurQueueSessionPayloadUp;
-	sint64 m_addedPayloadQueueSession;
+	// atomic: CUploadDiskIOThread reads both, and adds to m_addedPayloadQueueSession
+	std::atomic<sint64> m_nCurQueueSessionPayloadUp;
+	std::atomic<sint64> m_addedPayloadQueueSession;
 
 	struct TransferredData
 	{
@@ -741,8 +756,8 @@ private:
 		uint64 timestamp;
 	};
 
-	// Upload data rate computation
-	uint32 m_nUpDatarate;
+	// Upload data rate computation. Atomic: CUploadDiskIOThread reads the rate.
+	std::atomic<uint32> m_nUpDatarate;
 	uint32 m_nSumForAvgUpDataRate;
 	std::list<TransferredData> m_AvarageUDR_list;
 
@@ -776,6 +791,8 @@ private:
 
 	CNetworkAddress m_userAddress;
 	CNetworkAddress m_connectAddress;
+	bool m_dialingIPv6;
+	CNetworkAddress m_unansweredIPv6Address;
 	uint32 m_dwServerIP;
 	uint32 m_nUserIDHybrid;
 	uint16_t m_nUserPort;
@@ -857,8 +874,9 @@ private:
 	std::list<Requested_Block_Struct *> m_DoneBlocks_list;
 	wxMutex m_blockListLock; // protects m_BlockRequests_queue, m_DoneBlocks_list,
 				 // m_addedPayloadQueueSession
-	bool m_bDisableCompression = false;
-	bool m_bIOError = false;
+	// atomic: the disk I/O thread sets them, the main thread reads and resets them
+	std::atomic<bool> m_bDisableCompression{ false };
+	std::atomic<bool> m_bIOError{ false };
 
 	friend class CUploadDiskIOThread; // disk I/O thread needs direct access to block queues and session
 					  // counters

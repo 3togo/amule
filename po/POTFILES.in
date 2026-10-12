@@ -36,6 +36,7 @@ src/ExternalConn.cpp
 src/ExternalConnector.cpp
 src/FileDetailDialog.cpp
 src/FileDetailListCtrl.cpp
+src/ExternalCommand.cpp
 src/FileLaunch.cpp
 src/FirstRunWizard.cpp
 src/FriendList.cpp
@@ -119,3 +120,4 @@ src/utils/wxCas/src/wxcasprefs.cpp
 src/webserver/src/WebInterface.cpp
 src/webserver/src/WebServer.cpp
 packaging/windows/installer_strings.c
+src/kademlia/kademlia/Indexed.cpp

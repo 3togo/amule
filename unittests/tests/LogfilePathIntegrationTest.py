@@ -7,19 +7,14 @@ import hashlib
 import os
 from pathlib import Path
 import signal
-import socket
 import subprocess
 import sys
 import tempfile
 import time
 
-from AllSearchIntegrationTest import C, EC, string
-
-
-def free_port():
-    with socket.socket() as sock:
-        sock.bind(('127.0.0.1', 0))
-        return sock.getsockname()[1]
+from AllSearchIntegrationTest import (C, EC, PortCollision, check_daemon_ports,
+                                      free_ports, log_snapshot, new_log_text,
+                                      retry_port_collisions, string)
 
 
 def stop_forked_daemon(pid):
@@ -38,11 +33,11 @@ def stop_forked_daemon(pid):
 
 def write_config(root, setting=None):
     """Write an offline amule.conf with EC on a free port, and return that port."""
-    port = free_port()
+    port, peer_port = free_ports(2)
     config = f'''[eMule]
 Nick=logfile-regression
 FirstRunWizardDone=1
-Port={free_port()}
+Port={peer_port}
 UDPEnable=0
 Address=127.0.0.1
 ConnectToKad=0
@@ -54,6 +49,8 @@ Ed2kServersUrl=
 KadNodesUrl=
 TempDir={root}/Temp
 IncomingDir={root}/Incoming
+# The checks match English log lines; LC_ALL alone does not override a translated LANG.
+Language=en_US
 '''
     if setting is not None:
         config += f'LogFilePath={setting}\n'
@@ -64,7 +61,7 @@ ECPort={port}
 ECPassword={hashlib.md5(b'regression').hexdigest()}
 '''
     (root / 'amule.conf').write_text(config)
-    return port
+    return port, peer_port
 
 
 def daemon_env(root):
@@ -77,7 +74,7 @@ def daemon_env(root):
 def run(binary, root, setting=None, override=None, expected=None, failure=False,
         backup_failure=False, full_daemon=False, reset_failure=False):
     root.mkdir()
-    port = write_config(root, setting)
+    port, peer_port = write_config(root, setting)
     args = [binary, '-c', str(root), '--disable-fatal']
     if override is not None:
         args += [f'--log-file={override}']
@@ -94,6 +91,8 @@ def run(binary, root, setting=None, override=None, expected=None, failure=False,
     for restart in range(1 if failure else 2):
         if full_daemon:
             pidfile.unlink(missing_ok=True)
+        selected_log = expected or root / 'logfile'
+        snapshot = log_snapshot(selected_log)
         with (root / 'console.log').open('w') as console:
             proc = subprocess.Popen(args, stdout=console, stderr=console, env=env)
             ec = None
@@ -104,7 +103,7 @@ def run(binary, root, setting=None, override=None, expected=None, failure=False,
                     assert proc.wait() == 0
                 if failure:
                     assert proc.wait() != 0
-                    error = (root / 'console.log').read_text()
+                    error = (root / 'console.log').read_text(errors='replace')
                     assert 'ERROR:' in error and 'log file' in error, error
                     if expected != root / 'logfile':
                         assert not (root / 'logfile').exists(), 'silently used default path'
@@ -114,6 +113,9 @@ def run(binary, root, setting=None, override=None, expected=None, failure=False,
                 # owns the overall deadline. A forked launcher's success is not
                 # evidence that its daemon child is still alive.
                 while ec is None:
+                    startup = new_log_text(selected_log, snapshot)
+                    if 'Could not listen for external connections at ' in startup:
+                        raise PortCollision(f'Daemon could not bind EC port {port}')
                     if full_daemon:
                         if pidfile.exists():
                             pid = pidfile.read_text().strip()
@@ -125,9 +127,13 @@ def run(binary, root, setting=None, override=None, expected=None, failure=False,
                             ended = True
                         if ended:
                             daemon_reaped = True
-                            raise AssertionError((root / 'console.log').read_text())
+                            raise AssertionError((root / 'console.log').read_text(errors='replace'))
                     elif proc.poll() is not None:
-                        raise AssertionError((root / 'console.log').read_text())
+                        raise AssertionError((root / 'console.log').read_text(errors='replace'))
+                    if 'amuled: OnInit - starting timer' not in startup:
+                        time.sleep(0.1)
+                        continue
+                    check_daemon_ports(root, port, peer_port, log_text=startup)
                     try:
                         ec = EC(port)
                     except ConnectionRefusedError:
@@ -169,6 +175,12 @@ def run(binary, root, setting=None, override=None, expected=None, failure=False,
                 text = tags[C['EC_TAG_STRING']][0]
                 assert b'logfile-regression-before-reset' not in text, text
                 assert b'Log has been reset' in text, text
+            except BaseException:
+                console.flush()
+                print((root / 'console.log').read_text(errors='replace'), file=sys.stderr)
+                if expected is not None and expected.is_file():
+                    print(expected.read_text(errors='replace'), file=sys.stderr)
+                raise
             finally:
                 if ec:
                     ec.sock.close()
@@ -203,16 +215,24 @@ def run(binary, root, setting=None, override=None, expected=None, failure=False,
 def run_second_instance(binary, root):
     """A second amuled -f on a config another daemon holds must say why it stopped."""
     root.mkdir()
-    port = write_config(root)
+    port, peer_port = write_config(root)
     env = daemon_env(root)
+    snapshot = log_snapshot(root / 'logfile')
     with (root / 'first.log').open('w') as out:
         first = subprocess.Popen([binary, '-c', str(root), '--disable-fatal'],
                                  stdout=out, stderr=out, env=env)
         ec = None
         try:
             while ec is None:
+                startup = new_log_text(root / 'logfile', snapshot)
+                if 'Could not listen for external connections at ' in startup:
+                    raise PortCollision(f'Daemon could not bind EC port {port}')
                 if first.poll() is not None:
                     raise AssertionError((root / 'first.log').read_text())
+                if 'amuled: OnInit - starting timer' not in startup:
+                    time.sleep(0.1)
+                    continue
+                check_daemon_ports(root, port, peer_port, log_text=startup)
                 try:
                     ec = EC(port)
                 except ConnectionRefusedError:
@@ -287,4 +307,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    retry_port_collisions(main)

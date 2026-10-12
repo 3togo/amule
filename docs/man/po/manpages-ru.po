@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: manpages-ru\n"
 "POT-Creation-Date: 2026-10-07 10:08-0400\n"
-"PO-Revision-Date: 2026-10-07 16:31+0000\n"
+"PO-Revision-Date: 2026-10-08 11:09+0000\n"
 "Last-Translator: Sebastiano Pistore <SebastianoPistore.info@protonmail.ch>\n"
 "Language-Team: Russian <LL@li.org>\n"
 "Language: ru\n"
@@ -107,15 +107,14 @@ msgstr "Прочитать конфигурацию из места, указа�
 
 #. type: TP
 #: amule.1.in amuled.1.in amulegui.1.in
-#, fuzzy, no-wrap
-#| msgid "B<[ --amule-config-file>=I<E<lt>pathE<gt>> B<]>"
+#, no-wrap
 msgid "B<[ --log-file>=I<E<lt>fileE<gt>> B<]>"
-msgstr "B<[ --amule-config-file>=I<E<lt>путьE<gt>> B<]>"
+msgstr "B<[ --log-file>=I<E<lt>файлE<gt>> B<]>"
 
 #. type: Plain text
 #: amule.1.in amuled.1.in
 msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<amule.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<logfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
-msgstr ""
+msgstr "Записывать журнал в указанный файл вместо файла журнала по умолчанию.  Переопределяет параметр B<LogFilePath> в разделе B<[eMule]> файла I<amule.conf> только для этого запуска.  Относительные пути разрешаются относительно каталога конфигурации.  Родительский каталог должен уже существовать и быть доступным для записи; автоматически он не создаётся.  Пустой или отсутствующий параметр конфигурации использует I<logfile> в каталоге конфигурации.  При запуске предыдущий журнал сохраняется по тому же пути с добавлением I<.bak>.  Если резервную копию создать не удаётся, в журнал записывается предупреждение, а текущий сеанс дописывается в существующий журнал.  Изменения конфигурации вступают в силу после перезапуска."
 
 #. type: TP
 #: amule.1.in amulegui.1.in
@@ -949,7 +948,7 @@ msgstr "Программа B<amulegui> позволяет управлять я�
 #. type: Plain text
 #: amulegui.1.in
 msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<remote.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<remotelogfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
-msgstr ""
+msgstr "Записывать журнал в указанный файл вместо файла журнала по умолчанию.  Переопределяет параметр B<LogFilePath> в разделе B<[eMule]> файла I<remote.conf> только для этого запуска.  Относительные пути разрешаются относительно каталога конфигурации.  Родительский каталог должен уже существовать и быть доступным для записи; автоматически он не создаётся.  Пустой или отсутствующий параметр конфигурации использует I<remotelogfile> в каталоге конфигурации.  При запуске предыдущий журнал сохраняется по тому же пути с добавлением I<.bak>.  Если резервную копию создать не удаётся, в журнал записывается предупреждение, а текущий сеанс дописывается в существующий журнал.  Изменения конфигурации вступают в силу после перезапуска."
 
 #. type: Plain text
 #: amulegui.1.in
