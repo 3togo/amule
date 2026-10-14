@@ -26,6 +26,7 @@
 
 #include <wx/filename.h> // Needed for wxFileName::IsFileExecutable
 #include <wx/msgdlg.h>   // Needed for wxMessageBox
+#include <wx/tokenzr.h>  // Needed for searching the sandbox's PATH
 #include <wx/utils.h>    // Needed for wxExecute, wxLaunchDefaultApplication
 
 #include <common/Format.h> // Needed for CFormat
@@ -56,6 +57,35 @@ void Fail(const wxString &message, wxWindow *parent, bool reportModally)
 	if (reportModally && parent != nullptr) {
 		wxMessageBox(message, _("File preview"), wxOK | wxICON_EXCLAMATION, parent);
 	}
+}
+
+bool IsPlayerAvailable(const wxString &program)
+{
+	// execvp searches PATH only when the command has no slash.
+	if (program.Find('/') != wxNOT_FOUND) {
+		return wxFileName::FileExists(program) && wxFileName::IsFileExecutable(program);
+	}
+
+	wxString searchPath;
+	if (!wxGetEnv("PATH", &searchPath)) {
+		// With PATH unset, execvp uses a platform default. Let it resolve the
+		// command rather than incorrectly rejecting an available player.
+		return true;
+	}
+	if (searchPath.IsEmpty()) {
+		searchPath = ".";
+	}
+	wxStringTokenizer directories(searchPath, ":", wxTOKEN_RET_EMPTY_ALL);
+	while (directories.HasMoreTokens()) {
+		const wxString directory = directories.GetNextToken();
+		// An empty PATH entry means the current directory. Keep searching when a
+		// matching file is not executable, just as execvp does.
+		const wxString candidate = wxFileName(directory, program).GetFullPath();
+		if (wxFileName::FileExists(candidate) && wxFileName::IsFileExecutable(candidate)) {
+			return true;
+		}
+	}
+	return false;
 }
 
 // Hand the path to the user's configured player.
@@ -94,13 +124,22 @@ bool LaunchWithPlayer(const wxString &player, const CPath &path, wxWindow *paren
 	// user sees only wx's "execvp ... failed with error 2". That is the normal state of affairs
 	// inside a Flatpak, where a host player is simply not on the sandbox's filesystem.
 	//
-	// A bare command name is left alone: resolving it would mean reimplementing the PATH search
-	// the exec does anyway. Windows paths never match this test and do not need to:
-	// CreateProcess fails synchronously, so the error path below already reports it.
-	if (parts[0].StartsWith("/") && !wxFileName::IsFileExecutable(parts[0])) {
-		Fail(CFormat(_("The configured video player was not found: %s")) % parts[0],
-			parent,
-			reportModally);
+	// In Flatpak, also check bare names so a missing host player gets a useful
+	// explanation before wxExecute forks. Other builds retain their usual PATH lookup.
+	wxString flatpakId;
+	const bool inFlatpak = wxGetEnv("FLATPAK_ID", &flatpakId) && !flatpakId.IsEmpty();
+	const bool unavailable =
+		inFlatpak ? !IsPlayerAvailable(parts[0])
+			  : parts[0].StartsWith("/") && !wxFileName::IsFileExecutable(parts[0]);
+	if (unavailable) {
+		const wxString message =
+			inFlatpak ? CFormat(_("The configured video player is unavailable inside aMule's "
+					      "Flatpak sandbox: %s. "
+					      "Programs installed on the host are not directly available "
+					      "here.")) %
+					    parts[0]
+				  : CFormat(_("The configured video player was not found: %s")) % parts[0];
+		Fail(message, parent, reportModally);
 		return false;
 	}
 
