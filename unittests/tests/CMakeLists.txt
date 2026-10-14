@@ -2595,3 +2595,41 @@ if (ENABLE_IP2COUNTRY)
 	target_link_libraries (MaxMindDBUpdateTest muleunit mulecommon MaxMindDB::Shared)
 	add_test (NAME MaxMindDBUpdateTest COMMAND MaxMindDBUpdateTest)
 endif()
+
+# Run the production query parser and packet writer without starting the application.
+# Discard unrelated SearchList methods so this fixture needs no network/application stubs.
+add_executable (SearchPacketTest
+	SearchPacketTest.cpp
+	${CMAKE_SOURCE_DIR}/src/SearchList.cpp
+	${CMAKE_SOURCE_DIR}/src/Parser.cpp
+	${CMAKE_SOURCE_DIR}/src/Scanner.cpp
+	${CMAKE_SOURCE_DIR}/src/MemFile.cpp
+	${CMAKE_SOURCE_DIR}/src/SafeFile.cpp
+	${CMAKE_SOURCE_DIR}/src/LoggerConsole.cpp
+)
+target_compile_definitions (SearchPacketTest PRIVATE AMULE_DAEMON AMULE_SEARCH_PACKET_TEST)
+target_include_directories (SearchPacketTest PRIVATE
+	${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/include
+	${CMAKE_SOURCE_DIR}/src/libs ${CMAKE_BINARY_DIR}/src/libs
+	${CMAKE_BINARY_DIR}/src/libs/ec/cpp
+)
+if (MSVC)
+	target_compile_options (SearchPacketTest PRIVATE /Gy /Gw)
+	target_link_options (SearchPacketTest PRIVATE /OPT:REF)
+else()
+	# UBSan vptr metadata otherwise retains RTTI for discarded application methods.
+	# This fixture exercises static packet creation, without an application owner.
+	target_compile_options (SearchPacketTest PRIVATE
+		-ffunction-sections -fdata-sections -fno-sanitize=vptr)
+	if (APPLE)
+		target_link_options (SearchPacketTest PRIVATE -Wl,-dead_strip)
+	else()
+		target_link_options (SearchPacketTest PRIVATE -Wl,--gc-sections)
+	endif()
+endif()
+target_link_libraries (SearchPacketTest PRIVATE muleunit mulecommon)
+if (ENABLE_NLS AND Intl_FOUND)
+	target_include_directories (SearchPacketTest PRIVATE ${Intl_INCLUDE_DIRS})
+	target_link_libraries (SearchPacketTest PRIVATE ${Intl_LIBRARIES})
+endif()
+add_test (NAME SearchPacketTest COMMAND SearchPacketTest)

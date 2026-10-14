@@ -82,7 +82,7 @@ public:
 	struct CSearchParams
 	{
 		/** Prevents accidental use of uninitialized variables. */
-		CSearchParams() { minSize = maxSize = availability = 0; }
+		CSearchParams() { minSize = maxSize = availability = minBitrateKbps = 0; }
 
 		//! The actual string to search for.
 		wxString searchString;
@@ -98,6 +98,8 @@ public:
 		uint64_t maxSize;
 		//! The minimum available (source-count), zero for any.
 		uint32_t availability;
+		//! The minimum media bitrate in kilobits per second, zero for any.
+		uint32_t minBitrateKbps;
 	};
 
 	/** Constructor. */
@@ -503,8 +505,10 @@ private:
 	//! This smart pointer is used to safely prevent leaks.
 	typedef CSmartPtr<CMemFile> CMemFilePtr;
 
+	friend class CSearchPacketTestFixture;
+
 	/** Create a basic search-packet for the given search-type. */
-	CMemFilePtr CreateSearchData(
+	static CMemFilePtr CreateSearchData(
 		CSearchParams &params, SearchType type, bool supports64bit, bool &packetUsing64bit);
 
 	//! Timer used for global search intervals.

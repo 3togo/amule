@@ -255,9 +255,12 @@ protected:
 ///////////////////////////////////////////////////////////
 // CSearchList
 
+// Packet-only unit tests do not instantiate the search owner or its timer.
+#ifndef AMULE_SEARCH_PACKET_TEST
 wxBEGIN_EVENT_TABLE(CSearchList, wxEvtHandler)
 	EVT_MULE_TIMER(wxID_ANY, CSearchList::OnGlobalSearchTimer)
 wxEND_EVENT_TABLE()
+#endif
 
 CSearchList::CSearchList()
 : m_searchTimer(this, 0 /* Timer-id doesn't matter. */)
@@ -1604,6 +1607,8 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(
 		++parametercount;
 	if (!params.extension.IsEmpty())
 		++parametercount;
+	if (params.minBitrateKbps > 0)
+		++parametercount;
 
 	wxString typeText = params.typeText;
 	if (typeText == ED2KFTSTR_ARCHIVE) {
@@ -1717,6 +1722,14 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(
 			target.WriteMetaDataSearchParam(FT_FILEFORMAT, params.extension);
 		}
 
+		if (params.minBitrateKbps > 0) {
+			if (++iParameterCount < parametercount) {
+				target.WriteBooleanAND();
+			}
+			target.WriteMetaDataSearchParam(
+				FT_MEDIA_BITRATE, ED2K_SEARCH_OP_GREATER_EQUAL, params.minBitrateKbps);
+		}
+
 // #warning TODO - I keep this here, ready if we ever allow such searches...
 #if 0
 		if (complete > 0){
@@ -1724,13 +1737,6 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(
 				target.WriteBooleanAND();
 			}
 			target.WriteMetaDataSearchParam(FT_COMPLETE_SOURCES, ED2K_SEARCH_OP_GREATER, complete);
-		}
-
-		if (minBitrate > 0){
-			if (++iParameterCount < parametercount) {
-				target.WriteBooleanAND();
-			}
-			target.WriteMetaDataSearchParam(type == KadSearch ? TAG_MEDIA_BITRATE : FT_ED2K_MEDIA_BITRATE, ED2K_SEARCH_OP_GREATER, minBitrate);
 		}
 
 		if (minLength > 0){
@@ -1804,15 +1810,15 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(
 			}
 		}
 
-// #warning TODO - same as above...
-#if 0
-		if (complete > 0){
+		if (params.minBitrateKbps > 0) {
 			if (++iParameterCount < parametercount) {
 				target.WriteBooleanAND();
 			}
 		}
 
-		if (minBitrate > 0){
+// #warning TODO - same as above...
+#if 0
+		if (complete > 0){
 			if (++iParameterCount < parametercount) {
 				target.WriteBooleanAND();
 			}
@@ -1886,14 +1892,15 @@ CSearchList::CMemFilePtr CSearchList::CreateSearchData(
 			target.WriteMetaDataSearchParam(FT_FILEFORMAT, params.extension);
 		}
 
+		if (params.minBitrateKbps > 0) {
+			target.WriteMetaDataSearchParam(
+				FT_MEDIA_BITRATE, ED2K_SEARCH_OP_GREATER_EQUAL, params.minBitrateKbps);
+		}
+
 // #warning TODO - third and last warning of the same series.
 #if 0
 		if (complete > 0) {
 			target.WriteMetaDataSearchParam(FT_COMPLETE_SOURCES, ED2K_SEARCH_OP_GREATER, pParams->uComplete);
-		}
-
-		if (minBitrate > 0) {
-			target.WriteMetaDataSearchParam(type == KadSearch ? TAG_MEDIA_BITRATE : FT_ED2K_MEDIA_BITRATE, ED2K_SEARCH_OP_GREATER, minBitrate);
 		}
 
 		if (minLength > 0) {
