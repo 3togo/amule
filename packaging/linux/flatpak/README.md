@@ -68,36 +68,32 @@ Flatseal can also manage these permissions. Grant access to configured custom
 download, temporary, and sharing directories before starting aMule. Music is
 read-only, so it cannot be used as a download or temporary directory.
 
-Configuration and the default Incoming/Temp directories are persistent and
-private to this Flatpak. `--persist=.aMule` maps `~/.aMule` inside the sandbox
-to `~/.var/app/org.amule.aMule/.aMule` on the host. No access to the host's
-`~/.aMule` is granted. See the
-[Flatpak persistence documentation](https://docs.flatpak.org/en/latest/sandbox-permissions.html#filesystem-access).
+Configuration remains at the host's `~/.aMule`, shared with native aMule.
+`--filesystem=~/.aMule:create` grants access to that directory and creates it
+for new users. Existing identities, settings, and the default Incoming/Temp
+directories remain available across upgrades and restarts without copying.
+This is the compatibility approach proposed in
+[issue #117](https://github.com/amule-org/amule/issues/117); the profile has
+not been moved into private Flatpak storage.
 
-**Upgrading from a bundle with full home access:** the old host profile is
-not imported automatically. To keep its identity, settings, and downloads,
-quit both native and Flatpak aMule, back up the old profile, and copy the
-entire directory before the first launch with the new bundle:
+**Upgrading from a bundle with full home access:** grant permissions for
+configured download, temporary, and sharing folders outside Downloads,
+Music, and `~/.aMule` before starting aMule. Paths under `~/.aMule` that are
+symlinks to another location may also need access to their targets. Existing
+user or system overrides granting full home access remain effective; inspect
+and remove those broad overrides in Flatseal if you previously added them.
 
-```sh
-# Run on the host. Refuse to overwrite an existing Flatpak profile.
-profile="$HOME/.var/app/org.amule.aMule/.aMule"
-mkdir -p "$(dirname "$profile")"
-if [ ! -e "$profile" ] && [ ! -L "$profile" ]; then
-    cp -a "$HOME/.aMule" "$profile"
-else
-    echo "Flatpak profile already exists; back it up and reconcile it manually."
-fi
-```
-
-Copying includes `Incoming` and `Temp`, so allow enough free disk space.
-Absolute paths in the copied settings and symlinks to other directories
-still need permissions as above. The native and Flatpak profiles are
-independent after copying; do not run both clients with the same identity
-or point them at the same temporary directory simultaneously. For a custom
-app ID, substitute it in the host profile path and commands.
+Do not run native and Flatpak aMule simultaneously with the same profile or
+temporary directory.
 
 ## Automated GUI smoke tests
+
+Run the offline permission and profile-safety regression checks without desktop
+packages or a Flatpak installation:
+
+```sh
+python3 -S -m unittest discover -s packaging/linux/flatpak -p 'test_*.py' -v
+```
 
 GUI smoke tests run automatically on every master push that triggers the
 **Packaging** workflow. Releases do not run them. For other branches, manually
@@ -118,9 +114,10 @@ code from the selected workflow branch.
 
 The driver checks the installed permissions and absence of `/dev/dri` inside
 the sandbox without overriding device permissions. It uses a fresh aMule
-configuration in the private persisted profile, with first-run setup completed
+configuration in the default host profile, with first-run setup completed
 and networking disabled. It launches without a configuration-directory override
-and checks the saved profile from a second sandbox invocation. It opens
+and checks the saved profile and identity from a second sandbox invocation.
+It opens
 the main window, sends navigation and Page Down keys, opens Preferences,
 resizes the display/window, and requests a clean exit. GNOME uses a virtual
 keyboard; X11 and KWin's nested display use XTest input.
@@ -137,7 +134,8 @@ GPU-driver compatibility. They test the desktop versions shipped by Ubuntu
 
 For local reproduction, install the packages listed in
 `.github/workflows/flatpak-smoke.yml`, install the bundle for the current user,
-and run on a disposable desktop account (the output directory must be new):
+and run on a disposable desktop account (the output directory must be new and
+`~/.aMule` must be empty or absent):
 
 ```sh
 dbus-run-session -- python3 packaging/linux/flatpak/smoke.py \

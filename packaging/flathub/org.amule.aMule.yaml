@@ -55,10 +55,10 @@ finish-args:
   # Download destinations are writable; shared music only needs read access.
   - --filesystem=xdg-download
   - --filesystem=xdg-music:ro
-  # aMule and its bundled tools use ~/.aMule. Keep that path inside the
-  # sandbox, backed by ~/.var/app/<app-id>/.aMule on the host. This also
-  # persists the default Incoming / Temp directories across restarts.
-  - --persist=.aMule
+  # Preserve existing profiles, identities and partial downloads. aMule
+  # and its bundled tools use ~/.aMule, including default Incoming / Temp
+  # directories. Create it for new users without exposing the whole home.
+  - --filesystem=~/.aMule:create
   - --talk-name=org.freedesktop.PowerManagement.Inhibit
   - --talk-name=org.kde.StatusNotifierWatcher
   - --talk-name=com.canonical.AppMenu.Registrar

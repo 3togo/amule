@@ -56,10 +56,10 @@ finish-args:
   # Download destinations are writable; shared music only needs read access.
   - --filesystem=xdg-download
   - --filesystem=xdg-music:ro
-  # aMule and its bundled tools use ~/.aMule. Keep that path inside the
-  # sandbox, backed by ~/.var/app/<app-id>/.aMule on the host. This also
-  # persists the default Incoming / Temp directories across restarts.
-  - --persist=.aMule
+  # Preserve existing profiles, identities and partial downloads. aMule
+  # and its bundled tools use ~/.aMule, including default Incoming / Temp
+  # directories. Create it for new users without exposing the whole home.
+  - --filesystem=~/.aMule:create
   # Wake-from-sleep (long-running daemon-ish behaviour).
   - --talk-name=org.freedesktop.PowerManagement.Inhibit
   # SNI (StatusNotifierItem) tray icon support. Flatpak denies all
@@ -293,9 +293,9 @@ modules:
   # lookup in client lists / search results / transfers). The matching
   # GeoLite2-Country.mmdb database is NOT shipped: MaxMind's licence
   # forbids redistribution, and the file changes monthly. Users drop
-  # their own copy into the Flatpak's per-app data dir at runtime,
-  # which lives at ~/.var/app/org.amule.aMule/data/.aMule/ on the
-  # host. Without the .mmdb the feature stays inert; the lib being
+  # their own copy into ~/.aMule/ on the host, which is also the
+  # profile directory inside the sandbox. Without the .mmdb the
+  # feature stays inert; the lib being
   # built in is what allows the on-disk database to be picked up.
   - name: libmaxminddb
     buildsystem: autotools

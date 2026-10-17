@@ -15,9 +15,6 @@ import subprocess
 import sys
 import time
 
-from gi.repository import GLib
-from PIL import Image, ImageStat
-
 
 APP = "org.amule.aMule"
 PROCESSES = []
@@ -130,7 +127,11 @@ def capture(name):
 
 
 def main():
-    global SESSION, OUT
+    global SESSION, OUT, GLib, Image, ImageStat
+    # Offline policy tests do not need desktop bindings or image libraries.
+    from gi.repository import GLib
+    from PIL import Image, ImageStat
+
     SESSION, output_dir = sys.argv[1:]
     OUT = Path(output_dir).resolve()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -154,14 +155,8 @@ def main():
 
     permissions = run("flatpak", "info", "--user", "--show-permissions", APP)
     (OUT / "permissions.ini").write_text(permissions + "\n")
-    metadata = configparser.ConfigParser()
-    metadata.read_string(permissions)
-    devices = metadata.get("Context", "devices", fallback="").split(";")
-    assert "dri" not in devices and "all" not in devices, permissions
-    filesystems = set(filter(None, metadata.get("Context", "filesystems", fallback="").split(";")))
-    assert filesystems == {"xdg-download", "xdg-music:ro"}, permissions
-    persistent = set(filter(None, metadata.get("Context", "persistent", fallback="").split(";")))
-    assert persistent == {".aMule"}, permissions
+    check_permissions(permissions)
+    config = prepare_profile(Path.home(), SESSION)
     # No --nodevice override: check the actual installed manifest and sandbox.
     run("flatpak", "run", "--command=sh", APP, "-c", "test ! -e /dev/dri")
 
@@ -203,22 +198,6 @@ def main():
     app_env.update(LANG="C.UTF-8", LC_ALL="C.UTF-8", XDG_SESSION_TYPE=host["XDG_SESSION_TYPE"],
                    XDG_CURRENT_DESKTOP=host["XDG_CURRENT_DESKTOP"])
 
-    # Use the shipped default path, backed by --persist=.aMule. Refuse to
-    # overwrite a profile when this driver is used outside disposable CI.
-    config = Path.home() / ".var" / "app" / APP / ".aMule"
-    config.mkdir(parents=True, exist_ok=True)
-    assert not any(config.iterdir()), "Smoke test requires an empty Flatpak profile"
-    (config / "amule.conf").write_text(
-        "[eMule]\nFirstRunWizardDone=1\nAutoconnect=0\nNewVersionCheck=0\n"
-        "ConfirmExit=0\nStartupMinimized=0\nEnableTrayIcon=0\nUPnPEnabled=0\n"
-        "ConnectToED2K=0\nConnectToKad=0\nGeoIPEnabled=0\nGeoIPAutoUpdate=0\n"
-        "IPFilterAutoLoad=0\n")
-    if SESSION == "x11":
-        # Openbox preserves a maximized window's size when a resize is requested.
-        # Start restored so the X11 case exercises an actual client resize.
-        with (config / "amule.conf").open("a") as file:
-            file.write("[Razor_Preferences]\nMaximized=0\nMAIN_X_SIZE=1200\n"
-                       "MAIN_Y_SIZE=860\nMAIN_X_POS=20\nMAIN_Y_POS=30\n")
     app = start("amule", ["flatpak", "run", *options, APP], app_env)
     if SESSION == "kde-wayland":
         window = wait_for("KWin nested window", lambda: run(
@@ -281,18 +260,63 @@ def main():
     capture("05-resized")
     key("ctrl+q")
     assert app.wait(timeout=30) == 0, "aMule did not shut down cleanly"
-    assert (config / "amule.conf").is_file()
     saved = configparser.ConfigParser(interpolation=None)
     saved.read(config / "amule.conf")
+    assert saved.get("eMule", "Nick") == "Flatpak smoke profile", "aMule used a different profile"
     assert saved.has_option("eMule", "IncomingDir"), "aMule did not save its default profile"
-    run("flatpak", "run", "--command=sh", APP, "-ec",
-        'test -s "$HOME/.aMule/amule.conf"; '
-        'test -d "$HOME/.aMule/Incoming"; test -d "$HOME/.aMule/Temp"')
+    identity = config / "preferences.dat"
+    assert identity.stat().st_size > 0, "aMule did not save its identity"
+    # Reading from a new invocation proves that the host profile is mapped
+    # consistently and that the defaults survived shutdown.
+    persisted = run("flatpak", "run", "--command=sh", APP, "-ec",
+                    'test -s "$HOME/.aMule/preferences.dat"; '
+                    'test -d "$HOME/.aMule/Incoming"; test -d "$HOME/.aMule/Temp"; '
+                    'cat "$HOME/.aMule/amule.conf"')
+    assert persisted == (config / "amule.conf").read_text().strip(), "Profile mapping changed"
     check_drawing_failures(OUT / "amule.log")
     (OUT / "result.txt").write_text(f"PASS: {SESSION}; no DRI; native window; keyboard navigation; "
-                                   "Preferences; resize; screenshots; clean shutdown; no drawing failures.\n"
+                                   "Preferences; resize; screenshots; clean shutdown; default profile and identity persist; no drawing failures.\n"
                                    "Visual correctness and hardware performance require review.\n")
     print((OUT / "result.txt").read_text(), flush=True)
+
+
+def check_permissions(permissions):
+    metadata = configparser.ConfigParser(interpolation=None)
+    metadata.read_string(permissions)
+    devices = set(filter(None, metadata.get("Context", "devices", fallback="").split(";")))
+    if devices & {"dri", "all"}:
+        raise RuntimeError("Unexpected GPU permission: " + permissions)
+    filesystems = set(filter(None, metadata.get("Context", "filesystems", fallback="").split(";")))
+    # Flatpak may print the implicit read/write mode explicitly.
+    filesystems = {value.removesuffix(":rw") for value in filesystems}
+    if filesystems != {"xdg-download", "xdg-music:ro", "~/.aMule:create"}:
+        raise RuntimeError("Unexpected filesystem permissions: " + permissions)
+    if metadata.get("Context", "persistent", fallback="").strip(";"):
+        raise RuntimeError("Unexpected private profile mapping: " + permissions)
+    sockets = set(filter(None, metadata.get("Context", "sockets", fallback="").split(";")))
+    if not {"wayland", "fallback-x11"}.issubset(sockets) or "x11" in sockets:
+        raise RuntimeError("Unexpected display permissions: " + permissions)
+
+
+def prepare_profile(home, session):
+    # Match the application's default path; never overwrite a user's profile.
+    config = home / ".aMule"
+    if config.is_symlink():
+        raise RuntimeError("Smoke test refuses a symlinked aMule profile")
+    config.mkdir(parents=True, exist_ok=True)
+    if any(config.iterdir()):
+        raise RuntimeError("Smoke test requires an empty aMule profile")
+    with (config / "amule.conf").open("x") as file:
+        file.write(
+            "[eMule]\nNick=Flatpak smoke profile\nFirstRunWizardDone=1\nAutoconnect=0\nNewVersionCheck=0\n"
+            "ConfirmExit=0\nStartupMinimized=0\nEnableTrayIcon=0\nUPnPEnabled=0\n"
+            "ConnectToED2K=0\nConnectToKad=0\nGeoIPEnabled=0\nGeoIPAutoUpdate=0\n"
+            "IPFilterAutoLoad=0\n")
+        if session == "x11":
+            # Openbox preserves maximized windows' size on a resize request.
+            file.write("[Razor_Preferences]\nMaximized=0\nMAIN_X_SIZE=1200\n"
+                       "MAIN_Y_SIZE=860\nMAIN_X_POS=20\nMAIN_Y_POS=30\n")
+    return config
 
 
 def check_drawing_failures(log_path):
