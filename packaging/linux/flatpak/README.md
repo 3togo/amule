@@ -50,6 +50,53 @@ packaging/linux/build.sh render-flatpak-manifest
 To produce all 4 artifacts (appimage+flatpak × x86_64+aarch64) in one
 go: `packaging/linux/build.sh all`.
 
+## Filesystem permissions and existing profiles
+
+The bundle allows read/write access to the XDG Downloads directory and
+read-only access to the XDG Music directory. Other host folders need an
+explicit permission. For example:
+
+```sh
+# Share an additional folder without allowing changes to its contents.
+flatpak override --user --filesystem="$HOME/Shared:ro" org.amule.aMule
+
+# Allow a custom download destination (create it if needed).
+flatpak override --user --filesystem="$HOME/Videos/aMule:create" org.amule.aMule
+```
+
+Flatseal can also manage these permissions. Grant access to configured custom
+download, temporary, and sharing directories before starting aMule. Music is
+read-only, so it cannot be used as a download or temporary directory.
+
+Configuration and the default Incoming/Temp directories are persistent and
+private to this Flatpak. `--persist=.aMule` maps `~/.aMule` inside the sandbox
+to `~/.var/app/org.amule.aMule/.aMule` on the host. No access to the host's
+`~/.aMule` is granted. See the
+[Flatpak persistence documentation](https://docs.flatpak.org/en/latest/sandbox-permissions.html#filesystem-access).
+
+**Upgrading from a bundle with full home access:** the old host profile is
+not imported automatically. To keep its identity, settings, and downloads,
+quit both native and Flatpak aMule, back up the old profile, and copy the
+entire directory before the first launch with the new bundle:
+
+```sh
+# Run on the host. Refuse to overwrite an existing Flatpak profile.
+profile="$HOME/.var/app/org.amule.aMule/.aMule"
+mkdir -p "$(dirname "$profile")"
+if [ ! -e "$profile" ] && [ ! -L "$profile" ]; then
+    cp -a "$HOME/.aMule" "$profile"
+else
+    echo "Flatpak profile already exists; back it up and reconcile it manually."
+fi
+```
+
+Copying includes `Incoming` and `Temp`, so allow enough free disk space.
+Absolute paths in the copied settings and symlinks to other directories
+still need permissions as above. The native and Flatpak profiles are
+independent after copying; do not run both clients with the same identity
+or point them at the same temporary directory simultaneously. For a custom
+app ID, substitute it in the host profile path and commands.
+
 ## Automated GUI smoke tests
 
 GUI smoke tests run automatically on every master push that triggers the
@@ -71,7 +118,9 @@ code from the selected workflow branch.
 
 The driver checks the installed permissions and absence of `/dev/dri` inside
 the sandbox without overriding device permissions. It uses a fresh aMule
-configuration with first-run setup completed and networking disabled. It opens
+configuration in the private persisted profile, with first-run setup completed
+and networking disabled. It launches without a configuration-directory override
+and checks the saved profile from a second sandbox invocation. It opens
 the main window, sends navigation and Page Down keys, opens Preferences,
 resizes the display/window, and requests a clean exit. GNOME uses a virtual
 keyboard; X11 and KWin's nested display use XTest input.

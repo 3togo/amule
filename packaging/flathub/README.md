@@ -17,6 +17,10 @@ the current tip without manual updates.
 
 ## Why two manifests
 
+Both manifests use the same restricted filesystem permissions and private
+persistent profile. See [filesystem permissions and migration](../linux/flatpak/README.md#filesystem-permissions-and-existing-profiles)
+for existing profiles and additional sharing or download folders.
+
 Flathub's submission policy forbids mutable refs (branch names) and
 requires every source to be pinned by an immutable identifier:
 

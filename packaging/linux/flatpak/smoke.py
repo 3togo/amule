@@ -158,6 +158,10 @@ def main():
     metadata.read_string(permissions)
     devices = metadata.get("Context", "devices", fallback="").split(";")
     assert "dri" not in devices and "all" not in devices, permissions
+    filesystems = set(filter(None, metadata.get("Context", "filesystems", fallback="").split(";")))
+    assert filesystems == {"xdg-download", "xdg-music:ro"}, permissions
+    persistent = set(filter(None, metadata.get("Context", "persistent", fallback="").split(";")))
+    assert persistent == {".aMule"}, permissions
     # No --nodevice override: check the actual installed manifest and sandbox.
     run("flatpak", "run", "--command=sh", APP, "-c", "test ! -e /dev/dri")
 
@@ -199,8 +203,11 @@ def main():
     app_env.update(LANG="C.UTF-8", LC_ALL="C.UTF-8", XDG_SESSION_TYPE=host["XDG_SESSION_TYPE"],
                    XDG_CURRENT_DESKTOP=host["XDG_CURRENT_DESKTOP"])
 
-    config = OUT / "config"
-    config.mkdir()
+    # Use the shipped default path, backed by --persist=.aMule. Refuse to
+    # overwrite a profile when this driver is used outside disposable CI.
+    config = Path.home() / ".var" / "app" / APP / ".aMule"
+    config.mkdir(parents=True, exist_ok=True)
+    assert not any(config.iterdir()), "Smoke test requires an empty Flatpak profile"
     (config / "amule.conf").write_text(
         "[eMule]\nFirstRunWizardDone=1\nAutoconnect=0\nNewVersionCheck=0\n"
         "ConfirmExit=0\nStartupMinimized=0\nEnableTrayIcon=0\nUPnPEnabled=0\n"
@@ -212,7 +219,7 @@ def main():
         with (config / "amule.conf").open("a") as file:
             file.write("[Razor_Preferences]\nMaximized=0\nMAIN_X_SIZE=1200\n"
                        "MAIN_Y_SIZE=860\nMAIN_X_POS=20\nMAIN_Y_POS=30\n")
-    app = start("amule", ["flatpak", "run", *options, APP, "--config-dir=" + str(config)], app_env)
+    app = start("amule", ["flatpak", "run", *options, APP], app_env)
     if SESSION == "kde-wayland":
         window = wait_for("KWin nested window", lambda: run(
             "xdotool", "search", "--onlyvisible", "--pid", str(PROCESSES[1].pid))).splitlines()[-1]
@@ -275,6 +282,12 @@ def main():
     key("ctrl+q")
     assert app.wait(timeout=30) == 0, "aMule did not shut down cleanly"
     assert (config / "amule.conf").is_file()
+    saved = configparser.ConfigParser(interpolation=None)
+    saved.read(config / "amule.conf")
+    assert saved.has_option("eMule", "IncomingDir"), "aMule did not save its default profile"
+    run("flatpak", "run", "--command=sh", APP, "-ec",
+        'test -s "$HOME/.aMule/amule.conf"; '
+        'test -d "$HOME/.aMule/Incoming"; test -d "$HOME/.aMule/Temp"')
     check_drawing_failures(OUT / "amule.log")
     (OUT / "result.txt").write_text(f"PASS: {SESSION}; no DRI; native window; keyboard navigation; "
                                    "Preferences; resize; screenshots; clean shutdown; no drawing failures.\n"
