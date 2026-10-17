@@ -2819,3 +2819,29 @@ target_include_directories (AmuleApiProcessTest PRIVATE
 )
 target_link_libraries (AmuleApiProcessTest muleunit mulecommon wxWidgets::BASE)
 add_test (NAME AmuleApiProcessTest COMMAND AmuleApiProcessTest)
+
+# Disposable files, offline daemon, and real EC/REST deletion including unlink failure.
+option (ENABLE_COMPLETED_FILE_DELETE_INTEGRATION_TEST "Register completed-file deletion integration test" OFF)
+if (ENABLE_COMPLETED_FILE_DELETE_INTEGRATION_TEST AND BUILD_DAEMON AND BUILD_AMULEAPI AND UNIX AND NOT APPLE)
+	find_package (Python3 QUIET COMPONENTS Interpreter)
+	if (Python3_Interpreter_FOUND)
+		add_test (NAME CompletedFileDeleteIntegrationTest
+			COMMAND ${Python3_EXECUTABLE}
+				${CMAKE_CURRENT_SOURCE_DIR}/CompletedFileDeleteIntegrationTest.py
+				$<TARGET_FILE:amuled> $<TARGET_FILE:amuleapi>
+		)
+		set_tests_properties (CompletedFileDeleteIntegrationTest PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)
+		add_test (NAME CompletedFileDeleteCapabilityTest
+			COMMAND ${Python3_EXECUTABLE}
+				${CMAKE_CURRENT_SOURCE_DIR}/CompletedFileDeleteCapabilityTest.py
+				$<TARGET_FILE:amuleapi>
+		)
+		set_tests_properties (CompletedFileDeleteCapabilityTest PROPERTIES TIMEOUT 60)
+	endif ()
+endif ()
+
+find_program (AMULE_TEST_NODE_EXECUTABLE NAMES node nodejs)
+if (AMULE_TEST_NODE_EXECUTABLE)
+	add_test (NAME DownloadDeleteTest
+		COMMAND ${AMULE_TEST_NODE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/DownloadDeleteTest.mjs)
+endif ()

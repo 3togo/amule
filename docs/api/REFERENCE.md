@@ -1139,11 +1139,18 @@ curl -s -X PATCH -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application
 
 **Auth:** `ADMIN`
 
-Bulk cancel + remove of active downloads (deletes each `.part`/`.met` from disk). A completed or completing entry is rejected per-item with `download_completed` — clear those via `POST /downloads_clear_completed`.
+Bulk cancel + remove of active downloads (deletes each `.part`/`.met` from disk). Completed entries are deleted from disk through `EC_OP_KNOWNFILE_DELETE`. Use `POST /downloads_clear_completed` to clear entries while keeping the files.
+
+Entries still completing report `download_completed`; wait for completion and confirm again.
 
 **Body:** `{ "hashes": ["<md4>", …] }` (non-empty, max 500).
 
-**Response:** the [bulk `results` envelope](#bulk-mutations-and-the-results-envelope), keyed by hash. Per-item `error.code` is `not_found`, `download_completed`, `amuled_rejected`, or `ec_unavailable`.
+An optional `expected` object maps each hash to the same confirmation precondition
+accepted by single-file DELETE. All supplied preconditions are validated before any
+file is mutated; stale entries report `selection_changed` per item. The Web UI freezes
+this map and the selected hashes while its confirmation dialog is open.
+
+**Response:** the [bulk `results` envelope](#bulk-mutations-and-the-results-envelope), keyed by hash. Per-item `error.code` is `not_found`, `ec_unsupported`, `amuled_rejected`, or `ec_unavailable`.
 
 **Errors:** `400 bad_request` (missing/empty `hashes`), `503 ec_unavailable`.
 
@@ -1177,16 +1184,22 @@ curl -s -X PATCH -H "Authorization: Bearer $TOKEN" \
 
 **Auth:** `ADMIN`
 
-Cancels an **active** partfile and deletes its on-disk data. `{hash}` is the 32-char MD4 hex hash (case-insensitive). amuled runs `EC_OP_PARTFILE_DELETE` → `CPartFile::Delete()`, which removes the `.part`, `.part.met`, and `.met.bak` files and adds the hash to its `canceledfiles` list (so re-adding the same ed2k link is silently refused until the operator clears that list out-of-band). Completed and completing entries are out of scope and return `409 download_completed`; use [`POST /downloads_clear_completed`](#post-apiv1downloads_clear_completed) once the download has completed. The file in the Incoming directory is never deleted.
+Cancels an **active** partfile and deletes its on-disk data. `{hash}` is the 32-char MD4 hex hash (case-insensitive). amuled runs `EC_OP_PARTFILE_DELETE` → `CPartFile::Delete()`, which removes the `.part`, `.part.met`, and `.met.bak` files and adds the hash to its `canceledfiles` list (so re-adding the same ed2k link is silently refused until the operator clears that list out-of-band). For completed entries, deletes the finished file from disk, stops sharing/uploads, and clears the completed row. The known-file record is retained and the hash is not marked cancelled. If unlink fails, the file stays shared and listed and the API returns `amuled_rejected`. Older cores return `503 ec_unsupported`. To keep the file, use [`POST /downloads_clear_completed`](#post-apiv1downloads_clear_completed) instead.
 
 ```sh
 curl -s -X DELETE -H "Authorization: Bearer $TOKEN" \
   "http://$HOST/api/v1/downloads/8b54a3c2..."
 ```
 
+**Optional body:** `{ "expected": { "ecid": 123, "name": "file.ext", "directory": "/Incoming", "status": "completed" } }`.
+Copy these values from the detail GET (`ecid` is the current daemon record ID).
+A changed target returns `409 selection_changed` without deletion; malformed targets
+return `400 bad_request`. The Web UI always sends this precondition after confirmation.
+Requests without a body retain the existing hash-based API behavior.
+
 **Response:** `204 No Content`.
 
-**Errors:** `400 bad_request` (`{hash}` is not 32 hex characters), `400 amuled_rejected`, `404 not_found`, `409 download_completed`, `503 ec_unavailable`.
+**Errors:** `400 bad_request` (`{hash}` is not 32 hex characters), `400 amuled_rejected`, `404 not_found`, `409 download_completed` (still completing), `409 selection_changed`, `502 ec_protocol_error` (unexpected core acknowledgment), `503 ec_unsupported`, `503 ec_unavailable`.
 
 #### `POST /api/v1/downloads_clear_completed`
 
@@ -3365,7 +3378,9 @@ Every error code emitted by `/api/v1/*`, sorted by what triggered it. Two codes 
 | `partfile_unsupported` | 409 | Verify Local Data, or a content download, requested on a file that is still an incomplete partfile. |
 | `not_shared` | 409 | A comment or rating was posted against a file that is not shared. |
 | `not_completed` | 409 | `clear_completed` named a `hash` that is not a completed download. |
-| `download_completed` | 409 | A `DELETE /downloads` matched a completed or completing download; use `clear_completed` for those. |
+| `download_completed` | 409 | DELETE matched a download still completing; wait for completion and confirm again. |
+| `selection_changed` | 409 | The confirmed deletion target changed; refresh and confirm again. |
+| `ec_protocol_error` | 502 | The core returned an unexpected deletion acknowledgment; success could not be confirmed. |
 | `kad_more_exhausted` | 409 | `POST /search/{id}/more` on a Kad search that can no longer be widened — its 4-reask budget is spent, or it has entered the stopping window Kad begins 20 s before a keyword search ends. Terminal for that search; re-run the query for more. |
 | `version_check_unavailable` | 409 | `POST /version/check` cannot run - the daemon has no update-check capability. |
 | `payload_too_large` | 413 | Request body exceeds the 1 MiB limit. The connection closes after the response. |

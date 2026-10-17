@@ -202,6 +202,7 @@ m_req_fifo_thr(20)
 , m_serverChatSessions(false)
 , m_canChatPeerHash(false)
 , m_serverChatPeerHash(false)
+, m_serverDeleteComplete(false)
 , m_serverSharedDirsConfig(false)
 , m_serverSearchList(false)
 , m_serverKadLookups(false)
@@ -746,6 +747,7 @@ bool CRemoteConnect::ProcessAuthPacket(const CECPacket *reply)
 			// Server accepts/lists chat sessions by hash. Old daemons omit the echo and
 			// we address and list by GUI_ID only, exactly as a build that predates the
 			// hash tag would.
+			m_serverDeleteComplete = reply->GetTagByName(EC_TAG_CAN_DELETE_COMPLETE) != nullptr;
 			if (reply->GetTagByName(EC_TAG_CAN_CHAT_PEER_HASH)) {
 				m_serverChatPeerHash = true;
 			}

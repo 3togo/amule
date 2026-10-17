@@ -2566,6 +2566,10 @@ void WriteDownloadObject(
 	CJsonWriter &w, const webapi::FileSnapshot &f, bool include_parts = false, bool detail = false)
 {
 	w.BeginObject();
+	if (detail) {
+		w.Key("ecid");
+		w.ValueInt(f.ecid);
+	}
 	w.Key("hash");
 	w.ValueString(wxString::FromUTF8(f.hash.c_str()));
 	w.Key("name");
@@ -5173,6 +5177,51 @@ CHttpServer::Response CApiDispatcher::HandleDownloadPatch(
 	return r;
 }
 
+namespace
+{
+// Optional browser confirmation precondition. Old API clients may omit it, but
+// a supplied target must be complete and valid before any mutation is sent.
+bool ValidDeleteTarget(const picojson::value &value)
+{
+	if (!value.is<picojson::object>())
+		return false;
+	const auto &obj = value.get<picojson::object>();
+	for (const char *key : { "name", "directory", "status" }) {
+		auto it = obj.find(key);
+		if (it == obj.end() || !it->second.is<std::string>())
+			return false;
+	}
+	const auto id = obj.find("ecid");
+	if (id == obj.end() || !id->second.is<double>())
+		return false;
+	const double n = id->second.get<double>();
+	return n >= 1 && n <= UINT32_MAX && n == static_cast<uint32>(n);
+}
+
+bool MatchesDeleteTarget(const picojson::value &value, const webapi::FileSnapshot &file)
+{
+	const auto &obj = value.get<picojson::object>();
+	return obj.at("ecid").get<double>() == file.ecid && obj.at("name").get<std::string>() == file.name &&
+	       obj.at("directory").get<std::string>() == file.on_disk_dir &&
+	       obj.at("status").get<std::string>() == file.download.status;
+}
+
+std::unique_ptr<CECPacket> DownloadDeleteRequest(const webapi::FileSnapshot &file, const CMD4Hash &hash)
+{
+	const bool complete = file.download.status == "completed";
+	auto request = std::make_unique<CECPacket>(complete ? EC_OP_KNOWNFILE_DELETE : EC_OP_PARTFILE_DELETE);
+	CECTag target(complete ? EC_TAG_KNOWNFILE : EC_TAG_PARTFILE, hash);
+	// The complete-file op uses top-level identity tags; legacy partfile commands
+	// put their per-file preconditions on the hash tag, so multi-file EC still works.
+	CECTag *identity = complete ? static_cast<CECTag *>(request.get()) : &target;
+	identity->AddTag(CECTag(EC_TAG_ECID, file.ecid));
+	identity->AddTag(CECTag(EC_TAG_KNOWNFILE_PATH, wxString::FromUTF8(file.on_disk_dir.c_str())));
+	identity->AddTag(CECTag(EC_TAG_PARTFILE_NAME, wxString::FromUTF8(file.name.c_str())));
+	request->AddTag(target);
+	return request;
+}
+} // namespace
+
 CHttpServer::Response CApiDispatcher::HandleDownloadDelete(
 	const CHttpServer::Request &req, const std::string &key)
 {
@@ -5193,29 +5242,39 @@ CHttpServer::Response CApiDispatcher::HandleDownloadDelete(
 		return ErrorResponse(404, "not_found", "no download with that hash");
 	}
 
-	// DELETE handles ACTIVE downloads only. Completed entries live in amuled's
-	// m_completedDownloads staging list, and the only EC op that touches it is
-	// EC_OP_CLEAR_COMPLETED, which acks the notification rather than deleting the file
-	// from Incoming. Conflating the two under one verb confused operators who expected
-	// DELETE to remove a file from disk, so the completed case goes through
-	// POST /downloads_clear_completed. A "completing" file is being moved to Incoming and
-	// gets the same answer.
-	if (d.download.status == "completed" || d.download.status == "completing") {
+	if (!req.body.empty()) {
+		picojson::value body;
+		std::string error;
+		if (!ParseJsonObjectBody(req.body, body, error))
+			return ErrorResponse(400, "bad_request", error.c_str());
+		const auto &obj = body.get<picojson::object>();
+		const auto expected = obj.find("expected");
+		if (expected != obj.end() && !ValidDeleteTarget(expected->second))
+			return ErrorResponse(400,
+				"bad_request",
+				"expected must contain ecid, name, directory, and status");
+		if (expected != obj.end() && !MatchesDeleteTarget(expected->second, d))
+			return ErrorResponse(409,
+				"selection_changed",
+				"The confirmed download has changed. Refresh and confirm again.");
+	}
+
+	if (d.download.status == "completing") {
 		return ErrorResponse(409,
 			"download_completed",
-			"DELETE only removes active downloads (deletes .part/.met "
-			"files from disk). Use POST /downloads_clear_completed "
-			"with optional {\"hash\":\"...\"} body to clear a completed "
-			"entry's post-completion notification; the file in the "
-			"Incoming directory is NEVER removed via this API.");
+			"The download is completing. Wait for completion and confirm again.");
+	}
+	if (d.download.status == "completed" && !m_app.IsServerDeleteCompleteActive()) {
+		return ErrorResponse(503,
+			"ec_unsupported",
+			"The connected core does not support deleting complete files from disk.");
 	}
 
 	CMD4Hash file_hash;
 	if (!HashFromHex(d.hash, file_hash)) {
 		return ErrorResponse(500, "internal_error", "failed to decode partfile hash");
 	}
-	std::unique_ptr<CECPacket> ec_req(new CECPacket(EC_OP_PARTFILE_DELETE));
-	ec_req->AddTag(CECTag(EC_TAG_PARTFILE, file_hash));
+	auto ec_req = DownloadDeleteRequest(d, file_hash);
 
 	const CECPacket *ec_resp = m_app.SendRecvSerialized(ec_req.get());
 	if (!ec_resp) {
@@ -5225,6 +5284,10 @@ CHttpServer::Response CApiDispatcher::HandleDownloadDelete(
 	if (IsEcFailedResponse(ec_resp, ec_err_msg)) {
 		delete ec_resp;
 		return ErrorResponse(400, "amuled_rejected", ec_err_msg.c_str());
+	}
+	if (ec_resp->GetOpCode() != EC_OP_NOOP) {
+		delete ec_resp;
+		return ErrorResponse(502, "ec_protocol_error", "The core did not confirm deleting the file.");
 	}
 	delete ec_resp;
 
@@ -8981,6 +9044,30 @@ CHttpServer::Response CApiDispatcher::HandleDownloadsBulkDelete(const CHttpServe
 	if (!ParseBulkHashes(obj, hashes, bad))
 		return bad;
 
+	picojson::object normalizedTargets;
+	const picojson::object *expectedTargets = nullptr;
+	if (const auto it = obj.find("expected"); it != obj.end()) {
+		if (!it->second.is<picojson::object>())
+			return ErrorResponse(400, "bad_request", "expected must be an object keyed by hash");
+		for (const auto &target : it->second.get<picojson::object>()) {
+			CMD4Hash hash;
+			if (!HashFromHex(target.first, hash) || !ValidDeleteTarget(target.second))
+				return ErrorResponse(
+					400, "bad_request", "expected contains an invalid hash or target");
+			if (!normalizedTargets.emplace(LowerHexKey(target.first), target.second).second)
+				return ErrorResponse(
+					400, "bad_request", "expected contains duplicate hash keys");
+		}
+		expectedTargets = &normalizedTargets;
+		for (const auto &hash : hashes) {
+			const auto target = expectedTargets->find(LowerHexKey(hash));
+			if (target == expectedTargets->end() || !ValidDeleteTarget(target->second))
+				return ErrorResponse(400,
+					"bad_request",
+					"expected must contain a valid target for every hash");
+		}
+	}
+
 	std::vector<BulkItem> results;
 	results.reserve(hashes.size());
 	for (const std::string &raw : hashes) {
@@ -8990,14 +9077,25 @@ CHttpServer::Response CApiDispatcher::HandleDownloadsBulkDelete(const CHttpServe
 			results.push_back(BulkErr(raw, 404, "not_found", "no download with that hash"));
 			continue;
 		}
-		// Same guard as the single-item DELETE: completed entries are not
-		// removable here (use POST /downloads_clear_completed).
-		if (d.download.status == "completed" || d.download.status == "completing") {
+		if (expectedTargets && !MatchesDeleteTarget(expectedTargets->at(needle), d)) {
+			results.push_back(BulkErr(raw,
+				409,
+				"selection_changed",
+				"The confirmed download has changed. Refresh and confirm again."));
+			continue;
+		}
+		if (d.download.status == "completing") {
 			results.push_back(BulkErr(raw,
 				409,
 				"download_completed",
-				"DELETE only removes active downloads; use POST "
-				"/downloads_clear_completed to clear a completed entry"));
+				"The download is completing. Wait for completion and confirm again."));
+			continue;
+		}
+		if (d.download.status == "completed" && !m_app.IsServerDeleteCompleteActive()) {
+			results.push_back(BulkErr(raw,
+				503,
+				"ec_unsupported",
+				"The connected core does not support deleting complete files from disk."));
 			continue;
 		}
 		CMD4Hash file_hash;
@@ -9006,8 +9104,7 @@ CHttpServer::Response CApiDispatcher::HandleDownloadsBulkDelete(const CHttpServe
 				BulkErr(raw, 500, "internal_error", "failed to decode partfile hash"));
 			continue;
 		}
-		std::unique_ptr<CECPacket> ec_req(new CECPacket(EC_OP_PARTFILE_DELETE));
-		ec_req->AddTag(CECTag(EC_TAG_PARTFILE, file_hash));
+		auto ec_req = DownloadDeleteRequest(d, file_hash);
 		const CECPacket *ec_resp = m_app.SendRecvSerialized(ec_req.get());
 		if (!ec_resp) {
 			results.push_back(
@@ -9018,6 +9115,14 @@ CHttpServer::Response CApiDispatcher::HandleDownloadsBulkDelete(const CHttpServe
 		if (IsEcFailedResponse(ec_resp, ec_err)) {
 			delete ec_resp;
 			results.push_back(BulkErr(raw, 400, "amuled_rejected", ec_err));
+			continue;
+		}
+		if (ec_resp->GetOpCode() != EC_OP_NOOP) {
+			delete ec_resp;
+			results.push_back(BulkErr(raw,
+				502,
+				"ec_protocol_error",
+				"The core did not confirm deleting the file."));
 			continue;
 		}
 		delete ec_resp;
