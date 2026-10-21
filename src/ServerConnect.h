@@ -30,9 +30,12 @@
 
 #include "amuleIPV4Address.h" // Needed for amuleIPV4Address
 #include "Timer.h"            // Needed for CTimer
+#ifdef ENABLE_NATT_SERVER_COORDINATION
+#include "NatServerHolePunch.h" // Needed for the 0x61 policy state
+#endif
 
 #include <map> // Needed for std::map
-#ifdef ENABLE_IPV6
+#if defined(ENABLE_IPV6) || defined(ENABLE_NATT_SERVER_COORDINATION)
 #include <optional> // Needed for std::optional
 #endif
 
@@ -121,6 +124,33 @@ public:
 	//! announced SRV_TCPFLG_LOWID_HOLEPUNCH and the runtime setting is on. Called every ~60 s
 	//! from CamuleApp::OnCoreTimer -- no new thread.
 	void TrySendLowIdHolePunchKeepalive();
+
+	//! Target IDs are scoped to a server session, so a reconnect resets this state.
+	NatServerHolePunch::PendingRequestSet &LowIdHolePunchPendingRequests()
+	{
+		return m_lowIdHolePunchPendingRequests;
+	}
+	NatServerHolePunch::DialBackSchedule &LowIdHolePunchDialBacks() { return m_lowIdHolePunchDialBacks; }
+	NatServerHolePunch::DuplicateInfoSuppressor &LowIdHolePunchDuplicates()
+	{
+		return m_lowIdHolePunchDuplicates;
+	}
+	NatServerHolePunch::ActionRateLimiter &LowIdHolePunchActionLimiter()
+	{
+		return m_lowIdHolePunchActionLimiter;
+	}
+	NatServerHolePunch::ExpectedEndpointRegistry &LowIdHolePunchExpectedEndpoints()
+	{
+		return m_lowIdHolePunchExpectedEndpoints;
+	}
+	//! Clears the pending requests, expected endpoints and waiting dial backs: called on a new
+	//! login, since a previous connection's target IDs mean nothing on a different server.
+	void ResetLowIdHolePunchState();
+#ifdef AMULE_UTP_TRANSPORT
+	//! Dials back each punched peer whose delay ran out without a stream from it. Called about
+	//! once a second from CamuleApp::OnCoreTimer.
+	void ProcessLowIdHolePunchDialBacks();
+#endif
 #endif
 
 	//! Records that a server's hostname resolved during the current sweep.
@@ -177,6 +207,14 @@ private:
 	CTimer m_idRetryTimer;
 
 	ServerSocketMap connectionattemps;
+
+#ifdef ENABLE_NATT_SERVER_COORDINATION
+	NatServerHolePunch::PendingRequestSet m_lowIdHolePunchPendingRequests;
+	NatServerHolePunch::DialBackSchedule m_lowIdHolePunchDialBacks;
+	NatServerHolePunch::DuplicateInfoSuppressor m_lowIdHolePunchDuplicates;
+	NatServerHolePunch::ActionRateLimiter m_lowIdHolePunchActionLimiter;
+	NatServerHolePunch::ExpectedEndpointRegistry m_lowIdHolePunchExpectedEndpoints;
+#endif
 };
 
 #endif // SERVERCONNECT_H

@@ -213,7 +213,17 @@ public:
 	/// (or Connect() declined to start) and must not be touched again.
 	bool TryToConnect(bool bIgnoreMaxCon = false);
 	bool Connect();
+#if defined(ENABLE_NATT_SERVER_COORDINATION) && defined(AMULE_UTP_TRANSPORT)
+	//! Dials uTP for a temporary client at the server-announced endpoint. Do not mutate any
+	//! download source: OP_HELLO establishes identity before the client list attaches it.
+	bool TryServerVouchedLowIdUtpDial();
+#endif
 	void ConnectionEstablished();
+#ifdef AMULE_UTP_TRANSPORT
+	//! The uTP tie-break kept a different stream than the one that carried our file request;
+	//! ConnectionEstablished() asks again on the kept one.
+	void NoteFileRequestLostToSocketSwap() { m_fileRequestLostToSocketSwap = true; }
+#endif
 	const wxString &GetUserName() const { return m_Username; }
 	// Only use this when you know the real IP or when your clearing it.
 	void SetIP(uint32 val);
@@ -327,8 +337,29 @@ private:
 	void TrySendLugdunumNatCallbackRequest() const;
 	//! Sends OP_LOWID_HOLEPUNCH_REQUEST (ed2k-server) for this LowID source when its
 	//! preconditions hold. Mutually exclusive with the Lugdunum callback per server.
-	//! Called from TryToContact's LowID->LowID decline, so at most once per source.
-	void TrySendLowIdHolePunchRequest() const;
+	//! Called from TryToContact's LowID->LowID decline. Returns whether the request went out;
+	//! a busy server slot is not a send.
+	bool TrySendLowIdHolePunchRequest();
+	bool m_lowIdHolePunchRequested = false;
+#endif
+#if defined(ENABLE_NATT_SERVER_COORDINATION) && defined(AMULE_UTP_TRANSPORT)
+
+public:
+	//! Asks again for a DS_LOWTOLOWIP source whose request was never sent because the server
+	//! slot was busy.
+	void RetryLowIdHolePunchRequest();
+	//! A temporary client dialled on a server-announced endpoint. It becomes a download
+	//! source only through the client list match of its hello answer.
+	void MarkLowIdHolePunchDial() { m_lowIdHolePunchDial = true; }
+	bool TakeLowIdHolePunchDial()
+	{
+		const bool wasDial = m_lowIdHolePunchDial;
+		m_lowIdHolePunchDial = false;
+		return wasDial;
+	}
+
+private:
+	bool m_lowIdHolePunchDial = false;
 #endif
 
 public:
@@ -956,6 +987,9 @@ private:
 	uint8 m_nDownloadState;
 	uint16 m_nPartCount;
 	uint64 m_dwLastAskedTime;
+#ifdef AMULE_UTP_TRANSPORT
+	bool m_fileRequestLostToSocketSwap = false;
+#endif
 	wxString m_clientFilename;
 	uint64 m_nTransferredDown;
 	uint16 m_lastDownloadingPart; // last Part that was downloading

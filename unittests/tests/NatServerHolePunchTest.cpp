@@ -166,7 +166,12 @@ TEST(NatServerHolePunch, SendsKeepaliveOnlyWhileConnectedToACapableServerWithThe
 	facts.serverAnnouncesHolePunch = true;
 	facts.weAreLowId = true;
 	facts.udpPort = 4672;
+	facts.utpAvailable = true;
 	ASSERT_TRUE(ShouldSendKeepalive(facts));
+
+	KeepaliveFacts withoutUtp = facts;
+	withoutUtp.utpAvailable = false;
+	ASSERT_FALSE(ShouldSendKeepalive(withoutUtp));
 
 	KeepaliveFacts settingOff = facts;
 	settingOff.settingEnabled = false;
@@ -203,7 +208,12 @@ TEST(NatServerHolePunch, RequestsHolePunchOnlyWhenEveryPreconditionHolds)
 	facts.serverIsLugdunumActive = false;
 	facts.settingEnabled = true;
 	facts.ourUdpPort = 4672;
+	facts.utpAvailable = true;
 	ASSERT_TRUE(ShouldRequestLowIdHolePunch(facts));
+
+	RequestFacts withoutUtp = facts;
+	withoutUtp.utpAvailable = false;
+	ASSERT_FALSE(ShouldRequestLowIdHolePunch(withoutUtp));
 
 	// GetEffectiveUDPPort() returns 0 while UDP is disabled: ed2k-server would refuse a
 	// target with no known UDP port.
@@ -236,6 +246,165 @@ TEST(NatServerHolePunch, RequestsHolePunchOnlyWhenEveryPreconditionHolds)
 	RequestFacts highIdUs = facts;
 	highIdUs.ourId = 20000000;
 	ASSERT_FALSE(ShouldRequestLowIdHolePunch(highIdUs));
+}
+
+TEST(NatServerHolePunch, OnlyAdvertisesUdpPortsWhenUtpCanServeThePunch)
+{
+	ASSERT_TRUE(ShouldAdvertiseUdpPorts(true, true));
+	ASSERT_FALSE(ShouldAdvertiseUdpPorts(true, false));
+	ASSERT_FALSE(ShouldAdvertiseUdpPorts(false, true));
+}
+
+TEST(NatServerHolePunch, ReadsThePeerIdOnlyFromAnInfoOf29BytesOrMore)
+{
+	std::array<std::uint8_t, 29> bytes{};
+	const Info info{ { { 192, 0, 2, 1 } }, 3, 4, {}, 0 };
+	const auto base = BuildInfo(info);
+	std::copy(base.begin(), base.end(), bytes.begin());
+	bytes[25] = 0x78;
+	bytes[26] = 0x56;
+	bytes[27] = 0x34;
+	bytes[28] = 0x12;
+	const auto withId = ParseInfo(bytes.data(), bytes.size());
+	ASSERT_TRUE(withId.has_value());
+	ASSERT_TRUE(withId->peerId.has_value());
+	ASSERT_EQUALS((std::uint32_t)0x12345678, *withId->peerId);
+
+	std::array<std::uint8_t, 30> longer{};
+	std::copy(bytes.begin(), bytes.end(), longer.begin());
+	ASSERT_EQUALS((std::uint32_t)0x12345678, *ParseInfo(longer.data(), longer.size())->peerId);
+
+	// A 25-byte frame is a valid INFO that simply has no peer ID.
+	const auto withoutId = ParseInfo(bytes.data(), 25);
+	ASSERT_TRUE(withoutId.has_value());
+	ASSERT_FALSE(withoutId->peerId.has_value());
+	ASSERT_FALSE(ParseInfo(bytes.data(), 28)->peerId.has_value());
+}
+
+TEST(NatServerHolePunch, SeveralRequestsCanBePendingAndEachIsTakenOnce)
+{
+	PendingRequestSet requests;
+	ASSERT_TRUE(requests.CanSend(42, 100));
+	requests.OnSent(42, 100);
+	ASSERT_TRUE(requests.CanSend(43, 100));
+	requests.OnSent(43, 100);
+	// The same target is not asked twice while its request is pending.
+	ASSERT_FALSE(requests.CanSend(42, 101));
+
+	ASSERT_FALSE(requests.Take(44, 101));
+	ASSERT_TRUE(requests.Take(42, 101));
+	ASSERT_FALSE(requests.Take(42, 101));
+	ASSERT_TRUE(requests.CanSend(42, 101));
+	ASSERT_TRUE(requests.Take(43, 101));
+
+	requests.OnSent(50, 200);
+	requests.Release(51);
+	ASSERT_FALSE(requests.CanSend(50, 200));
+	requests.Release(50);
+	ASSERT_TRUE(requests.CanSend(50, 200));
+}
+
+TEST(NatServerHolePunch, PendingRequestsAreBoundedAndExpire)
+{
+	PendingRequestSet requests;
+	for (std::uint32_t id = 1; id <= kMaxPendingRequests; ++id) {
+		ASSERT_TRUE(requests.CanSend(id, 0));
+		requests.OnSent(id, 0);
+	}
+	ASSERT_FALSE(requests.CanSend(1000, kPendingRequestTimeoutMs - 1));
+	ASSERT_FALSE(requests.Take(1, kPendingRequestTimeoutMs));
+	ASSERT_TRUE(requests.CanSend(1000, kPendingRequestTimeoutMs));
+}
+
+TEST(NatServerHolePunch, DuplicateInfoAndActionCapBoundServerDirectedTraffic)
+{
+	DuplicateInfoSuppressor duplicates;
+	const Hash hash{ { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 } };
+	ASSERT_TRUE(duplicates.ShouldProcess(hash, 0));
+	ASSERT_FALSE(duplicates.ShouldProcess(hash, kDuplicateInfoWindowMs - 1));
+	ASSERT_TRUE(duplicates.ShouldProcess(hash, kDuplicateInfoWindowMs));
+	ActionRateLimiter actions;
+	for (std::size_t i = 0; i < kMaxActionsPerWindow; ++i) {
+		ASSERT_TRUE(actions.Admit(0));
+	}
+	ASSERT_FALSE(actions.Admit(kActionWindowMs - 1));
+	ASSERT_TRUE(actions.Admit(kActionWindowMs));
+}
+
+TEST(NatServerHolePunch, ExpectsOnlyRegisteredPunchAddressesWithinTtl)
+{
+	ExpectedEndpointRegistry endpoints;
+	const IPv4 peer{ { 192, 0, 2, 1 } };
+	const IPv4 other{ { 192, 0, 2, 2 } };
+	ASSERT_TRUE(endpoints.Take(peer, 5000, 0).kind == PunchAction::None);
+	endpoints.Register(peer, 4662, 1);
+	ASSERT_TRUE(endpoints.Take(other, 5000, 1).kind == PunchAction::None);
+	const PunchAction first = endpoints.Take(peer, 5000, 1);
+	ASSERT_TRUE(first.kind == PunchAction::DialLater);
+	ASSERT_EQUALS((std::uint16_t)4662, first.tcpPort);
+	ASSERT_TRUE(endpoints.Take(peer, 5000, 1).kind == PunchAction::None);
+	endpoints.Register(peer, 4662, 2);
+	ASSERT_TRUE(endpoints.Take(peer, 5000, 2 + kExpectedEndpointTtlMs).kind == PunchAction::None);
+	endpoints.Register(peer, 0, 3 + kExpectedEndpointTtlMs);
+	ASSERT_TRUE(endpoints.Take(peer, 5000, 3 + kExpectedEndpointTtlMs).kind == PunchAction::None);
+}
+
+TEST(NatServerHolePunch, ADialInFlightToThePunchSourceIsNotRepeated)
+{
+	ExpectedEndpointRegistry endpoints;
+	const IPv4 peer{ { 192, 0, 2, 1 } };
+	endpoints.Register(peer, 4662, 1);
+	endpoints.NoteDialled(peer, 5000);
+	ASSERT_TRUE(endpoints.Take(peer, 5000, 2).kind == PunchAction::None);
+	// The punch consumed the entry: a later one from the same address is unexpected.
+	ASSERT_TRUE(endpoints.Take(peer, 5001, 2).kind == PunchAction::None);
+
+	// A punch from another port is a different NAT mapping, so it earns its own dial now.
+	endpoints.Register(peer, 4662, 3);
+	endpoints.NoteDialled(peer, 5000);
+	const PunchAction other = endpoints.Take(peer, 5001, 4);
+	ASSERT_TRUE(other.kind == PunchAction::DialNow);
+	ASSERT_EQUALS((std::uint16_t)4662, other.tcpPort);
+
+	// An endpoint nobody dialled waits for a stream from the peer before dialling back.
+	endpoints.Register(peer, 4662, 5);
+	ASSERT_TRUE(endpoints.Take(peer, 5000, 6).kind == PunchAction::DialLater);
+
+	// Noting a dial for an address that was never registered changes nothing.
+	endpoints.NoteDialled(peer, 5000);
+	ASSERT_TRUE(endpoints.Take(peer, 5000, 7).kind == PunchAction::None);
+}
+
+TEST(NatServerHolePunch, DialBacksWaitForTheirDelayAndAreTakenOnce)
+{
+	DialBackSchedule dialBacks;
+	const IPv4 peer{ { 192, 0, 2, 1 } };
+	const IPv4 other{ { 192, 0, 2, 2 } };
+	ASSERT_TRUE(dialBacks.TakeDue(0).empty());
+	dialBacks.Schedule(peer, 4662, 5000, 10);
+	dialBacks.Schedule(other, 4663, 5001, 11);
+	ASSERT_TRUE(dialBacks.TakeDue(10 + kDialBackDelayMs - 1).empty());
+	auto due = dialBacks.TakeDue(10 + kDialBackDelayMs);
+	ASSERT_EQUALS((std::size_t)1, due.size());
+	ASSERT_TRUE(due[0].peerIP == peer);
+	ASSERT_EQUALS((std::uint16_t)4662, due[0].tcpPort);
+	ASSERT_EQUALS((std::uint16_t)5000, due[0].udpPort);
+	due = dialBacks.TakeDue(11 + kDialBackDelayMs);
+	ASSERT_EQUALS((std::size_t)1, due.size());
+	ASSERT_TRUE(due[0].peerIP == other);
+	ASSERT_TRUE(dialBacks.TakeDue(100000).empty());
+
+	// A newer punch from the same address replaces the one still waiting.
+	dialBacks.Schedule(peer, 4662, 5000, 200);
+	dialBacks.Schedule(peer, 4662, 5002, 201);
+	due = dialBacks.TakeDue(201 + kDialBackDelayMs);
+	ASSERT_EQUALS((std::size_t)1, due.size());
+	ASSERT_EQUALS((std::uint16_t)5002, due[0].udpPort);
+
+	for (std::size_t i = 0; i <= kMaxDialBacks; ++i) {
+		dialBacks.Schedule({ { 198, 51, 100, static_cast<std::uint8_t>(i) } }, 4662, 5000, 300);
+	}
+	ASSERT_EQUALS(kMaxDialBacks, dialBacks.TakeDue(300 + kDialBackDelayMs).size());
 }
 
 TEST(NatServerHolePunch, KeepsLowIdServerSourcesOnlyFromOurOwnCapableServer)

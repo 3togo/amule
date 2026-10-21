@@ -34,7 +34,9 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <optional>
+#include <vector>
 
 namespace NatServerHolePunch
 {
@@ -54,6 +56,8 @@ struct Info
 	std::uint16_t udpPort;
 	Hash userHash;
 	std::uint8_t role; // Opaque: decoding does not authorize a peer action.
+	// The server ID of the peer described, present only in a frame of 29 bytes or more.
+	std::optional<std::uint32_t> peerId;
 };
 struct Failure
 {
@@ -134,6 +138,9 @@ inline std::optional<Info> ParseInfo(const std::uint8_t *data, std::size_t size)
 	info.udpPort = static_cast<std::uint16_t>(Detail::ReadLE(data + 6, 2));
 	std::copy_n(data + 8, 16, info.userHash.begin());
 	info.role = data[24];
+	if (size >= 29) {
+		info.peerId = Detail::ReadLE(data + 25, 4);
+	}
 	return info;
 }
 inline std::array<std::uint8_t, 5> BuildFailure(const Failure &failure)
@@ -180,14 +187,23 @@ struct KeepaliveFacts
 	bool serverAnnouncesHolePunch = false;
 	bool weAreLowId = false;
 	std::uint16_t udpPort = 0;
+	// Without uTP, advertising support would enrol a client that cannot act on a punch.
+	bool utpAvailable = false;
 };
 
 // Whether to send OP_SERVER_NATT_KEEPALIVE now: connected to a server that announced
-// SRV_TCPFLG_LOWID_HOLEPUNCH, with the runtime setting on, while we are LowID with UDP enabled.
+// SRV_TCPFLG_LOWID_HOLEPUNCH, with the runtime setting on, while we are LowID with UDP enabled
+// and the build can act on it.
 inline bool ShouldSendKeepalive(const KeepaliveFacts &facts)
 {
 	return facts.settingEnabled && facts.connected && facts.serverAnnouncesHolePunch &&
-	       facts.weAreLowId && facts.udpPort != 0;
+	       facts.weAreLowId && facts.udpPort != 0 && facts.utpAvailable;
+}
+
+// Do not enrol a build that cannot serve the uTP connection after the punch.
+inline bool ShouldAdvertiseUdpPorts(bool settingEnabled, bool utpAvailable) noexcept
+{
+	return settingEnabled && utpAvailable;
 }
 
 struct RequestFacts
@@ -201,15 +217,17 @@ struct RequestFacts
 	bool serverIsLugdunumActive = false;
 	bool settingEnabled = false;
 	std::uint16_t ourUdpPort = 0;
+	// See KeepaliveFacts::utpAvailable.
+	bool utpAvailable = false;
 };
 
 // Whether to send OP_LOWID_HOLEPUNCH_REQUEST for a LowID source: both ends must be LowID on the
-// same, hole-punch-capable, non-Lugdunum server, the runtime setting must be on, and our UDP port
-// must be enabled.
+// same, hole-punch-capable, non-Lugdunum server, the runtime setting must be on, our UDP port
+// must be enabled, and the build must be able to act on the server's word.
 inline bool ShouldRequestLowIdHolePunch(const RequestFacts &facts)
 {
 	if (!facts.settingEnabled || !facts.sameServer || facts.serverIsLugdunumActive ||
-		!facts.serverAnnouncesHolePunch || facts.ourUdpPort == 0) {
+		!facts.serverAnnouncesHolePunch || facts.ourUdpPort == 0 || !facts.utpAvailable) {
 		return false;
 	}
 	return IsLowID(facts.ourId) && IsLowID(facts.sourceId);
@@ -233,6 +251,267 @@ inline bool ShouldKeepLowIdServerSource(const LowIdServerSourceFacts &facts)
 	return facts.settingEnabled && facts.originIsLocalServer && facts.sourceServerIsOurCurrentServer &&
 	       facts.weAreLowId && facts.serverAnnouncesHolePunch;
 }
+
+// Server-coordinated punch state.
+
+// A 0x61 names the peer's server ID, so every 0x60 still waiting for its answer can be matched
+// exactly. A request that never gets one expires after 30 s.
+constexpr std::uint64_t kPendingRequestTimeoutMs = 30'000;
+constexpr std::size_t kMaxPendingRequests = 8;
+
+class PendingRequestSet
+{
+public:
+	bool CanSend(std::uint32_t targetId, std::uint64_t now)
+	{
+		Evict(now);
+		return m_pending.size() < kMaxPendingRequests && Find(targetId) == m_pending.end();
+	}
+	void OnSent(std::uint32_t targetId, std::uint64_t now)
+	{
+		Evict(now);
+		if (Find(targetId) == m_pending.end()) {
+			m_pending.push_back({ targetId, now });
+		}
+	}
+	// True when a request for targetId was pending, which makes this side its requester.
+	bool Take(std::uint32_t targetId, std::uint64_t now)
+	{
+		Evict(now);
+		const auto match = Find(targetId);
+		if (match == m_pending.end()) {
+			return false;
+		}
+		m_pending.erase(match);
+		return true;
+	}
+	// A 0x62 identifies the failed target.
+	void Release(std::uint32_t targetId) { Take(targetId, 0); }
+
+private:
+	struct Entry
+	{
+		std::uint32_t targetId;
+		std::uint64_t sentAt;
+	};
+	std::vector<Entry>::iterator Find(std::uint32_t targetId)
+	{
+		return std::find_if(m_pending.begin(), m_pending.end(), [targetId](const Entry &entry) {
+			return entry.targetId == targetId;
+		});
+	}
+	void Evict(std::uint64_t now)
+	{
+		const auto firstLive =
+			std::remove_if(m_pending.begin(), m_pending.end(), [now](const Entry &entry) {
+				return now >= entry.sentAt && now - entry.sentAt >= kPendingRequestTimeoutMs;
+			});
+		m_pending.erase(firstLive, m_pending.end());
+	}
+	std::vector<Entry> m_pending;
+};
+
+// ed2k-server resends 0x61 on purpose, up to three times per side. 10 s spans
+// that burst without silently dropping a later, independent rendezvous for the same peer.
+constexpr std::uint64_t kDuplicateInfoWindowMs = 10'000;
+// Mirrors CRequesterLimiter's cap (NatRendezvousPolicy.h): bounds memory from a server that
+// never repeats, not just a well-behaved one.
+constexpr std::size_t kMaxTrackedDuplicates = 256;
+
+// Suppresses a repeated 0x61 for the same peer: keyed by user hash, which every 0x61 carries
+// regardless of role, unlike the target ID which only the requester side always has.
+class DuplicateInfoSuppressor
+{
+public:
+	// True the first time @p peerHash is seen inside the window; false for a repeat.
+	bool ShouldProcess(const Hash &peerHash, std::uint64_t now)
+	{
+		Evict(now);
+		for (const Entry &entry : m_seen) {
+			if (entry.peerHash == peerHash) {
+				return false;
+			}
+		}
+		if (m_seen.size() >= kMaxTrackedDuplicates) {
+			m_seen.erase(m_seen.begin());
+		}
+		m_seen.push_back({ peerHash, now });
+		return true;
+	}
+
+private:
+	struct Entry
+	{
+		Hash peerHash;
+		std::uint64_t seenAt;
+	};
+	void Evict(std::uint64_t now)
+	{
+		const auto firstLive =
+			std::remove_if(m_seen.begin(), m_seen.end(), [now](const Entry &entry) {
+				return now >= entry.seenAt && now - entry.seenAt >= kDuplicateInfoWindowMs;
+			});
+		m_seen.erase(firstLive, m_seen.end());
+	}
+	std::vector<Entry> m_seen;
+};
+
+// A server can point us at any IP; cap server-directed punches and dials. 20/minute
+// accommodates normal multi-source use while bounding the reach of a hostile server.
+constexpr std::uint64_t kActionWindowMs = 60'000;
+constexpr std::size_t kMaxActionsPerWindow = 20;
+
+// Shared by both dials (requester role) and punches (target role) triggered by 0x61: one global
+// budget, since both are the same risk -- the server choosing our next action.
+class ActionRateLimiter
+{
+public:
+	bool Admit(std::uint64_t now)
+	{
+		Evict(now);
+		if (m_events.size() >= kMaxActionsPerWindow) {
+			return false;
+		}
+		m_events.push_back(now);
+		return true;
+	}
+
+private:
+	void Evict(std::uint64_t now)
+	{
+		while (!m_events.empty() && now >= m_events.front() &&
+			now - m_events.front() >= kActionWindowMs) {
+			m_events.pop_front();
+		}
+	}
+	std::deque<std::uint64_t> m_events;
+};
+
+// A punch reply is accepted for 30 s after the server gives us its peer endpoint.
+constexpr std::uint64_t kExpectedEndpointTtlMs = 30'000;
+
+// What a peer's punch asks of us.
+struct PunchAction
+{
+	enum Kind
+	{
+		None,
+		DialNow,
+		DialLater
+	};
+	Kind kind = None;
+	std::uint16_t tcpPort = 0;
+};
+
+// A server-announced endpoint may trigger one dial back when its UDP punch arrives. The TCP
+// port is kept only for a temporary client; OP_HELLO establishes the peer's actual identity.
+class ExpectedEndpointRegistry
+{
+public:
+	void Register(const IPv4 &peerIP, std::uint16_t tcpPort, std::uint64_t now)
+	{
+		Evict(now);
+		if (tcpPort == 0) {
+			return;
+		}
+		m_expected.push_back({ peerIP, tcpPort, now, std::nullopt });
+	}
+	// Records the UDP port of a dial already started for this endpoint, so the punch that
+	// follows from that same port does not start a second one.
+	void NoteDialled(const IPv4 &peerIP, std::uint16_t udpPort)
+	{
+		const auto match = Find(peerIP);
+		if (match != m_expected.end()) {
+			match->dialledUdpPort = udpPort;
+		}
+	}
+	// A punch from an endpoint we dialled needs nothing more from that port and a dial now
+	// from another; a peer we did not dial gets a dial back later, if no stream arrives.
+	PunchAction Take(const IPv4 &sourceIP, std::uint16_t sourcePort, std::uint64_t now)
+	{
+		Evict(now);
+		const auto match = Find(sourceIP);
+		if (match == m_expected.end()) {
+			return {};
+		}
+		const Entry entry = *match;
+		m_expected.erase(match);
+		if (!entry.dialledUdpPort.has_value()) {
+			return { PunchAction::DialLater, entry.tcpPort };
+		}
+		if (*entry.dialledUdpPort == sourcePort) {
+			return {};
+		}
+		return { PunchAction::DialNow, entry.tcpPort };
+	}
+
+private:
+	struct Entry
+	{
+		IPv4 peerIP;
+		std::uint16_t tcpPort;
+		std::uint64_t registeredAt;
+		std::optional<std::uint16_t> dialledUdpPort;
+	};
+	std::vector<Entry>::iterator Find(const IPv4 &peerIP)
+	{
+		return std::find_if(m_expected.begin(), m_expected.end(), [&peerIP](const Entry &entry) {
+			return entry.peerIP == peerIP;
+		});
+	}
+	void Evict(std::uint64_t now)
+	{
+		const auto firstLive =
+			std::remove_if(m_expected.begin(), m_expected.end(), [now](const Entry &entry) {
+				return now >= entry.registeredAt &&
+				       now - entry.registeredAt >= kExpectedEndpointTtlMs;
+			});
+		m_expected.erase(firstLive, m_expected.end());
+	}
+	std::vector<Entry> m_expected;
+};
+
+// The side that did not request the punch dials back only when the peer's own stream has not
+// arrived by then, which normally leaves a single connection.
+constexpr std::uint64_t kDialBackDelayMs = 3'000;
+constexpr std::size_t kMaxDialBacks = 16;
+
+class DialBackSchedule
+{
+public:
+	struct Entry
+	{
+		IPv4 peerIP;
+		std::uint16_t tcpPort;
+		std::uint16_t udpPort;
+		std::uint64_t dueAt;
+	};
+	void Schedule(const IPv4 &peerIP, std::uint16_t tcpPort, std::uint16_t udpPort, std::uint64_t now)
+	{
+		const auto same = std::find_if(m_entries.begin(),
+			m_entries.end(),
+			[&peerIP](const Entry &entry) { return entry.peerIP == peerIP; });
+		if (same != m_entries.end()) {
+			m_entries.erase(same);
+		} else if (m_entries.size() >= kMaxDialBacks) {
+			m_entries.erase(m_entries.begin());
+		}
+		m_entries.push_back({ peerIP, tcpPort, udpPort, now + kDialBackDelayMs });
+	}
+	std::vector<Entry> TakeDue(std::uint64_t now)
+	{
+		std::vector<Entry> due;
+		const auto firstPending = std::stable_partition(m_entries.begin(),
+			m_entries.end(),
+			[now](const Entry &entry) { return now >= entry.dueAt; });
+		due.assign(m_entries.begin(), firstPending);
+		m_entries.erase(m_entries.begin(), firstPending);
+		return due;
+	}
+
+private:
+	std::vector<Entry> m_entries;
+};
 } // namespace NatServerHolePunch
 #endif // ENABLE_NATT_SERVER_COORDINATION
 #endif // AMULE_NAT_SERVER_HOLE_PUNCH_H
