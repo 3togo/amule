@@ -13,7 +13,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-19 13:45+0000\n"
+"PO-Revision-Date: 2026-10-21 09:04+0000\n"
 "Last-Translator: Marcel Pol <marcel@timelord.nl>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "Language: nl\n"
@@ -1049,11 +1049,11 @@ msgstr "Upload: %.1f%s | Download: %.1f%s"
 
 #: src/amuleDlg.cpp
 msgid "Transfer speeds are reported by the daemon. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "Overdrachtsnelheid wordt gerapporteerd door de daemon. Totale uploads bevat ook controleverkeer. Peeruploadsnelheid bevat alleen bestandpakketten. Waardes tussen haakjes toten protocol-overhead in KiB/s."
 
 #: src/amuleDlg.cpp
 msgid "Live speeds are averaged over the last second. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "Live snelheid wordt gemiddeld genomen over de laatste seconde. Totale uploads bevat ook controleverkeer. Peeruploadsnelheid bevat alleen bestandpakketten. Waardes tussen haakjes toten protocol-overhead in KiB/s."
 
 #: src/amuleDlg.cpp
 #, c-format
@@ -4120,7 +4120,7 @@ msgstr "Kopiëren"
 msgid "Paste"
 msgstr "Plakken"
 
-#: src/MuleTextCtrl.cpp src/muuli_wdr.cpp
+#: src/MuleTextCtrl.cpp src/muuli_wdr.cpp src/TextClearButton.h
 #: src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Clear"
 msgstr "Wissen"
@@ -5031,9 +5031,8 @@ msgid "Slot Allocation"
 msgstr "Slot-toewijzing"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Bandwidth calculator..."
-msgstr "Bandbreedtegrenzen"
+msgstr "Bandbreedte rekenmachine..."
 
 #: src/muuli_wdr.cpp
 msgid "Ports"
@@ -7208,23 +7207,20 @@ msgid "Server connection refresh interval: Disabled"
 msgstr "Server verbinding verversingstijd: Uitgeschakeld"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Bandwidth calculator"
-msgstr "Bandbreedtegrenzen"
+msgstr "Bandbreedte rekenmachine"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Enter limits in Mbit/s. Zero means unlimited."
-msgstr ""
+msgstr "Voer limieten in Mbit/s in. Nul betekent ongelimiteerd."
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Download (Mbit/s)"
-msgstr "Downloads (%i)"
+msgstr "Download (Mbit/s)"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Upload (Mbit/s)"
-msgstr "Uploadgrens"
+msgstr "Upload (Mbit/s)"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "disabled"

@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-20 14:05+0000\n"
+"PO-Revision-Date: 2026-10-21 09:04+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
 "Language: zh_CN\n"
@@ -1050,11 +1050,11 @@ msgstr "上传: %.1f%s | 下载: %.1f%s"
 
 #: src/amuleDlg.cpp
 msgid "Transfer speeds are reported by the daemon. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "传输速度由 daemon 程序报告。总上传包括控制流量；对等方上传速度只包括文件数据包。圆括号中值显示协议总开销，单位 KiB/s。"
 
 #: src/amuleDlg.cpp
 msgid "Live speeds are averaged over the last second. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "实时速度是过去一秒均值。总上传包括控制流量；对等方上传速度只包括文件数据包。圆括号中的值显示协议总开销，单位 KiB/s。"
 
 #: src/amuleDlg.cpp
 #, c-format
@@ -4120,7 +4120,7 @@ msgstr "复制"
 msgid "Paste"
 msgstr "粘贴"
 
-#: src/MuleTextCtrl.cpp src/muuli_wdr.cpp
+#: src/MuleTextCtrl.cpp src/muuli_wdr.cpp src/TextClearButton.h
 #: src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Clear"
 msgstr "清除"
@@ -5030,9 +5030,8 @@ msgid "Slot Allocation"
 msgstr "槽速度"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Bandwidth calculator..."
-msgstr "带宽限制"
+msgstr "带宽计算器…"
 
 #: src/muuli_wdr.cpp
 msgid "Ports"
@@ -7207,23 +7206,20 @@ msgid "Server connection refresh interval: Disabled"
 msgstr "服务器连接刷新周期：已禁用"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Bandwidth calculator"
-msgstr "带宽限制"
+msgstr "带宽计算器"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Enter limits in Mbit/s. Zero means unlimited."
-msgstr ""
+msgstr "输入速率限制，单位 Mbit/s。0 表示无限制。"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Download (Mbit/s)"
-msgstr "下载 (%i)"
+msgstr "下载 (Mbit/s)"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Upload (Mbit/s)"
-msgstr "上传限制"
+msgstr "上传 (Mbit/s)"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "disabled"
