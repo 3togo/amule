@@ -416,6 +416,8 @@ EC_TAG_SERVER                             0x0500
 	EC_TAG_SERVER_FILES_HARD                  0x0510
 	EC_TAG_SERVER_TCP_FLAGS                   0x0511
 	EC_TAG_SERVER_UDP_FLAGS                   0x0512
+## Optional flag on EC_OP_FAILED: source-list update refused because a download is active.
+	EC_TAG_SERVER_UPDATE_BUSY                 0x0513
 
 EC_TAG_CLIENT                             0x0600
 	EC_TAG_CLIENT_SOFTWARE                    0x0601

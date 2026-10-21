@@ -3955,14 +3955,25 @@ CECPacket *CECServerSocket::ProcessRequest2(const CECPacket *request)
 		}
 	} break;
 	case EC_OP_SERVER_UPDATE_FROM_URL: {
-		wxString url = request->GetFirstTagSafe()->GetStringData();
+		const CECTag *urlTag = request->GetFirstTagSafe();
+		if (request->GetTagCount() > 1 || (request->GetTagCount() && !urlTag->IsString())) {
+			response = new CECPacket(EC_OP_FAILED);
+			response->AddTag(CECTag(EC_TAG_STRING, _("Invalid URL")));
+			break;
+		}
+		wxString url = urlTag->GetStringData();
 
-		// Save the new url, and update the UI (if not amuled).
-		Notify_ServersURLChanged(url);
-		thePrefs::SetEd2kServersUrl(url);
+		// An empty URL updates the configured list; explicit URLs are never saved.
 
-		theApp->serverlist->UpdateServerMetFromURL(url);
-		response = new CECPacket(EC_OP_NOOP);
+		wxString error;
+		if (theApp->serverlist->UpdateServerMetFromURL(url, false, false, &error)) {
+			response = new CECPacket(EC_OP_NOOP);
+		} else {
+			response = new CECPacket(EC_OP_FAILED);
+			response->AddTag(CECTag(EC_TAG_STRING, error));
+			if (theApp->serverlist->IsServerMetDownloading())
+				response->AddTag(CECTag(EC_TAG_SERVER_UPDATE_BUSY, static_cast<uint8>(1)));
+		}
 		break;
 	}
 	case EC_OP_SERVER_SET_STATIC_PRIO: {
@@ -4154,7 +4165,14 @@ CECPacket *CECServerSocket::ProcessRequest2(const CECPacket *request)
 		const wxString oldBindInterface(thePrefs::GetNetworkInterface());
 		bool portRebindFailed = false;
 		wxString networkMessage;
-		static_cast<const CEC_Prefs_Packet *>(request)->Apply();
+		if (!static_cast<const CEC_Prefs_Packet *>(request)->Apply()) {
+			response = new CECPacket(EC_OP_FAILED);
+			response->AddTag(CECTag(EC_TAG_STRING,
+				CFormat(_("Could not save server list sources to %s. Check the URLs and file "
+					  "permissions.")) %
+					(thePrefs::GetConfigDir() + "addresses.dat")));
+			break;
+		}
 		// Apply() left any amuleapi password the client sent sitting in the
 		// preferences as a pending request; this is what turns it into a
 		// stored, stretched record in amuleapi-passwords. Logged rather than

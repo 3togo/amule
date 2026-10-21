@@ -249,7 +249,7 @@ public:
 		EC_DETAIL_LEVEL prefs_detail = EC_DETAIL_FULL,
 		EC_DETAIL_LEVEL cat_details = EC_DETAIL_FULL);
 
-	void Apply() const;
+	bool Apply() const;
 };
 
 class CEC_Server_Tag : public CECTag

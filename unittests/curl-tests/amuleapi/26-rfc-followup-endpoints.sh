@@ -106,12 +106,20 @@ else
 fi
 
 # --- 3. POST /servers_update — body validation. ------------------
+# Use an empty saved list so this validation never starts an external download
+# that could race the explicit-URL request below. Restore it afterwards.
+SAVED_SOURCES=$(curl -s "${H_AUTH[@]}" "$API/preferences" | jq -c '{servers:{update_urls:.servers.update_urls}}')
+RC=$(curl -s -o /tmp/p11_su.json -w "%{http_code}" -X PATCH "${H_AUTH[@]}" \
+	-H "Content-Type: application/json" -d '{"servers":{"update_urls":[]}}' "$API/preferences")
+if [ "$RC" != "200" ]; then
+	_fail "servers_update setup" "expected 200, got $RC"
+fi
 RC=$(curl -s -o /tmp/p11_su.json -w "%{http_code}" -X POST "${H_AUTH[@]}" \
 	-H "Content-Type: application/json" -d '{}' "$API/servers_update")
-if [ "$RC" = "400" ]; then
-	_pass "POST /servers_update missing url → 400"
+if [ "$RC" = "400" ] && jq -e '.error.code == "amuled_rejected" and (.error.message | contains("No server list sources configured"))' /tmp/p11_su.json >/dev/null; then
+	_pass "POST /servers_update empty sources → 400 with reason"
 else
-	_fail "servers_update no-body" "expected 400, got $RC"
+	_fail "servers_update no-body" "expected rejection for empty sources, got $RC"
 fi
 RC=$(curl -s -o /tmp/p11_su.json -w "%{http_code}" -X POST "${H_AUTH[@]}" \
 	-H "Content-Type: application/json" \
@@ -123,12 +131,18 @@ else
 fi
 RC=$(curl -s -o /tmp/p11_su.json -w "%{http_code}" -X POST "${H_AUTH[@]}" \
 	-H "Content-Type: application/json" \
-	-d '{"url":"http://upd.emule-security.org/server.met"}' \
+	-d '{"url":"http://127.0.0.1:1/server.met"}' \
 	"$API/servers_update")
 if [ "$RC" = "202" ]; then
 	_pass "POST /servers_update valid url → 202"
 else
 	_fail "servers_update happy path" "got $RC: $(cat /tmp/p11_su.json)"
+fi
+
+RC=$(curl -s -o /tmp/p11_su.json -w "%{http_code}" -X PATCH "${H_AUTH[@]}" \
+	-H "Content-Type: application/json" -d "$SAVED_SOURCES" "$API/preferences")
+if [ "$RC" != "200" ]; then
+	_fail "servers_update restore sources" "expected 200, got $RC"
 fi
 
 # --- 4. /servers/by-address/<ip>:<port> connect + DELETE. --------

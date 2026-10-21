@@ -483,7 +483,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr ""
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr ""
 
@@ -1254,6 +1254,10 @@ msgstr ""
 #: src/amule-remote-gui.cpp
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
+msgstr ""
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
 msgstr ""
 
 #: src/amule-remote-gui.cpp
@@ -2251,6 +2255,25 @@ msgstr[1] ""
 #: src/DownloadQueue.cpp
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "Edit server list sources"
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
 msgstr ""
 
 #: src/ExternalConn.cpp
@@ -5048,7 +5071,7 @@ msgid "retries"
 msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "List"
+msgid "Edit sources…"
 msgstr ""
 
 #: src/muuli_wdr.cpp
@@ -5653,16 +5676,16 @@ msgstr ""
 msgid "Click this button to reset the log."
 msgstr ""
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+msgid "Update server list"
 msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
+msgid "One-off URL:"
 msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+msgid "Download once"
 msgstr ""
 
 #: src/muuli_wdr.cpp
@@ -6948,16 +6971,6 @@ msgid "Reset to defaults"
 msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr ""
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr ""
 
@@ -7539,16 +7552,11 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr ""
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
+msgid "A server list download is already in progress."
 msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr ""
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+msgid "No server list sources configured"
 msgstr ""
 
 #: src/ServerList.cpp
@@ -7558,16 +7566,7 @@ msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr ""
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr ""
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
+msgid "Finished downloading the server list from %s"
 msgstr ""
 
 #: src/ServerList.cpp
@@ -7775,6 +7774,14 @@ msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
 msgstr ""
 
 #: src/ServerWnd.cpp

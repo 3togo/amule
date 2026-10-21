@@ -23,6 +23,7 @@
 //
 
 #include "Api.h"
+#include "ServerListSources.h"
 #include "JsonDepthScan.h" // webapi::JsonNestingWithinLimit
 
 #include "ClientTagNames.h" // Needed for the shared client-tag token decoders
@@ -3625,10 +3626,9 @@ std::string FilePriorityAccepted(unsigned domain)
 	return "`priority` must be one of " + out;
 }
 
-// /servers_update, /kad/update and /ipfilter/update are the same operation over
-// three lists: take one http(s) URL, hand it to amuled in a single string tag, echo
-// the effective URL back with a 202. amuled persists the URL into the matching
-// preference itself, so none of them also PATCHes it here.
+// List downloads pass a URL to amuled and return 202 when accepted.
+// Server updates may omit the URL to download all saved sources; explicit
+// server URLs are used once. Kad and IP filter downloads persist their URL.
 struct UrlFetchSpec
 {
 	// JSON body field carrying the URL, and the key echoed in the reply.
@@ -3644,6 +3644,8 @@ struct UrlFetchSpec
 	// Run an inline RefresherTick so the caches, and the SSE diff built from them,
 	// pick up whatever already landed.
 	bool refresh_after;
+	// An omitted URL selects a list in the daemon instead of a single configured URL.
+	bool optional_url = false;
 };
 
 // Pull the URL out of the body per `spec`, falling back to `configured` when the
@@ -3689,6 +3691,10 @@ bool ResolveFetchUrl(const CHttpServer::Request &req,
 				("required string field " + field + " is missing").c_str());
 			return false;
 		}
+		if (spec.optional_url) {
+			out_url.clear();
+			return true;
+		}
 		if (configured == nullptr) {
 			rejection = ErrorResponse(
 				503, "ec_unavailable", "amuleapi has not received its first EC snapshot yet");
@@ -3732,8 +3738,13 @@ CHttpServer::Response UrlFetchOp(
 	}
 	std::string ec_err;
 	if (IsEcFailedResponse(ec_resp, ec_err)) {
+		const CECTag *busy = ec_resp->GetTagByName(EC_TAG_SERVER_UPDATE_BUSY);
+		const int status = spec.op == EC_OP_SERVER_UPDATE_FROM_URL && busy && busy->IsInt() &&
+						   busy->GetInt() != 0
+					   ? 409
+					   : 400;
 		delete ec_resp;
-		return ErrorResponse(400, "amuled_rejected", ec_err.c_str());
+		return ErrorResponse(status, "amuled_rejected", ec_err.c_str());
 	}
 	delete ec_resp;
 
@@ -6788,12 +6799,16 @@ CHttpServer::Response CApiDispatcher::HandleServerUpdateFromUrl(const CHttpServe
 	// next few ticks (CServerList::UpdateServerMetFromURL), so the `server_added` SSE
 	// events keep firing on subsequent natural ticks.
 	static const UrlFetchSpec kSpec = {
-		"url", EC_OP_SERVER_UPDATE_FROM_URL, EC_TAG_SERVERS_UPDATE_URL, true, true
+		"url", EC_OP_SERVER_UPDATE_FROM_URL, EC_TAG_SERVERS_UPDATE_URL, false, true, true
 	};
 	std::string url;
 	CHttpServer::Response rejection;
 	if (!ResolveFetchUrl(req, kSpec, nullptr, url, rejection)) {
 		return rejection;
+	}
+	if (!url.empty() && (url.find('\0') != std::string::npos ||
+				    !ServerListSources::IsValid(wxString::FromUTF8(url.c_str())))) {
+		return ErrorResponse(400, "bad_request", "url must be a valid HTTP or HTTPS URL");
 	}
 	return UrlFetchOp(m_app, m_state, kSpec, url);
 }
@@ -8188,7 +8203,14 @@ bool PrefTakeString(const picojson::object &o,
 		err = std::string(key) + " must be a string";
 		return false;
 	}
-	group.AddTag(CECTag(name, wxString::FromUTF8(it->second.get<std::string>().c_str())));
+	const auto &value = it->second.get<std::string>();
+	if (name == EC_TAG_SERVERS_UPDATE_URL &&
+		(value.find('\0') != std::string::npos ||
+			(!value.empty() && !ServerListSources::IsValid(wxString::FromUTF8(value.c_str()))))) {
+		err = "update_url must be empty or a valid HTTP or HTTPS URL";
+		return false;
+	}
+	group.AddTag(CECTag(name, wxString::FromUTF8(value.c_str())));
 	any = true;
 	return true;
 }
@@ -8216,7 +8238,14 @@ bool PrefTakeStringArray(const picojson::object &o,
 			err = std::string(key) + " must be an array of strings";
 			return false;
 		}
-		list.AddTag(CECTag(EC_TAG_STRING, wxString::FromUTF8(el.get<std::string>().c_str())));
+		const auto &value = el.get<std::string>();
+		if (name == EC_TAG_SERVERS_URL_LIST &&
+			(value.find('\0') != std::string::npos ||
+				!ServerListSources::IsValid(wxString::FromUTF8(value.c_str())))) {
+			err = "update_urls must contain valid HTTP or HTTPS URLs";
+			return false;
+		}
+		list.AddTag(CECTag(EC_TAG_STRING, wxString::FromUTF8(value.c_str())));
 	}
 	group.AddTag(list);
 	any = true;

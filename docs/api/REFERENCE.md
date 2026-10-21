@@ -2102,7 +2102,7 @@ curl -s -X PATCH -H "Authorization: Bearer $TOKEN" \
 
 **Auth:** `ADMIN`
 
-Tells amuled to fetch the `server.met` from the supplied URL and refresh its list. Same operation the desktop GUI's "Update server list from URL" button drives.
+With no body or `{}`, downloads and merges all configured `servers.update_urls` in order. With `url`, downloads that source once without changing preferences. Failed sources do not stop a configured-list update. Cancellation stops the sequence. An empty configured list or invalid URL is rejected with HTTP 400 and the daemon’s reason. A download already in progress returns HTTP 409 Conflict.
 
 **Body:**
 
@@ -2110,11 +2110,11 @@ Tells amuled to fetch the `server.met` from the supplied URL and refresh its lis
 { "url": "http://example.com/server.met" }
 ```
 
-`url` is **required** here, and must start with `http://` or `https://`; omitting it, or sending anything else, is a `400 bad_request`. This differs from [`POST /ipfilter/update`](#post-apiv1ipfilterupdate), which does fall back to its configured preference when the field is absent.
+`url` is optional. When supplied it must be a nonempty HTTP or HTTPS URL; invalid values produce `400 bad_request`. An empty configured list is a no-op. The daemon reads its list at the start of the operation, so this does not depend on the API preference snapshot.
 
 All three `*/update` endpoints -- servers, Kad nodes and the IP filter -- name this field `url` (R6), rather than repeating a noun the path already carries.
 
-The URL is **persisted** into the `servers.update_url` preference, so a subsequent `GET /preferences` reflects it — there is no need to PATCH it separately.
+The URL is **not saved**. Edit `servers.update_urls` through `PATCH /preferences` to change the configured sources. The array accepts only HTTP/HTTPS URLs, preserves order and removes duplicates; `[]` disables configured-list downloads. `servers.update_url` remains a read/write compatibility alias for the first entry; writing it replaces the first entry and retains the rest. If both are supplied, `update_urls` takes precedence. Sources are saved atomically in the daemon's `addresses.dat`; a failed save rejects the request.
 
 **Response:** `202 Accepted`, no body. The download runs asynchronously -- its outcome arrives on the log channel.
 
@@ -2387,7 +2387,8 @@ Returns every preference category amuled carries over EC. The `general` and `con
     "server_priority_system_enabled": true,
     "smart_lowid_check_enabled": true, "safe_server_connect_enabled": false,
     "autoconnect_static_servers_only": false, "manual_servers_high_priority": false,
-    "update_url": "http://upd.emule-security.org/server.met"
+    "update_url": "https://upd.emule-security.org/server.met",
+    "update_urls": ["https://upd.emule-security.org/server.met"]
   },
   "security": {
     "shared_files_visibility": "everybody",
@@ -2440,7 +2441,7 @@ downloads are skipped; uploads continue while a check runs.
 
 Booleans are plain JSON `true`/`false` regardless of how amuled encodes them on the wire. **Passwords are never returned** — the webserver admin/guest and amuleapi passwords are write-only (see PATCH). `general.user_hash` is the node's own identity hash, not a password.
 
-**Admin-only fields.** `connection.proxy_user`, `geoip.maxmind_license`, `geoip.custom_update_url`, `servers.update_url`, `security.ipfilter_update_url` and `kad.update_url` are returned to admin sessions only, because these values may contain credentials or access tokens. Guest responses omit these keys. Admins read and set them as usual. Download URLs in daemon logs and `geoip.last_update_status` omit user info, query strings and fragments.
+**Admin-only fields.** `connection.proxy_user`, `geoip.maxmind_license`, `geoip.custom_update_url`, `servers.update_url`, `servers.update_urls`, `security.ipfilter_update_url` and `kad.update_url` are returned to admin sessions only, because these values may contain credentials or access tokens. Guest responses omit these keys. Admins read and set them as usual. Download URLs in daemon logs and `geoip.last_update_status` omit user info, query strings and fragments.
 
 `connection.extended_udp_port_enabled` is positive-sense: `true` means the extended UDP port (Kad / global search) is on. `security.shared_files_visibility` is a 3-state enum string, not a bool: `"everybody"` / `"friends"` / `"nobody"`.
 
@@ -2711,7 +2712,7 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" \
   "http://$HOST/api/v1/ipfilter/update"
 ```
 
-An explicit URL is **persisted** into the `security.ipfilter_update_url` preference, so a subsequent `GET /preferences` reflects it and the next startup auto-update (`security.ipfilter_auto_update_enabled`) uses it — the same side effect [`POST /api/v1/servers_update`](#post-apiv1servers_update) and [`POST /api/v1/kad/update`](#post-apiv1kadupdate) have.
+An explicit URL is **persisted** into the `security.ipfilter_update_url` preference, so a subsequent `GET /preferences` reflects it and the next startup auto-update (`security.ipfilter_auto_update_enabled`) uses it — the same side effect [`POST /api/v1/kad/update`](#post-apiv1kadupdate) has.
 
 **Response:** `202 Accepted`, no body. Where the request named a URL it already knows which one ran; where it omitted one, `security.ipfilter_update_url` on [`GET /preferences`](#get-apiv1preferences) is the answer, and the paragraph above is why reading it there is the honest version -- the snapshot this handler resolves from is the same one that endpoint serves.
 

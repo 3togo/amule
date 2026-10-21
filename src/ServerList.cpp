@@ -28,6 +28,7 @@
 #include "DownloadUrl.h" // Needed for DownloadUrlForLog
 
 #include "ServerList.h" // Interface declarations.
+#include "ServerListSources.h"
 
 #include <protocol/Protocols.h>
 #include <protocol/ed2k/Constants.h>
@@ -85,11 +86,10 @@ bool CServerList::Init()
 
 void CServerList::StartAutoUpdate()
 {
-	current_url_index = 0;
-	AutoUpdate();
+	UpdateServerMetFromURL(wxEmptyString, false, true);
 }
 
-bool CServerList::LoadServerMet(const CPath &path)
+bool CServerList::LoadServerMet(const CPath &path, bool allowPartial)
 {
 	AddLogLineN(CFormat(_("Loading server.met file: %s")) % path);
 
@@ -138,7 +138,11 @@ bool CServerList::LoadServerMet(const CPath &path)
 		AddLogLineC(_("IO error while reading 'server.met': ") + err.what());
 	}
 
-	// The servers read before an error are still added.
+	if (!readAll && !allowPartial) {
+		return false;
+	}
+
+	// Startup can still salvage servers from a damaged local file.
 	Notify_ServerFreeze();
 	uint32 iAddCount = 0;
 	for (const ServerMetRecord &record : records) {
@@ -468,6 +472,10 @@ void CServerList::GetUserFileStatus(uint32 &user, uint32 &file)
 
 CServerList::~CServerList()
 {
+	// HTTP shutdown can leave a completed transfer's notification queued.
+	const CPath temporary(thePrefs::GetConfigDir() + "server.met.download");
+	if (temporary.FileExists())
+		CPath::RemoveFile(temporary);
 	if (IsInitialized()) {
 		SaveServerMet();
 	}
@@ -804,18 +812,57 @@ void CServerList::RemoveDeadServers()
 	}
 }
 
-void CServerList::UpdateServerMetFromURL(const wxString &strURL, bool showDialog)
+bool CServerList::UpdateServerMetFromURL(
+	const wxString &strURL, bool showDialog, bool automatic, wxString *error)
 {
-	if (strURL.Find("://") == -1) {
-		AddLogLineC(_("Invalid URL"));
-		return;
+	auto refuse = [error](const wxString &reason) {
+		if (error)
+			*error = reason;
+		AddLogLineN(reason);
+		return false;
+	};
+	if (m_serverMetDownloading) {
+		return refuse(_("A server list download is already in progress."));
 	}
-	m_URLUpdate = strURL;
-	wxString strTempFilename(thePrefs::GetConfigDir() + "server.met.download");
-	CHTTPDownloadThread *downloader = new CHTTPDownloadThread(strURL,
-		strTempFilename,
+	m_serverMetAutomatic = automatic;
+	m_serverMetSources.clear();
+	if (strURL.empty()) {
+		m_serverMetSources = thePrefs::GetServerListURLs();
+	} else if (ServerListSources::IsValid(strURL)) {
+		m_serverMetSources.Add(strURL);
+	} else {
+		return refuse(_("Invalid URL"));
+	}
+	if (m_serverMetSources.empty()) {
+		return refuse(_("No server list sources configured"));
+	}
+	m_serverMetSourceIndex = 0;
+	m_serverMetLoaded = false;
+	m_serverMetShowDialog = showDialog;
+	StartNextServerMetDownload();
+	return true;
+}
+
+void CServerList::StartNextServerMetDownload()
+{
+	if (m_serverMetSourceIndex < m_serverMetSources.size()) {
+		const wxString source = m_serverMetSources[m_serverMetSourceIndex++];
+		AddLogLineN(CFormat(_("Start downloading server list from %s")) % DownloadUrlForLog(source));
+		StartServerMetDownload(source, m_serverMetShowDialog);
+	} else {
+		m_serverMetSources.clear();
+	}
+}
+
+void CServerList::StartServerMetDownload(const wxString &url, bool showDialog)
+{
+	m_serverMetURL = url;
+	m_serverMetDownloading = true;
+	m_serverMetShowDialog = showDialog;
+	auto *downloader = new CHTTPDownloadThread(url,
+		thePrefs::GetConfigDir() + "server.met.download",
 		thePrefs::GetConfigDir() + "server.met",
-		HTTP_ServerMet,
+		m_serverMetAutomatic ? HTTP_ServerMetAuto : HTTP_ServerMet,
 		showDialog,
 		false);
 	downloader->Create();
@@ -824,92 +871,46 @@ void CServerList::UpdateServerMetFromURL(const wxString &strURL, bool showDialog
 
 bool CServerList::DownloadFinished(uint32 result)
 {
-	bool ret = false;
+	m_serverMetDownloading = false;
+	const CPath temporary(thePrefs::GetConfigDir() + "server.met.download");
+	if (theApp->IsOnShutDown()) {
+		if (temporary.FileExists())
+			CPath::RemoveFile(temporary);
+		m_serverMetSources.clear();
+		return false;
+	}
+	bool loaded = false;
 	if (result == HTTP_Success) {
-		const CPath tempFilename = CPath(thePrefs::GetConfigDir() + "server.met.download");
-
-		LoadServerMet(tempFilename);
-		SaveServerMet();
-
-		CPath::RemoveFile(tempFilename);
-		AddLogLineN(CFormat(_("Finished downloading the server list from %s")) %
-			    DownloadUrlForLog(m_URLUpdate));
-		ret = true;
-		// cppcheck-suppress duplicateBranch
-	} else if (result == HTTP_Skipped) {
+		loaded = LoadServerMet(temporary, false);
+		if (loaded) {
+			m_serverMetLoaded = true;
+			SaveServerMet();
+			AddLogLineN(CFormat(_("Finished downloading the server list from %s")) %
+				    DownloadUrlForLog(m_serverMetURL));
+		}
+	}
+	if (temporary.FileExists())
+		CPath::RemoveFile(temporary);
+	if (result == HTTP_Skipped) {
 		AddLogLineN(CFormat(_("Skipped download of %s, because requested file is not newer.")) %
 			    "server.met");
-	} else {
+	}
+	if (result == HTTP_Cancelled) {
+		m_serverMetSources.clear();
+		return false;
+	}
+	if (!loaded && result != HTTP_Skipped) {
 		AddLogLineC(CFormat(_("Failed to download %s from %s")) % "server.met" %
-			    DownloadUrlForLog(m_URLUpdate));
+			    DownloadUrlForLog(m_serverMetURL));
 	}
-	return ret;
-}
-
-void CServerList::AutoUpdate()
-{
-
-	uint8 url_count = theApp->glob_prefs->addresses_list.GetCount();
-
-	if (!url_count) {
-		AddLogLineC(_("No server list address entry in 'addresses.dat' found. Please paste a valid "
-			      "server list address into this file in order to auto-update your server list"));
-		return;
-	}
-	// Do current URL. Callback function will take care of the others.
-	while (current_url_index < url_count) {
-		wxString URI = theApp->glob_prefs->addresses_list[current_url_index];
-		// wxURL only registers protocol handlers for http and ftp, so any https URL would
-		// come back as wxURL_NOPROTO and be rejected -- while the download itself goes
-		// through wxWebRequest, which handles https fine (#714). Validate with wxURI plus
-		// an explicit scheme check instead.
-		wxURI uri(URI);
-		const wxString scheme = uri.HasScheme() ? uri.GetScheme().Lower() : wxString();
-		if (uri.HasServer() && (scheme == "http" || scheme == "https")) {
-			m_URLUpdate = URI;
-			wxString strTempFilename = thePrefs::GetConfigDir() + "server_auto.met";
-			AddLogLineC(
-				CFormat(_("Start downloading server list from %s")) % DownloadUrlForLog(URI));
-			CHTTPDownloadThread *downloader = new CHTTPDownloadThread(URI,
-				strTempFilename,
-				thePrefs::GetConfigDir() + "server.met",
-				HTTP_ServerMetAuto,
-				false,
-				false);
-			downloader->Create();
-			downloader->Run();
-
-			return;
-		} else {
-			AddLogLineC(
-				CFormat(_(
-					"WARNING: invalid URL specified for auto-updating of servers: %s")) %
-				URI);
-		}
-		current_url_index++;
-	}
-	AddLogLineC(_("No valid server.met auto-download url on addresses.dat"));
+	StartNextServerMetDownload();
+	return !m_serverMetDownloading && m_serverMetLoaded;
 }
 
 void CServerList::AutoDownloadFinished(uint32 result)
 {
-	if (result == HTTP_Success) {
-		CPath tempFilename = CPath(thePrefs::GetConfigDir() + "server_auto.met");
-
-		LoadServerMet(tempFilename);
-		SaveServerMet();
-
-		CPath::RemoveFile(tempFilename);
-	} else {
-		AddLogLineC(CFormat(_("Failed to download the server list from %s")) %
-			    DownloadUrlForLog(m_URLUpdate));
-	}
-
-	++current_url_index;
-
-	if (current_url_index < theApp->glob_prefs->addresses_list.GetCount()) {
-		AutoUpdate();
-	}
+	// Automatic updates merge the same sources without the manual connect action.
+	DownloadFinished(result);
 }
 
 void CServerList::ObserverAdded(ObserverType *o)

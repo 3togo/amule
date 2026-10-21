@@ -28,6 +28,13 @@
 #include <wx/file.h>   // Needed for wxFile
 #include <wx/log.h>    // Needed for wxLogSysError
 #include <wx/textctrl.h>
+#include <wx/tokenzr.h>
+#include <wx/msgdlg.h>
+#include "Preferences.h"
+#ifdef CLIENT_GUI
+#include "amule.h"
+#include "amule-remote-gui.h"
+#endif
 
 #include "EditServerListDlg.h" // Interface declarations
 
@@ -57,7 +64,7 @@ EditServerListDlg::EditServerListDlg(
 
 	Centre(wxBOTH);
 
-	if (wxFile::Exists(filename))
+	if (!filename.empty() && wxFile::Exists(filename))
 		m_textctrl->LoadFile(filename);
 
 	m_textctrl->SetFocus();
@@ -69,9 +76,57 @@ EditServerListDlg::~EditServerListDlg() {}
 
 void EditServerListDlg::OnOK(wxCommandEvent &WXUNUSED(event))
 {
-	if (m_textctrl->SaveFile(m_file))
+	if (m_file.empty() || m_textctrl->SaveFile(m_file))
 		EndModal(1);
 	else
 		wxLogSysError("Can't write to file '" + m_file + "'");
+}
+wxString EditServerListDlg::GetText() const
+{
+	return m_textctrl->GetValue();
+}
+void EditServerListDlg::SetText(const wxString &text)
+{
+	m_textctrl->SetValue(text);
+}
+
+void EditServerListSources(wxWindow *parent)
+{
+	EditServerListDlg dlg(parent,
+		_("Edit server list sources"),
+		_("Enter one server.met URL per line.\nSaving replaces the source list and removes comment "
+		  "lines."),
+		wxEmptyString);
+	wxString text;
+	for (const auto &url : thePrefs::GetServerListURLs())
+		text += url + "\n";
+	dlg.SetText(text);
+	while (dlg.ShowModal() == 1) {
+		wxArrayString urls;
+		wxStringTokenizer lines(dlg.GetText(), "\r\n");
+		while (lines.HasMoreTokens()) {
+			wxString url = lines.GetNextToken();
+			url.Trim().Trim(false);
+			if (!url.empty() && !url.StartsWith("#"))
+				urls.Add(url);
+		}
+		if (thePrefs::SetServerListURLs(urls)) {
+#ifdef CLIENT_GUI
+			theApp->glob_prefs->SendChangesToRemote();
+#endif
+			return;
+		}
+		wxMessageBox(wxString::Format(_("Could not save server list sources to %s. Check the URLs "
+						"and file permissions."),
+#ifdef CLIENT_GUI
+				     _("addresses.dat in the daemon configuration directory")
+#else
+				     thePrefs::GetConfigDir() + "addresses.dat"
+#endif
+					     ),
+			_("ERROR"),
+			wxOK | wxICON_ERROR,
+			parent);
+	}
 }
 // File_checked_for_headers

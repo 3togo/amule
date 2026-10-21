@@ -28,11 +28,15 @@
 
 class wxTextCtrl;
 
+void EditServerListSources(wxWindow *parent);
+
 class EditServerListDlg : public wxDialog
 {
 public:
 	EditServerListDlg(
 		wxWindow *parent, const wxString &caption, const wxString &message, const wxString &filename);
+	wxString GetText() const;
+	void SetText(const wxString &text);
 
 	virtual ~EditServerListDlg();
 

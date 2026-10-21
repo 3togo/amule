@@ -945,10 +945,8 @@
   "prefs_field_servers_safe_server_connect_enabled": "Connessione sicura",
   "prefs_field_servers_autoconnect_static_servers_only": "Connetti automaticamente solo ai server statici",
   "prefs_field_servers_manual_servers_high_priority": "Assegna priorità alta ai server aggiunti manualmente",
-  "prefs_field_servers_update_url": "URL di aggiornamento della lista server",
   "prefs_field_kad_update_url": "URL di aggiornamento dei nodi Kad",
   "prefs_action_enter_url": "Inserisci un URL",
-  "prefs_action_servers_update": "Scarica ora la lista server da questo URL e sostituisci quella attuale",
   "prefs_action_servers_update_toast": "Aggiornamento della lista server…",
   "prefs_action_kad_update": "Scarica ora la lista dei nodi Kad da questo URL e sostituisci quella attuale (Kad si riavvia)",
   "prefs_action_kad_update_toast": "Aggiornamento della lista dei nodi Kad…",
@@ -1045,5 +1043,11 @@
   "downloads_confirm_delete_selected_one": "Eliminare dal disco il file selezionato? I file completati verranno eliminati definitivamente; i download attivi verranno annullati e rimossi. L'operazione non può essere annullata.",
   "downloads_confirm_delete_selected_many": "Eliminare dal disco i {n} file selezionati? I file completati verranno eliminati definitivamente; i download attivi verranno annullati e rimossi. L'operazione non può essere annullata.",
   "downloads_confirm_delete_selected_other": "Eliminare dal disco i {n} file selezionati? I file completati verranno eliminati definitivamente; i download attivi verranno annullati e rimossi. L'operazione non può essere annullata.",
-  "prefs_field_files_shared_file_reverify_days": "Verifica i dati locali dei file condivisi richiesti ogni N giorni (0 = disattivato)"
+  "prefs_field_files_shared_file_reverify_days": "Verifica i dati locali dei file condivisi richiesti ogni N giorni (0 = disattivato)",
+  "prefs_field_servers_update_urls": "Server list source URLs (one per line)",
+  "prefs_field_servers_update_list": "Update server list",
+  "prefs_sources_apply_first": "Apply your changes first",
+  "prefs_sources_saved_help": "Downloads from the saved sources.",
+  "prefs_sources_one_off": "One-off URL",
+  "prefs_sources_download_once": "Download once"
 }

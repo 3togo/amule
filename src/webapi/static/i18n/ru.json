@@ -112,7 +112,6 @@
   "prefs_field_files_mmap_enabled": "Использовать MMAP: доступ к файлам с отображением в память (экономит память)",
   "prefs_field_directories_follow_symlinks": "Переходить по символическим ссылкам в общих папках",
   "client_detail_os": "ОС",
-  "prefs_action_servers_update": "Загрузить список серверов по этому URL сейчас и заменить текущий",
   "shared_prio_release": "Выпуск",
   "client_detail_ul_total": "Всего отдано",
   "client_detail_origin": "Источник",
@@ -233,7 +232,6 @@
   "prefs_field_security_obfuscation_requested": "Использовать маскировку исходящих соединений",
   "prefs_group_general": "Основные",
   "prefs_field_connection_upnp_control_point_port": "Порт UPnP TCP (необязательно)",
-  "prefs_field_servers_update_url": "Адрес обновления списка серверов",
   "downloads_peer_ident_id_needed": "Требуется ИД",
   "downloads_peer_col_user_hash": "Хеш пользователя",
   "prefs_remote_controls": "Удалённое управление",
@@ -1045,5 +1043,11 @@
   "downloads_confirm_delete_selected_one": "Удалить выбранный файл с диска? Завершённые файлы будут безвозвратно удалены; активные загрузки будут отменены и удалены. Это действие необратимо.",
   "downloads_confirm_delete_selected_few": "Удалить выбранные файлы ({n} шт.) с диска? Завершённые файлы будут безвозвратно удалены; активные загрузки будут отменены и удалены. Это действие необратимо.",
   "downloads_confirm_delete_selected_many": "Удалить выбранные файлы ({n} шт.) с диска? Завершённые файлы будут безвозвратно удалены; активные загрузки будут отменены и удалены. Это действие необратимо.",
-  "prefs_field_files_shared_file_reverify_days": "Проверять локальные данные запрошенных общих файлов каждые N дней (0 — отключено)"
+  "prefs_field_servers_update_urls": "Server list source URLs (one per line)",
+  "prefs_field_servers_update_list": "Update server list",
+  "prefs_field_files_shared_file_reverify_days": "Проверять локальные данные запрошенных общих файлов каждые N дней (0 — отключено)",
+  "prefs_sources_apply_first": "Apply your changes first",
+  "prefs_sources_saved_help": "Downloads from the saved sources.",
+  "prefs_sources_one_off": "One-off URL",
+  "prefs_sources_download_once": "Download once"
 }

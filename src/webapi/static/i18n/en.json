@@ -944,10 +944,8 @@
   "prefs_field_servers_safe_server_connect_enabled": "Safe connect",
   "prefs_field_servers_autoconnect_static_servers_only": "Autoconnect to servers in static list only",
   "prefs_field_servers_manual_servers_high_priority": "Set manually added servers to High Priority",
-  "prefs_field_servers_update_url": "Server list update URL",
   "prefs_field_kad_update_url": "Kad nodes update URL",
   "prefs_action_enter_url": "Enter a URL",
-  "prefs_action_servers_update": "Download the server list from this URL now and replace the current one",
   "prefs_action_servers_update_toast": "Updating server list…",
   "prefs_action_kad_update": "Download the Kad node list from this URL now and replace the current one (Kad restarts)",
   "prefs_action_kad_update_toast": "Updating Kad node list…",
@@ -1035,5 +1033,11 @@
   "messages_captcha_passed": "CAPTCHA passed. Your message was delivered.",
   "messages_captcha_retry": "CAPTCHA failed. Send another message to try again.",
   "messages_captcha_exhausted": "CAPTCHA failed. No attempts remain.",
-  "messages_captcha_image": "Chat CAPTCHA"
+  "messages_captcha_image": "Chat CAPTCHA",
+  "prefs_field_servers_update_urls": "Server list source URLs (one per line)",
+  "prefs_field_servers_update_list": "Update server list",
+  "prefs_sources_apply_first": "Apply your changes first",
+  "prefs_sources_saved_help": "Downloads from the saved sources.",
+  "prefs_sources_one_off": "One-off URL",
+  "prefs_sources_download_once": "Download once"
 }

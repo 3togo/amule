@@ -110,7 +110,7 @@ def run(daemon_binary, api_binary):
                          'runtime enable did not load server.met and staticservers.dat')
                 assert {s['port'] for s in request('/servers')['servers']} == {4661, 4662}
                 log_text = (core / 'logfile').read_text(errors='replace')
-                assert log_text.count("No server list address entry in 'addresses.dat'") == 1, log_text
+                assert log_text.count('No server list sources configured') == 1, log_text
                 assert f'Created Server UDP-Socket at port {peer_port + 3}' in log_text
 
                 # Change the on-disk list: subsequent toggles must preserve the live list,
@@ -122,7 +122,7 @@ def run(daemon_binary, api_binary):
                     assert network_flags() == int(ed2k) | (int(kad) << 1)
                 assert len(request('/servers')['servers']) == 2, 'server list was reinitialized'
                 log_text = (core / 'logfile').read_text(errors='replace')
-                assert log_text.count("No server list address entry in 'addresses.dat'") == 1
+                assert log_text.count('No server list sources configured') == 1
 
                 # Partial EC writes from another client must also feed the poll signal,
                 # including a zero bitmask, without changing the other network flag.

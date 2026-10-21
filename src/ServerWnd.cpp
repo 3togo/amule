@@ -36,7 +36,8 @@
 #include "Server.h"         // Needed for CServer
 #include "ServerList.h"     // Needed for CServerList
 #include "ServerListCtrl.h" // Needed for CServerListCtrl
-#include "Preferences.h"    // Needed for CPreferences
+#include "EditServerListDlg.h"
+#include "Preferences.h" // Needed for CPreferences
 #include "ServerConnect.h"
 #include "amuleDlg.h" // Needed for CamuleDlg
 #include "amule.h"    // Needed for theApp
@@ -130,7 +131,23 @@ CServerWnd::CServerWnd(wxWindow *pParent /*=NULL*/, int splitter_pos)
 	// default and avoid the layout-recalc storm during minimize/restore that gravity 0.5
 	// produced on Mac and Windows.
 	CastChild(IDC_NODESLISTURL, wxTextCtrl)->SetValue(thePrefs::GetKadNodesUrl());
-	CastChild(IDC_SERVERLISTURL, wxTextCtrl)->SetValue(thePrefs::GetEd2kServersUrl());
+
+	auto *updateSources = CastChild(ID_UPDATELIST, wxButton);
+	SetButtonLabelAndBitmap(updateSources, _("Update server list"), "amule:reload");
+	updateSources->SetToolTip(_("Download and merge every saved source"));
+	auto *sourceField = CastChild(IDC_SERVERLISTURL, wxTextCtrl);
+	sourceField->SetToolTip(_("Download this server.met URL once without saving it."));
+
+	sourceField->SetHint("https://…/server.met");
+	auto *editSources = wxDynamicCast(FindWindowByName("editServerSources", this), wxButton);
+	editSources->Bind(wxEVT_BUTTON, [this](wxCommandEvent &) { EditServerListSources(this); });
+	auto *downloadOnce = wxDynamicCast(FindWindowByName("downloadServerListOnce", this), wxButton);
+	downloadOnce->Bind(wxEVT_BUTTON, &CServerWnd::OnBnClickedUpdateservermetfromurl, this);
+	downloadOnce->Enable(!sourceField->GetValue().empty());
+	sourceField->Bind(wxEVT_TEXT, [downloadOnce](wxCommandEvent &event) {
+		downloadOnce->Enable(!event.GetString().empty());
+		event.Skip();
+	});
 
 	// Three columns, no header: an empty spacer that insets the labels, then label and value.
 	// Columns must exist before any row is inserted -- adding one to a populated wxListCtrl
@@ -161,13 +178,11 @@ CServerWnd::CServerWnd(wxWindow *pParent /*=NULL*/, int splitter_pos)
 
 CServerWnd::~CServerWnd()
 {
-	thePrefs::SetEd2kServersUrl(CastChild(IDC_SERVERLISTURL, wxTextCtrl)->GetValue());
 	thePrefs::SetKadNodesUrl(CastChild(IDC_NODESLISTURL, wxTextCtrl)->GetValue());
 }
 
 void CServerWnd::UpdateServerMetFromURL(const wxString &strURL)
 {
-	thePrefs::SetEd2kServersUrl(strURL);
 #ifdef CLIENT_GUI
 	// Runs on the core, which shows no dialog for a remote request.
 	theApp->serverlist->UpdateServerMetFromURL(strURL);
@@ -217,9 +232,12 @@ void CServerWnd::OnBnClickedAddserver(wxCommandEvent &WXUNUSED(evt))
 	theApp->serverlist->SaveServerMet();
 }
 
-void CServerWnd::OnBnClickedUpdateservermetfromurl(wxCommandEvent &WXUNUSED(evt))
+void CServerWnd::OnBnClickedUpdateservermetfromurl(wxCommandEvent &evt)
 {
-	wxString strURL = CastChild(IDC_SERVERLISTURL, wxTextCtrl)->GetValue();
+	wxString strURL = evt.GetId() == ID_UPDATELIST ? wxString()
+						       : CastChild(IDC_SERVERLISTURL, wxTextCtrl)->GetValue();
+	if (evt.GetId() != ID_UPDATELIST && strURL.empty())
+		return;
 	UpdateServerMetFromURL(strURL);
 }
 

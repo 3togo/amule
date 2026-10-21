@@ -1255,7 +1255,8 @@ bool CamuleApp::OnInit()
 	}
 #endif // ENABLE_VERSION_CHECK
 	if (thePrefs::GetNetworkED2K() && thePrefs::AutoServerlist()) {
-		serverlist->StartAutoUpdate();
+		// With an empty list, the manual completion path connects once the update ends.
+		serverlist->UpdateServerMetFromURL(wxEmptyString, false, serverlist->GetServerCount() != 0);
 	}
 
 	// Start the fs-watcher after the initial scan so directories exist in shareddir_list
@@ -1291,15 +1292,15 @@ bool CamuleApp::OnInit()
 			// The first-run wizard already collected the user's bootstrap choices (and
 			// UPnP / port settings, which were applied before ReinitializeNetwork ran).
 			// Act on them now that the server list and sockets exist.
-			if (wizardWantsServerMet) {
-				serverlist->UpdateServerMetFromURL(thePrefs::GetEd2kServersUrl());
+			if (wizardWantsServerMet && !thePrefs::AutoServerlist()) {
+				serverlist->UpdateServerMetFromURL(wxEmptyString);
 			}
 			if (wizardWantsNodesDat) {
 				UpdateNotesDat(thePrefs::GetKadNodesUrl());
 			}
 		} else {
-			const bool needServerMet =
-				!serverlist->GetServerCount() && thePrefs::GetNetworkED2K();
+			const bool needServerMet = !serverlist->GetServerCount() &&
+						   thePrefs::GetNetworkED2K() && !thePrefs::AutoServerlist();
 			const bool needNodesDat = thePrefs::GetNetworkKademlia() &&
 						  !wxFileExists(thePrefs::GetConfigDir() + "nodes.dat");
 
@@ -1343,8 +1344,7 @@ bool CamuleApp::OnInit()
 
 				if (dlg.ShowModal() == wxID_OK) {
 					if (serverMetCheck && serverMetCheck->GetValue()) {
-						serverlist->UpdateServerMetFromURL(
-							thePrefs::GetEd2kServersUrl());
+						serverlist->UpdateServerMetFromURL(wxEmptyString);
 					}
 					if (nodesDatCheck && nodesDatCheck->GetValue()) {
 						UpdateNotesDat(thePrefs::GetKadNodesUrl());
@@ -1353,11 +1353,12 @@ bool CamuleApp::OnInit()
 			}
 		}
 #else
-		const bool needServerMet = !serverlist->GetServerCount() && thePrefs::GetNetworkED2K();
+		const bool needServerMet = !serverlist->GetServerCount() && thePrefs::GetNetworkED2K() &&
+					   !thePrefs::AutoServerlist();
 		const bool needNodesDat = thePrefs::GetNetworkKademlia() &&
 					  !wxFileExists(thePrefs::GetConfigDir() + "nodes.dat");
 		if (needServerMet) {
-			serverlist->UpdateServerMetFromURL(thePrefs::GetEd2kServersUrl());
+			serverlist->UpdateServerMetFromURL(wxEmptyString);
 		}
 		if (needNodesDat) {
 			UpdateNotesDat(thePrefs::GetKadNodesUrl());
@@ -3293,9 +3294,9 @@ void CamuleApp::OnFinishedHTTPDownload(CMuleInternalEvent &event)
 		ipfilter->DownloadFinished(event.GetExtraInt64());
 		break;
 	case HTTP_ServerMet:
-		if (serverlist->DownloadFinished(event.GetExtraInt64()) && !IsConnectedED2K()) {
-			// If successfully downloaded a server list, and are not connected at the moment, try
-			// to connect. This happens when no server met is available on startup.
+		if (serverlist->DownloadFinished(event.GetExtraInt64()) && !serverconnect->IsConnected() &&
+			!serverconnect->IsConnecting()) {
+			// Connect once after the entire update, preserving an existing connection attempt.
 			serverconnect->ConnectToAnyServer();
 		}
 		break;

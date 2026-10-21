@@ -129,3 +129,29 @@ TEST(ServerMet, TruncatedFileKeepsTheServersBeforeIt)
 	ASSERT_EQUALS(size_t(1), records.size());
 	ASSERT_EQUALS(IP_A, records[0].ip);
 }
+
+TEST(ServerMet, TrailingRecordsAreRejectedWithoutLosingSalvageableServers)
+{
+	CMemFile servers;
+	WriteServer(servers, IP_A, "17.15", false);
+	WriteServer(servers, IP_B, "17.15", false);
+	CMemFile file;
+	Finish(file, servers, 1);
+
+	std::vector<ServerMetRecord> records;
+	ASSERT_RAISES(CInvalidPacket, ReadServerMetRecords(file, records));
+	ASSERT_EQUALS(size_t(1), records.size());
+	ASSERT_EQUALS(IP_A, records[0].ip);
+}
+
+TEST(ServerMet, TrailingDataAfterEmptyListIsRejected)
+{
+	CMemFile servers;
+	servers.WriteUInt8(0xff);
+	CMemFile file;
+	Finish(file, servers, 0);
+
+	std::vector<ServerMetRecord> records;
+	ASSERT_RAISES(CInvalidPacket, ReadServerMetRecords(file, records));
+	ASSERT_TRUE(records.empty());
+}

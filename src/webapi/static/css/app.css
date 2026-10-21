@@ -617,6 +617,8 @@ table.data.virtual td.name .name-select { width: 100%; max-width: 100%; }
 /* Text field with a trailing action button (update-from-URL). */
 .field-action { display: flex; align-items: center; gap: 6px; }
 .field-action .input { flex: 1; min-width: 0; }
+/* Separates the one-off URL from the saved-source hint above it. */
+.prefs-panel .one-off-label { margin-top: 8px; }
 /* Sub-options: indented under their parent (two nesting levels). */
 .prefs-panel .field-sub { margin-left: 24px; }
 .prefs-panel .field-sub2 { margin-left: 48px; }

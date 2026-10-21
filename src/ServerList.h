@@ -27,6 +27,7 @@
 #define SERVERLIST_H
 
 #include "ObservableQueue.h"
+#include <wx/arrstr.h>
 
 class CServer;
 class CPacket;
@@ -45,7 +46,8 @@ public:
 	bool RemoveServer(CServer *in_server, bool fromUser = false);
 	void RemoveAllServers();
 	void RemoveDeadServers();
-	bool LoadServerMet(const CPath &path);
+	// Local startup files may be salvaged; downloaded lists must parse completely.
+	bool LoadServerMet(const CPath &path, bool allowPartial = true);
 	bool SaveServerMet();
 	void ServerStats();
 	void ResetServerPos() { m_serverpos = m_servers.begin(); }
@@ -61,7 +63,12 @@ public:
 	bool IsInitialized() const { return m_initialized; }
 	void Sort();
 	// showDialog shows the HTTP progress dialog, for a local, user-initiated update only.
-	void UpdateServerMetFromURL(const wxString &strURL, bool showDialog = false);
+	bool UpdateServerMetFromURL(const wxString &strURL,
+		bool showDialog = false,
+		bool automatic = false,
+		wxString *error = nullptr);
+	bool IsServerMetDownloading() const { return m_serverMetDownloading; }
+	// Report success only at the end of a sequence, if any source loaded.
 	bool DownloadFinished(uint32 result);
 	void AutoDownloadFinished(uint32 result);
 	uint32 GetAvgFile() const;
@@ -96,20 +103,26 @@ public:
 
 private:
 	virtual void ObserverAdded(ObserverType *);
-	void AutoUpdate();
+	void StartServerMetDownload(const wxString &url, bool showDialog);
+	void StartNextServerMetDownload();
 	CServer *GetNextStatServer();
 
 	wxString m_staticServersConfig;
 	void LoadStaticServers();
 	void SaveStaticServers();
-	uint8 current_url_index;
 
 	typedef std::list<CServer *> CInternalList;
 	CInternalList m_servers;
 	CInternalList::const_iterator m_serverpos;
 	CInternalList::const_iterator m_statserverpos;
 
-	wxString m_URLUpdate;
+	wxString m_serverMetURL;
+	wxArrayString m_serverMetSources;
+	size_t m_serverMetSourceIndex = 0;
+	bool m_serverMetDownloading = false;
+	bool m_serverMetLoaded = false;
+	bool m_serverMetAutomatic = false;
+	bool m_serverMetShowDialog = false;
 	bool m_initialized;
 };
 

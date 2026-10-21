@@ -201,6 +201,7 @@ const PrefField kSchema[] = {
 	PREF_BOOL("servers", "update_list_from_client", EC_TAG_SERVERS_ADD_FROM_CLIENT, PrefEnc::Presence, false, PrefAccess::ReadWrite, servers.update_list_from_client),
 	PREF_BOOL("servers", "update_list_from_server", EC_TAG_SERVERS_ADD_FROM_SERVER, PrefEnc::Presence, false, PrefAccess::ReadWrite, servers.update_list_from_server),
 	PREF_STR("servers", "update_url", EC_TAG_SERVERS_UPDATE_URL, PrefAccess::AdminRead, servers.update_url),
+	PREF_STRARR("servers", "update_urls", EC_TAG_SERVERS_URL_LIST, PrefAccess::AdminRead, servers.update_urls),
 	PREF_BOOL("servers", "server_priority_system_enabled", EC_TAG_SERVERS_USE_SCORE_SYSTEM, PrefEnc::Presence, false, PrefAccess::ReadWrite, servers.server_priority_system_enabled),
 
 	// [security]

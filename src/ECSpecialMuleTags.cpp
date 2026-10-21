@@ -327,7 +327,12 @@ CEC_Prefs_Packet::CEC_Prefs_Packet(
 		if (thePrefs::AutoServerlist()) {
 			srv_prefs.AddTag(CECEmptyTag(EC_TAG_SERVERS_AUTO_UPDATE));
 		}
-		// Here should come the URL list...
+		const auto urls = thePrefs::GetServerListURLs();
+		CECEmptyTag sources(EC_TAG_SERVERS_URL_LIST);
+		for (const auto &url : urls) {
+			sources.AddTag(CECTag(EC_TAG_STRING, url));
+		}
+		srv_prefs.AddTag(sources);
 		if (thePrefs::AddServersFromServer()) {
 			srv_prefs.AddTag(CECEmptyTag(EC_TAG_SERVERS_ADD_FROM_SERVER));
 		}
@@ -349,7 +354,7 @@ CEC_Prefs_Packet::CEC_Prefs_Packet(
 		if (thePrefs::IsManualHighPrio()) {
 			srv_prefs.AddTag(CECEmptyTag(EC_TAG_SERVERS_MANUAL_HIGH_PRIO));
 		}
-		srv_prefs.AddTag(CECTag(EC_TAG_SERVERS_UPDATE_URL, thePrefs::GetEd2kServersUrl()));
+		srv_prefs.AddTag(CECTag(EC_TAG_SERVERS_UPDATE_URL, urls.empty() ? wxString() : urls[0]));
 		AddTag(srv_prefs);
 	}
 
@@ -580,10 +585,31 @@ static void ApplyBoolean(bool use_tag, const CECTag *thisTab, void(applyFunc)(bo
  * Sets every preference except the categories, which work as follows: the remote GUI loads them
  * at startup and then changes them on command, and the webserver is not supposed to change them.
  */
-void CEC_Prefs_Packet::Apply() const
+bool CEC_Prefs_Packet::Apply() const
 {
 	const CECTag *thisTab = NULL;
 	const CECTag *oneTag = NULL;
+
+	// Persist/validate the source list before changing any other preference.
+	if (const auto *servers = GetTagByName(EC_TAG_PREFS_SERVERS)) {
+		if (const auto *sources = servers->GetTagByName(EC_TAG_SERVERS_URL_LIST)) {
+			// EC lists use either an empty container or a count payload.
+			if (!(sources->IsCustom() && sources->GetTagDataLen() == 0) &&
+				!(sources->IsInt() && sources->GetInt() == sources->GetTagCount()))
+				return false;
+			wxArrayString urls;
+			for (const auto &tag : *sources) {
+				if (tag.GetTagName() != EC_TAG_STRING || !tag.IsString())
+					return false;
+				urls.Add(tag.GetStringData());
+			}
+			if (!thePrefs::SetServerListURLs(urls))
+				return false;
+		} else if (const auto *url = servers->GetTagByName(EC_TAG_SERVERS_UPDATE_URL)) {
+			if (!url->IsString() || !thePrefs::SetEd2kServersUrl(url->GetStringData()))
+				return false;
+		}
+	}
 
 	if ((thisTab = GetTagByName(EC_TAG_PREFS_GENERAL)) != NULL) {
 		if ((oneTag = thisTab->GetTagByName(EC_TAG_USER_NICK)) != NULL) {
@@ -808,7 +834,7 @@ void CEC_Prefs_Packet::Apply() const
 			thePrefs::SetDeadserverRetries(oneTag->GetInt());
 		}
 		ApplyBoolean(use_tag, thisTab, thePrefs::SetAutoServerlist, EC_TAG_SERVERS_AUTO_UPDATE);
-		// Here should come the URL list...
+
 		ApplyBoolean(
 			use_tag, thisTab, thePrefs::SetAddServersFromServer, EC_TAG_SERVERS_ADD_FROM_SERVER);
 		ApplyBoolean(
@@ -824,9 +850,6 @@ void CEC_Prefs_Packet::Apply() const
 			thePrefs::SetAutoConnectStaticOnly,
 			EC_TAG_SERVERS_AUTOCONN_STATIC_ONLY);
 		ApplyBoolean(use_tag, thisTab, thePrefs::SetManualHighPrio, EC_TAG_SERVERS_MANUAL_HIGH_PRIO);
-		if ((oneTag = thisTab->GetTagByName(EC_TAG_SERVERS_UPDATE_URL)) != NULL) {
-			thePrefs::SetEd2kServersUrl(oneTag->GetStringData());
-		}
 	}
 
 	if ((thisTab = GetTagByName(EC_TAG_PREFS_FILES)) != NULL) {
@@ -1067,5 +1090,6 @@ void CEC_Prefs_Packet::Apply() const
 	}
 
 	theApp->glob_prefs->Save();
+	return true;
 }
 // File_checked_for_headers

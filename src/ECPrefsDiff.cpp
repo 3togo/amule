@@ -28,7 +28,8 @@ namespace
 {
 bool IsPresenceFlag(const CECTag &tag)
 {
-	return tag.IsCustom() && tag.GetTagDataLen() == 0;
+	// The source list has an empty payload too, but its children are the value.
+	return tag.GetTagName() != EC_TAG_SERVERS_URL_LIST && tag.IsCustom() && tag.GetTagDataLen() == 0;
 }
 
 CECTag ToFullDetail(const CECTag &tag)

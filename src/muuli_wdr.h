@@ -692,6 +692,7 @@ enum EConnButtonState
 	ConnButtonConnecting,
 	ConnButtonConnected
 };
+void SetButtonLabelAndBitmap(wxButton *button, const wxString &label, const wxString &artId);
 void SetConnectButtonState(
 	wxButton *button, EConnButtonState state, bool enabled, const wxString &networkName);
 

@@ -381,3 +381,34 @@ developers have no control over what other peers transfer through this
 medium and cannot be held liable for non-personal copyright
 infringement or other illegal activity by third parties. Share
 responsibly.
+
+### Server-list sources
+
+`addresses.dat` in the aMule configuration directory is the single list of
+HTTP or HTTPS `server.met` source URLs, one per line. Blank lines, comments
+beginning with `#`, unsupported URLs and duplicates are skipped. A fresh install
+starts with `https://upd.emule-security.org/server.met`, the existing default;
+no additional source ships without project agreement. An existing empty file
+stays empty unless a valid legacy `Ed2kServersUrl` needs migrating. A legacy source
+missing from the list is inserted at the top (including the old default); a customised
+source already in the list moves to the top once. The legacy configuration key
+is then removed.
+
+Startup auto-update, first-run bootstrap, an empty daemon server list, and manual
+updates all download and merge every configured source in order. Failures advance
+to the next entry. Each download must validate in full before any of its records are imported; malformed or truncated files never
+replace the existing server list. Local damaged startup files can still be
+salvaged. Cancellation stops the sequence. Only one sequence runs at a time;
+edits during a download affect the next update, preserving the active snapshot.
+
+The Networks tab and Servers preferences share the same list editor. amulegui
+edits the daemon's list through EC, without touching a local `addresses.dat`.
+amuleapi exposes `servers.update_urls` as an array and retains
+`servers.update_url` as a compatibility alias for its first entry. Updating the
+alias replaces the first entry while preserving the remaining sources. If both
+fields are supplied, the array takes precedence. The Web UI provides a multiline
+list editor, an update button and a one-off URL download.
+
+`POST /api/v1/servers_update` without `url`
+updates the configured list. An explicit URL, a Networks one-off download, or
+an `ed2k://|serverlist|URL|/` link fetches just that URL once and saves nothing.

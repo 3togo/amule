@@ -84,5 +84,8 @@ bool ReadServerMetRecords(const CFileDataIO &file, std::vector<ServerMetRecord> 
 	// and the error.
 	file.Seek(start);
 	ReadRecords(file, false, records);
+	if (file.GetPosition() != file.GetLength()) {
+		throw CInvalidPacket("Unexpected trailing data in server.met");
+	}
 	return false;
 }

@@ -144,7 +144,9 @@ def run(daemon_binary, api_binary):
                 patch = {'geoip': {'source': 'custom', 'custom_update_url': secret_url,
                                   'maxmind_license': 'MAXMIND-1874'},
                          'connection': {'proxy_user': 'PROXY-USER-1874'},
-                         'servers': {'update_url': base + '/server.met?token=SERVER-1874'},
+                         'servers': {'update_url': base + '/server.met?token=SERVER-1874',
+                                     'update_urls': [base + '/server.met?token=SERVER-1874',
+                                                     base + '/backup.met?token=BACKUP-1874']},
                          'security': {'ipfilter_update_url': base + '/filter?token=FILTER-1874'},
                          'kad': {'update_url': base + '/nodes.dat?token=KAD-1874'}}
                 status, result = request('PATCH', '/preferences', patch, admin)
@@ -225,7 +227,7 @@ def run(daemon_binary, api_binary):
                     subscriber.wait(timeout=5)
                     processes.remove(subscriber)
                 sensitive = ['USER-1874', 'PASS-1874', 'FRAGMENT-1874', 'LICENSE-KEY-1874', 'TOKEN-1874', 'MAXMIND-1874', 'PATH-1874',
-                             'PROXY-USER-1874', 'SERVER-1874', 'FILTER-1874',
+                             'PROXY-USER-1874', 'SERVER-1874', 'BACKUP-1874', 'FILTER-1874',
                              'KAD-1874', 'SUCCESS-1874', 'CONNECTION-1874', 'OVERSIZE-1874']
                 surfaces = [failure_status, json.dumps(request('GET', '/preferences', token=guest)[1]),
                             json.dumps(request('GET', '/logs/amule', token=guest)[1]),

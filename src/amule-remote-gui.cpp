@@ -2163,12 +2163,28 @@ void CServerListRem::HandlePacket(const CECPacket *)
 	// CRemoteContainer<CServer, uint32, CEC_Server_Tag>::HandlePacket(packet);
 }
 
+// A download may be refused before it starts; show the daemon's reason.
+class CServerListDownloadHandler : public CECPacketHandlerBase
+{
+	void AbortPendingRequest() override { delete this; }
+	void HandlePacket(const CECPacket *packet) override
+	{
+		if (packet->GetOpCode() == EC_OP_FAILED) {
+			const auto *tag = packet->GetTagByName(EC_TAG_STRING);
+			const wxString message = tag ? tag->GetStringData() : _("Invalid URL");
+			wxTheApp->CallAfter(
+				[message]() { wxMessageBox(message, _("ERROR"), wxOK | wxICON_ERROR); });
+		}
+		delete this;
+	}
+};
+
 void CServerListRem::UpdateServerMetFromURL(wxString url)
 {
 	CECPacket req(EC_OP_SERVER_UPDATE_FROM_URL);
 	req.AddTag(CECTag(EC_TAG_SERVERS_UPDATE_URL, url));
 
-	m_conn->SendPacket(&req);
+	m_conn->SendRequest(new CServerListDownloadHandler(), &req);
 }
 
 void CServerListRem::SetStaticServer(CServer *server, bool isStatic)
