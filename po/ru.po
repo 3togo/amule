@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-20 22:06+0000\n"
+"PO-Revision-Date: 2026-10-21 09:04+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
 "Language: ru\n"
@@ -1058,11 +1058,11 @@ msgstr "Отд: %.1f%s | Заг: %.1f%s"
 
 #: src/amuleDlg.cpp
 msgid "Transfer speeds are reported by the daemon. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "Скорости передачи сообщаются демоном. Общая отдача включает служебный трафик; скорость отдачи пирам учитывает только пакеты файлов. Значения в скобках показывают служебный трафик протокола в КиБ/с."
 
 #: src/amuleDlg.cpp
 msgid "Live speeds are averaged over the last second. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "Текущие скорости усреднены за последнюю секунду. Общая отдача включает служебный трафик; скорость отдачи пирам учитывает только пакеты файлов. Значения в скобках показывают служебный трафик протокола в КиБ/с."
 
 #: src/amuleDlg.cpp
 #, c-format
@@ -4155,7 +4155,7 @@ msgstr "Копировать"
 msgid "Paste"
 msgstr "Вставить"
 
-#: src/MuleTextCtrl.cpp src/muuli_wdr.cpp
+#: src/MuleTextCtrl.cpp src/muuli_wdr.cpp src/TextClearButton.h
 #: src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Clear"
 msgstr "Очистить"
@@ -4698,7 +4698,7 @@ msgstr "Кодек"
 
 #: src/muuli_wdr.cpp src/SearchListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Artist"
-msgstr "Исполнитель"
+msgstr "Артист"
 
 #: src/muuli_wdr.cpp src/SearchListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Album"
