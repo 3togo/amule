@@ -25,6 +25,7 @@
 #   ./run-all.sh                                                 # run every script in
 #                                                                # the canonical order
 #   ./run-all.sh 12-downloads-add-patch.sh 13-downloads-delete-clear.sh  # run a subset
+#   AMULEAPI_SMOKE_OFFLINE=1 ./run-all.sh 26-rfc-followup-endpoints.sh  # isolated endpoint fixture
 
 set -u
 
@@ -89,9 +90,11 @@ JWT_SECRET=$(od -An -tx1 -N32 /dev/urandom | tr -d ' \n')
 run_phase() {
 	local script=$1
 	echo "==================== $script ===================="
-	# This phase owns an offline core/API pair on private ports.
-	if [ "$script" = "45-all-search.sh" ]; then
-		AMULEAPI_BIN="$BIN" bash "$SCRIPT_DIR/$script"
+	# All-search always owns an offline core/API pair on private ports.
+	# Endpoint checks use the shared daemon unless CI requests the fixture.
+	if [ "$script" = "45-all-search.sh" ] ||
+		{ [ "$script" = "26-rfc-followup-endpoints.sh" ] && [ "${AMULEAPI_SMOKE_OFFLINE:-0}" = "1" ]; }; then
+		AMULEAPI_BIN="$BIN" bash "$SCRIPT_DIR/$script" --offline
 		return $?
 	fi
 	# Narrowly target the regtest daemon so a dev who happens to have

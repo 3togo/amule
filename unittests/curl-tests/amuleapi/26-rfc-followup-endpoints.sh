@@ -21,12 +21,27 @@
 set -u
 set -o pipefail
 
+# The isolated search fixture enables Kad with an empty nodes.dat and never
+# joins a public network. Reuse it so a real accepted search drives the SSE test.
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+if [ "${1:-}" = "--offline" ]; then
+	: "${AMULEAPI_BIN:?Run through run-all.sh or set AMULEAPI_BIN}"
+	AMULED_BIN=${AMULED_BIN:-$(dirname "$AMULEAPI_BIN")/../amuled}
+	exec python3 "$SCRIPT_DIR/../../tests/AllSearchApiSmoke.py" \
+		"$AMULED_BIN" "$AMULEAPI_BIN" "$SCRIPT_DIR/26-rfc-followup-endpoints.sh"
+fi
+
 HOST=${HOST:-localhost:4713}
-API="$HOST/api/v1"
+API=${API:-"$HOST/api/v1"}
 ADMIN_PASS=${ADMIN_PASS:-adminpass}
 
 TEST_HASH="0031c9cba65c50dd2015c184b2ca2c88"
 TEST_LINK="ed2k://|file|ubuntu-24.04.4-desktop-amd64.iso|6655619072|0031C9CBA65C50DD2015C184B2CA2C88|/"
+
+SSE_PROBE_HASH="0031c9cba65c50dd2015c184b2ca2c90"
+SSE_PROBE_LINK="ed2k://|file|channel-filter-probe.bin|4096|0031C9CBA65C50DD2015C184B2CA2C90|/"
+SSE_HASH="0031c9cba65c50dd2015c184b2ca2c89"
+SSE_LINK="ed2k://|file|channel-filter-regression.bin|4096|0031C9CBA65C50DD2015C184B2CA2C89|/"
 
 FAIL_COUNT=0
 TEST_COUNT=0
@@ -35,17 +50,26 @@ TEST_COUNT=0
 # would report the absence of a check as a check that succeeded.
 SKIP_COUNT=0
 SSE=$(mktemp -t amuleapi_26_rfc_followup_endpoints_sse.XXXXXX)
-trap '
+PID=
+cleanup() {
+	local cleanup_hash
+	if [ -n "$PID" ]; then
+		kill "$PID" 2>/dev/null || true
+		wait "$PID" 2>/dev/null || true
+	fi
 	rm -f "$SSE"
 	# Best-effort: delete any partfile this script may have left in
 	# amuled queue (Windows VM has ~63 GB on C: — a leftover 6.6 GB
 	# Ubuntu ISO partfile blocks the next run). Errors swallowed
 	# because the daemon may already be down on a CI tear-down.
 	if [ -n "${ADMIN_TOKEN:-}" ]; then
-		curl -s -X DELETE -H "Authorization: Bearer $ADMIN_TOKEN" \
-			"$API/downloads/$TEST_HASH" > /dev/null 2>&1 || true
+		for cleanup_hash in "$TEST_HASH" "$SSE_PROBE_HASH" "$SSE_HASH"; do
+			curl -s -X DELETE -H "Authorization: Bearer $ADMIN_TOKEN" \
+				"$API/downloads/$cleanup_hash" > /dev/null 2>&1 || true
+		done
 	fi
-' EXIT
+}
+trap cleanup EXIT
 
 _die()  { echo "FATAL: $*" >&2; exit 2; }
 _pass() { TEST_COUNT=$((TEST_COUNT+1)); echo "  PASS  $1"; }
@@ -78,10 +102,16 @@ else
 	_fail "/status kad.network" "missing: $(echo "$STATUS" | jq -c .kad)"
 fi
 for f in user_count file_count node_count; do
-	if echo "$STATUS" | jq -e ".kad.network.$f | type == \"number\"" >/dev/null 2>&1; then
-		_pass "/status .kad.network.$f is a number"
+	# Null is a measurement's explicit unknown value while disconnected.
+	# Require the key as well: a missing field must not pass as a JSON null.
+	if echo "$STATUS" | jq -e --arg field "$f" '
+		.kad as $kad | ($kad.network | has($field)) and
+		(if $kad.state == "connected" then
+			$kad.network[$field] | type == "number"
+		else $kad.network[$field] == null end)' >/dev/null 2>&1; then
+		_pass "/status .kad.network.$f matches connection state"
 	else
-		_fail "/status kad.network.$f" "missing/non-numeric"
+		_fail "/status kad.network.$f" "missing or inconsistent with Kad state: $STATUS"
 	fi
 done
 
@@ -254,8 +284,9 @@ fi
 # "Invalid link or already on list" and the test misreads the
 # wire shape verdict.
 _wait_for_no_download() {
+	local present
 	for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
-		local present=$(curl -s "${H_AUTH[@]}" "$API/downloads" \
+		present=$(curl -s "${H_AUTH[@]}" "$API/downloads" \
 			| jq -r --arg h "$TEST_HASH" \
 				'.downloads | map(select(.hash == $h)) | length')
 		if [ "$present" = "0" ]; then return 0; fi
@@ -500,32 +531,86 @@ else
 	_fail "clients detail 405" "expected 405, got $RC"
 fi
 
+_wait_for_sse() {
+	local attempt
+	for ((attempt = 0; attempt < 100; ++attempt)); do
+		grep -q '^: connected' "$SSE" && return 0
+		kill -0 "$PID" 2>/dev/null || break
+		sleep 0.1
+	done
+	_fail "SSE subscription" "stream did not become ready: $(head -10 "$SSE")"
+	return 1
+}
+
+_wait_for_diff_resume() {
+	local attempt
+	for ((attempt = 0; attempt < 100; ++attempt)); do
+		grep -qE '^event: (resync|download_added|download_updated|status_changed)$' "$SSE" && return 0
+		kill -0 "$PID" 2>/dev/null || break
+		sleep 0.1
+	done
+	_fail "SSE diff resume" "no diff tick or resync received: $(head -10 "$SSE")"
+	return 1
+}
+
 # --- 10. /events ?channels= filter. ------------------------------
-# Test 8 left the daemon disconnected; reconnect so download_* /
-# status_* events have a reason to fire.
-curl -s -X POST "${H_AUTH[@]}" "$API/networks/connect" > /dev/null
-sleep 6
-curl -s -X DELETE "${H_AUTH[@]}" "$API/downloads/$TEST_HASH" > /dev/null
-_wait_for_no_download || true
+# Test 8 left the daemon disconnected. Restore both networks for subsequent
+# live phases. The fixture only restarts its contact-free Kad component, which
+# accepts an All search without joining the public network.
+CONNECT_NETWORK=both
+if [ "${1:-}" = "--fixture-ready" ]; then
+	CONNECT_NETWORK=kad
+fi
+RC=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${H_AUTH[@]}" \
+	-H "Content-Type: application/json" -d "{\"network\":\"$CONNECT_NETWORK\"}" "$API/networks/connect")
+if [ "$RC" = "202" ]; then
+	_pass "reconnect $CONNECT_NETWORK → 202"
+else
+	_fail "reconnect $CONNECT_NETWORK" "expected 202, got $RC"
+fi
 : > "$SSE"
-( curl -s -m 10 -N "${H_AUTH[@]}" \
+( curl -s -m 20 -N "${H_AUTH[@]}" \
 	"$API/events?channels=downloads,status" \
 	>> "$SSE" 2>&1 ) &
 PID=$!
-sleep 2
-curl -s -X POST "${H_AUTH[@]}" -H "Content-Type: application/json" \
-	-d "{\"links\":[\"$TEST_LINK\"]}" "$API/downloads" > /dev/null
+_wait_for_sse || true
+# The initial ': connected' chunk precedes the first resumed diff tick. After
+# suspension that tick primes the baseline and emits resync(idle), which may
+# include a mutation made immediately after connecting. Use a distinct probe to
+# observe that tick before the mutation whose event we assert below.
+RC=$(curl -s -o /tmp/p11_sse_probe.json -w "%{http_code}" -X POST "${H_AUTH[@]}" \
+	-H "Content-Type: application/json" \
+	-d "{\"links\":[\"$SSE_PROBE_LINK\"]}" "$API/downloads")
+if [ "$RC" = "202" ] && jq -e '.results[0].ok == true' /tmp/p11_sse_probe.json >/dev/null 2>&1; then
+	_pass "SSE resume probe accepted"
+else
+	_fail "SSE resume probe" "expected accepted link, got $RC: $(cat /tmp/p11_sse_probe.json)"
+fi
+_wait_for_diff_resume || exit 1
+# Use a new hash: deleting and re-adding the earlier file between two diff
+# ticks can legitimately coalesce into an unchanged snapshot and emit no event.
+RC=$(curl -s -o /tmp/p11_sse_download.json -w "%{http_code}" -X POST "${H_AUTH[@]}" \
+	-H "Content-Type: application/json" \
+	-d "{\"links\":[\"$SSE_LINK\"]}" "$API/downloads")
+if [ "$RC" = "202" ] && jq -e '.results[0].ok == true' /tmp/p11_sse_download.json >/dev/null 2>&1; then
+	_pass "channel-filter download accepted"
+else
+	_fail "channel-filter download start" "expected 202 with accepted link, got $RC: $(cat /tmp/p11_sse_download.json)"
+fi
 sleep 6
 kill $PID 2>/dev/null
 wait $PID 2>/dev/null
+PID=
 
 # In the channels=downloads,status window we MUST see download_* / status_*
 # events and MUST NOT see client_* / server_* / shared_* / log_* events.
-if grep -qE "^event: (download_added|download_updated|status_changed)$" "$SSE"; then
+if awk '/^event: / { download = ($0 == "event: download_added" || $0 == "event: download_updated") }
+	download && /^data: / { sub(/^data: /, ""); print }' "$SSE" \
+	| jq -es --arg hash "$SSE_HASH" 'any(.[]; .hash == $hash)' >/dev/null 2>&1; then
 	_pass "/events?channels=downloads,status delivers download/status events"
 else
 	_fail "events channel-filter positive" \
-		"no download/status events seen; sample: $(head -10 "$SSE")"
+		"no event for the accepted download seen; sample: $(head -10 "$SSE")"
 fi
 # comments_ is in this list on purpose. comments_updated has the prefix
 # `comments`, which event_channel does not map, so its channel is literally
@@ -547,18 +632,35 @@ fi
 	"$API/events?channels=search" \
 	>> "$SSE" 2>&1 ) &
 PID=$!
-sleep 1
-curl -s -X POST "${H_AUTH[@]}" -H "Content-Type: application/json" \
-	-d '{"query":"ubuntu","type":"local"}' "$API/search" > /dev/null
+_wait_for_sse || true
+SEARCH_START=$(mktemp -t amuleapi_26_search_start.XXXXXX)
+RC=$(curl -s -o "$SEARCH_START" -w "%{http_code}" -X POST "${H_AUTH[@]}" \
+	-H "Content-Type: application/json" \
+	-d '{"query":"offlinechannelsregression","type":"all"}' "$API/search")
+SEARCH_ID=$(jq -r '.search_id // empty' "$SEARCH_START")
+if [ "$RC" = "202" ] && jq -e '.search_id > 0 and .type == "all"' "$SEARCH_START" >/dev/null 2>&1; then
+	_pass "channel-filter search accepted with an explicit search_id"
+else
+	_fail "channel-filter search start" "expected 202 with search_id, got $RC: $(cat "$SEARCH_START")"
+fi
+rm -f "$SEARCH_START"
 sleep 8
 kill $PID 2>/dev/null
 wait $PID 2>/dev/null
+PID=
 
-if grep -qE "^event: search_progress$" "$SSE"; then
+# Match the newly accepted search, not progress from the fixture's restored one.
+if awk '/^event: / { progress = ($0 == "event: search_progress") }
+	progress && /^data: / { sub(/^data: /, ""); print }' "$SSE" \
+	| jq -es --argjson sid "${SEARCH_ID:-0}" 'any(.[]; .search_id == $sid and .type == "all")' >/dev/null 2>&1; then
 	_pass "/events?channels=search delivers search_progress"
 else
 	_fail "events channel=search positive" \
 		"no search_progress in 8 s; sample: $(head -10 "$SSE")"
+fi
+if [ -n "$SEARCH_ID" ]; then
+	curl -s -X POST "${H_AUTH[@]}" "$API/search/$SEARCH_ID/stop" > /dev/null
+	curl -s -X DELETE "${H_AUTH[@]}" "$API/search/$SEARCH_ID" > /dev/null
 fi
 LEAKED=$(grep -cE "^event: (download_|status_|client_|server_|shared_|log_)" "$SSE" || true)
 if [ "$LEAKED" -eq 0 ]; then
