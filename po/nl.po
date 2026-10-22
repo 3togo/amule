@@ -13,7 +13,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-21 09:04+0000\n"
+"PO-Revision-Date: 2026-10-22 09:54+0000\n"
 "Last-Translator: Marcel Pol <marcel@timelord.nl>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "Language: nl\n"
@@ -2328,24 +2328,25 @@ msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Ongeldige eD2k-link! FOUT: %s"
 
 #: src/EditServerListDlg.cpp
-#, fuzzy
 msgid "Edit server list sources"
-msgstr "Bewerk serverlijst"
+msgstr "Bewerk bronnen van serverlijst"
 
 #: src/EditServerListDlg.cpp
 msgid ""
 "Enter one server.met URL per line.\n"
 "Saving replaces the source list and removes comment lines."
 msgstr ""
+"Voer één server.met-URL per regel in.\n"
+"Opslaan vervangt de bronlijst en vewijdert regels met opmerkingen."
 
 #: src/EditServerListDlg.cpp src/ExternalConn.cpp
 #, c-format
 msgid "Could not save server list sources to %s. Check the URLs and file permissions."
-msgstr ""
+msgstr "Serverlijst-bronnen opslaan naar %s mislukt. Controleer de URLs en bestandstoestemmingen."
 
 #: src/EditServerListDlg.cpp
 msgid "addresses.dat in the daemon configuration directory"
-msgstr ""
+msgstr "addresses.dat in de daemon configuratiemap"
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5199,9 +5200,8 @@ msgid "retries"
 msgstr "pogingen"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Edit sources…"
-msgstr "Bestandsbronnen:"
+msgstr "Bronnen aanpassen…"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5808,18 +5808,16 @@ msgid "Click this button to reset the log."
 msgstr "Klik op deze knop om het logboek te wissen."
 
 #: src/muuli_wdr.cpp src/ServerWnd.cpp
-#, fuzzy
 msgid "Update server list"
 msgstr "Bewerk serverlijst"
 
 #: src/muuli_wdr.cpp
 msgid "One-off URL:"
-msgstr ""
+msgstr "Eenmalige URL:"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Download once"
-msgstr "Gedownload"
+msgstr "Download een keer"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7736,11 +7734,11 @@ msgstr "IO-fout bij het schrijven van 'server.met': %s"
 
 #: src/ServerList.cpp
 msgid "A server list download is already in progress."
-msgstr ""
+msgstr "Een serverlijstdownload is al bezig."
 
 #: src/ServerList.cpp
 msgid "No server list sources configured"
-msgstr ""
+msgstr "Geen serverlijstbronnen zijn ingesteld"
 
 #: src/ServerList.cpp
 #, c-format
@@ -7961,11 +7959,11 @@ msgstr "aMuleGUI-log"
 
 #: src/ServerWnd.cpp
 msgid "Download and merge every saved source"
-msgstr ""
+msgstr "Download en voeg elke opgeslagen bron samen"
 
 #: src/ServerWnd.cpp
 msgid "Download this server.met URL once without saving it."
-msgstr ""
+msgstr "Download deze server.met-URL een keer zonder het op te slaan."
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
