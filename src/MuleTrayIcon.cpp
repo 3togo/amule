@@ -70,7 +70,7 @@ void CMuleTrayIcon::DoShowHide()
 	} else {
 		theApp->amuledlg->RestoreMainWindow();
 	}
-#ifdef WITH_LIBAYATANA_APPINDICATOR
+#ifdef __WXGTK__
 	// The SNI menu is static between state changes, so without this poke the
 	// "Hide aMule" / "Show aMule" label would lag a click behind.
 	RebuildMenu();
@@ -361,6 +361,14 @@ CMuleTrayIcon::~CMuleTrayIcon()
 	// m_menu is owned by the indicator (set_menu took the floating ref).
 }
 
+void CMuleTrayIcon::SetVisible(bool visible)
+{
+	if (m_indicator) {
+		app_indicator_set_status(
+			m_indicator, visible ? APP_INDICATOR_STATUS_ACTIVE : APP_INDICATOR_STATUS_PASSIVE);
+	}
+}
+
 void CMuleTrayIcon::SetTrayIcon(int Icon, uint32 /*percent*/)
 {
 	// SNI has no per-frame icon overlays, so the legacy backend's percent bar is dropped here.
@@ -642,6 +650,7 @@ CMuleTrayIcon::CMuleTrayIcon()
 {
 	Old_Icon = -1;
 	Old_SpeedSize = 0xFFFF; // must be > any possible one.
+	m_visible = true;
 }
 
 CMuleTrayIcon::~CMuleTrayIcon() {}
@@ -718,14 +727,36 @@ void CMuleTrayIcon::SetTrayIcon(int Icon, uint32 percent)
 
 void CMuleTrayIcon::SetTrayToolTip(const wxString &Tip)
 {
+	// Called on every rate update. wx's AppIndicator backend shows no tooltip, yet each of its
+	// SetIcon() calls writes a new icon file and re-registers the indicator with the host.
+	if (Tip == CurrentTip) {
+		return;
+	}
 	CurrentTip = Tip;
+#if !(defined(wxUSE_APPINDICATOR) && wxUSE_APPINDICATOR)
 	UpdateTray();
+#endif
 }
 
 // Private functions
 
+void CMuleTrayIcon::SetVisible(bool visible)
+{
+	m_visible = visible;
+	if (visible) {
+		Old_Icon = -1; // RemoveIcon() dropped the icon SetTrayIcon() remembers.
+	} else {
+		// With wx's AppIndicator backend this only sets the indicator passive.
+		RemoveIcon();
+	}
+}
+
 void CMuleTrayIcon::UpdateTray()
 {
+	// A deferred RebuildMenu() must not bring back a hidden icon.
+	if (!m_visible) {
+		return;
+	}
 #ifndef __WXCOCOA__
 	if (IsOk())
 #endif
@@ -733,6 +764,17 @@ void CMuleTrayIcon::UpdateTray()
 		SetIcon(CurrentIcon, CurrentTip);
 	}
 }
+
+#ifdef __WXGTK__
+void CMuleTrayIcon::RebuildMenu()
+{
+#if defined(wxUSE_APPINDICATOR) && wxUSE_APPINDICATOR
+	// wx's AppIndicator backend builds the menu inside SetIcon(). Deferred because this can run
+	// from an event of the current menu, which SetIcon() deletes.
+	CallAfter(&CMuleTrayIcon::UpdateTray);
+#endif
+}
+#endif
 
 wxMenu *CMuleTrayIcon::CreatePopupMenu()
 {
@@ -750,8 +792,11 @@ wxMenu *CMuleTrayIcon::CreatePopupMenu()
 	traymenu->Append(TRAY_MENU_INFO, label);
 	traymenu->AppendSeparator();
 
-	// Treat iconized as not visible -- see DoShowHide for rationale.
-	if (theApp->amuledlg->IsShown() && !theApp->amuledlg->IsTrayLogicallyIconized()) {
+	// Treat iconized as not visible -- see DoShowHide for rationale. wx's AppIndicator backend
+	// builds this menu inside SetIcon(), which first runs from the CamuleDlg constructor: before
+	// theApp->amuledlg is set, and in amule before theApp->serverconnect exists.
+	const CamuleDlg *dlg = theApp->amuledlg;
+	if (dlg && dlg->IsShown() && !dlg->IsTrayLogicallyIconized()) {
 		traymenu->Append(TRAY_MENU_HIDE, _("Hide aMule"));
 	} else {
 		traymenu->Append(TRAY_MENU_SHOW, _("Show aMule"));
@@ -815,9 +860,11 @@ wxMenu *CMuleTrayIcon::CreatePopupMenu()
 		wxString temp_name = _("ServerName: ");
 		wxString temp_ip = _("ServerIP: ");
 
-		if (theApp->serverconnect->GetCurrentServer()) {
-			temp_name += theApp->serverconnect->GetCurrentServer()->GetListName();
-			temp_ip += theApp->serverconnect->GetCurrentServer()->GetFullIP();
+		const CServer *server =
+			theApp->serverconnect ? theApp->serverconnect->GetCurrentServer() : nullptr;
+		if (server) {
+			temp_name += server->GetListName();
+			temp_ip += server->GetFullIP();
 		} else {
 			temp_name += _("Not connected");
 			temp_ip += _("Not Connected");

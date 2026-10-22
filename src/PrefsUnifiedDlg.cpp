@@ -50,6 +50,9 @@
 
 #include <memory> // std::unique_ptr (progress dialog lifetime)
 #include <wx/stdpaths.h>
+#ifdef __WXGTK__
+#include <wx/taskbar.h> // wxTaskBarIcon::IsAvailable (legacy tray availability)
+#endif
 #include <wx/utils.h> // wxGetUserHome
 
 // Network-interface enumeration for the "Bind to interface" and "Bind to IP"
@@ -107,6 +110,17 @@ void RefreshPreferencesPage(wxWindow *window)
 			return;
 		}
 	}
+}
+
+// Minimize to Tray needs the tray icon, and on GTK an X11 session: Wayland never reports that
+// a window was minimized. SanitiseTrayPreferences() forces the setting off to match.
+bool MinToTrayUsable(bool trayIcon)
+{
+#ifdef __WXGTK__
+	return trayIcon && !CamuleAppCommon::IsWaylandSession();
+#else
+	return trayIcon;
+#endif
 }
 
 #ifdef CLIENT_GUI
@@ -463,16 +477,19 @@ PrefsUnifiedDlg::PrefsUnifiedDlg(wxWindow *parent)
 			// wxTaskBarIcon maps to NSStatusItem on Mac, NOTIFYICONDATA on Windows,
 			// GtkStatusIcon / libayatana SNI on Linux.
 #if defined(__WXGTK__) && !defined(WITH_LIBAYATANA_APPINDICATOR)
-			// On Linux without libayatana-appindicator3 the only backend wxTaskBarIcon can
-			// fall back to is the legacy GtkStatusIcon API, which GNOME Shell dropped in 3.26
-			// and wlroots-based compositors never implemented -- the tray icon is silently
-			// invisible. Disable the option so users do not enable a feature that does
-			// nothing. CamuleApp::OnInit force-clears UseTrayIcon at startup for the same
-			// reason.
-			FindWindow(IDC_ENABLETRAYICON)->Enable(false);
-			FindWindow(IDC_ENABLETRAYICON)
-				->SetToolTip(_("Tray icon support requires libayatana-appindicator3 at "
-					       "compile time."));
+			// On Linux without libayatana-appindicator3 the tray falls back to wxTaskBarIcon,
+			// which needs a host it can reach: an X11 system tray for GtkStatusIcon, or an SNI
+			// watcher when wx (3.2.12+) is built with AppIndicator support. GNOME Shell and
+			// native Wayland often have neither, and the icon is then silently invisible, so
+			// disable the option rather than let users enable a feature that does nothing.
+			// SanitiseTrayPreferences() force-clears UseTrayIcon at startup for the same reason.
+			if (!wxTaskBarIcon::IsAvailable()) {
+				FindWindow(IDC_ENABLETRAYICON)->Enable(false);
+				FindWindow(IDC_ENABLETRAYICON)
+					->SetToolTip(
+						_("No system tray found. Use a desktop with a system "
+						  "tray, or build aMule with libayatana-appindicator3."));
+			}
 #endif
 
 #ifdef __WXGTK__
@@ -920,12 +937,7 @@ bool PrefsUnifiedDlg::TransferToWindow()
 	// back there.
 	FindWindow(IDC_MACHIDEONCLOSE)->Enable(thePrefs::UseTrayIcon());
 
-#ifdef __WXGTK__
-	const bool minTrayUsable = thePrefs::UseTrayIcon() && !CamuleAppCommon::IsWaylandSession();
-#else
-	const bool minTrayUsable = thePrefs::UseTrayIcon();
-#endif
-	FindWindow(IDC_MINTRAY)->Enable(minTrayUsable);
+	FindWindow(IDC_MINTRAY)->Enable(MinToTrayUsable(thePrefs::UseTrayIcon()));
 
 	UpdateMessageFilterControls();
 	FindWindow(IDC_COMMENTWORD)->Enable(CastChild(IDC_FILTERCOMMENTS, wxCheckBox)->IsChecked());
@@ -1992,7 +2004,7 @@ void PrefsUnifiedDlg::OnCheckBoxChange(wxCommandEvent &event)
 		break;
 
 	case IDC_ENABLETRAYICON:
-		FindWindow(IDC_MINTRAY)->Enable(value);
+		FindWindow(IDC_MINTRAY)->Enable(MinToTrayUsable(value));
 		// HideOnClose's recovery surface is the tray icon, so its checkbox follows tray-icon
 		// state too. Live-update both here so the user does not have to close and reopen prefs
 		// to see dependent options gate correctly.
@@ -2000,7 +2012,7 @@ void PrefsUnifiedDlg::OnCheckBoxChange(wxCommandEvent &event)
 		if (value) {
 			theApp->amuledlg->CreateSystray();
 		} else {
-			theApp->amuledlg->RemoveSystray();
+			theApp->amuledlg->HideSystray();
 		}
 		thePrefs::SetUseTrayIcon(value);
 		break;
