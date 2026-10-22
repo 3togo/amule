@@ -29,12 +29,21 @@
 using namespace muleunit;
 DECLARE_SIMPLE(WindowGeometry)
 
+// wxRect::Contains() is implemented in wxCore. Keep these geometry assertions
+// usable in daemon-only builds, which link only wxBase.
+static bool ContainsRect(const wxRect &outer, const wxRect &inner)
+{
+	return inner.x >= outer.x && inner.y >= outer.y &&
+	       int64_t(inner.x) + inner.width <= int64_t(outer.x) + outer.width &&
+	       int64_t(inner.y) + inner.height <= int64_t(outer.y) + outer.height;
+}
+
 TEST(WindowGeometry, RemovedMonitorAndNegativeCoordinatesRecover)
 {
 	const std::vector<wxRect> areas{ wxRect(0, 24, 1920, 1056) };
 	const wxRect result =
 		ConstrainWindowRect(wxRect(-5000, -4000, 800, 600), areas, wxSize(320, 240), 50);
-	ASSERT_TRUE(areas[0].Contains(result));
+	ASSERT_TRUE(ContainsRect(areas[0], result));
 	ASSERT_TRUE((wxSize(800, 600)) == (result.GetSize()));
 }
 TEST(WindowGeometry, ValidNegativeMonitorIsPreserved)
@@ -49,7 +58,7 @@ TEST(WindowGeometry, RemovedMonitorFallsBackToPrimaryDisplay)
 	const std::vector<wxRect> areas{ wxRect(-1280, 0, 1280, 1024), wxRect(0, 40, 1920, 1040) };
 	const wxRect result =
 		ConstrainWindowRect(wxRect(5000, 3000, 800, 600), areas, wxSize(320, 240), 50, 1);
-	ASSERT_TRUE(areas[1].Contains(result));
+	ASSERT_TRUE(ContainsRect(areas[1], result));
 	ASSERT_TRUE((wxSize(800, 600)) == (result.GetSize()));
 }
 TEST(WindowGeometry, ReachableSpanningWindowIsPreserved)
@@ -71,7 +80,7 @@ TEST(WindowGeometry, ResizeBorderSliversRecoverOnEitherSide)
 		for (const int x : { area.width - overlap, overlap - 900 }) {
 			const wxRect saved(x, 100, 900, 600);
 			const wxRect result = ConstrainWindowRect(saved, { area }, wxSize(320, 240), 50);
-			ASSERT_TRUE(area.Contains(result));
+			ASSERT_TRUE(ContainsRect(area, result));
 			ASSERT_TRUE(saved.GetSize() == result.GetSize());
 		}
 	}
@@ -92,7 +101,7 @@ TEST(WindowGeometry, BottomMarginMustLeaveUsableTitleBar)
 	for (const int clearance : { 1, 7, 49 }) {
 		const wxRect result = ConstrainWindowRect(
 			wxRect(-1300, -clearance, 900, 600), { area }, wxSize(320, 240), 50);
-		ASSERT_TRUE(area.Contains(result));
+		ASSERT_TRUE(ContainsRect(area, result));
 	}
 }
 TEST(WindowGeometry, ReachabilityMarginUsesCallerScale)
@@ -100,18 +109,18 @@ TEST(WindowGeometry, ReachabilityMarginUsesCallerScale)
 	const wxRect area(0, 0, 2882, 1706);
 	const wxRect saved(2783, 100, 900, 600);
 	ASSERT_TRUE(saved == ConstrainWindowRect(saved, { area }, wxSize(320, 240), 50));
-	ASSERT_TRUE(area.Contains(ConstrainWindowRect(saved, { area }, wxSize(640, 480), 100)));
+	ASSERT_TRUE(ContainsRect(area, ConstrainWindowRect(saved, { area }, wxSize(640, 480), 100)));
 	const wxRect boundary(2782, 1606, 900, 600);
 	ASSERT_TRUE(boundary == ConstrainWindowRect(boundary, { area }, wxSize(640, 480), 100));
 	const wxRect tooLow(2782, 1607, 900, 600);
-	ASSERT_TRUE(area.Contains(ConstrainWindowRect(tooLow, { area }, wxSize(640, 480), 100)));
+	ASSERT_TRUE(ContainsRect(area, ConstrainWindowRect(tooLow, { area }, wxSize(640, 480), 100)));
 }
 TEST(WindowGeometry, UsableMarginOnAnotherMonitorPreservesSpanningBounds)
 {
 	const std::vector<wxRect> areas{ wxRect(0, 0, 1441, 853), wxRect(1441, 0, 1441, 853) };
 	const wxRect saved(1434, 100, 900, 600);
 	ASSERT_TRUE(saved == ConstrainWindowRect(saved, areas, wxSize(320, 240), 50));
-	ASSERT_TRUE(areas[0].Contains(ConstrainWindowRect(saved, { areas[0] }, wxSize(320, 240), 50)));
+	ASSERT_TRUE(ContainsRect(areas[0], ConstrainWindowRect(saved, { areas[0] }, wxSize(320, 240), 50)));
 }
 TEST(WindowGeometry, RestorePassesReachabilityMargin)
 {
@@ -154,7 +163,7 @@ TEST(WindowGeometry, EmptyPrimaryWorkAreaDoesNotCollapseWindow)
 	const std::vector<wxRect> areas{ wxRect(), wxRect(100, 40, 1280, 720) };
 	const wxRect result =
 		ConstrainWindowRect(wxRect(-5000, -4000, 800, 600), areas, wxSize(320, 240), 50);
-	ASSERT_TRUE(areas[1].Contains(result));
+	ASSERT_TRUE(ContainsRect(areas[1], result));
 	ASSERT_TRUE((wxSize(800, 600)) == (result.GetSize()));
 }
 TEST(WindowGeometry, RecoveryUsesWideWorkAreaArithmetic)
