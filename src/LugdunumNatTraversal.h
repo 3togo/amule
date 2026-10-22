@@ -37,6 +37,10 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <map>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace LugdunumNatTraversal
 {
@@ -223,6 +227,287 @@ inline ForwardedCallback ParseForwardedCallback(const std::uint8_t *data, std::s
 		std::copy_n(data + 11, 16, result.userHash.begin());
 	}
 	return result;
+}
+
+struct CallbackDialTarget
+{
+	std::uint32_t provisionalUserId = 0;
+	std::uint32_t ip = 0;
+	std::uint16_t udpPort = 0;
+};
+
+// The forwarded IP/UDP tuple selects a route only; a peer ID is established by OP_HELLO.
+inline CallbackDialTarget BuildCallbackDialTarget(const ForwardedCallback &callback)
+{
+	return { 0, callback.seenIp, callback.seenUdpPort };
+}
+
+template <typename Dialer> bool DispatchForwardedCallback(const ForwardedCallback &callback, Dialer &&dialer)
+{
+	if (!callback.ok) {
+		return false;
+	}
+	std::forward<Dialer>(dialer)(callback);
+	return true;
+}
+
+struct CallbackFailureKey
+{
+	std::uint32_t serverIp = 0;
+	std::uint16_t serverPort = 0;
+	std::uint32_t requesterId = 0;
+	std::uint32_t endpointIp = 0;
+	std::uint16_t endpointUdpPort = 0;
+
+	bool operator<(const CallbackFailureKey &other) const
+	{
+		return std::tie(serverIp, serverPort, requesterId, endpointIp, endpointUdpPort) <
+		       std::tie(other.serverIp,
+			       other.serverPort,
+			       other.requesterId,
+			       other.endpointIp,
+			       other.endpointUdpPort);
+	}
+
+	bool operator==(const CallbackFailureKey &other) const
+	{
+		return serverIp == other.serverIp && serverPort == other.serverPort &&
+		       requesterId == other.requesterId && endpointIp == other.endpointIp &&
+		       endpointUdpPort == other.endpointUdpPort;
+	}
+};
+
+class ForwardedCallbackActionGuard
+{
+public:
+	static constexpr std::uint64_t DuplicateWindowMs = 10'000;
+	static constexpr std::uint64_t ActionWindowMs = 60'000;
+	static constexpr std::size_t MaxDuplicateEntries = 256;
+	static constexpr std::size_t MaxActions = 20;
+
+	bool Admit(const CallbackFailureKey &key, std::uint64_t nowMs)
+	{
+		Prune(nowMs);
+		const CallbackServer server{ key.serverIp, key.serverPort };
+		std::vector<std::uint64_t> &actions = m_actions[server];
+		if (m_duplicates.find(key) != m_duplicates.end() || actions.size() >= MaxActions) {
+			return false;
+		}
+		if (m_duplicates.size() == MaxDuplicateEntries) {
+			const auto oldest = std::min_element(m_duplicates.begin(),
+				m_duplicates.end(),
+				[](const auto &left, const auto &right) {
+					return left.second < right.second;
+				});
+			m_duplicates.erase(oldest);
+		}
+		m_duplicates.emplace(key, nowMs);
+		actions.push_back(nowMs);
+		return true;
+	}
+
+private:
+	void Prune(std::uint64_t nowMs)
+	{
+		for (auto entry = m_duplicates.begin(); entry != m_duplicates.end();) {
+			if (nowMs >= entry->second && nowMs - entry->second >= DuplicateWindowMs) {
+				entry = m_duplicates.erase(entry);
+			} else {
+				++entry;
+			}
+		}
+		for (auto actionWindow = m_actions.begin(); actionWindow != m_actions.end();) {
+			std::vector<std::uint64_t> &actions = actionWindow->second;
+			actions.erase(std::remove_if(actions.begin(),
+					      actions.end(),
+					      [nowMs](std::uint64_t actionAt) {
+						      return nowMs >= actionAt &&
+							     nowMs - actionAt >= ActionWindowMs;
+					      }),
+				actions.end());
+			if (actions.empty()) {
+				actionWindow = m_actions.erase(actionWindow);
+			} else {
+				++actionWindow;
+			}
+		}
+	}
+
+	using CallbackServer = std::pair<std::uint32_t, std::uint16_t>;
+	std::map<CallbackFailureKey, std::uint64_t> m_duplicates;
+	std::map<CallbackServer, std::vector<std::uint64_t>> m_actions;
+};
+
+inline bool ShouldClearCallbackFailureAfterHello(const CallbackFailureKey &key, std::uint32_t actualPeerId)
+{
+	return key.requesterId == 0 || key.requesterId == actualPeerId;
+}
+
+template <typename ClearFailure>
+bool ClearCallbackFailureAfterHello(
+	const CallbackFailureKey &key, std::uint32_t actualPeerId, ClearFailure &&clearFailure)
+{
+	if (!ShouldClearCallbackFailureAfterHello(key, actualPeerId)) {
+		return false;
+	}
+	std::forward<ClearFailure>(clearFailure)(key);
+	return true;
+}
+
+class CallbackFailureMemory
+{
+public:
+	static constexpr std::uint64_t CooldownMs = 10 * 60 * 1000;
+
+	bool IsCoolingDown(const CallbackFailureKey &key, std::uint64_t nowMs)
+	{
+		PruneExpired(nowMs);
+		return m_failures.find(key) != m_failures.end();
+	}
+
+	void RecordFailure(const CallbackFailureKey &key, std::uint64_t nowMs)
+	{
+		PruneExpired(nowMs);
+		m_failures[key] = nowMs;
+	}
+
+	void Clear(const CallbackFailureKey &key) { m_failures.erase(key); }
+
+private:
+	void PruneExpired(std::uint64_t nowMs)
+	{
+		for (auto entry = m_failures.begin(); entry != m_failures.end();) {
+			if (nowMs >= entry->second && nowMs - entry->second >= CooldownMs) {
+				entry = m_failures.erase(entry);
+			} else {
+				++entry;
+			}
+		}
+	}
+
+	std::map<CallbackFailureKey, std::uint64_t> m_failures;
+};
+
+// Main-thread callback rendezvous state. The initial uTP SYN opens the pinhole; after three
+// seconds without a stream, request the reciprocal callback and send a small peer datagram every
+// three seconds so a port-restricted NAT still admits the delayed reciprocal SYN. State ends on a
+// verified HELLO or after one minute, whichever comes first.
+struct CallbackRendezvousAction
+{
+	CallbackFailureKey key;
+	std::uint32_t ip = 0;
+	std::uint16_t udpPort = 0;
+	bool requestReverseCallback = false;
+	bool sendKeepalive = false;
+};
+
+class CCallbackRendezvous
+{
+public:
+	static constexpr std::uint64_t ReverseAfterMs = 3'000;
+	static constexpr std::uint64_t KeepaliveIntervalMs = 3'000;
+	static constexpr std::uint64_t LifetimeMs = 60'000;
+	static constexpr std::size_t MaxPending = 20;
+
+	bool Start(
+		const CallbackFailureKey &key, std::uint32_t ip, std::uint16_t udpPort, std::uint64_t nowMs)
+	{
+		if (ip == 0 || udpPort == 0 || m_pending.find(key) != m_pending.end() ||
+			m_pending.size() >= MaxPending) {
+			return false;
+		}
+		m_pending.emplace(key, Pending{ ip, udpPort, nowMs });
+		return true;
+	}
+
+	bool Complete(const CallbackFailureKey &key) { return m_pending.erase(key) != 0; }
+	bool IsActive(const CallbackFailureKey &key) const { return m_pending.find(key) != m_pending.end(); }
+
+	std::vector<CallbackRendezvousAction> Tick(std::uint64_t nowMs)
+	{
+		std::vector<CallbackRendezvousAction> actions;
+		for (auto entry = m_pending.begin(); entry != m_pending.end();) {
+			Pending &pending = entry->second;
+			if (nowMs >= pending.startedAtMs && nowMs - pending.startedAtMs >= LifetimeMs) {
+				entry = m_pending.erase(entry);
+				continue;
+			}
+			const bool dueForKeepalive = nowMs >= pending.nextKeepaliveAtMs;
+			const bool dueForReverse = !pending.reverseRequested &&
+						   nowMs >= pending.startedAtMs &&
+						   nowMs - pending.startedAtMs >= ReverseAfterMs;
+			if (dueForKeepalive || dueForReverse) {
+				actions.push_back({ entry->first,
+					pending.ip,
+					pending.udpPort,
+					dueForReverse && entry->first.requesterId != 0,
+					dueForKeepalive });
+				pending.reverseRequested = pending.reverseRequested || dueForReverse;
+				if (dueForKeepalive) {
+					pending.nextKeepaliveAtMs = nowMs + KeepaliveIntervalMs;
+				}
+			}
+			++entry;
+		}
+		return actions;
+	}
+
+private:
+	struct Pending
+	{
+		std::uint32_t ip;
+		std::uint16_t udpPort;
+		std::uint64_t startedAtMs;
+		std::uint64_t nextKeepaliveAtMs = startedAtMs + KeepaliveIntervalMs;
+		bool reverseRequested = false;
+	};
+
+	std::map<CallbackFailureKey, Pending> m_pending;
+};
+
+inline bool ShouldDialForwardedCallback(
+	const ForwardedCallback &callback, bool serverCallbackActive, bool settingEnabled)
+{
+	return callback.ok && serverCallbackActive && settingEnabled && callback.seenIp != 0 &&
+	       callback.seenUdpPort != 0;
+}
+
+// A zero requester ID is a reverse callback: act on it, but never request a callback back on failure.
+inline bool ShouldSendCallbackRequestAfterFailure(std::uint32_t requesterId)
+{
+	return requesterId != 0;
+}
+
+template <typename RecordFailure, typename RequestCallback>
+bool HandleCallbackDialFailure(
+	const CallbackFailureKey &key, RecordFailure &&recordFailure, RequestCallback &&requestCallback)
+{
+	std::forward<RecordFailure>(recordFailure)(key);
+	if (!ShouldSendCallbackRequestAfterFailure(key.requesterId)) {
+		return false;
+	}
+	std::forward<RequestCallback>(requestCallback)(key.requesterId);
+	return true;
+}
+
+template <typename StartDial,
+	typename RecordFailure,
+	typename RequestCallback,
+	typename RemoveTemporaryClient>
+bool RunCallbackDialApplication(const CallbackFailureKey &key,
+	StartDial &&startDial,
+	RecordFailure &&recordFailure,
+	RequestCallback &&requestCallback,
+	RemoveTemporaryClient &&removeTemporaryClient)
+{
+	if (std::forward<StartDial>(startDial)()) {
+		return true;
+	}
+	HandleCallbackDialFailure(key,
+		std::forward<RecordFailure>(recordFailure),
+		std::forward<RequestCallback>(requestCallback));
+	std::forward<RemoveTemporaryClient>(removeTemporaryClient)();
+	return false;
 }
 
 } // namespace LugdunumNatTraversal

@@ -45,6 +45,9 @@
 #include "PeerCapabilities.h" // Needed for CPeerCapabilities
 #include "ProtocolPeerIdentity.h"
 #include "KadBuddyLiveness.h"
+#if defined(ENABLE_NATT_SERVER_COORDINATION) && defined(AMULE_UTP_TRANSPORT)
+#include "LugdunumNatTraversal.h"
+#endif
 
 #include <map>
 #include <wx/thread.h> // Needed for wxMutex
@@ -213,6 +216,10 @@ public:
 	/// (or Connect() declined to start) and must not be touched again.
 	bool TryToConnect(bool bIgnoreMaxCon = false);
 	bool Connect();
+#ifdef ENABLE_NATT_SERVER_COORDINATION
+	//! Sends a reciprocal request for a callback-provided peer ID after its dial fails.
+	void TrySendLugdunumNatCallbackRequest(uint32 targetId) const;
+#endif
 #if defined(ENABLE_NATT_SERVER_COORDINATION) && defined(AMULE_UTP_TRANSPORT)
 	//! Dials uTP for a temporary client at the server-announced endpoint. Do not mutate any
 	//! download source: OP_HELLO establishes identity before the client list attaches it.
@@ -351,15 +358,44 @@ public:
 	//! A temporary client dialled on a server-announced endpoint. It becomes a download
 	//! source only through the client list match of its hello answer.
 	void MarkLowIdHolePunchDial() { m_lowIdHolePunchDial = true; }
+	bool IsLowIdHolePunchDial() const { return m_lowIdHolePunchDial; }
 	bool TakeLowIdHolePunchDial()
 	{
 		const bool wasDial = m_lowIdHolePunchDial;
 		m_lowIdHolePunchDial = false;
 		return wasDial;
 	}
+	void MarkLugdunumCallbackDial(const LugdunumNatTraversal::CallbackFailureKey &failureKey)
+	{
+		m_lugdunumCallbackDial = true;
+		m_lugdunumCallbackFailureKey = failureKey;
+	}
+	bool IsLugdunumCallbackDial() const { return m_lugdunumCallbackDial; }
+	const LugdunumNatTraversal::CallbackFailureKey &GetLugdunumCallbackFailureKey() const
+	{
+		return m_lugdunumCallbackFailureKey;
+	}
+	void CompleteLugdunumCallbackDial()
+	{
+		m_lugdunumCallbackDial = false;
+		m_lugdunumCallbackFailureKey = {};
+	}
+	bool TakeLugdunumCallbackRequestOnFailure(
+		uint32 &requesterId, LugdunumNatTraversal::CallbackFailureKey &failureKey)
+	{
+		if (!m_lugdunumCallbackDial) {
+			return false;
+		}
+		failureKey = m_lugdunumCallbackFailureKey;
+		requesterId = failureKey.requesterId;
+		CompleteLugdunumCallbackDial();
+		return true;
+	}
 
 private:
 	bool m_lowIdHolePunchDial = false;
+	bool m_lugdunumCallbackDial = false;
+	LugdunumNatTraversal::CallbackFailureKey m_lugdunumCallbackFailureKey{};
 #endif
 
 public:

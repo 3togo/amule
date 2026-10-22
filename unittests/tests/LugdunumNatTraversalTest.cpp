@@ -32,6 +32,42 @@ using namespace LugdunumNatTraversal;
 
 DECLARE_SIMPLE(LugdunumNatTraversal)
 
+TEST(LugdunumNatTraversal, KeepsCallbackPinholeOpenAndRequestsReverseEarly)
+{
+	CCallbackRendezvous rendezvous;
+	const CallbackFailureKey key{ 1, 2, 3, 0x0100007F, 4672 };
+
+	ASSERT_TRUE(rendezvous.Start(key, 0x0100007F, 4672, 100));
+	ASSERT_TRUE(rendezvous.Tick(3099).empty());
+	const std::vector<CallbackRendezvousAction> first = rendezvous.Tick(3100);
+	ASSERT_EQUALS(1, (int)first.size());
+	ASSERT_TRUE(first[0].sendKeepalive);
+	ASSERT_TRUE(first[0].requestReverseCallback);
+	ASSERT_TRUE(first[0].key == key);
+
+	ASSERT_TRUE(rendezvous.Tick(6099).empty());
+	const std::vector<CallbackRendezvousAction> second = rendezvous.Tick(6100);
+	ASSERT_EQUALS(1, (int)second.size());
+	ASSERT_TRUE(second[0].sendKeepalive);
+	ASSERT_FALSE(second[0].requestReverseCallback);
+
+	ASSERT_TRUE(rendezvous.Complete(key));
+	ASSERT_TRUE(rendezvous.Tick(9100).empty());
+}
+
+TEST(LugdunumNatTraversal, ReverseCallbackNeverRequestsAnotherReverseAndRendezvousExpires)
+{
+	CCallbackRendezvous rendezvous;
+	const CallbackFailureKey reverseKey{ 1, 2, 0, 0x0100007F, 4672 };
+	ASSERT_TRUE(rendezvous.Start(reverseKey, 0x0100007F, 4672, 0));
+
+	const std::vector<CallbackRendezvousAction> action = rendezvous.Tick(3000);
+	ASSERT_EQUALS(1, (int)action.size());
+	ASSERT_TRUE(action[0].sendKeepalive);
+	ASSERT_FALSE(action[0].requestReverseCallback);
+	ASSERT_TRUE(rendezvous.Tick(60000).empty());
+}
+
 TEST(LugdunumNatTraversal, ParsesLiveIdChangeVectors)
 {
 	// Mazinga, without 0x1000 (S3): id, flags, aux (server) port only.
@@ -416,4 +452,226 @@ TEST(LugdunumNatTraversal, KeepsLowIdServerSourcesOnlyFromOurOwnCapableServer)
 	LowIdServerSourceFacts notCapable = facts;
 	notCapable.serverCallbackCapable = false;
 	ASSERT_FALSE(ShouldKeepLowIdServerSource(notCapable));
+}
+
+TEST(LugdunumNatTraversal, ReverseCallbackStillDialsButCannotStartReciprocalRequest)
+{
+	ForwardedCallback callback;
+	callback.ok = true;
+	callback.seenIp = 0x01020304;
+	callback.seenUdpPort = 4662;
+	callback.requesterId = 0;
+
+	ASSERT_TRUE(ShouldDialForwardedCallback(callback, true, true));
+	ASSERT_FALSE(ShouldSendCallbackRequestAfterFailure(callback.requesterId));
+
+	callback.requesterId = 0x12345678;
+	ASSERT_TRUE(ShouldDialForwardedCallback(callback, true, true));
+	ASSERT_TRUE(ShouldSendCallbackRequestAfterFailure(callback.requesterId));
+
+	ASSERT_FALSE(ShouldDialForwardedCallback(callback, false, true));
+	ASSERT_FALSE(ShouldDialForwardedCallback(callback, true, false));
+	callback.seenUdpPort = 0;
+	ASSERT_FALSE(ShouldDialForwardedCallback(callback, true, true));
+}
+
+TEST(LugdunumNatTraversal, CallbackDialKeepsObservedEndpointOutOfPeerId)
+{
+	ForwardedCallback callback;
+	callback.ok = true;
+	callback.seenIp = 0x01020304;
+	callback.seenUdpPort = 4662;
+	callback.requesterId = 0x12345678;
+	callback.hasObfuscation = true;
+	callback.userHash.fill(0xAB);
+
+	const CallbackDialTarget target = BuildCallbackDialTarget(callback);
+	ASSERT_EQUALS(0u, target.provisionalUserId);
+	ASSERT_EQUALS(callback.seenIp, target.ip);
+	ASSERT_EQUALS(callback.seenUdpPort, target.udpPort);
+}
+
+TEST(LugdunumNatTraversal, CallbackFailureCooldownExpiresAfterTenMinutesAndEndpointChangesBypass)
+{
+	CallbackFailureMemory failures;
+	const CallbackFailureKey key{ 0x0A000001, 4661, 0x12345678, 0xC0000201, 4662 };
+	const std::uint64_t failedAt = 100;
+	failures.RecordFailure(key, failedAt);
+
+	ASSERT_TRUE(failures.IsCoolingDown(key, failedAt + CallbackFailureMemory::CooldownMs - 1));
+	ASSERT_FALSE(failures.IsCoolingDown(key, failedAt + CallbackFailureMemory::CooldownMs));
+
+	failures.RecordFailure(key, failedAt);
+	CallbackFailureKey changedEndpoint = key;
+	changedEndpoint.endpointUdpPort = 4663;
+	ASSERT_FALSE(failures.IsCoolingDown(changedEndpoint, failedAt + 1));
+
+	CallbackFailureKey otherServer = key;
+	otherServer.serverIp = 0x0A000002;
+	ASSERT_FALSE(failures.IsCoolingDown(otherServer, failedAt + 1));
+}
+
+TEST(LugdunumNatTraversal, SuccessfulCallbackHelloClearsOnlyTheMatchingPeerFailure)
+{
+	CallbackFailureMemory failures;
+	const CallbackFailureKey key{ 0x0A000001, 4661, 0x12345678, 0xC0000201, 4662 };
+	failures.RecordFailure(key, 100);
+	ASSERT_TRUE(failures.IsCoolingDown(key, 101));
+	bool cleared = false;
+	ASSERT_FALSE(ClearCallbackFailureAfterHello(key, 0x87654321, [&](const auto &) {
+		failures.Clear(key);
+		cleared = true;
+	}));
+	ASSERT_FALSE(cleared);
+	ASSERT_TRUE(failures.IsCoolingDown(key, 102));
+
+	ASSERT_TRUE(ClearCallbackFailureAfterHello(key, key.requesterId, [&](const auto &) {
+		failures.Clear(key);
+		cleared = true;
+	}));
+	ASSERT_TRUE(cleared);
+	ASSERT_FALSE(failures.IsCoolingDown(key, 103));
+
+	CallbackFailureKey reverseCallback = key;
+	reverseCallback.requesterId = 0;
+	ASSERT_TRUE(ClearCallbackFailureAfterHello(reverseCallback, 0x87654321, [](const auto &) {}));
+}
+
+TEST(LugdunumNatTraversal, ReverseCallbackFailureMemoryFallsBackToObservedEndpoint)
+{
+	CallbackFailureMemory failures;
+	const CallbackFailureKey key{ 0x0A000001, 4661, 0, 0xC0000201, 4662 };
+	failures.RecordFailure(key, 100);
+	ASSERT_TRUE(failures.IsCoolingDown(key, 101));
+
+	CallbackFailureKey changedEndpoint = key;
+	changedEndpoint.endpointIp = 0xC0000202;
+	ASSERT_FALSE(failures.IsCoolingDown(changedEndpoint, 101));
+}
+
+TEST(LugdunumNatTraversal, DispatchAndFailureActionsUseInjectedOperations)
+{
+	ForwardedCallback tcpCallback;
+	tcpCallback.ok = true;
+	tcpCallback.seenIp = 0xC0000201;
+	tcpCallback.seenUdpPort = 4662;
+	tcpCallback.requesterId = 0x12345678;
+	ForwardedCallback udpCallback = tcpCallback;
+	udpCallback.hasObfuscation = true;
+	udpCallback.userHash.fill(0xAB);
+
+	int dialCount = 0;
+	CallbackDialTarget firstTarget{};
+	CallbackDialTarget secondTarget{};
+	const auto dial = [&](const ForwardedCallback &callback) {
+		const CallbackDialTarget target = BuildCallbackDialTarget(callback);
+		if (dialCount == 0) {
+			firstTarget = target;
+		} else {
+			secondTarget = target;
+		}
+		++dialCount;
+	};
+	ASSERT_TRUE(DispatchForwardedCallback(tcpCallback, dial));
+	ASSERT_TRUE(DispatchForwardedCallback(udpCallback, dial));
+	ASSERT_EQUALS(2, dialCount);
+	ASSERT_EQUALS(firstTarget.provisionalUserId, secondTarget.provisionalUserId);
+	ASSERT_EQUALS(firstTarget.ip, secondTarget.ip);
+	ASSERT_EQUALS(firstTarget.udpPort, secondTarget.udpPort);
+	ForwardedCallback invalid = tcpCallback;
+	invalid.ok = false;
+	ASSERT_FALSE(DispatchForwardedCallback(invalid, dial));
+	ASSERT_EQUALS(2, dialCount);
+
+	const CallbackFailureKey requesterKey{ 0x0A000001, 4661, 0x12345678, 0xC0000201, 4662 };
+	const CallbackFailureKey reverseKey{ 0x0A000001, 4661, 0, 0xC0000201, 4662 };
+	int recordedFailures = 0;
+	int callbackRequests = 0;
+	std::uint32_t requestedId = 0;
+	const auto recordFailure = [&](const CallbackFailureKey &) { ++recordedFailures; };
+	const auto requestCallback = [&](std::uint32_t requesterId) {
+		++callbackRequests;
+		requestedId = requesterId;
+	};
+	ASSERT_TRUE(HandleCallbackDialFailure(requesterKey, recordFailure, requestCallback));
+	ASSERT_FALSE(HandleCallbackDialFailure(reverseKey, recordFailure, requestCallback));
+	ASSERT_EQUALS(2, recordedFailures);
+	ASSERT_EQUALS(1, callbackRequests);
+	ASSERT_EQUALS(requesterKey.requesterId, requestedId);
+}
+
+TEST(LugdunumNatTraversal, FailedCallbackAttemptKeepsSourceRetryableThroughApplicationSeam)
+{
+	const CallbackFailureKey key{ 0x0A000001, 4661, 0x12345678, 0xC0000201, 4662 };
+	CallbackFailureMemory failures;
+	struct FakeClientRegistry
+	{
+		int sourceCount = 1;
+		int temporaryClients = 0;
+	} clients;
+	int dialCalls = 0;
+	int recordedFailures = 0;
+	int callbackRequests = 0;
+	std::uint32_t requestedId = 0;
+
+	const auto attempt = [&](std::uint64_t now) {
+		if (failures.IsCoolingDown(key, now)) {
+			return false;
+		}
+		return RunCallbackDialApplication(
+			key,
+			[&]() {
+				++dialCalls;
+				++clients.temporaryClients;
+				return false;
+			},
+			[&](const CallbackFailureKey &failedKey) {
+				++recordedFailures;
+				failures.RecordFailure(failedKey, now);
+			},
+			[&](std::uint32_t requesterId) {
+				++callbackRequests;
+				requestedId = requesterId;
+			},
+			[&]() { --clients.temporaryClients; });
+	};
+
+	ASSERT_FALSE(attempt(100));
+	ASSERT_EQUALS(1, clients.sourceCount);
+	ASSERT_EQUALS(0, clients.temporaryClients);
+	ASSERT_EQUALS(1, dialCalls);
+	ASSERT_EQUALS(1, recordedFailures);
+	ASSERT_EQUALS(1, callbackRequests);
+	ASSERT_EQUALS(key.requesterId, requestedId);
+
+	ASSERT_FALSE(attempt(101));
+	ASSERT_EQUALS(1, dialCalls);
+	ASSERT_EQUALS(1, clients.sourceCount);
+
+	ASSERT_FALSE(attempt(100 + CallbackFailureMemory::CooldownMs));
+	ASSERT_EQUALS(2, dialCalls);
+	ASSERT_EQUALS(1, clients.sourceCount);
+	ASSERT_EQUALS(0, clients.temporaryClients);
+	ASSERT_EQUALS(2, recordedFailures);
+	ASSERT_EQUALS(2, callbackRequests);
+}
+
+TEST(LugdunumNatTraversal, ForwardedCallbackGuardDeduplicatesAndBoundsActions)
+{
+	ForwardedCallbackActionGuard guard;
+	const CallbackFailureKey key{ 0x0A000001, 4661, 0x12345678, 0xC0000201, 4662 };
+	ASSERT_TRUE(guard.Admit(key, 100));
+	ASSERT_FALSE(guard.Admit(key, 100 + ForwardedCallbackActionGuard::DuplicateWindowMs - 1));
+	ASSERT_TRUE(guard.Admit(key, 100 + ForwardedCallbackActionGuard::DuplicateWindowMs));
+
+	CallbackFailureKey distinct = key;
+	for (std::size_t index = 0; index < ForwardedCallbackActionGuard::MaxActions - 2; ++index) {
+		distinct.requesterId = static_cast<std::uint32_t>(index + 1);
+		ASSERT_TRUE(guard.Admit(distinct, 20'000));
+	}
+	distinct.requesterId = 0xFFFFFFFF;
+	ASSERT_FALSE(guard.Admit(distinct, 20'000));
+	distinct.serverIp = 0x0A000002;
+	ASSERT_TRUE(guard.Admit(distinct, 20'000));
+	ASSERT_TRUE(guard.Admit(distinct, 100 + ForwardedCallbackActionGuard::ActionWindowMs));
 }

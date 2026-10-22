@@ -31,6 +31,10 @@
 
 #include <memory>
 
+#if defined(ENABLE_NATT_SERVER_COORDINATION) && defined(AMULE_UTP_TRANSPORT)
+#include "LugdunumNatTraversal.h"
+#endif
+
 #ifdef AMULE_UTP_TRANSPORT
 #include "UtpContext.h"
 #include "UtpStreamAcceptor.h"
@@ -40,6 +44,12 @@
 #include "QuicNgtcp2Adapter.h"
 #include "NatRendezvousPolicy.h"
 #include "QuicStreamAcceptor.h"
+#endif
+#ifdef ENABLE_NATT_SERVER_COORDINATION
+namespace LugdunumNatTraversal
+{
+struct ForwardedCallback;
+}
 #endif
 
 class CClientUDPSocket : public CMuleUDPSocket
@@ -58,6 +68,12 @@ public:
 	IUtpContext *GetUtpContext() { return &m_utp; }
 #if defined(ENABLE_NATT_SERVER_COORDINATION)
 	bool DialLowIdHolePunchPeer(uint32 ip, uint16 tcpPort, uint16 udpPort);
+	bool DialLugdunumNatCallbackPeer(const LugdunumNatTraversal::ForwardedCallback &callback);
+	bool IsLugdunumNatCallbackCoolingDown(const LugdunumNatTraversal::CallbackFailureKey &key);
+	void RecordLugdunumNatCallbackFailure(const LugdunumNatTraversal::CallbackFailureKey &key);
+	void ClearLugdunumNatCallbackFailure(const LugdunumNatTraversal::CallbackFailureKey &key);
+	bool IsLugdunumCallbackRendezvousActive(const LugdunumNatTraversal::CallbackFailureKey &key) const;
+	void CompleteLugdunumCallbackRendezvous(const LugdunumNatTraversal::CallbackFailureKey &key);
 #endif
 #endif
 #ifdef AMULE_QUIC_TRANSPORT
@@ -80,6 +96,11 @@ private:
 		const uint8_t *userHash) override;
 	CUtpContext m_utp;
 	CUtpStreamAcceptor m_utpAcceptor;
+#ifdef ENABLE_NATT_SERVER_COORDINATION
+	LugdunumNatTraversal::CallbackFailureMemory m_lugdunumCallbackFailures;
+	LugdunumNatTraversal::ForwardedCallbackActionGuard m_lugdunumCallbackActions;
+	LugdunumNatTraversal::CCallbackRendezvous m_lugdunumCallbackRendezvous;
+#endif
 #endif
 #ifdef AMULE_QUIC_TRANSPORT
 	// Declaration order is construction order: each of these is built from the ones before it,
@@ -103,6 +124,8 @@ private:
 	bool TryProcessServerWayNatCallback(uint32 ip, uint8_t *buffer, size_t length);
 #ifdef AMULE_UTP_TRANSPORT
 	void HandleLowIdHolePunch(uint32 host, uint16 port);
+	void SendLugdunumNatCallbackRequest(const LugdunumNatTraversal::CallbackFailureKey &key);
+	void TickLugdunumCallbackRendezvous();
 #endif
 #endif
 

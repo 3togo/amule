@@ -189,6 +189,9 @@ CClientUDPSocket::~CClientUDPSocket()
 void CClientUDPSocket::TickUtp()
 {
 	wxASSERT(wxIsMainThread());
+#ifdef ENABLE_NATT_SERVER_COORDINATION
+	TickLugdunumCallbackRendezvous();
+#endif
 	m_utp.Tick();
 }
 
@@ -399,10 +402,14 @@ bool CClientUDPSocket::TryProcessServerWayNatCallback(uint32 ip, uint8_t *buffer
 
 	const LugdunumNatTraversal::ForwardedCallback callback =
 		LugdunumNatTraversal::ParseForwardedCallback(decrypted + 2, decryptedLen - 2);
-	if (callback.ok) {
-		LugdunumNatTraversal::LogForwardedCallback(
-			logClientUDP, "OP_NAT_CALLBACKREQUESTED_UDP", callback);
-	}
+	LugdunumNatTraversal::DispatchForwardedCallback(
+		callback, [this](const LugdunumNatTraversal::ForwardedCallback &forwarded) {
+			LugdunumNatTraversal::LogForwardedCallback(
+				logClientUDP, "OP_NAT_CALLBACKREQUESTED_UDP", forwarded);
+#ifdef AMULE_UTP_TRANSPORT
+			DialLugdunumNatCallbackPeer(forwarded);
+#endif
+		});
 	return true;
 }
 #endif
@@ -456,9 +463,13 @@ void CClientUDPSocket::ProcessReservedProt2Frame(
 		// one kind that may arrive from someone we do not know; everything else has
 		// to come from an endpoint that already holds a socket.
 		const EUtpFrameKind kind = ClassifyUtpFrame(classified.payload, classified.payloadLength);
+		const std::uint64_t nowMs = ::GetTickCount64();
 		const bool fromKnownPeer = m_utp.HasRegisteredPeer(ip, port);
-		if (kind != EUtpFrameKind::Malformed && (kind == EUtpFrameKind::Syn || fromKnownPeer)) {
-			if (ProcessUtpFrame(m_utp, classified, ip, port)) {
+		const bool fromExpectedHandshakePeer =
+			kind == EUtpFrameKind::Existing && m_utp.HasExpectedPortRemapPeer(ip, port, nowMs);
+		if (kind != EUtpFrameKind::Malformed &&
+			(kind == EUtpFrameKind::Syn || fromKnownPeer || fromExpectedHandshakePeer)) {
+			if (ProcessUtpFrame(m_utp, classified, ip, port, nowMs)) {
 				return;
 			}
 		} else if (kind == EUtpFrameKind::Existing) {
@@ -611,6 +622,154 @@ bool CClientUDPSocket::DialLowIdHolePunchPeer(uint32 ip, uint16 tcpPort, uint16 
 		if (CUpDownClient *checked = ref.GetClientChecked()) {
 			checked->Safe_Delete();
 		}
+	}
+	return started;
+}
+
+bool CClientUDPSocket::IsLugdunumNatCallbackCoolingDown(const LugdunumNatTraversal::CallbackFailureKey &key)
+{
+	return m_lugdunumCallbackFailures.IsCoolingDown(key, ::GetTickCount64());
+}
+
+void CClientUDPSocket::RecordLugdunumNatCallbackFailure(const LugdunumNatTraversal::CallbackFailureKey &key)
+{
+	m_lugdunumCallbackFailures.RecordFailure(key, ::GetTickCount64());
+}
+
+void CClientUDPSocket::ClearLugdunumNatCallbackFailure(const LugdunumNatTraversal::CallbackFailureKey &key)
+{
+	m_lugdunumCallbackFailures.Clear(key);
+}
+
+bool CClientUDPSocket::IsLugdunumCallbackRendezvousActive(
+	const LugdunumNatTraversal::CallbackFailureKey &key) const
+{
+	return m_lugdunumCallbackRendezvous.IsActive(key);
+}
+
+void CClientUDPSocket::CompleteLugdunumCallbackRendezvous(const LugdunumNatTraversal::CallbackFailureKey &key)
+{
+	m_lugdunumCallbackRendezvous.Complete(key);
+}
+
+void CClientUDPSocket::SendLugdunumNatCallbackRequest(const LugdunumNatTraversal::CallbackFailureKey &key)
+{
+	if (theApp->serverconnect == nullptr || !Ok()) {
+		return;
+	}
+	CServer *server = theApp->serverconnect->GetCurrentServer();
+	if (server == nullptr) {
+		return;
+	}
+	CServer *serverListEntry =
+		theApp->serverlist->GetServerByAddress(server->GetAddress(), server->GetPort());
+	if (serverListEntry == nullptr) {
+		return;
+	}
+	const LugdunumNatTraversal::CallbackRequestFacts facts{ theApp->serverconnect->GetClientID(),
+		key.requesterId,
+		server->GetIP() == key.serverIp && server->GetPort() == key.serverPort,
+		server->IsLugdunumNatCallbackActive(),
+		thePrefs::IsServerCryptLayerUDPEnabled(),
+		serverListEntry->GetServerKeyUDP(),
+		serverListEntry->SupportsObfuscationUDP(),
+		thePrefs::IsLugdunumNatCallbackEnabled() };
+	if (!LugdunumNatTraversal::ShouldRequestLugdunumNatCallback(facts)) {
+		return;
+	}
+	const LugdunumNatTraversal::CallbackRequest request{ key.requesterId,
+		theApp->serverconnect->GetClientID() };
+	const auto payload = LugdunumNatTraversal::BuildCallbackRequest(request);
+	CMemFile data(payload.data(), payload.size());
+	CPacket *packet = new CPacket(data, OP_EDONKEYPROT, OP_NAT_CALLBACKREQUEST);
+	uint16 rawSize = static_cast<uint16>(packet->GetPacketSize() + 2);
+	uint8_t *raw = new uint8_t[rawSize];
+	memcpy(raw, packet->GetUDPHeader(), 2);
+	memcpy(raw + 2, packet->GetDataBuffer(), packet->GetPacketSize());
+	delete packet;
+	rawSize = static_cast<uint16>(CEncryptedDatagramSocket::EncryptSendServer(
+		&raw, rawSize, serverListEntry->GetServerKeyUDP()));
+	CMemFile encryptedData(raw + 2, rawSize - 2);
+	CPacket *encrypted = new CPacket(encryptedData, raw[0], raw[1]);
+	delete[] raw;
+	theStats::AddUpOverheadOther(encrypted->GetPacketSize());
+	SendPacket(encrypted,
+		server->GetIP(),
+		serverListEntry->GetObfuscationPortUDP(),
+		false,
+		nullptr,
+		false,
+		0);
+}
+
+void CClientUDPSocket::TickLugdunumCallbackRendezvous()
+{
+	for (const LugdunumNatTraversal::CallbackRendezvousAction &action :
+		m_lugdunumCallbackRendezvous.Tick(::GetTickCount64())) {
+		if (action.requestReverseCallback) {
+			SendLugdunumNatCallbackRequest(action.key);
+		}
+		if (action.sendKeepalive && Ok()) {
+			CPacket *punch = new CPacket(OP_HOLEPUNCH, 0, OP_EMULEPROT);
+			theStats::AddUpOverheadOther(punch->GetPacketSize());
+			SendPacket(punch, action.ip, action.udpPort, false, nullptr, false, 0);
+		}
+	}
+}
+
+bool CClientUDPSocket::DialLugdunumNatCallbackPeer(const LugdunumNatTraversal::ForwardedCallback &callback)
+{
+	CServerConnect *connect = theApp->serverconnect;
+	CServer *server = connect != nullptr ? connect->GetCurrentServer() : nullptr;
+	if (server == nullptr || !connect->IsConnected()) {
+		return false;
+	}
+	if (!LugdunumNatTraversal::ShouldDialForwardedCallback(callback,
+		    server->IsLugdunumNatCallbackActive(),
+		    thePrefs::IsLugdunumNatCallbackEnabled()) ||
+		!Ok() || !m_utp.IsAvailable() || !IsGoodIP(callback.seenIp, thePrefs::FilterLanIPs()) ||
+		theApp->ipfilter->IsFiltered(callback.seenIp) ||
+		theApp->clientlist->IsBannedClient(
+			CNetworkAddress::FromIPv4NetworkOrderOrAbsent(callback.seenIp)) ||
+		theApp->listensocket->TooManySockets()) {
+		return false;
+	}
+
+	// The forwarded endpoint is a route hint, not an identity; OP_HELLO supplies the peer ID.
+	const LugdunumNatTraversal::CallbackDialTarget target =
+		LugdunumNatTraversal::BuildCallbackDialTarget(callback);
+	const LugdunumNatTraversal::CallbackFailureKey failureKey{
+		server->GetIP(), server->GetPort(), callback.requesterId, target.ip, target.udpPort
+	};
+	if (IsLugdunumNatCallbackCoolingDown(failureKey) ||
+		!m_lugdunumCallbackActions.Admit(failureKey, ::GetTickCount64())) {
+		return false;
+	}
+
+	CUpDownClient *client = new CUpDownClient(
+		0, target.provisionalUserId, server->GetIP(), server->GetPort(), nullptr, true, false);
+	client->SetUserAddress(CNetworkAddress::FromIPv4NetworkOrder(target.ip));
+	theApp->clientlist->AddClient(client);
+	CClientRef ref{ client CLIENT_DEBUGSTRING("Lugdunum callback dial") };
+	client->SetUDPPort(target.udpPort);
+	client->MarkLowIdHolePunchDial();
+	client->MarkLugdunumCallbackDial(failureKey);
+	const bool started = LugdunumNatTraversal::RunCallbackDialApplication(
+		failureKey,
+		[client]() { return client->TryServerVouchedLowIdUtpDial(); },
+		[this](const LugdunumNatTraversal::CallbackFailureKey &key) {
+			RecordLugdunumNatCallbackFailure(key);
+		},
+		[client](std::uint32_t requesterId) {
+			client->TrySendLugdunumNatCallbackRequest(requesterId);
+		},
+		[&ref]() {
+			if (CUpDownClient *checked = ref.GetClientChecked()) {
+				checked->Safe_Delete();
+			}
+		});
+	if (started) {
+		m_lugdunumCallbackRendezvous.Start(failureKey, target.ip, target.udpPort, ::GetTickCount64());
 	}
 	return started;
 }

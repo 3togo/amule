@@ -88,6 +88,9 @@
 #endif
 #include "ChatState.h"         // Needed for ChatStateAfterFailedConnect
 #include "ContactDialPolicy.h" // Needed for DecideContactRoute
+#ifdef AMULE_UTP_TRANSPORT
+#include "UtpDialPolicy.h" // Needed for file-request recovery after a uTP socket swap
+#endif
 #include "Logger.h"
 #include "DataToText.h" // Needed for GetSoftName()
 #include "GuiEvents.h"  // Needed for Notify_
@@ -1793,6 +1796,11 @@ EContactResult CUpDownClient::CheckContactPreconditions()
 #ifdef ENABLE_NATT_SERVER_COORDINATION
 void CUpDownClient::TrySendLugdunumNatCallbackRequest() const
 {
+	TrySendLugdunumNatCallbackRequest(GetUserIDHybrid());
+}
+
+void CUpDownClient::TrySendLugdunumNatCallbackRequest(uint32 targetId) const
+{
 	if (theApp->serverconnect == nullptr || theApp->clientudp == nullptr) {
 		return;
 	}
@@ -1807,7 +1815,7 @@ void CUpDownClient::TrySendLugdunumNatCallbackRequest() const
 		return;
 	}
 	const LugdunumNatTraversal::CallbackRequestFacts facts{ theApp->serverconnect->GetClientID(),
-		GetUserIDHybrid(),
+		targetId,
 		theApp->serverconnect->IsLocalServer(GetServerIP(), GetServerPort()),
 		server->IsLugdunumNatCallbackActive(),
 		thePrefs::IsServerCryptLayerUDPEnabled(),
@@ -1818,8 +1826,7 @@ void CUpDownClient::TrySendLugdunumNatCallbackRequest() const
 		return;
 	}
 
-	const LugdunumNatTraversal::CallbackRequest request{ GetUserIDHybrid(),
-		theApp->serverconnect->GetClientID() };
+	const LugdunumNatTraversal::CallbackRequest request{ targetId, theApp->serverconnect->GetClientID() };
 	const std::array<std::uint8_t, 8> payload = LugdunumNatTraversal::BuildCallbackRequest(request);
 	CMemFile data(payload.data(), payload.size());
 	CPacket *packet = new CPacket(data, OP_EDONKEYPROT, OP_NAT_CALLBACKREQUEST);
@@ -1840,7 +1847,7 @@ void CUpDownClient::TrySendLugdunumNatCallbackRequest() const
 	delete[] pRawPacket;
 
 	AddDebugLogLineN(logClientUDP,
-		CFormat("Client UDP socket: OP_NAT_CALLBACKREQUEST for source %u to %s") % GetUserIDHybrid() %
+		CFormat("Client UDP socket: OP_NAT_CALLBACKREQUEST for source %u to %s") % targetId %
 			Uint32_16toStringIP_Port(server->GetIP(), serverListEntry->GetObfuscationPortUDP()));
 	theStats::AddUpOverheadOther(encrypted->GetPacketSize());
 	theApp->clientudp->SendPacket(encrypted,
@@ -2183,10 +2190,12 @@ EContactResult CUpDownClient::TryToContact(bool bIgnoreMaxCon)
 		if (!m_socket->IsOk() && ShouldTryIPv4Utp(GetDialAddress()) &&
 			DecideUtpDial(facts) == EUtpDialDecision::TryUtp) {
 			std::unique_ptr<IStreamTransport> transport;
+			const SUtpDialOptions dialOptions{ false, ::GetTickCount64(), ECID() };
 			if (utp->Dial(GetConnectIP(),
 				    utpPort,
 				    ShouldReceiveCryptUDPPackets(),
 				    HasValidHash() ? GetUserHash().GetHash() : nullptr,
+				    dialOptions,
 				    transport)) {
 				// Attached first: the socket refuses stream obfuscation once
 				// it is carried by a transport that obfuscates its own frames.
@@ -2230,10 +2239,12 @@ bool CUpDownClient::TryServerVouchedLowIdUtpDial()
 		return false;
 	}
 	std::unique_ptr<IStreamTransport> transport;
+	const SUtpDialOptions dialOptions{ true, ::GetTickCount64(), ECID() };
 	if (!utp->Dial(GetConnectIP(),
 		    GetUDPPort(),
 		    ShouldReceiveCryptUDPPackets(),
 		    HasValidHash() ? GetUserHash().GetHash() : nullptr,
+		    dialOptions,
 		    transport)) {
 		return false;
 	}
@@ -2404,7 +2415,7 @@ void CUpDownClient::ConnectionEstablished()
 	switch (GetDownloadState()) {
 #if defined(ENABLE_NATT_SERVER_COORDINATION) && defined(AMULE_UTP_TRANSPORT)
 	case DS_LOWTOLOWIP:
-		if (!thePrefs::IsLowIdHolePunchEnabled()) {
+		if (!thePrefs::IsLowIdHolePunchEnabled() && !thePrefs::IsLugdunumNatCallbackEnabled()) {
 			break;
 		}
 		[[fallthrough]];
@@ -2425,12 +2436,9 @@ void CUpDownClient::ConnectionEstablished()
 		}
 	}
 #ifdef AMULE_UTP_TRANSPORT
-	if (m_fileRequestLostToSocketSwap) {
-		m_fileRequestLostToSocketSwap = false;
-		if (GetDownloadState() == DS_CONNECTED) {
-			SendFileRequest();
-		}
-	}
+	RetryFileRequestAfterUtpSocketSwap(m_fileRequestLostToSocketSwap,
+		GetDownloadState() == DS_CONNECTED,
+		[&]() { SendFileRequest(); });
 #endif
 	switch (GetUploadState()) {
 	case US_CONNECTING:

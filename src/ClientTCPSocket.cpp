@@ -29,6 +29,9 @@
 #ifdef AMULE_UTP_TRANSPORT
 #include "UtpSocketTransport.h" // per-stream crypt parameters
 #endif                          // Interface declarations.
+#ifdef ENABLE_NATT_SERVER_COORDINATION
+#include "LugdunumNatTraversal.h" // callback failure policy
+#endif
 
 #include "BrowseManager.h"
 
@@ -80,6 +83,13 @@ CClientTCPSocket::CClientTCPSocket(CUpDownClient *in_client, const CProxyData *P
 		m_remoteip = 0;
 	}
 	m_remoteAddress = CNetworkAddress::FromIPv4NetworkOrderOrAbsent(m_remoteip);
+#if defined(ENABLE_NATT_SERVER_COORDINATION) && defined(AMULE_UTP_TRANSPORT)
+	if (in_client != nullptr && in_client->IsLowIdHolePunchDial()) {
+		// Server-vouched dials carry a route address separately from peer identity until hello.
+		m_remoteAddress = in_client->GetUserAddress().Unmapped();
+		m_remoteip = m_remoteAddress.ToIPv4NetworkOrderOrZero();
+	}
+#endif
 #ifdef ENABLE_IPV6
 	// A native IPv6 peer has no IPv4 hybrid ID; OnReceive() filters on the address dialled.
 	if (in_client) {
@@ -264,6 +274,11 @@ bool CClientTCPSocket::TryUtpTcpFallback()
 	if (m_client->HasLowID() || !m_client->IsRedialAllowed()) {
 		return false;
 	}
+#ifdef ENABLE_NATT_SERVER_COORDINATION
+	if (m_client->IsLugdunumCallbackDial()) {
+		return false;
+	}
+#endif
 	// A stream handshake that already started cannot be re-keyed: Connect() would
 	// reach SetConnectionEncryption()'s wxFAIL and leave the keystreams at their
 	// mid-stream position, so the peer would decode the new connection's first
@@ -312,6 +327,26 @@ void CClientTCPSocket::Disconnect(const wxString &strReason)
 {
 	byConnected = ES_DISCONNECTED;
 	if (m_client) {
+#if defined(ENABLE_NATT_SERVER_COORDINATION) && defined(AMULE_UTP_TRANSPORT)
+		uint32 requesterId = 0;
+		LugdunumNatTraversal::CallbackFailureKey failureKey{};
+		if (m_client->TakeLugdunumCallbackRequestOnFailure(requesterId, failureKey)) {
+			LugdunumNatTraversal::HandleCallbackDialFailure(
+				failureKey,
+				[this](const LugdunumNatTraversal::CallbackFailureKey &key) {
+					if (theApp->clientudp != nullptr) {
+						theApp->clientudp->RecordLugdunumNatCallbackFailure(key);
+					}
+				},
+				[this, &failureKey](uint32 requester) {
+					if (theApp->clientudp == nullptr ||
+						!theApp->clientudp->IsLugdunumCallbackRendezvousActive(
+							failureKey)) {
+						m_client->TrySendLugdunumNatCallbackRequest(requester);
+					}
+				});
+		}
+#endif
 		if (m_client->Disconnected(strReason, true)) {
 			// Safe_Delete() can be reached from Disconnected(), or anything else
 			// that sets m_client to NULL, so check m_client first.
@@ -365,8 +400,24 @@ bool CClientTCPSocket::ProcessPacket(const uint8_t *buffer, uint32 size, uint8 o
 		theStats::AddDownOverheadOther(size);
 		m_client->ProcessHelloAnswer(buffer, size);
 #if defined(ENABLE_NATT_SERVER_COORDINATION) && defined(AMULE_UTP_TRANSPORT)
-		// The answer is what identifies a hole-punch dial: join the LowID source it reached, as
-		// an incoming hello does, so the file request goes out over this stream.
+		if (m_client->IsLugdunumCallbackDial()) {
+			const LugdunumNatTraversal::CallbackFailureKey failureKey =
+				m_client->GetLugdunumCallbackFailureKey();
+			LugdunumNatTraversal::ClearCallbackFailureAfterHello(failureKey,
+				m_client->GetUserIDHybrid(),
+				[this](const LugdunumNatTraversal::CallbackFailureKey &key) {
+					if (theApp->clientudp != nullptr) {
+						theApp->clientudp->ClearLugdunumNatCallbackFailure(key);
+					}
+				});
+			m_client->CompleteLugdunumCallbackDial();
+			if (theApp->clientudp != nullptr) {
+				theApp->clientudp->CompleteLugdunumCallbackRendezvous(failureKey);
+			}
+		}
+		// The answer establishes identity for this server-vouched temporary dial: attach it to
+		// an already-known peer, as an incoming hello does, so any pending source request follows
+		// the verified peer onto this stream.
 		if (m_client->TakeLowIdHolePunchDial()) {
 			CUpDownClient *const dialled = m_client;
 			bool senderDiscarded = false;
@@ -460,6 +511,23 @@ bool CClientTCPSocket::ProcessPacket(const uint8_t *buffer, uint32 size, uint8 o
 			return false;
 		}
 
+#if defined(ENABLE_NATT_SERVER_COORDINATION) && defined(AMULE_UTP_TRANSPORT)
+		if (m_client->IsLugdunumCallbackDial()) {
+			const LugdunumNatTraversal::CallbackFailureKey failureKey =
+				m_client->GetLugdunumCallbackFailureKey();
+			LugdunumNatTraversal::ClearCallbackFailureAfterHello(failureKey,
+				m_client->GetUserIDHybrid(),
+				[this](const LugdunumNatTraversal::CallbackFailureKey &key) {
+					if (theApp->clientudp != nullptr) {
+						theApp->clientudp->ClearLugdunumNatCallbackFailure(key);
+					}
+				});
+			m_client->CompleteLugdunumCallbackDial();
+			if (theApp->clientudp != nullptr) {
+				theApp->clientudp->CompleteLugdunumCallbackRendezvous(failureKey);
+			}
+		}
+#endif
 		wxASSERT(m_client);
 
 		// If we already know this client the socket is attached to the known one, the new
