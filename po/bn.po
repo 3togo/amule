@@ -507,7 +507,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "আপনি স্টার্টআপে ওয়েব সার্ভার চালানোর অনুরোধ করেছেন, কিন্তু amuleweb বাইনারি চালানো যাচ্ছে না। অনুগ্রহ করে aMule ওয়েব সার্ভার সম্বলিত প্যাকেজটি ইনস্টল করুন, অথবা -DBUILD_WEBSERVER=YES সহ সোর্স থেকে aMule বিল্ড করে ইনস্টল করুন।"
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "ত্রুটি"
 
@@ -1299,6 +1299,10 @@ msgstr ""
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "ডিরেক্টরি '%s' বিভাগ '%s'-এর জন্য তৈরি করা যাচ্ছে না, ডিরেক্টরি '%s' রাখা হচ্ছে।"
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "অবৈধ URL"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2301,6 +2305,26 @@ msgstr[1] "%uটি লিংক যোগ করা যায়নি (বি�
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "অবৈধ eD2k লিংক! ত্রুটি: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "সার্ভার তালিকা সম্পাদনা করুন"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5156,8 +5180,9 @@ msgid "retries"
 msgstr "পুনঃচেষ্টা"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "তালিকা"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "ফাইল সোর্স:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5764,17 +5789,19 @@ msgstr ""
 msgid "Click this button to reset the log."
 msgstr "লগ রিসেট করতে এই বোতামে ক্লিক করুন।"
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "URL থেকে সার্ভার তালিকা আপডেট করতে এই বোতামে ক্লিক করুন …"
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "সার্ভার তালিকা সম্পাদনা করুন"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "সার্ভার তালিকা"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "পরিচিত সার্ভারের তালিকা আপডেট করতে এখানে server.met ফাইলের url লিখুন এবং বামের বোতামটি চাপুন।"
+#, fuzzy
+msgid "Download once"
+msgstr "ডাউনলোড করা হয়েছে"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7102,18 +7129,6 @@ msgid "Reset to defaults"
 msgstr "ডিফল্টে রিসেট করুন"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "সার্ভার তালিকা সম্পাদনা করুন"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"server.met ফাইল ডাউনলোড করতে এখানে URL যোগ করুন।\n"
-"প্রতি লাইনে শুধুমাত্র একটি URL।"
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "IP2Country আপডেট ব্যর্থ হয়েছে"
 
@@ -7707,17 +7722,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr ""
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "অবৈধ URL"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "%s থেকে সার্ভার তালিকা ডাউনলোড সম্পন্ন হয়েছে"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "'addresses.dat' এ কোনো সার্ভার তালিকা ঠিকানা এন্ট্রি পাওয়া যায়নি। আপনার সার্ভার তালিকা স্বয়ংক্রিয়ভাবে আপডেট করতে অনুগ্রহ করে এই ফাইলে একটি বৈধ সার্ভার তালিকা ঠিকানা পেস্ট করুন"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7726,17 +7736,8 @@ msgstr "%s থেকে সার্ভার তালিকা ডাউনল
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "সতর্কতা: সার্ভার স্বয়ংক্রিয় আপডেটের জন্য অবৈধ URL উল্লেখ করা হয়েছে: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "addresses.dat এ কোনো বৈধ server.met স্বয়ংক্রিয়-ডাউনলোড URL নেই"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "%s থেকে সার্ভার তালিকা ডাউনলোড করতে ব্যর্থ"
+msgid "Finished downloading the server list from %s"
+msgstr "%s থেকে সার্ভার তালিকা ডাউনলোড সম্পন্ন হয়েছে"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -7944,6 +7945,14 @@ msgstr "সার্ভার %s এর জন্য dns সমাধান ক�
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "aMuleGUI লগ"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10161,6 +10170,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "তালিকা"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "URL থেকে সার্ভার তালিকা আপডেট করতে এই বোতামে ক্লিক করুন …"
+
+#~ msgid "Server list"
+#~ msgstr "সার্ভার তালিকা"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "পরিচিত সার্ভারের তালিকা আপডেট করতে এখানে server.met ফাইলের url লিখুন এবং বামের বোতামটি চাপুন।"
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "server.met ফাইল ডাউনলোড করতে এখানে URL যোগ করুন।\n"
+#~ "প্রতি লাইনে শুধুমাত্র একটি URL।"
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "'addresses.dat' এ কোনো সার্ভার তালিকা ঠিকানা এন্ট্রি পাওয়া যায়নি। আপনার সার্ভার তালিকা স্বয়ংক্রিয়ভাবে আপডেট করতে অনুগ্রহ করে এই ফাইলে একটি বৈধ সার্ভার তালিকা ঠিকানা পেস্ট করুন"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "সতর্কতা: সার্ভার স্বয়ংক্রিয় আপডেটের জন্য অবৈধ URL উল্লেখ করা হয়েছে: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "addresses.dat এ কোনো বৈধ server.met স্বয়ংক্রিয়-ডাউনলোড URL নেই"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "%s থেকে সার্ভার তালিকা ডাউনলোড করতে ব্যর্থ"
 
 #~ msgid "Download graph scale:"
 #~ msgstr "ডাউনলোড গ্রাফ স্কেল:"

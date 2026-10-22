@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-20 14:05+0000\n"
+"PO-Revision-Date: 2026-10-22 07:18+0000\n"
 "Last-Translator: David Watzke <david@watzke.cz>\n"
 "Language-Team: cs <cs@li.org>\n"
 "Language: cs\n"
@@ -529,7 +529,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Požádali jste o spuštění webového serveru po startu, avšak binární soubor amuleweb nelze spustit. Nainstalujte balíček obsahující webový server aMule, nebo sestavte aMule ze zdrojového kódu pomocí přepínače -DBUILD_WEBSERVER=YES a pak jej nainstalujte."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "CHYBA"
 
@@ -724,16 +724,15 @@ msgstr "Ukládání seedů zdrojů..."
 
 #: src/amule.cpp
 msgid "Stopping background downloads and workers..."
-msgstr ""
+msgstr "Zastavování stahování na pozadí a workerů..."
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Closing connections..."
-msgstr " - stav: připojování..."
+msgstr "Uzavírání spojení..."
 
 #: src/amule.cpp
 msgid "Saving known files and statistics..."
-msgstr ""
+msgstr "Ukládání známých souborů a statistik..."
 
 #: src/amule.cpp
 msgid "ERROR: can't open logfile"
@@ -1049,7 +1048,7 @@ msgstr "Odesílání: %.1f%s | Stahování: %.1f%s"
 
 #: src/amuleDlg.cpp
 msgid "Transfer speeds are reported by the daemon. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "Rychlost přenosů je hlášena daemonem. Celkové odesílání zahrnuje kontrolní provoz; rychlost odesílání peera zahrnuje jen pakety souborů. Hodnoty v závorkách ukazují režii protokolu v KiB/s."
 
 #: src/amuleDlg.cpp
 msgid "Live speeds are averaged over the last second. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
@@ -1320,6 +1319,10 @@ msgstr "Nešlo smazat kategorii: %s"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "Nelze vytvořit adresář '%s' pro kategorii '%s', ponechává se adresář '%s'."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "Neplatná adresa URL"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2334,6 +2337,26 @@ msgstr[2] "Nelze přidat %u odkazů (podrobnosti viz protokol)."
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Neplatný odkaz eD2k! CHYBA: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "Upravit seznam serverů"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5202,8 +5225,9 @@ msgid "retries"
 msgstr "pokusech"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "Seznam"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "Zdroje souboru:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5810,17 +5834,19 @@ msgstr "Vyberte barvu pro tuto kategorii (nyní vybranou)"
 msgid "Click this button to reset the log."
 msgstr "Kliknutím na toto tlačítko vymažete protokol."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "Klikněte na toto tlačítko pro aktualizaci seznamu serverů z URL ..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "Upravit seznam serverů"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "Seznam serverů"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "Zde zadejte URL souboru server.met a stiskněte tlačítko vlevo pro aktualizaci seznamu známých serverů."
+#, fuzzy
+msgid "Download once"
+msgstr "Staženo"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7154,18 +7180,6 @@ msgid "Reset to defaults"
 msgstr "Obnovit výchozí nastavení"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "Upravit seznam serverů"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"Sem přidejte adresy URL pro stažení souborů server.met.\n"
-"Na každý řádek zadejte pouze jednu adresu URL."
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "Selhala aktualizace IP2Country"
 
@@ -7772,17 +7786,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "Selhání I/O při zápisu 'server.met': %s"
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "Neplatná adresa URL"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "Stažení seznamu serverů z %s bylo dokončeno"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "V souboru 'addresses.dat' nebyla nalezena žádná adresa seznamu serverů. Vložte prosím platnou adresu seznamu serverů do tohoto souboru, aby se váš seznam serverů mohl automaticky aktualizovat"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7791,17 +7800,8 @@ msgstr "Zahájení stahování seznamu serverů z %s"
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "VAROVÁNÍ: pro automatickou aktualizaci serverů byla zadána neplatná URL adresa: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "Soubor addresses.dat neobsahuje žádnou platnou adresu URL pro automatické stažení souboru server.met"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "Seznam serverů se z adresy %s nepodařilo stáhnout"
+msgid "Finished downloading the server list from %s"
+msgstr "Stažení seznamu serverů z %s bylo dokončeno"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -8010,6 +8010,14 @@ msgstr "Nepodařilo se vyřešit DNS pro server %s: Nelze se připojit!"
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "Protokol aMuleGUI"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10246,6 +10254,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "Seznam"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "Klikněte na toto tlačítko pro aktualizaci seznamu serverů z URL ..."
+
+#~ msgid "Server list"
+#~ msgstr "Seznam serverů"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "Zde zadejte URL souboru server.met a stiskněte tlačítko vlevo pro aktualizaci seznamu známých serverů."
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "Sem přidejte adresy URL pro stažení souborů server.met.\n"
+#~ "Na každý řádek zadejte pouze jednu adresu URL."
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "V souboru 'addresses.dat' nebyla nalezena žádná adresa seznamu serverů. Vložte prosím platnou adresu seznamu serverů do tohoto souboru, aby se váš seznam serverů mohl automaticky aktualizovat"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "VAROVÁNÍ: pro automatickou aktualizaci serverů byla zadána neplatná URL adresa: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "Soubor addresses.dat neobsahuje žádnou platnou adresu URL pro automatické stažení souboru server.met"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "Seznam serverů se z adresy %s nepodařilo stáhnout"
 
 #, c-format
 #~ msgid "Skipped deleting '%s': the selected file has changed."

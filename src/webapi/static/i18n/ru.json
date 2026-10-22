@@ -857,7 +857,7 @@
   "shared_size": "Размер",
   "shared_toast_done": "Готово",
   "shared_toast_no_files_selected": "Файлы не выбраны",
-  "shared_verify": "Проверка локальных данных",
+  "shared_verify": "Сверка локальных данных",
   "shared_verify_tip": "Повторно прочитать файл с диска и проверить его по хеш-набору. Результат отображается в журнале aMule.",
   "shared_verify_tip_partfile": "Недоступно, пока файл ещё загружается.",
   "shared_verify_confirm": "Проверить локальные данные «{name}»? Весь файл будет прочитан с диска.",

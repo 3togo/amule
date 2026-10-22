@@ -517,7 +517,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "A web szerver futtatását kérte induláskor, de az amuleweb program nem futtatható. Kérem telepítse az aMule web szervert tartalmazó csomagot, vagy építse az aMule-t a forráskódból a -DBUILD_WEBSERVER=YES paraméterrel és installálja azt."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "HIBA"
 
@@ -1312,6 +1312,10 @@ msgstr "A letöltött fájlok eltolása %s helyre sikertelen"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "A '%s' könyvtár létrehozása a '%s' kategóriához nem lehetséges, a '%s' könyvtár megtartva."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "Érvénytelen URL"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2311,6 +2315,26 @@ msgstr[0] "Nem sikerült hozzáadni %u linket (a részletekért lásd a naplót)
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Érvénytelen eD2k hivatkozás! HIBA: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "Kiszolgáló lista szerkesztése"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5173,8 +5197,9 @@ msgid "retries"
 msgstr "próbálkozás után"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "Lista"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "Fájl források:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5783,17 +5808,19 @@ msgstr "Válassz színt ehhez a kategóriához (jelenleg kiválasztva)"
 msgid "Click this button to reset the log."
 msgstr "Kattints erre a gombra a logfájl visszaállításához."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "Kattints erre a gombra a kiszolgálólista frissítéséhez  ..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "Kiszolgáló lista szerkesztése"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "Kiszolgálók listája"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "Adj meg egy címet a server.met fájlhoz és nyomd meg a baloldali gombot az ismert kiszolgálók listájának frissítéséhez."
+#, fuzzy
+msgid "Download once"
+msgstr "Letöltve"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7126,18 +7153,6 @@ msgid "Reset to defaults"
 msgstr "Visszaállítás alapértelmezettre"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "Kiszolgáló lista szerkesztése"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"URL-ek felvétele a server.met fájl letöltéséhez.\n"
-"Egy sorba csak egy URL."
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "Az IP2Country frissítése sikertelen"
 
@@ -7733,17 +7748,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "IO hiba a 'server.met' fájl olvasása közben: "
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "Érvénytelen URL"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "Kiszolgáló lista letöltése %s-ről befejeződött"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "Az addresses.dat fájlban nem található kiszolgáló-lista cím bejegyzés. Kérlek írj be egy érvényes kiszolgáló-lista címet ebbe a fájlba, hogy automatikusan tudjam frissíteni a kiszolgáló listát."
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7752,17 +7762,8 @@ msgstr "Kiszolgáló lista letöltése %s-ről megkezdve."
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "FIGYELEM: érvénytelen URL megadva a kiszolgálók automatikus frissítéséhez: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "Nincs érvényes url a server.met fájl automatikus letöltéséhez az addresses.dat fájlban"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "Kiszolgáló lista letöltése sikertelen %s-ről"
+msgid "Finished downloading the server list from %s"
+msgstr "Kiszolgáló lista letöltése %s-ről befejeződött"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -7973,6 +7974,14 @@ msgstr "Nem tudom a DNS-t feloldani a %s kiszolgálóhoz: Nem tudok kapcsolódni
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "aMuleGUI napló"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10181,6 +10190,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "Lista"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "Kattints erre a gombra a kiszolgálólista frissítéséhez  ..."
+
+#~ msgid "Server list"
+#~ msgstr "Kiszolgálók listája"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "Adj meg egy címet a server.met fájlhoz és nyomd meg a baloldali gombot az ismert kiszolgálók listájának frissítéséhez."
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "URL-ek felvétele a server.met fájl letöltéséhez.\n"
+#~ "Egy sorba csak egy URL."
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "Az addresses.dat fájlban nem található kiszolgáló-lista cím bejegyzés. Kérlek írj be egy érvényes kiszolgáló-lista címet ebbe a fájlba, hogy automatikusan tudjam frissíteni a kiszolgáló listát."
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "FIGYELEM: érvénytelen URL megadva a kiszolgálók automatikus frissítéséhez: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "Nincs érvényes url a server.met fájl automatikus letöltéséhez az addresses.dat fájlban"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "Kiszolgáló lista letöltése sikertelen %s-ről"
 
 #~ msgid "Download graph scale:"
 #~ msgstr "Letöltési grafikon méretaránya:"

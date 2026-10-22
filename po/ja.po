@@ -516,7 +516,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "起動時にウェブサーバを実行するよう要求されましたが、amulewebバイナリを実行できません。aMuleウェブサーバを含むパッケージをインストールするか、-DBUILD_WEBSERVER=YESを指定してソースからaMuleをビルドし、インストールしてください。"
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "エラー"
 
@@ -1311,6 +1311,10 @@ msgstr "あなたはすでにファイル%sをダウンロードしようとし�
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "ディレクトリ '%s'（カテゴリ '%s' 用）を作成できません。ディレクトリ '%s' を維持します。"
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "不正なURL"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2311,6 +2315,26 @@ msgstr[0] "%u 個のリンクを追加できませんでした（詳細はログ
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "無効なeD2kリンクです！ エラー：%s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "サーバリストを編集"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5171,8 +5195,9 @@ msgid "retries"
 msgstr "回"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "リスト"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "ファイルソース："
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5782,17 +5807,19 @@ msgstr "このカテゴリの色を選択する（現在選択中）"
 msgid "Click this button to reset the log."
 msgstr "このボタンをクリックするとログのリセットが行います。"
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "このボタンをクリックするとサーバ・リストはURLから最新化する..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "サーバリストを編集"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "サーバリスト"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "server.metファイルへのURLをここに入力してから左側のボタンをクリックすると、既知のサーバのリストがアップデートされます。"
+#, fuzzy
+msgid "Download once"
+msgstr "ダウンロード済み"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7124,18 +7151,6 @@ msgid "Reset to defaults"
 msgstr "デフォルト値にリセット"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "サーバリストを編集"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"server.metファイルをダウンロードするURLをここに追加してください。\n"
-"一行にひとつのURLのみです。"
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "IP2Country の更新に失敗しました"
 
@@ -7730,17 +7745,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "known.metファイル%sを読む時にIOエラーが発生しました"
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "不正なURL"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "%s からのサーバリストのダウンロードが完了しました"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "'addresses.dat' にサーバリストのアドレスが見つかりません。サーバリストを自動更新するには、有効なサーバリストのアドレスをこのファイルに貼り付けてください"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7749,17 +7759,8 @@ msgstr "サーバリストを%sからダウンロードするのを開始する"
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "警告：サーバの自動更新に無効な URL が指定されています：%s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "addresses.datに、正しいserver.metの自動ダウンロードURLがありません。"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "サーバリストを%sからダウンロードするのに失敗しました"
+msgid "Finished downloading the server list from %s"
+msgstr "%s からのサーバリストのダウンロードが完了しました"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -7970,6 +7971,14 @@ msgstr "%sに接続するためのDNSは解決できませんでした：接続�
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "aMuleGUIログ"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10177,6 +10186,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "リスト"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "このボタンをクリックするとサーバ・リストはURLから最新化する..."
+
+#~ msgid "Server list"
+#~ msgstr "サーバリスト"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "server.metファイルへのURLをここに入力してから左側のボタンをクリックすると、既知のサーバのリストがアップデートされます。"
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "server.metファイルをダウンロードするURLをここに追加してください。\n"
+#~ "一行にひとつのURLのみです。"
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "'addresses.dat' にサーバリストのアドレスが見つかりません。サーバリストを自動更新するには、有効なサーバリストのアドレスをこのファイルに貼り付けてください"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "警告：サーバの自動更新に無効な URL が指定されています：%s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "addresses.datに、正しいserver.metの自動ダウンロードURLがありません。"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "サーバリストを%sからダウンロードするのに失敗しました"
 
 #~ msgid "Download graph scale:"
 #~ msgstr "ダウンロードグラフの縮尺："

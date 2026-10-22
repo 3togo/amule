@@ -520,7 +520,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Abioan web zerbitzaria exekutatzeko eskatu duzu, baina amuleweb bitarra ezin da exekutatu. Mesedez, instalatu aMule web zerbitzaria duen paketea, edo eraiki aMule iturburutik -DBUILD_WEBSERVER=YES aukerarekin eta instalatu."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "ERROREA"
 
@@ -1315,6 +1315,10 @@ msgstr "Aldiroko deskarga fitxategientzat karpeta"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "Ezin da '%s' direktorioa sortu '%s' kategoriarentzat, '%s' direktorioa mantenduko da."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "URL Baliogabea"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2326,6 +2330,26 @@ msgstr[1] "Ezin izan dira %u lotura gehitu (xehetasunetarako, ikusi erregistroa)
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Okerreko eD2k lotura! ERROREA: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "Editatu zerbitzari zerrenda"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5197,8 +5221,9 @@ msgid "retries"
 msgstr "saiakerak"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "Zerrenda"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "Fitxategiaren iturburua:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5808,17 +5833,19 @@ msgstr "Hautatu kolorea kategoria honentzat (unean aukeratutakoa)"
 msgid "Click this button to reset the log."
 msgstr "Botoi hau klikatu erregistroa garbitzeko."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "Klik egin botoi honetan zerbitzari zerrenda URL-tik eguneratzeko ..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "Editatu zerbitzari zerrenda"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "Zerbitzari zerrenda"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "Idatzi server.met fitxategiaren URL bat hemen eta gero ezkerreko botoia sakatu zerbitzari ezagunen zerrenda eguneratzeko."
+#, fuzzy
+msgid "Download once"
+msgstr "Deskargatua"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7157,18 +7184,6 @@ msgid "Reset to defaults"
 msgstr "Berrezarri balio lehenetsietara"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "Editatu zerbitzari zerrenda"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"Gehitu hemen server.met deskargatzeko URL-a.\n"
-"URL helbide bat lerro bakoitzean."
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "IP2Country eguneratzeak huts egin du"
 
@@ -7772,17 +7787,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "SI errorea 'server.met' fitxategia irakurtzean: "
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "URL Baliogabea"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "Amaituta zerbitzari zerrenda %s-tik deskargatzeaz"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "Ez da zerbitzari zerrenda helbideri aurkitu 'addresses.dat' fitxategian. Mesedez itsatsi zerbitzari zerrenda erabilgarri bat fitxategi honetan zerbitzari-zerrenda eguneratu ahal izateko"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7791,17 +7801,8 @@ msgstr "Hasi zerbitzari zerrenda %s-tik deskargatzen"
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "OHARRA: URL baliogabea ezarri zerbitzari auto-eguneraketarako: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "Ez da baliozko server.met auto-deskarga url helbiderik aurkitu addresses.dat fitxategian"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "Huts zerbitzari zerrenda %s-tik deskargatzerakoan"
+msgid "Finished downloading the server list from %s"
+msgstr "Amaituta zerbitzari zerrenda %s-tik deskargatzeaz"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -8013,6 +8014,14 @@ msgstr "Ezin da %s zerbitzariaren dns-a ebatzi: Ezin da konektatu!"
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "aMuleGUI erregistroa"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10233,6 +10242,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "Zerrenda"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "Klik egin botoi honetan zerbitzari zerrenda URL-tik eguneratzeko ..."
+
+#~ msgid "Server list"
+#~ msgstr "Zerbitzari zerrenda"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "Idatzi server.met fitxategiaren URL bat hemen eta gero ezkerreko botoia sakatu zerbitzari ezagunen zerrenda eguneratzeko."
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "Gehitu hemen server.met deskargatzeko URL-a.\n"
+#~ "URL helbide bat lerro bakoitzean."
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "Ez da zerbitzari zerrenda helbideri aurkitu 'addresses.dat' fitxategian. Mesedez itsatsi zerbitzari zerrenda erabilgarri bat fitxategi honetan zerbitzari-zerrenda eguneratu ahal izateko"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "OHARRA: URL baliogabea ezarri zerbitzari auto-eguneraketarako: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "Ez da baliozko server.met auto-deskarga url helbiderik aurkitu addresses.dat fitxategian"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "Huts zerbitzari zerrenda %s-tik deskargatzerakoan"
 
 #~ msgid "Download graph scale:"
 #~ msgstr "Deskarga grafiko eskala:"

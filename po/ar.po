@@ -536,7 +536,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "لقد طلبت تشغيل خادم الويب عند بدء التشغيل، لكن الملف التنفيذي amuleweb لا يمكن تشغيله. الرجاء تثبيت الحزمة التي تحتوي على خادم ويب aMule، أو بناء aMule من المصدر باستخدام -DBUILD_WEBSERVER=YES وتثبيته."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "خطأ"
 
@@ -1328,6 +1328,10 @@ msgstr "لا يمكن حذف الفئة: %s"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "تعذّر إنشاء المجلد '%s' للفئة '%s'، سيتم الاحتفاظ بالمجلد '%s'."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "عنوان شبكي غير صحيح"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2338,6 +2342,26 @@ msgstr[1] "تعذرت إضافة %u روابط (راجع السجل للتفاص
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "رابط eD2k غير صالح! خطأ: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "تحرير قائمة الخوادم"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5214,8 +5238,9 @@ msgid "retries"
 msgstr "أعد المحاولة"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "قائمة"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "مصادر الملف:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5823,17 +5848,19 @@ msgstr ""
 msgid "Click this button to reset the log."
 msgstr "انقر هذا الزر لإعادة ضبط السجل."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "قم بالضغط على هذا الزر لتحديث قائمة الخادمات من العنوان ..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "تحرير قائمة الخوادم"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "قائمة الخادمات"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "أدخل هنا رابط ملف server.met واضغط الزر الموجود على اليسار لتحديث قائمة الخوادم المعروفة."
+#, fuzzy
+msgid "Download once"
+msgstr "تم التحميل"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7161,18 +7188,6 @@ msgid "Reset to defaults"
 msgstr "إعادة التعيين إلى الافتراضي"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "تحرير قائمة الخوادم"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"أضف هنا عنوان لتحميل ملفات server.met \n"
-"عنوان واحد فقط لكل سطر"
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "فشل تحديث IP2Country"
 
@@ -7770,17 +7785,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "فشل غير متوقع اثناء كتابة ملف %s : %s"
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "عنوان شبكي غير صحيح"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "انتهى تحميل قائمة الخوادم من %s"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "لم يُعثر على عنوان لقائمة الخوادم في 'addresses.dat'. يرجى لصق عنوان صالح لقائمة الخوادم في هذا الملف لتفعيل التحديث التلقائي لقائمة خوادمك"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7789,17 +7799,8 @@ msgstr "بدء تحميل قائمة الخوادم من %s"
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "تحذير: عنوان URL غير صالح للتحديث التلقائي للخوادم: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "لا يوجد عنوان URL صالح للتحميل التلقائي لـ server.met في addresses.dat"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "فشل تحميل قائمة الخوادم من %s"
+msgid "Finished downloading the server list from %s"
+msgstr "انتهى تحميل قائمة الخوادم من %s"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -8011,6 +8012,14 @@ msgstr "تعذّر تحليل DNS للخادم %s: تعذّر الاتصال!"
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "سجل aMuleGUI"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10230,6 +10239,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "قائمة"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "قم بالضغط على هذا الزر لتحديث قائمة الخادمات من العنوان ..."
+
+#~ msgid "Server list"
+#~ msgstr "قائمة الخادمات"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "أدخل هنا رابط ملف server.met واضغط الزر الموجود على اليسار لتحديث قائمة الخوادم المعروفة."
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "أضف هنا عنوان لتحميل ملفات server.met \n"
+#~ "عنوان واحد فقط لكل سطر"
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "لم يُعثر على عنوان لقائمة الخوادم في 'addresses.dat'. يرجى لصق عنوان صالح لقائمة الخوادم في هذا الملف لتفعيل التحديث التلقائي لقائمة خوادمك"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "تحذير: عنوان URL غير صالح للتحديث التلقائي للخوادم: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "لا يوجد عنوان URL صالح للتحميل التلقائي لـ server.met في addresses.dat"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "فشل تحميل قائمة الخوادم من %s"
 
 #, c-format
 #~ msgid "Skipped deleting '%s': the selected file has changed."
