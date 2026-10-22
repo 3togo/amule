@@ -26,8 +26,21 @@
 #define AMULE_BANDWIDTH_RATE_CONVERSION_H
 #include <algorithm>
 #include <cmath>
+#include <limits>
 namespace BandwidthRateConversion
 {
+// Preserve the percentage until the tray renderer caps it at 100, but keep the
+// conversion to int defined for a zero capacity, non-finite rates or huge ratios.
+inline int ToPercent(double rate, unsigned int capacity)
+{
+	if (!(rate > 0) || capacity == 0) {
+		return 0;
+	}
+	const double percent = std::ceil(rate * 100 / capacity);
+	const int maximum = std::numeric_limits<int>::max();
+	return percent >= maximum ? maximum : static_cast<int>(percent);
+}
+
 // Network connection speeds use decimal megabits; aMule limits use binary KiB/s.
 inline double ToMegabits(int rate)
 {

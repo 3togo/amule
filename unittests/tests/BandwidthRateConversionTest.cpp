@@ -52,3 +52,22 @@ TEST(BandwidthRateConversion, ControlRange)
 	ASSERT_EQUALS(2000000, BandwidthRateConversion::FromMegabits(16384, 2000000));
 	ASSERT_EQUALS(2000000, BandwidthRateConversion::FromMegabits(100000, 2000000));
 }
+
+TEST(BandwidthRateConversion, Percentage)
+{
+	ASSERT_EQUALS(0, BandwidthRateConversion::ToPercent(0, 100));
+	ASSERT_EQUALS(0, BandwidthRateConversion::ToPercent(-1, 100));
+	ASSERT_EQUALS(0, BandwidthRateConversion::ToPercent(1, 0));
+	ASSERT_EQUALS(1, BandwidthRateConversion::ToPercent(0.001, 100));
+	ASSERT_EQUALS(2, BandwidthRateConversion::ToPercent(1.01, 100));
+	ASSERT_EQUALS(50, BandwidthRateConversion::ToPercent(50, 100));
+	ASSERT_EQUALS(100, BandwidthRateConversion::ToPercent(100, 100));
+	ASSERT_EQUALS(200, BandwidthRateConversion::ToPercent(200, 100));
+	ASSERT_EQUALS(0, BandwidthRateConversion::ToPercent(std::numeric_limits<double>::quiet_NaN(), 1));
+	ASSERT_EQUALS(0, BandwidthRateConversion::ToPercent(-std::numeric_limits<double>::infinity(), 1));
+	ASSERT_EQUALS(std::numeric_limits<int>::max(),
+		BandwidthRateConversion::ToPercent(std::numeric_limits<double>::infinity(), 1));
+	ASSERT_EQUALS(std::numeric_limits<int>::max(),
+		BandwidthRateConversion::ToPercent(std::numeric_limits<double>::max(), 1));
+	ASSERT_EQUALS(std::numeric_limits<int>::max(), BandwidthRateConversion::ToPercent(2147483648.0, 1));
+}

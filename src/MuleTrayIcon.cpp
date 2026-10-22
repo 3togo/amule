@@ -544,9 +544,9 @@ void CMuleTrayIcon::RebuildMenu()
 // desktops that still consume GtkStatusIcon; on Wayland the icon goes nowhere, which is what the
 // libayatana-appindicator3 backend above is for.
 
-#include <algorithm> // Needed for std::max / std::min
+#include "TrayIconBundle.h"
 
-#include <wx/artprov.h> // Needed for wxArtProvider::GetBitmap
+#include <wx/artprov.h> // Needed for wxArtProvider::GetBitmapBundle
 
 #include <wx/menu.h>
 
@@ -649,7 +649,7 @@ void CMuleTrayIcon::Close(wxCommandEvent &WXUNUSED(event))
 CMuleTrayIcon::CMuleTrayIcon()
 {
 	Old_Icon = -1;
-	Old_SpeedSize = 0xFFFF; // must be > any possible one.
+	Old_Percent = 0;
 	m_visible = true;
 }
 
@@ -659,7 +659,7 @@ CMuleTrayIcon::~CMuleTrayIcon() {}
 
 void CMuleTrayIcon::SetTrayIcon(int Icon, uint32 percent)
 {
-	wxASSERT(Icon >= 0 && Icon < (int)WXSIZEOF(BaseImage));
+	wxCHECK_RET(Icon >= 0 && Icon < (int)WXSIZEOF(BaseImage), "Invalid tray icon state");
 
 	if (!BaseImage[Icon].IsOk()) {
 		const char *artId = "amule:tray_disconnected";
@@ -673,67 +673,35 @@ void CMuleTrayIcon::SetTrayIcon(int Icon, uint32 percent)
 		default:
 			break;
 		}
-		wxImage image = wxArtProvider::GetBitmap(artId, wxART_OTHER).ConvertToImage();
-		if (!image.IsOk()) {
+		BaseImage[Icon] = wxArtProvider::GetBitmapBundle(artId, wxART_OTHER);
+		if (!BaseImage[Icon].IsOk()) {
 			return;
 		}
-		// Artwork that predates alpha marks its transparency with pure red. Turn that into
-		// a real alpha channel once, here, so everything below works on one representation.
-		if (!image.HasAlpha()) {
-			image.SetMaskColour(255, 0, 0);
-			image.InitAlpha();
-		}
-		BaseImage[Icon] = image;
 	}
 
-	const wxImage &base = BaseImage[Icon];
-	const int width = base.GetWidth();
-	const int height = base.GetHeight();
-	const int barHeight = (height * (int)percent) / 100;
-
-	if ((Old_Icon == Icon) && (Old_SpeedSize == barHeight)) {
+	const wxColour barColour = CStatisticsDlg::getColors(11);
+	if (Old_Icon == Icon && Old_Percent == percent && Old_BarColour == barColour) {
 		return;
 	}
 	Old_Icon = Icon;
-	Old_SpeedSize = barHeight;
+	Old_Percent = percent;
+	Old_BarColour = barColour;
 
-	// Always compose onto a copy of the untouched artwork. Composing onto the icon we produced
-	// last time loses transparency a little more each round -- an icon converted back to a
-	// bitmap returns its transparent pixels as black, so a rising transfer rate ends up with a
-	// solid black background.
-	//
-	// The bar is written into the image rather than drawn with a wxDC because wxMSW's DC writes
-	// the colour channels and leaves alpha alone: a bar drawn over transparent pixels keeps
-	// alpha 0 and never appears.
-	wxImage composed = base.Copy();
-	if (barHeight > 0) {
-		const wxColour barColour = CStatisticsDlg::getColors(11);
-		// Two pixels wide, in the last two columns, growing from the bottom. It used to sit
-		// two columns further in, which newer artwork fills, so the bar landed on the
-		// drawing instead of beside it.
-		const int barLeft = std::max(0, width - 2);
-		const int barRight = std::min(width, barLeft + 2);
-		for (int y = height - barHeight; y < height; ++y) {
-			for (int x = barLeft; x < barRight; ++x) {
-				composed.SetRGB(x, y, barColour.Red(), barColour.Green(), barColour.Blue());
-				composed.SetAlpha(x, y, wxALPHA_OPAQUE);
-			}
-		}
-	}
-
-	CurrentIcon.CopyFromBitmap(wxBitmap(composed));
+	// Let SetIcon() choose the native size before rasterizing the SVG and bar.
+	// DPI changes invalidate Old_Icon so the next tick replaces the flattened icon.
+	CurrentIcon = MuleTray::MakeIconBundle(BaseImage[Icon], percent, barColour);
 	UpdateTray();
 }
 
 void CMuleTrayIcon::SetTrayToolTip(const wxString &Tip)
 {
-	// Called on every rate update. wx's AppIndicator backend shows no tooltip, yet each of its
-	// SetIcon() calls writes a new icon file and re-registers the indicator with the host.
-	if (Tip == CurrentTip) {
-		return;
-	}
 	CurrentTip = Tip;
 #if !(defined(wxUSE_APPINDICATOR) && wxUSE_APPINDICATOR)
+	// Native backends flatten the bundle in SetIcon(). Refresh even with an unchanged tooltip:
+	// Cocoa and GTK before wx 3.3 do not emit wxEVT_DPI_CHANGED, and the tray's display can
+	// change independently of the main window. Reuse the bundle and let the backend select
+	// its current size. wx's AppIndicator backend has no tooltip and would instead write a
+	// new icon file and re-register the indicator on every tick.
 	UpdateTray();
 #endif
 }

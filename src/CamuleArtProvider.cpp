@@ -1,6 +1,7 @@
 // CamuleArtProvider -- see CamuleArtProvider.h for the contract.
 
 #include "CamuleArtProvider.h"
+#include "TrayIconBundle.h"
 
 #include "icons/icon_data.h"
 
@@ -87,6 +88,9 @@ wxBitmapBundle IconBundle(const struct AMuleIconEntry *entry,
 	}
 	if (!image.HasAlpha()) {
 		image.InitAlpha();
+	}
+	if (wxString::FromUTF8(entry->name).StartsWith("tray_")) {
+		return MuleTray::MakeArtworkFallback(image, size);
 	}
 	// Target logical size: the caller's request, or the PNG's natural size when it does not
 	// care. Derive both the 1x and 2x renditions from the original image so each is a single

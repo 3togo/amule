@@ -108,3 +108,45 @@ highlighted/disabled rows and high contrast, and physical mixed-DPI transitions.
 Inspect macOS menus in light/dark mode and flags on Retina/non-Retina displays.
 Check live OS appearance changes while the application runs. Simulated sizes
 and Linux tests do not replace those native desktop sessions.
+
+## Tray artwork
+
+The three `tray_*.svg` files use adem4ik's v1 artwork contributed in
+[aMule issue #1665](https://github.com/amule-org/amule/issues/1665),
+from `amule_tray_fixed.zip` (SHA-256
+`702dc1513a2bf88f7523d39aa77cc24e81767be55c70be805fb77ae375e7435f`).
+The `try1_fixed/amule_22_norm_fixed.svg`, `amule_22_yellow_fixed.svg` and
+`amule_22_gray_fixed.svg` files map to `tray_high`, `tray_low` and
+`tray_disconnected`, respectively. Arc arguments are separated for wx 3.2's
+NanoSVG parser. CSS class declarations are inlined into each element because
+NanoSVG ignores stylesheet rules; fills and gradients contain the state colours
+without SVG filters. The matching 22×22 PNG fallbacks are rendered with wx/NanoSVG.
+The last two columns are reserved for the download-speed bar. PNG fallback
+bundles resample the original directly at each requested size and clear the
+reserved bar columns after filtering, so blurred edge pixels cannot occupy them.
+
+The wxTaskBarIcon backend draws the speed bar at the pixel size requested by
+`SetIcon()`. The native backend flattens the bundle; `wxEVT_DPI_CHANGED` invalidates
+the tray state so the next statistics tick submits a fresh bundle even while idle.
+Native tooltip updates also resubmit the retained bundle on each statistics tick:
+Cocoa and GTK with wxWidgets 3.2 do not emit this DPI event, and the tray's display
+can change independently of the main window. wx's AppIndicator backend skips
+tooltip-only submissions to avoid repeated icon-file writes and registrations.
+On Windows, preferred sizes use the system small-icon metrics at the taskbar's DPI
+(typically 16/24 pixels at 100/150%), with system metrics as the older-OS fallback.
+wx passes the scale of a hidden window that keeps its startup DPI, so that scale is
+only the fallback when the taskbar's DPI is unavailable.
+Linux AppIndicator continues to resolve the existing
+scalable `org.amule.aMule` icon from the desktop theme. macOS template styling
+and Linux per-state named icons remain separate work.
+
+`IconArtworkTest` also checks tray composition at 16, 17, 22, 24, 33, 39, 44, 66, 88 and 100 pixels,
+including a return from 4x to 1x, empty/half/full bars, percentages above 100,
+exact percentage boundaries, distinct brown/yellow/gray state colours, white
+eyes and muzzle, non-black gray planks, transparent pixels beneath the bar, and
+preservation of artwork and transparency, for both SVG and PNG fallback bundles.
+The transfer-rate conversion also handles zero capacity and non-finite or
+out-of-range percentages before converting to an integer.
+`AMULE_ICON_TEST_OUTPUT` exports tray
+renders. Native Windows/macOS tray sizing and physical display transitions still
+need desktop verification.

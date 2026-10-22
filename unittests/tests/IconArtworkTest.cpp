@@ -36,6 +36,7 @@
 #include "CountryFlags.h"
 #include <vector>
 #include "MenuIcons.h"
+#include "TrayIconBundle.h"
 #include "icons/icon_data.h"
 #include <iostream>
 #include <stdexcept>
@@ -205,6 +206,96 @@ void require(bool ok, const char *message)
 	if (!ok)
 		throw std::runtime_error(message);
 }
+// wx versions bundle different NanoSVG rasterizers: the same SVG can have
+// different antialiased coverage and shading. Validate each rendition's visible
+// requirements independently instead of requiring SVG/PNG byte identity.
+static void CheckTrayArtwork(const wxImage &image, const char *state)
+{
+	require(image.IsOk() && image.HasAlpha() && image.GetSize() == wxSize(22, 22),
+		"tray artwork dimensions or alpha invalid");
+	int opaque = 0, brown = 0, yellow = 0, gray = 0, white = 0;
+	for (int y = 0; y < 22; ++y) {
+		require(image.GetAlpha(20, y) == 0 && image.GetAlpha(21, y) == 0,
+			"tray artwork intrudes into speed-bar columns");
+		for (int x = 0; x < 20; ++x) {
+			opaque += image.GetAlpha(x, y) > 0;
+			if (image.GetAlpha(x, y) == 255) {
+				const int r = image.GetRed(x, y);
+				const int g = image.GetGreen(x, y);
+				const int b = image.GetBlue(x, y);
+				brown += r > g + 30 && g > b + 10;
+				yellow += std::abs(r - g) < 40 && g > b + 40;
+				const int low = std::min({ r, g, b });
+				const int high = std::max({ r, g, b });
+				gray += high - low < 5 && low > 60 && high < 220;
+				// Limit the near-white check to the face: low-ID body
+				// gradients can otherwise satisfy it with black eyes.
+				white += low > 220 && y <= 10;
+			}
+		}
+	}
+	require(opaque > 80, "tray artwork rendered empty");
+	require(white >= 2, "tray artwork lost white eyes or muzzle");
+	require(gray >= 5, "tray artwork lost gray bench planks");
+	// NanoSVG ignores SVG colour filters: check the actual rendered fills,
+	// so a low-ID icon accidentally rendering brown cannot pass unnoticed.
+	if (std::strcmp(state, "tray_low") == 0) {
+		require(yellow > 25, "low-ID tray artwork is not yellow");
+	} else if (std::strcmp(state, "tray_high") == 0) {
+		require(brown > 30 && yellow == 0, "high-ID tray artwork is not brown");
+	} else {
+		require(gray > 80 && brown == 0 && yellow == 0, "disconnected tray artwork is not gray");
+	}
+}
+
+static void CheckTrayComposition(
+	const wxBitmapBundle &artwork, const char *state, const char *format, const char *output)
+{
+	Phase(std::strcmp(format, "svg") == 0 ? "tray SVG composition" : "tray PNG fallback composition");
+	const wxColour colour(19, 137, 241);
+	const auto half = MuleTray::MakeIconBundle(artwork, 50, colour);
+	for (int pixels : { 16, 17, 22, 24, 33, 39, 44, 66, 88, 100, 22 }) {
+		Rendering(state, pixels / 22.0);
+		const wxSize size(pixels, pixels);
+		// Normalize the reference through the same native bitmap codec as the
+		// composed image: MSW/Cocoa premultiply RGB at antialiased edges.
+		const auto base = wxBitmap(artwork.GetBitmap(size).ConvertToImage()).ConvertToImage();
+		for (unsigned int percent : { 0u, 29u, 50u, 57u, 58u, 100u, 200u, 0u }) {
+			const auto bundle =
+				percent == 50 ? half : MuleTray::MakeIconBundle(artwork, percent, colour);
+			const auto image = bundle.GetBitmap(size).ConvertToImage();
+			require(image.IsOk() && image.GetSize() == size && image.HasAlpha(),
+				"tray size or alpha lost");
+			const int barWidth = std::max(1, pixels / 11);
+			const int barHeight = pixels * std::min(percent, 100u) / 100;
+			for (int y = 0; y < pixels; ++y) {
+				for (int x = 0; x < pixels; ++x) {
+					const bool bar = x >= pixels - barWidth && y >= pixels - barHeight;
+					if (bar) {
+						require(base.GetAlpha(x, y) == 0,
+							"speed bar overwrites artwork");
+					}
+					require(image.GetAlpha(x, y) == (bar ? 255 : base.GetAlpha(x, y)),
+						"tray transparency or bar height changed");
+					require(image.GetRed(x, y) ==
+								(bar ? colour.Red() : base.GetRed(x, y)) &&
+							image.GetGreen(x, y) == (bar ? colour.Green()
+										     : base.GetGreen(x, y)) &&
+							image.GetBlue(x, y) ==
+								(bar ? colour.Blue() : base.GetBlue(x, y)),
+						"tray bar overlaps artwork or has wrong colour");
+				}
+			}
+			if (output) {
+				image.SaveFile(
+					wxString::Format(
+						"%s/%s-%s-%d-%u.png", output, state, format, pixels, percent),
+					wxBITMAP_TYPE_PNG);
+			}
+		}
+	}
+}
+
 int main(int argc, char **argv)
 {
 	// Below CTest's 10 s limit; 0 disables it, e.g. under a debugger.
@@ -255,6 +346,41 @@ int main(int argc, char **argv)
 						image.GetBlue(5, 7) == colour.Blue(),
 					"live theme switch kept stale menu colour");
 			}
+		}
+
+		Phase("tray SVGs and speed bars");
+		for (const char *state : { "tray_high", "tray_low", "tray_disconnected" }) {
+			const auto entry = amule_find_icon(state);
+			require(entry && entry->svg_len, "tray SVG missing");
+			const auto artwork =
+				wxArtProvider::GetBitmapBundle(wxString("amule:") + state, wxART_OTHER);
+			require(artwork.IsOk() && artwork.GetDefaultSize() == wxSize(22, 22),
+				"tray bundle invalid");
+			const auto natural = artwork.GetBitmap(wxSize(22, 22)).ConvertToImage();
+			CheckTrayArtwork(natural, state);
+			wxMemoryInputStream pngStream(entry->png_data, entry->png_len);
+			const wxImage fallback(pngStream, wxBITMAP_TYPE_PNG);
+			CheckTrayArtwork(fallback, state);
+			const wxColour colour(19, 137, 241);
+			// Revisit 1x after 4x using the same bundle, as on a monitor move.
+			const auto half = MuleTray::MakeIconBundle(artwork, 50, colour);
+#ifdef __WXMSW__
+			// Compare with wx's independently queried native small-icon metrics at
+			// the current display DPI, rather than the artwork's 22px canvas.
+			wxFrame metricWindow(nullptr, wxID_ANY, "tray metrics");
+			require(half.GetPreferredBitmapSizeAtScale(metricWindow.GetDPIScaleFactor()) ==
+					wxSize(wxSystemSettings::GetMetric(wxSYS_SMALLICON_X, &metricWindow),
+						wxSystemSettings::GetMetric(
+							wxSYS_SMALLICON_Y, &metricWindow)),
+				"tray bundle does not use native small-icon metrics");
+#endif
+#if defined(wxHAS_SVG) && !defined(__WXMSW__)
+			require(half.GetPreferredBitmapSizeAtScale(1.5) == wxSize(33, 33) &&
+					half.GetPreferredBitmapSizeAtScale(3) == wxSize(66, 66),
+				"tray bundle lost vector scale selection");
+#endif
+			CheckTrayComposition(artwork, state, "svg", output);
+			CheckTrayComposition(MuleTray::MakeArtworkFallback(fallback), state, "png", output);
 		}
 
 		Phase("legacy flag padding");
@@ -435,7 +561,8 @@ int main(int argc, char **argv)
 	Phase("done");
 	if (!status)
 		std::cout << "PASS: " << flags << " flags and " << menus
-			  << " menu icons at 1x/1.5x/2x/3x/4x; fallback, bitmap cache, DPI transition, menu "
+			  << " menu icons at 1x/1.5x/2x/3x/4x; three tray states at 16-100px; fallback, "
+			     "bitmap cache, DPI transition, menu "
 			     "semantics and live theme "
 			     "colour\n";
 	return status;

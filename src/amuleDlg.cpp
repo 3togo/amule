@@ -65,6 +65,7 @@
 #include "MuleTextCtrl.h" // Needed for CMuleTextCtrl (fast-links placeholder)
 #include "MuleLogCtrl.h"  // Needed for CMuleLogCtrl (the log/server-info panes)
 #include "MuleTrayIcon.h"
+#include "BandwidthRateConversion.h"
 #include "muuli_wdr.h"   // Needed for ID_BUTTON*
 #include "Preferences.h" // Needed for CPreferences
 #include "PrefsUnifiedDlg.h"
@@ -220,6 +221,14 @@ CamuleDlg::CamuleDlg(wxWindow *pParent, const wxString &title, wxPoint where, wx
 	wxIdleEvent::SetMode(wxIDLE_PROCESS_SPECIFIED);
 	SetExtraStyle(GetExtraStyle() | wxWS_EX_PROCESS_IDLE);
 	wxUpdateUIEvent::SetMode(wxUPDATE_UI_PROCESS_SPECIFIED);
+#ifndef WITH_LIBAYATANA_APPINDICATOR
+	Bind(wxEVT_DPI_CHANGED, [this](wxDPIChangedEvent &event) {
+		event.Skip();
+		if (m_wndTaskbarNotifier) {
+			m_wndTaskbarNotifier->InvalidateForDPIChange();
+		}
+	});
+#endif
 	wxInitAllImageHandlers();
 	Apply_Clients_Skin();
 
@@ -1514,8 +1523,9 @@ void CamuleDlg::ShowTransferRate()
 	wxASSERT((m_wndTaskbarNotifier != NULL) == thePrefs::UseTrayIcon());
 	if (m_wndTaskbarNotifier) {
 		// set trayicon-icon
-		int percentDown = (int)ceil((kBpsDown * 100) / thePrefs::GetMaxGraphDownloadRate());
-		UpdateTrayIcon((percentDown > 100) ? 100 : percentDown);
+		const int percentDown =
+			BandwidthRateConversion::ToPercent(kBpsDown, thePrefs::GetMaxGraphDownloadRate());
+		UpdateTrayIcon(percentDown);
 
 		wxString buffer2;
 		if (theApp->IsConnected()) {

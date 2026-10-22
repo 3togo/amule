@@ -11,6 +11,7 @@ on:
       - 'po/**'
       - 'config.h.cm'
       - 'scripts/check-unique-ids.py'
+      - 'scripts/check-tray-backend-build.py'
       - '.github/workflows/ccpp.yml'
   pull_request:
     branches: [ "**" ]
@@ -22,6 +23,7 @@ on:
       - 'po/**'
       - 'config.h.cm'
       - 'scripts/check-unique-ids.py'
+      - 'scripts/check-tray-backend-build.py'
       - '.github/workflows/ccpp.yml'
 
 concurrency:
@@ -207,6 +209,11 @@ jobs:
         run: ccache --zero-stats
       - name: make
         run: cmake --build build
+      # Normal Ubuntu builds select libayatana and would miss Linux-only
+      # declaration/definition guard mismatches in the wxTaskBarIcon backend.
+      - name: compile wxTaskBarIcon without libayatana
+        if: matrix.build_type == 'Release'
+        run: python3 scripts/check-tray-backend-build.py build --require-remote-gui
       - name: save ccache
         uses: ./.github/actions/cache-save-newest
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
