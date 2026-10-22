@@ -73,11 +73,15 @@ public:
 		uint32_t ip,
 		uint16_t port,
 		bool encrypt,
-		const uint8_t *) override
+		const uint8_t *userHash) override
 	{
 		lastIp = ip;
 		lastPort = port;
 		lastEncrypt = encrypt;
+		lastUserHash.clear();
+		if (userHash != nullptr) {
+			lastUserHash.assign(userHash, userHash + 16);
+		}
 		++datagrams;
 		if (!dropOldPort || port == g_loop->clientSourcePort) {
 			g_loop->toClient.emplace_back(payload, payload + length);
@@ -89,6 +93,7 @@ public:
 	uint16_t lastPort = 0;
 	bool dropOldPort = false;
 	bool lastEncrypt = false;
+	std::vector<uint8_t> lastUserHash;
 	unsigned droppedOldPortDatagrams = 0;
 	unsigned datagrams = 0;
 };
@@ -414,6 +419,25 @@ TEST(UtpLibraryAdapter, OutboundDialSendsItsSynToTheRequestedEndpoint)
 	ASSERT_TRUE(loop.server->Dial(kPeerIp, kPeerPort, false, nullptr, transport));
 	ASSERT_EQUALS(kPeerIp, sink.lastIp);
 	ASSERT_EQUALS((int)kPeerPort, (int)sink.lastPort);
+	Teardown(loop);
+}
+
+TEST(UtpLibraryAdapter, OutboundEncryptedSynRetainsItsSocketCryptParameters)
+{
+	SLoopback loop;
+	g_loop = &loop;
+	CServerSink sink;
+	loop.server = CreateUtpLibrary();
+	ASSERT_TRUE(loop.server->Create(sink));
+	const uint8_t userHash[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+
+	std::unique_ptr<IStreamTransport> transport;
+	ASSERT_TRUE(loop.server->Dial(kPeerIp, kPeerPort, true, userHash, transport));
+	ASSERT_TRUE(sink.lastEncrypt);
+	ASSERT_EQUALS(16, (int)sink.lastUserHash.size());
+	for (unsigned i = 0; i < sink.lastUserHash.size(); ++i) {
+		ASSERT_EQUALS((int)userHash[i], (int)sink.lastUserHash[i]);
+	}
 	Teardown(loop);
 }
 
@@ -755,6 +779,44 @@ TEST(UtpLibraryAdapter, AClosingStreamKeepsItsEndpointUntilTheSocketDies)
 
 	loop.server->Destroy();
 	ASSERT_FALSE(loop.server->HasRegisteredPeer(kPeerIp, kPeerPort));
+	Teardown(loop);
+}
+
+TEST(UtpLibraryAdapter, AClosedStreamStaysObfuscatedUntilTheSocketDies)
+{
+	// CloseSocket() drops the transport, but libutp still sends on the socket:
+	// here the ACK of data the peer sent before it saw our FIN.
+	SLoopback loop;
+	g_loop = &loop;
+	CServerSink sink;
+	CFakeAcceptor acceptor;
+	loop.server = CreateUtpLibrary();
+	ASSERT_TRUE(loop.server->Create(sink));
+	loop.server->SetAcceptor(&acceptor);
+	StartClient(loop);
+	Pump(loop);
+	ASSERT_TRUE(acceptor.accepted != nullptr);
+	const uint8_t userHash[16] = { 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 9, 8, 7, 6, 5, 4 };
+	static_cast<CUtpSocketTransport *>(acceptor.accepted.get())->SetCryptParameters(true, userHash);
+	// Takes the accepted socket out of SYN_RECV, where utp_close() sends no FIN.
+	const uint8_t payload = 0xA5;
+	utp_iovec vector{ const_cast<uint8_t *>(&payload), 1 };
+	ASSERT_EQUALS(1, (int)utp_writev(loop.clientSocket, &vector, 1));
+	Pump(loop);
+
+	acceptor.accepted->Close();
+	const unsigned afterFin = sink.datagrams;
+	ASSERT_TRUE(sink.lastEncrypt);
+	ASSERT_EQUALS(1, (int)utp_writev(loop.clientSocket, &vector, 1));
+	sink.lastEncrypt = false;
+	Pump(loop);
+	Pump(loop);
+	ASSERT_TRUE(sink.datagrams > afterFin);
+	ASSERT_TRUE(sink.lastEncrypt);
+	ASSERT_EQUALS(16, (int)sink.lastUserHash.size());
+	for (unsigned i = 0; i < sink.lastUserHash.size(); ++i) {
+		ASSERT_EQUALS((int)userHash[i], (int)sink.lastUserHash[i]);
+	}
 	Teardown(loop);
 }
 
