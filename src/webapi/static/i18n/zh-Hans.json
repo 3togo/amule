@@ -18,5 +18,9 @@
   "common_cancel": "取消",
   "app_language": "语言",
   "common_err_unauthorized": "未授权。",
-  "common_yes": "是"
+  "common_yes": "是",
+  "prefs_sources_apply_first": "先应用你的更改",
+  "prefs_field_servers_update_list": "更新服务器列表",
+  "prefs_sources_one_off": "一次性URL",
+  "prefs_field_servers_update_urls": "服务器列表源URL（一行一个）"
 }

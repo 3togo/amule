@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-22 07:18+0000\n"
+"PO-Revision-Date: 2026-10-22 19:12+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
 "Language: ru\n"
@@ -2352,24 +2352,25 @@ msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Неверная ссылка eD2k! ОШИБКА: %s"
 
 #: src/EditServerListDlg.cpp
-#, fuzzy
 msgid "Edit server list sources"
-msgstr "Редактировать список серверов"
+msgstr "Изменить источники списка серверов"
 
 #: src/EditServerListDlg.cpp
 msgid ""
 "Enter one server.met URL per line.\n"
 "Saving replaces the source list and removes comment lines."
 msgstr ""
+"Введите по одному URL-адресу server.met на строку.\n"
+"Сохранение заменяет список источников и удаляет строки комментариев."
 
 #: src/EditServerListDlg.cpp src/ExternalConn.cpp
 #, c-format
 msgid "Could not save server list sources to %s. Check the URLs and file permissions."
-msgstr ""
+msgstr "Не удалось сохранить источники списка серверов в %s. Проверьте URL-адреса и права доступа к файлу."
 
 #: src/EditServerListDlg.cpp
 msgid "addresses.dat in the daemon configuration directory"
-msgstr ""
+msgstr "addresses.dat в каталоге конфигурации демона"
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -2930,7 +2931,7 @@ msgstr "%.2f КиБ/с"
 #: src/FileDetailDialog.cpp src/muuli_wdr.cpp src/ServerWnd.cpp
 #: src/SharedFilesCtrl.cpp
 msgid "OK"
-msgstr "ОК"
+msgstr "Хорошо"
 
 #: src/FileRenameDialog.h
 msgid "Enter new name for this file:"
@@ -4754,7 +4755,7 @@ msgstr "Применить"
 
 #: src/muuli_wdr.cpp
 msgid "Ok"
-msgstr "ОК"
+msgstr "Хорошо"
 
 #: src/muuli_wdr.cpp
 msgid "Comment/Rate file (Text will be visible to all users)"
@@ -5239,9 +5240,8 @@ msgid "retries"
 msgstr "попыток"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Edit sources…"
-msgstr "Источники файлов:"
+msgstr "Править источники…"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5852,18 +5852,16 @@ msgid "Click this button to reset the log."
 msgstr "Нажмите эту кнопку для очистки журнала."
 
 #: src/muuli_wdr.cpp src/ServerWnd.cpp
-#, fuzzy
 msgid "Update server list"
-msgstr "Редактировать список серверов"
+msgstr "Обновить список серверов"
 
 #: src/muuli_wdr.cpp
 msgid "One-off URL:"
-msgstr ""
+msgstr "Разовый адрес:"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Download once"
-msgstr "Загружено"
+msgstr "Скачать один раз"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7802,11 +7800,11 @@ msgstr "Ошибка ввода-вывода при записи server.met: %s"
 
 #: src/ServerList.cpp
 msgid "A server list download is already in progress."
-msgstr ""
+msgstr "Скачивание списка серверов уже выполняется."
 
 #: src/ServerList.cpp
 msgid "No server list sources configured"
-msgstr ""
+msgstr "Источники списка серверов не настроены"
 
 #: src/ServerList.cpp
 #, c-format
@@ -8029,11 +8027,11 @@ msgstr "Журнал aMuleGUI"
 
 #: src/ServerWnd.cpp
 msgid "Download and merge every saved source"
-msgstr ""
+msgstr "Скачать и объединить все сохранённые источники"
 
 #: src/ServerWnd.cpp
 msgid "Download this server.met URL once without saving it."
-msgstr ""
+msgstr "Скачать этот URL-адрес server.met один раз, не сохраняя его."
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
