@@ -519,7 +519,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Solicitasti executar el sirvidor web al aniciu, pero nun se pue executar el binariu amuleweb. Instala'l paquete que contién el sirvidor web d'aMule, o compila aMule dende'l códigu fonte con -DBUILD_WEBSERVER=YES ya instalalu."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "FALLU"
 
@@ -1315,6 +1315,10 @@ msgstr "Carpeta pa los ficheros temporales de descargues"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "Nun puede crease'l direutoriu '%s' pa la categoría '%s', calteniendo direutoriu '%s'."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "URL non válida"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2326,6 +2330,26 @@ msgstr[1] "Nun se pudieron amestar %u enllaces (ver rexistru pa más detalles)."
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Enllaz eD2k inválidu! FALLU: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "Editar llista de sirvidores"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5199,8 +5223,9 @@ msgid "retries"
 msgstr "reintentos"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "Llista"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "Fontes del ficheru:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5810,17 +5835,19 @@ msgstr "Seleiciona color pa esta categoría (seleicionada)"
 msgid "Click this button to reset the log."
 msgstr "Calca esti botón pa llimpiar el registru."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "Click nesti botón p'actualizar la llista de sirvidores dende una URL ..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "Editar llista de sirvidores"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "Llista de sirvidores"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "Introduz la url a un ficheru server.met y calca'l botón de la esquierda p'actualizar la llista de sirvidores conocíos."
+#, fuzzy
+msgid "Download once"
+msgstr "Descargáu"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7161,18 +7188,6 @@ msgid "Reset to defaults"
 msgstr "Restablecer a los valores por defeutu"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "Editar llista de sirvidores"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"Amesta equí les URL's pa descargar los ficheros server.met.\n"
-"Namái una url per llinia."
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "Falló l'actualización d'IP2Country"
 
@@ -7775,17 +7790,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "IO error lleendo'l ficheru known.met: %s"
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "URL non válida"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "Finó la descarga de la llista de sirvidores dende %s"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "Nun s'alcontró una entrada de direición en 'addresses.dat'. Por favor, apega una llista de sirvidores válida nesti ficheru pa poder actualizar de mou automáticu la llista de sirvidores."
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7794,17 +7804,8 @@ msgstr "Descargando llista de sirvidores de %s"
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "ALVERTENCIA: especificada una URL inválida pa l'actualización automática de sirvidores : %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "Fallu en addresses.dat, server.met de la url de auto descarga inválidu"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "Fallu al descargar la llista de sirvidores dende %s"
+msgid "Finished downloading the server list from %s"
+msgstr "Finó la descarga de la llista de sirvidores dende %s"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -8016,6 +8017,14 @@ msgstr "Imposible resolver dns pal sirvidor %s: ¡Imposible coneutar! "
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "Rexistru d'aMuleGUI"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10220,6 +10229,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "Llista"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "Click nesti botón p'actualizar la llista de sirvidores dende una URL ..."
+
+#~ msgid "Server list"
+#~ msgstr "Llista de sirvidores"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "Introduz la url a un ficheru server.met y calca'l botón de la esquierda p'actualizar la llista de sirvidores conocíos."
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "Amesta equí les URL's pa descargar los ficheros server.met.\n"
+#~ "Namái una url per llinia."
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "Nun s'alcontró una entrada de direición en 'addresses.dat'. Por favor, apega una llista de sirvidores válida nesti ficheru pa poder actualizar de mou automáticu la llista de sirvidores."
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "ALVERTENCIA: especificada una URL inválida pa l'actualización automática de sirvidores : %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "Fallu en addresses.dat, server.met de la url de auto descarga inválidu"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "Fallu al descargar la llista de sirvidores dende %s"
 
 #~ msgid "Download graph scale:"
 #~ msgstr "Descargar escala gráfica:"

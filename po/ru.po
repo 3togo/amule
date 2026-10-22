@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-21 09:04+0000\n"
+"PO-Revision-Date: 2026-10-22 07:18+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
 "Language: ru\n"
@@ -535,7 +535,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Вы запросили запуск веб-сервера при старте, но исполняемый файл amuleweb не может быть запущен. Установите пакет, содержащий веб-сервер aMule, либо соберите aMule из исходного кода с параметром -DBUILD_WEBSERVER=YES и установите его."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "ОШИБКА"
 
@@ -713,7 +713,7 @@ msgstr "Метаданные медиафайла: проверяемый фай
 #: src/amule.cpp
 #, c-format
 msgid "Verify Local Data: another file named '%s' in your shared folders has the same content as '%s' and may be an intact copy of it."
-msgstr "Проверка локальных данных: в ваших общих папках есть файл «%s» с тем же содержимым, что и «%s» — возможно, это его целая копия."
+msgstr "Сверка локальных данных: в ваших общих папках есть файл «%s» с тем же содержимым, что и «%s» — возможно, это его целая копия."
 
 #: src/amule.cpp
 #, c-format
@@ -1329,6 +1329,10 @@ msgstr "Не удалось удалить категорию: %s"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "Не удаётся создать каталог «%s» для категории «%s», сохраняется каталог «%s»."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "Неверный URL"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2346,6 +2350,26 @@ msgstr[2] "Не удалось добавить %u ссылок (подробн�
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Неверная ссылка eD2k! ОШИБКА: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "Редактировать список серверов"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -3688,7 +3712,7 @@ msgstr "Пользователь Kad"
 #: src/KnownFile.cpp
 #, c-format
 msgid "Verify Local Data: %s is still downloading, so it was not checked."
-msgstr "Проверка локальных данных: %s всё ещё загружается, поэтому не проверялся."
+msgstr "Сверка локальных данных: %s всё ещё загружается, поэтому не проверялся."
 
 #: src/KnownFile.cpp
 #, c-format
@@ -4710,7 +4734,7 @@ msgstr "Заголовок"
 
 #: src/muuli_wdr.cpp src/SharedFilesCtrl.cpp
 msgid "Verify Local Data"
-msgstr "Проверка локальных данных"
+msgstr "Сверка локальных данных"
 
 #: src/muuli_wdr.cpp
 msgid "File Names"
@@ -5215,8 +5239,9 @@ msgid "retries"
 msgstr "попыток"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "Список"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "Источники файлов:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5324,7 +5349,7 @@ msgstr "Проверять локальные данные запрошенны�
 
 #: src/muuli_wdr.cpp
 msgid "Re-read requested complete files in the background and compare them with their stored MD4/AICH hashes, as Verify Local Data does. Corrupt parts stop being shared. Uploads continue during the check."
-msgstr "Повторно читать запрошенные завершённые файлы в фоне и сравнивать их с сохранёнными хешами MD4/AICH, как это делает «Проверка локальных данных». Повреждённые части перестают публиковаться. Во время проверки отдача продолжается."
+msgstr "Повторно читать запрошенные завершённые файлы в фоне и сравнивать их с сохранёнными хешами MD4/AICH, как это делает «Сверка локальных данных». Повреждённые части перестают публиковаться. Во время проверки отдача продолжается."
 
 #: src/muuli_wdr.cpp
 msgid "days (0 = off)"
@@ -5826,17 +5851,19 @@ msgstr "Выбор цвета для этой категории (сейчас �
 msgid "Click this button to reset the log."
 msgstr "Нажмите эту кнопку для очистки журнала."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "Нажмите для обновления списка серверов из URL-адреса…"
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "Редактировать список серверов"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "Список серверов"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "Введите адрес к файлу server.met и нажмите кнопку слева для обновления списка известных серверов."
+#, fuzzy
+msgid "Download once"
+msgstr "Загружено"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7172,18 +7199,6 @@ msgid "Reset to defaults"
 msgstr "Сбросить к значениям по умолчанию"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "Редактировать список серверов"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"Добавьте адреса для загрузки файлов server.met.\n"
-"По одному на строку."
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "Не удалось обновить IP2Country"
 
@@ -7786,17 +7801,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "Ошибка ввода-вывода при записи server.met: %s"
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "Неверный URL"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "Загрузка списка серверов с %s завершена"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "В «addresses.dat» не найдено адресов списков серверов. Вставьте действительный адрес в этот файл для автообновления списка серверов"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7805,17 +7815,8 @@ msgstr "Начало загрузки списка серверов с %s"
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "ПРЕДУПРЕЖДЕНИЕ: неверный URL для авто-обновления серверов: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "В addresses.dat нет верного URL-адреса для автоматической загрузки server.met"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "Не удалось загрузить список серверов с %s"
+msgid "Finished downloading the server list from %s"
+msgstr "Загрузка списка серверов с %s завершена"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -8025,6 +8026,14 @@ msgstr "Не удалось разрешить DNS для сервера %s: Н�
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "Журнал aMuleGUI"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -8352,7 +8361,7 @@ msgstr "Экспорт выбранных файлов в коллекцию emu
 #: src/SharedFilesCtrl.cpp
 #, c-format
 msgid "Verify Local Data on PartFile is currently not supported: %s"
-msgstr "Проверка локальных данных для part-файла в настоящее время не поддерживается: %s"
+msgstr "Проверка локальных данных для частичного файла в настоящее время не поддерживается: %s"
 
 #: src/SharedFilesCtrl.cpp
 #, c-format
@@ -9362,52 +9371,52 @@ msgstr "Преобразование старых наборов хешей AICH
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data (%s): Result OK for %s"
-msgstr "Проверка локальных данных (%s): результат в порядке для %s"
+msgstr "Сверка локальных данных (%s): результат в порядке для %s"
 
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data (%s): ERRORS FOUND! %s Failed blocks: MD4: %s. %s %s"
-msgstr "Проверка локальных данных (%s): ОБНАРУЖЕНЫ ОШИБКИ! %s Неудачные блоки: MD4: %s. %s %s"
+msgstr "Сверка локальных данных (%s): ОБНАРУЖЕНЫ ОШИБКИ! %s Неудачные блоки: MD4: %s. %s %s"
 
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data: file %s was removed before it could be checked."
-msgstr "Проверка локальных данных: файл %s был удалён до начала проверки."
+msgstr "Сверка локальных данных: файл %s был удалён до начала проверки."
 
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data: could not read %s, so it was not checked."
-msgstr "Проверка локальных данных: не удалось прочитать %s, поэтому файл не проверялся."
+msgstr "Сверка локальных данных: не удалось прочитать %s, поэтому файл не проверялся."
 
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data: ERRORS FOUND! %s Size on disk: %u bytes, expected: %u bytes."
-msgstr "Проверка локальных данных: ОБНАРУЖЕНЫ ОШИБКИ! %s Размер на диске: %u байт, ожидалось: %u байт."
+msgstr "Сверка локальных данных: ОБНАРУЖЕНЫ ОШИБКИ! %s Размер на диске: %u байт, ожидалось: %u байт."
 
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data: %s is larger than aMule supports, so it was not checked."
-msgstr "Проверка локальных данных: %s больше, чем поддерживает aMule, поэтому файл не проверялся."
+msgstr "Сверка локальных данных: %s больше, чем поддерживает aMule, поэтому файл не проверялся."
 
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data: %s is empty, so there is nothing to check."
-msgstr "Проверка локальных данных: %s пуст, проверять нечего."
+msgstr "Сверка локальных данных: %s пуст, проверять нечего."
 
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data: missing MD4 hashes for %s, so it was not checked."
-msgstr "Проверка локальных данных: отсутствуют хеши MD4 для %s, поэтому файл не проверялся."
+msgstr "Сверка локальных данных: отсутствуют хеши MD4 для %s, поэтому файл не проверялся."
 
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data: %s was removed or changed during the check, which did not finish."
-msgstr "Проверка локальных данных: %s был удалён или изменён во время проверки, которая не завершилась."
+msgstr "Сверка локальных данных: %s был удалён или изменён во время проверки, которая не завершилась."
 
 #: src/ThreadTasks.cpp
 #, c-format
 msgid "Verify Local Data: could not read %s, so the check did not finish: %s"
-msgstr "Проверка локальных данных: не удалось прочитать %s, поэтому проверка не завершилась: %s"
+msgstr "Сверка локальных данных: не удалось прочитать %s, поэтому проверка не завершилась: %s"
 
 #: src/ThreadTasks.cpp
 #, c-format
@@ -10269,6 +10278,39 @@ msgstr "Kad не смогла подгрузить сохранённый инд
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr "Kad не смогла сохранить индекс. Предыдущая копия этого файла сохранена."
+
+#~ msgid "List"
+#~ msgstr "Список"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "Нажмите для обновления списка серверов из URL-адреса…"
+
+#~ msgid "Server list"
+#~ msgstr "Список серверов"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "Введите адрес к файлу server.met и нажмите кнопку слева для обновления списка известных серверов."
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "Добавьте адреса для загрузки файлов server.met.\n"
+#~ "По одному на строку."
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "В «addresses.dat» не найдено адресов списков серверов. Вставьте действительный адрес в этот файл для автообновления списка серверов"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "ПРЕДУПРЕЖДЕНИЕ: неверный URL для авто-обновления серверов: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "В addresses.dat нет верного URL-адреса для автоматической загрузки server.met"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "Не удалось загрузить список серверов с %s"
 
 #, c-format
 #~ msgid "Skipped deleting '%s': the selected file has changed."

@@ -520,7 +520,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Pyysit web-palvelimen käynnistämistä käynnistyksen yhteydessä, mutta amuleweb-binääriä ei voida suorittaa. Asenna paketti, joka sisältää aMulen web-palvelimen, tai käännä aMule lähdekoodista käyttäen -DBUILD_WEBSERVER=YES ja asenna se."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "VIRHE"
 
@@ -1315,6 +1315,10 @@ msgstr "Kansio latauksen väliaikaisille tiedostoille"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "Ei voida luoda kansiota '%s' luokalle '%s', pidän kansion '%s'."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "Virheellinen URL"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2327,6 +2331,26 @@ msgstr[1] "%u linkkiä jäi lisäämättä (katso lisätietoja lokista)."
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Virheellinen eD2k-linkki! VIRHE: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "Muokkaa palvelinlistaa"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5198,8 +5222,9 @@ msgid "retries"
 msgstr "yrityksen jälkeen"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "Lista"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "Tiedostolähteet:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5810,17 +5835,19 @@ msgstr "Valitse väri tälle luokalle (valittuna)"
 msgid "Click this button to reset the log."
 msgstr "Napsauta tätä painiketta nollataksesi lokin."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "Napsauta tätä nappia päivittääksesi palvelinlistan osoitteesta ..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "Muokkaa palvelinlistaa"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "Palvelinlista"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "Syötä tähän server.met-tiedostoon osoittava url ja paina nappia vasemmalla päivittääksesi tunnettujen palvelimien listan."
+#, fuzzy
+msgid "Download once"
+msgstr "Ladattu"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7159,18 +7186,6 @@ msgid "Reset to defaults"
 msgstr "Palauta oletusarvoihin"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "Muokkaa palvelinlistaa"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"Syötä tähän URLit joista server.met-tiedostot haetaan.\n"
-"Vain yksi urli riville."
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "IP2Country-päivitys epäonnistui"
 
@@ -7774,17 +7789,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "IO-virhe luettaessa tiedostoa 'server.met': "
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "Virheellinen URL"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "Palvelinlista ladattu osoitteesta %s"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "Palvelinlistan osoitetta ei löydetty tiedostosta 'addresses.dat'. Ole hyvä ja liitä kelvollinen palvelinlistan osoite tähän tiedostoon palvelinlistan automaattiseksi päivittämiseksi"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7793,17 +7803,8 @@ msgstr "Aloita palvelinlistan lataus osoitteesta %s"
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "VAROITUS: palvelinlistan automaattisen päivityksen url ei kelpaa: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "Addresses.dat-tiedostosta ei löytynyt kelvollisia urleja server.met:in automaattilataukselle"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "Palvelinlistan %s lataus epäonnistui"
+msgid "Finished downloading the server list from %s"
+msgstr "Palvelinlista ladattu osoitteesta %s"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -8015,6 +8016,14 @@ msgstr "Ei voitu selvittää dns-nimeä palvelimelle %s: Ei voida yhdistää!"
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "aMuleGUI-loki"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10235,6 +10244,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "Lista"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "Napsauta tätä nappia päivittääksesi palvelinlistan osoitteesta ..."
+
+#~ msgid "Server list"
+#~ msgstr "Palvelinlista"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "Syötä tähän server.met-tiedostoon osoittava url ja paina nappia vasemmalla päivittääksesi tunnettujen palvelimien listan."
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "Syötä tähän URLit joista server.met-tiedostot haetaan.\n"
+#~ "Vain yksi urli riville."
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "Palvelinlistan osoitetta ei löydetty tiedostosta 'addresses.dat'. Ole hyvä ja liitä kelvollinen palvelinlistan osoite tähän tiedostoon palvelinlistan automaattiseksi päivittämiseksi"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "VAROITUS: palvelinlistan automaattisen päivityksen url ei kelpaa: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "Addresses.dat-tiedostosta ei löytynyt kelvollisia urleja server.met:in automaattilataukselle"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "Palvelinlistan %s lataus epäonnistui"
 
 #~ msgid "Download graph scale:"
 #~ msgstr "Latauskuvaajan skaala:"

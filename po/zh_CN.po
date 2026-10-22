@@ -531,7 +531,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "您要求启动时运行 Web 服务器，但 amuleweb 程序无法运行， 请先安装包含 amule web 服务器的 aMule 包，或者使用 -DBUILD_WEBSERVER=YES 选项从源码构建 aMule 并安装它。"
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "错误"
 
@@ -1321,6 +1321,10 @@ msgstr "无法删除分类：%s"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "无法创建 “%s” 目录用于 “%s” 分类，保留 “%s” 目录。"
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "无效 URL"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2322,6 +2326,26 @@ msgstr[1] "无法添加 %u 个链接（详情请查看日志）"
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "非法 eD2k 链接！错误: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "编辑服务器列表"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5174,8 +5198,9 @@ msgid "retries"
 msgstr "次连接失败，则删除该服务器"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "列表"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "文件源:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5781,17 +5806,19 @@ msgstr "选择该分类颜色 (当前选择)"
 msgid "Click this button to reset the log."
 msgstr "按此按钮清空日志。"
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "按此按钮从该网址更新服务器列表 ..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "编辑服务器列表"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "服务器列表"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "输入 server.met 文件的地址，再按此按钮更新服务器列表。"
+#, fuzzy
+msgid "Download once"
+msgstr "已下载"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7116,18 +7143,6 @@ msgid "Reset to defaults"
 msgstr "重置为默认"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "编辑服务器列表"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"在此添加下载 server.met 文件的地址\n"
-"每行只限一个。"
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "IP2Country 更新失败"
 
@@ -7719,17 +7734,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "写入“server.met”时发生 IO 错误： %s"
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "无效 URL"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "从%s下载服务器列表完成"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "addresses.dat文件内没有服务器列表地址，请粘贴一个有效服务器列表地址到该文件以自动更新服务器列表。"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7738,17 +7748,8 @@ msgstr "正在开始从 %s 下载服务器列表"
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "警告：自动下载服务器列表的地址错误：%s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "addresses.dat 文件中没有有效的自动更新 server.met 的地址"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "无法从 %s 下载服务器列表"
+msgid "Finished downloading the server list from %s"
+msgstr "从%s下载服务器列表完成"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -7956,6 +7957,14 @@ msgstr "无法解析服务器 %s 的 DNS： 无法连接！"
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "aMule图形用户界面日志"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10176,6 +10185,39 @@ msgstr "Kad 无法加载其已保存的索引。现有的索引文件被保留�
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr "Kad 无法保存索引。该文件之前的副本被保留。"
+
+#~ msgid "List"
+#~ msgstr "列表"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "按此按钮从该网址更新服务器列表 ..."
+
+#~ msgid "Server list"
+#~ msgstr "服务器列表"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "输入 server.met 文件的地址，再按此按钮更新服务器列表。"
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "在此添加下载 server.met 文件的地址\n"
+#~ "每行只限一个。"
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "addresses.dat文件内没有服务器列表地址，请粘贴一个有效服务器列表地址到该文件以自动更新服务器列表。"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "警告：自动下载服务器列表的地址错误：%s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "addresses.dat 文件中没有有效的自动更新 server.met 的地址"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "无法从 %s 下载服务器列表"
 
 #, c-format
 #~ msgid "Skipped deleting '%s': the selected file has changed."

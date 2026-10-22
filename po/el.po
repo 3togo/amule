@@ -518,7 +518,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Ζητήσατε να εκτελείται ο διακομιστής ιστού κατά την εκκίνηση, αλλά δεν είναι δυνατή η εκτέλεση του δυαδικού αρχείου amuleweb. Παρακαλώ εγκαταστήστε το πακέτο που περιέχει τον διακομιστή ιστού του aMule, ή δημιουργήστε το aMule από τον πηγαίο κώδικα με -DBUILD_WEBSERVER=YES και εγκαταστήστε το."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "ΣΦΑΛΜΑ"
 
@@ -1313,6 +1313,10 @@ msgstr "Κατάλογος για τα προσωρινά αρχεία"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "Δεν είναι δυνατή η δημιουργία καταλόγου '%s' για την κατηγορία '%s', διατηρείται ο κατάλογος '%s'."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "Άκυρη URL"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2326,6 +2330,26 @@ msgstr[1] "Δεν ήταν δυνατή η προσθήκη %u συνδέσμω�
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Άκυρος σύνδεσμος eD2k! ΣΦΑΛΜΑ: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "Επεξεργασία λίστας διακομιστών"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5196,8 +5220,9 @@ msgid "retries"
 msgstr "προσπάθειες"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "Λίστα"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "Πηγές αρχείου:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5806,17 +5831,19 @@ msgstr "Επιλογή χρώματος για τη συγκεκριμένη κ�
 msgid "Click this button to reset the log."
 msgstr "Πατήστε αυτό το κουμπί για το καθάρισμα του αρχείου καταγραφής."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "Πατήστε αυτό το αρχείο για να ανανεώσετε την λίστα διακομιστών από την URL ..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "Επεξεργασία λίστας διακομιστών"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "Λίστα διακομιστών"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "Εισάγετε την url ενός αρχείου server.met και πατήστε το κουμπί στα αριστερά για να ανανεώσετε τη λίστα με τους γνωστούς διακομιστές"
+#, fuzzy
+msgid "Download once"
+msgstr "Έχει κατεβεί"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7156,18 +7183,6 @@ msgid "Reset to defaults"
 msgstr "Επαναφορά στις προεπιλογές"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "Επεξεργασία λίστας διακομιστών"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"Βάλτε εδώ τη διεύθυνση για το κατέβασμα των αρχείων server.met. \n"
-"Μία διεύθυνση σε κάθε γραμμή"
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "Η ενημέρωση IP2Country απέτυχε"
 
@@ -7770,17 +7785,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "Σφάλμα εισόδου εξόδου κατά την ανάγνωση του αρχείου known.met: %s"
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "Άκυρη URL"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, fuzzy, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "Ολοκληρώθηκε το κατέβασμα της λίστας διακομιστών από το %s"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "Δεν βρέθηκε πεδίο λίστας διακομιστών το αρχείο 'addresses.dat'. Παρακαλώ επικολλήστε μια έγκυρη λίστα σε αυτό το αρχείο έτσι ώστε να ενημερωθεί αυτόματα η λίστα διακομιστών σας"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7788,18 +7798,9 @@ msgid "Start downloading server list from %s"
 msgstr "Εκκίνηση του κατεβάσματος της λίστας διακομιστών από το %s"
 
 #: src/ServerList.cpp
-#, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Προσδιορίστηκε άκυρη διεύθυνση για την αυτόματη ενημέρωση των διακομιστών: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "Άκυρη URL αυτόματο κατέβασμα του server.met στο αρχείο addresses.dat"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "Αποτυχία κατεβάσματος της λίστας διακομιστών από το %s"
+#, fuzzy, c-format
+msgid "Finished downloading the server list from %s"
+msgstr "Ολοκληρώθηκε το κατέβασμα της λίστας διακομιστών από το %s"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -8011,6 +8012,14 @@ msgstr "Δεν μπόρεσε να γίνει επίλυση dns για τον �
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "Αρχείο καταγραφής aMuleGUI"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10239,6 +10248,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "Λίστα"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "Πατήστε αυτό το αρχείο για να ανανεώσετε την λίστα διακομιστών από την URL ..."
+
+#~ msgid "Server list"
+#~ msgstr "Λίστα διακομιστών"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "Εισάγετε την url ενός αρχείου server.met και πατήστε το κουμπί στα αριστερά για να ανανεώσετε τη λίστα με τους γνωστούς διακομιστές"
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "Βάλτε εδώ τη διεύθυνση για το κατέβασμα των αρχείων server.met. \n"
+#~ "Μία διεύθυνση σε κάθε γραμμή"
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "Δεν βρέθηκε πεδίο λίστας διακομιστών το αρχείο 'addresses.dat'. Παρακαλώ επικολλήστε μια έγκυρη λίστα σε αυτό το αρχείο έτσι ώστε να ενημερωθεί αυτόματα η λίστα διακομιστών σας"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Προσδιορίστηκε άκυρη διεύθυνση για την αυτόματη ενημέρωση των διακομιστών: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "Άκυρη URL αυτόματο κατέβασμα του server.met στο αρχείο addresses.dat"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "Αποτυχία κατεβάσματος της λίστας διακομιστών από το %s"
 
 #~ msgid "Download graph scale:"
 #~ msgstr "Κλιματα του γραφήματος εισερχομένων:"

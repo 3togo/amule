@@ -518,7 +518,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Du har anmodet om at køre webserveren ved opstart, men amuleweb-binæren kan ikke køres. Installer venligst pakken, der indeholder aMule-webserveren, eller byg aMule fra kildekode med -DBUILD_WEBSERVER=YES og installer den."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "FEJL"
 
@@ -1314,6 +1314,10 @@ msgstr "Du prøver allerede at downloade denne fil %s"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "Kan ikke oprette mappen '%s' til kategorien '%s', beholder mappen '%s'."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "Invalid URL"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2325,6 +2329,26 @@ msgstr[1] "Kunne ikke tilføje %u links (se log for detaljer)."
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Ugyldigt eD2k-link! FEJL: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "Rediger serverliste"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5204,8 +5228,9 @@ msgid "retries"
 msgstr "forsøg"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "Liste"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "Filkilder:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5813,17 +5838,19 @@ msgstr ""
 msgid "Click this button to reset the log."
 msgstr "Klik på denne knap for at nulstille loggen."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "Tryk på denne knap for at opdatere serverlisten fra URL ..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "Rediger serverliste"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "Serverliste"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "Indtast url'en til en server.met-fil her, og tryk på knappen til venstre for at opdatere listen over kendte servere."
+#, fuzzy
+msgid "Download once"
+msgstr "Downloadet"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7152,18 +7179,6 @@ msgid "Reset to defaults"
 msgstr "Nulstil til standardværdier"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "Rediger serverliste"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"Tilføj URLer hvor der kan hentes server.met filer.\n"
-"Kun en URL på hver linje."
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "IP2Country-opdatering fejlede"
 
@@ -7763,17 +7778,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "Uventet fil fejl ved skrivning %s : %s"
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "Invalid URL"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "Færdig med at downloade serverlisten fra %s"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "Ingen adresse på serverliste fundet i 'addresses.dat'. Indsæt en gyldig adresse på serverliste i denne fil for at kunne opdatere din serverliste automatisk"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7782,17 +7792,8 @@ msgstr "Starter download af serverliste fra %s"
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "ADVARSEL: ugyldig URL angivet til automatisk opdatering af servere: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "Ingen gyldig url til automatisk download af server.met i addresses.dat"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "Kunne ikke downloade serverlisten fra %s"
+msgid "Finished downloading the server list from %s"
+msgstr "Færdig med at downloade serverlisten fra %s"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -8004,6 +8005,14 @@ msgstr "Kunne ikke slå dns op for server %s: Kan ikke oprette forbindelse!"
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "aMuleGUI-log"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10221,6 +10230,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "Liste"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "Tryk på denne knap for at opdatere serverlisten fra URL ..."
+
+#~ msgid "Server list"
+#~ msgstr "Serverliste"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "Indtast url'en til en server.met-fil her, og tryk på knappen til venstre for at opdatere listen over kendte servere."
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "Tilføj URLer hvor der kan hentes server.met filer.\n"
+#~ "Kun en URL på hver linje."
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "Ingen adresse på serverliste fundet i 'addresses.dat'. Indsæt en gyldig adresse på serverliste i denne fil for at kunne opdatere din serverliste automatisk"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "ADVARSEL: ugyldig URL angivet til automatisk opdatering af servere: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "Ingen gyldig url til automatisk download af server.met i addresses.dat"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "Kunne ikke downloade serverlisten fra %s"
 
 #~ msgid "Download graph scale:"
 #~ msgstr "Downloadgrafskala:"

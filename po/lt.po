@@ -519,7 +519,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Nurodėte paleisti žiniatinklio serverį paleidimo metu, tačiau amuleweb vykdomojo failo paleisti nepavyksta. Įdiekite paketą, kuriame yra aMule žiniatinklio serveris, arba sukompiliuokite aMule iš šaltinio kodo su -DBUILD_WEBSERVER=YES ir jį įdiekite."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "KLAIDA"
 
@@ -1315,6 +1315,10 @@ msgstr "Failas %s jau yra atsiunčiamų failų sąraše"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "Nepavyksta sukurti aplanko „%s“ kategorijai „%s“, paliekamas aplankas „%s“."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "Klaidingas URL"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2340,6 +2344,26 @@ msgstr[2] "Nepavyko pridėti %u nuorodų (išsamiau žr. žurnale)."
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Klaidinga eD2k nuoroda! KLAIDA: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "Keisti serverių sąrašą"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5220,8 +5244,9 @@ msgid "retries"
 msgstr "bandymų"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "Sąrašas"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "Failo šaltiniai:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5831,17 +5856,19 @@ msgstr "Nurodykite dabartinės kategorijos spalvą"
 msgid "Click this button to reset the log."
 msgstr "Išvalyti įvykių žurnalą."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "Paspaudę šį mygtuką atnaujinsite serverių sąrašą iš URL..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "Keisti serverių sąrašą"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "Serverių sąrašas"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "Įrašykite server.met failo URL ir paspaudę mygtuką kairėje atnaujinsite serverių sąrašą."
+#, fuzzy
+msgid "Download once"
+msgstr "Atsiųsta"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7188,18 +7215,6 @@ msgid "Reset to defaults"
 msgstr "Atkurti numatytąsias reikšmes"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "Keisti serverių sąrašą"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"Įrašykite server.met failų URL.\n"
-"Vieną URL vienoje eilutėje."
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "Nepavyko atnaujinti IP2Country"
 
@@ -7810,17 +7825,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "Nuskaitant known.met failą įvyko IO klaida: %s"
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "Klaidingas URL"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "Baigtas serverių sąrašo atsiuntimas iš %s"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "Faile „addresses.dat“ nerasta serverių sąrašo įrašų. Norėdami automatiškai atnaujinti sąrašą į šį failą įkelkite teisingą serverių sąrašo adresą."
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7829,17 +7839,8 @@ msgstr "Atsiųsti serverių sąrašą iš %s"
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "DĖMESIO: automatiškam serverių sąrašo atnaujinimui pateiktas neteisingas URL: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "Faile addresses.dat nerasta nei vieno teisingo server.met failo automatinio atsiuntimo URL"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "Nepavyko iš %s atsiųsti serverių sąrašo"
+msgid "Finished downloading the server list from %s"
+msgstr "Baigtas serverių sąrašo atsiuntimas iš %s"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -8052,6 +8053,14 @@ msgstr "Nepavyko išsiaiškinti serverio %s DNS. Ryšys nebus užmezgamas!"
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "aMuleGUI žurnalas"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10286,6 +10295,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "Sąrašas"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "Paspaudę šį mygtuką atnaujinsite serverių sąrašą iš URL..."
+
+#~ msgid "Server list"
+#~ msgstr "Serverių sąrašas"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "Įrašykite server.met failo URL ir paspaudę mygtuką kairėje atnaujinsite serverių sąrašą."
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "Įrašykite server.met failų URL.\n"
+#~ "Vieną URL vienoje eilutėje."
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "Faile „addresses.dat“ nerasta serverių sąrašo įrašų. Norėdami automatiškai atnaujinti sąrašą į šį failą įkelkite teisingą serverių sąrašo adresą."
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "DĖMESIO: automatiškam serverių sąrašo atnaujinimui pateiktas neteisingas URL: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "Faile addresses.dat nerasta nei vieno teisingo server.met failo automatinio atsiuntimo URL"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "Nepavyko iš %s atsiųsti serverių sąrašo"
 
 #~ msgid "Download graph scale:"
 #~ msgstr "Atsiuntimo grafiko mastelis:"

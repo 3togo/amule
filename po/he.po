@@ -518,7 +518,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "ביקשת להריץ את שרת האינטרנט בעת ההפעלה, אך לא ניתן להריץ את הקובץ הבינארי amuleweb. אנא התקן את החבילה המכילה את שרת האינטרנט של aMule, או בנה את aMule מהמקור עם -DBUILD_WEBSERVER=YES והתקן אותו."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "שגיאה"
 
@@ -1314,6 +1314,10 @@ msgstr "אתה כבר מנסה להוריד את הקובץ %s"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "לא ניתן ליצור את התיקייה '%s' עבור הקטיגוריה '%s', התיקייה '%s' נשמרת."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "כתובת URL לא תקינה"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2326,6 +2330,26 @@ msgstr[1] "לא ניתן היה להוסיף %u קישורים (לפרטים ר�
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "קישור eD2k לא תקין! שגיאה: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "ערוך רשימת שרתים"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5197,8 +5221,9 @@ msgid "retries"
 msgstr "ניסיונות"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "רשימה"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "מקורות קובץ:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5808,17 +5833,19 @@ msgstr ""
 msgid "Click this button to reset the log."
 msgstr "לחץ על כפתור זה כדי לאפס את היומן."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "לחץ על כפתור זה כדי לעדכן את רשימת השרתים מכתובת URL..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "ערוך רשימת שרתים"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "רשימת שרתים"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "הזן כאן את כתובת ה-URL לקובץ server.met ולחץ על הכפתור משמאל כדי לעדכן את רשימת השרתים הידועים."
+#, fuzzy
+msgid "Download once"
+msgstr "הורד"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7152,18 +7179,6 @@ msgid "Reset to defaults"
 msgstr "אפס לברירות מחדל"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "ערוך רשימת שרתים"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"הוסף כאן כתובות URL שמהם ניתן להוריד קבצי server.met.\n"
-"רק כתובת אחת בכל שורה."
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "עדכון IP2Country נכשל"
 
@@ -7764,17 +7779,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "שגיאת קריאה/כתיבה תוך כדי הקובץ known.met: %s"
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "כתובת URL לא תקינה"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "הורדת רשימת השרתים מ-%s הסתיימה"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "לא נמצאה רשומת כתובת לרשימת שרתים בקובץ 'addresses.dat'. אנא הדבק כתובת תקינה של רשימת שרתים בקובץ זה כדי לאפשר עדכון אוטומטי של רשימת השרתים שלך"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7783,17 +7793,8 @@ msgstr "מתחיל להוריד רשימת שרתים מ-%s"
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "אזהרה: צוינה כתובת URL לא תקינה לעדכון אוטומטי של שרתים: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "אין כתובת URL תקינה להורדה אוטומטית של server.met בקובץ addresses.dat"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "נכשלה הורדת רשימת השרתים מ-%s"
+msgid "Finished downloading the server list from %s"
+msgstr "הורדת רשימת השרתים מ-%s הסתיימה"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -8005,6 +8006,14 @@ msgstr "לא יכול לפענח כתובת השרת של %s באמצעות DNS:
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "יומן aMuleGUI"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10225,6 +10234,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "רשימה"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "לחץ על כפתור זה כדי לעדכן את רשימת השרתים מכתובת URL..."
+
+#~ msgid "Server list"
+#~ msgstr "רשימת שרתים"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "הזן כאן את כתובת ה-URL לקובץ server.met ולחץ על הכפתור משמאל כדי לעדכן את רשימת השרתים הידועים."
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "הוסף כאן כתובות URL שמהם ניתן להוריד קבצי server.met.\n"
+#~ "רק כתובת אחת בכל שורה."
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "לא נמצאה רשומת כתובת לרשימת שרתים בקובץ 'addresses.dat'. אנא הדבק כתובת תקינה של רשימת שרתים בקובץ זה כדי לאפשר עדכון אוטומטי של רשימת השרתים שלך"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "אזהרה: צוינה כתובת URL לא תקינה לעדכון אוטומטי של שרתים: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "אין כתובת URL תקינה להורדה אוטומטית של server.met בקובץ addresses.dat"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "נכשלה הורדת רשימת השרתים מ-%s"
 
 #~ msgid "Download graph scale:"
 #~ msgstr "קנה מידה של גרף הורדות:"

@@ -520,7 +520,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Ви запросили запуск веб-сервера під час старту, але виконуваний файл amuleweb не вдалося запустити. Встановіть пакунок, що містить веб-сервер aMule, або зберіть aMule з вихідного коду з -DBUILD_WEBSERVER=YES та встановіть його."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "ПОМИЛКА"
 
@@ -1315,6 +1315,10 @@ msgstr "Тека для тимчасових звантажуваних файл
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "Не вдалося створити теку '%s' для категорії '%s', залишено теку '%s'."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "Невірна URL-адреса"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2344,6 +2348,26 @@ msgstr[2] "Не вдалося додати %u посилань (див. час�
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Невірне eD2k-посилання! ПОМИЛКА: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "Редагувати перелік серверів"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5226,8 +5250,9 @@ msgid "retries"
 msgstr "спроб"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "Перелік"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "Джерела файлу:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5838,17 +5863,19 @@ msgstr "Виберіть колір для цієї категорії (зара
 msgid "Click this button to reset the log."
 msgstr "Натисніть цю кнопку, щоб очистити часопис."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "Натисніть на кнопку щоб оновити перелік серверів з адреси..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "Редагувати перелік серверів"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "Перелік серверів"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "Введіть адресу файлу server.met та натисніть кнопку ліворуч щоб оновити перелік відомих серверів."
+#, fuzzy
+msgid "Download once"
+msgstr "Звантажені"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7195,18 +7222,6 @@ msgid "Reset to defaults"
 msgstr "Скинути до значень за замовчуванням"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "Редагувати перелік серверів"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"Додайте тут адреси файлів server.met.\n"
-"Тільки одна адреса на рядок."
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "Оновлення IP2Country не вдалося"
 
@@ -7817,17 +7832,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "Помилка введення-виведення під час читання файлу known.met: %s"
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "Невірна URL-адреса"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, fuzzy, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "Завершилось звантаження переліку серверів з %s"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "Не знайдено жодного запису переліку серверів в addresses.dat. Будь ласка, вставте вірний перелік адрес серверів в цей файл для того щоб автоматично оновити ваш перелік серверів"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7835,18 +7845,9 @@ msgid "Start downloading server list from %s"
 msgstr "Починається звантаження переліку серверів з %s"
 
 #: src/ServerList.cpp
-#, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "ЗАСТЕРЕЖЕННЯ: вказана невірна адреса для автоматичного оновлення серверів: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "Немає правильної адреси автоматичного звантаження server.met в addresses.dat"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "Неможливо звантажити перелік серверів з %s"
+#, fuzzy, c-format
+msgid "Finished downloading the server list from %s"
+msgstr "Завершилось звантаження переліку серверів з %s"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -8059,6 +8060,14 @@ msgstr "Неможливо визначити DNS-назву для сервер
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "Часопис aMuleGUI"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10302,6 +10311,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "Перелік"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "Натисніть на кнопку щоб оновити перелік серверів з адреси..."
+
+#~ msgid "Server list"
+#~ msgstr "Перелік серверів"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "Введіть адресу файлу server.met та натисніть кнопку ліворуч щоб оновити перелік відомих серверів."
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "Додайте тут адреси файлів server.met.\n"
+#~ "Тільки одна адреса на рядок."
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "Не знайдено жодного запису переліку серверів в addresses.dat. Будь ласка, вставте вірний перелік адрес серверів в цей файл для того щоб автоматично оновити ваш перелік серверів"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "ЗАСТЕРЕЖЕННЯ: вказана невірна адреса для автоматичного оновлення серверів: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "Немає правильної адреси автоматичного звантаження server.met в addresses.dat"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "Неможливо звантажити перелік серверів з %s"
 
 #~ msgid "Download graph scale:"
 #~ msgstr "Шкала графіку звантаження"

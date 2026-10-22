@@ -518,7 +518,7 @@ msgid "You requested to run web server on startup, but the amuleweb binary canno
 msgstr "Du har bedt om at vevtenaren skal køyre ved oppstart, men den binære fila amuleweb kan ikkje køyrast. Installer pakken som inneheld aMule-vevtenaren, eller bygg aMule frå kjeldekode med -DBUILD_WEBSERVER=YES og installer det."
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
-#: src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
+#: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "FEIL"
 
@@ -1313,6 +1313,10 @@ msgstr "Du freistar allereie nedlasting av fila %s"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "Kan ikkje opprette katalogen «%s» for kategorien «%s», held fram med katalogen «%s»."
+
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
+msgid "Invalid URL"
+msgstr "Ugangbar URL"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
@@ -2326,6 +2330,26 @@ msgstr[1] "Greidde ikkje å leggje til %u lenkjer (sjå loggen for detaljar)."
 #, c-format
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Ugangbar eD2k lenkje! FEIL: %s"
+
+#: src/EditServerListDlg.cpp
+#, fuzzy
+msgid "Edit server list sources"
+msgstr "Handsame tenarlista"
+
+#: src/EditServerListDlg.cpp
+msgid ""
+"Enter one server.met URL per line.\n"
+"Saving replaces the source list and removes comment lines."
+msgstr ""
+
+#: src/EditServerListDlg.cpp src/ExternalConn.cpp
+#, c-format
+msgid "Could not save server list sources to %s. Check the URLs and file permissions."
+msgstr ""
+
+#: src/EditServerListDlg.cpp
+msgid "addresses.dat in the daemon configuration directory"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5199,8 +5223,9 @@ msgid "retries"
 msgstr "freistnader"
 
 #: src/muuli_wdr.cpp
-msgid "List"
-msgstr "Liste"
+#, fuzzy
+msgid "Edit sources…"
+msgstr "Filkjelder:"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5810,17 +5835,19 @@ msgstr "Vel farge for denne kategorien (no valt)"
 msgid "Click this button to reset the log."
 msgstr "Klikk denne knappen for å nullstille loggen."
 
-#: src/muuli_wdr.cpp
-msgid "Click on this button to update the servers list from URL ..."
-msgstr "Klikk på denne knappen for å oppdatere tenarlista frå nettadresse ..."
+#: src/muuli_wdr.cpp src/ServerWnd.cpp
+#, fuzzy
+msgid "Update server list"
+msgstr "Handsame tenarlista"
 
 #: src/muuli_wdr.cpp
-msgid "Server list"
-msgstr "Tenarliste"
+msgid "One-off URL:"
+msgstr ""
 
 #: src/muuli_wdr.cpp
-msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
-msgstr "Skriv inn nettadressa til ei server.met fil her og klikk på knappen til venstre for å oppdatere tenarlista."
+#, fuzzy
+msgid "Download once"
+msgstr "Lasta ned"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7160,18 +7187,6 @@ msgid "Reset to defaults"
 msgstr "Tilbakestill til standardverdiar"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Edit server list"
-msgstr "Handsame tenarlista"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid ""
-"Add here URL's to download server.met files.\n"
-"Only one url on each line."
-msgstr ""
-"Skriv inn URL`en for å laste ned server.met filer.\n"
-"Berre ein URL på kvar linje."
-
-#: src/PrefsUnifiedDlg.cpp
 msgid "IP2Country update failed"
 msgstr "IP2Country-oppdatering mislukkast"
 
@@ -7774,17 +7789,12 @@ msgid "IO failure while writing 'server.met': %s"
 msgstr "IO feil underlesing av known.met fila: %s"
 
 #: src/ServerList.cpp
-msgid "Invalid URL"
-msgstr "Ugangbar URL"
+msgid "A server list download is already in progress."
+msgstr ""
 
 #: src/ServerList.cpp
-#, c-format
-msgid "Finished downloading the server list from %s"
-msgstr "Ferdig med å laste ned tenarlista frå %s"
-
-#: src/ServerList.cpp
-msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
-msgstr "Inga tenarlistadresse funnen i 'addresses.dat'. Lim inn ei gangbar tenarlisteadresse i denne fila for å automatisk oppdatere tenarlista di"
+msgid "No server list sources configured"
+msgstr ""
 
 #: src/ServerList.cpp
 #, c-format
@@ -7793,17 +7803,8 @@ msgstr "Last ned tenarlista frå %s"
 
 #: src/ServerList.cpp
 #, c-format
-msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
-msgstr "ÅTVARING: ikkje gangbar URL for automatisk oppdatering av tenarar: %s"
-
-#: src/ServerList.cpp
-msgid "No valid server.met auto-download url on addresses.dat"
-msgstr "Ugangbar autonedlastingsnettside for server.met i addresses.dat"
-
-#: src/ServerList.cpp
-#, c-format
-msgid "Failed to download the server list from %s"
-msgstr "Greidde ikkje å laste ned tenarlista frå %s"
+msgid "Finished downloading the server list from %s"
+msgstr "Ferdig med å laste ned tenarlista frå %s"
 
 #: src/ServerList.cpp
 msgid "Local server is filtered by the IPFilters, reconnecting to a different server!"
@@ -8015,6 +8016,14 @@ msgstr "Greidde ikkje å løyse dns for tenar %s: Greier ikkje å kople til!"
 #: src/ServerWnd.cpp
 msgid "aMuleGUI Log"
 msgstr "aMuleGUI-logg"
+
+#: src/ServerWnd.cpp
+msgid "Download and merge every saved source"
+msgstr ""
+
+#: src/ServerWnd.cpp
+msgid "Download this server.met URL once without saving it."
+msgstr ""
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -10238,6 +10247,39 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "List"
+#~ msgstr "Liste"
+
+#~ msgid "Click on this button to update the servers list from URL ..."
+#~ msgstr "Klikk på denne knappen for å oppdatere tenarlista frå nettadresse ..."
+
+#~ msgid "Server list"
+#~ msgstr "Tenarliste"
+
+#~ msgid "Enter the url to a server.met file here and press the button to the left to update the list of known servers."
+#~ msgstr "Skriv inn nettadressa til ei server.met fil her og klikk på knappen til venstre for å oppdatere tenarlista."
+
+#~ msgid ""
+#~ "Add here URL's to download server.met files.\n"
+#~ "Only one url on each line."
+#~ msgstr ""
+#~ "Skriv inn URL`en for å laste ned server.met filer.\n"
+#~ "Berre ein URL på kvar linje."
+
+#~ msgid "No server list address entry in 'addresses.dat' found. Please paste a valid server list address into this file in order to auto-update your server list"
+#~ msgstr "Inga tenarlistadresse funnen i 'addresses.dat'. Lim inn ei gangbar tenarlisteadresse i denne fila for å automatisk oppdatere tenarlista di"
+
+#, c-format
+#~ msgid "WARNING: invalid URL specified for auto-updating of servers: %s"
+#~ msgstr "ÅTVARING: ikkje gangbar URL for automatisk oppdatering av tenarar: %s"
+
+#~ msgid "No valid server.met auto-download url on addresses.dat"
+#~ msgstr "Ugangbar autonedlastingsnettside for server.met i addresses.dat"
+
+#, c-format
+#~ msgid "Failed to download the server list from %s"
+#~ msgstr "Greidde ikkje å laste ned tenarlista frå %s"
 
 #~ msgid "Download graph scale:"
 #~ msgstr "Skala for nedlastingsgraf:"
