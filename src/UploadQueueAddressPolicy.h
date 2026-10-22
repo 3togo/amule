@@ -58,6 +58,35 @@ inline bool MatchesRateLimitScope(const CNetworkAddress &first, const CNetworkAd
 	return IsMatchable(first) && IsMatchable(second) &&
 	       PeerAddressing::RateLimitScope(first) == PeerAddressing::RateLimitScope(second);
 }
+
+/** Upload slots one accounting scope may hold at once. */
+inline constexpr unsigned MaxUploadSlotsPerScope = 2;
+
+/**
+ * Whether a peer at `candidate` may take another upload slot, given the peers already uploading.
+ *
+ * The waiting-queue cap alone does not bound slots: each queued client that gets a slot leaves the
+ * queue, so one host rotating user hashes over several ports can refill it and collect slot after
+ * slot. Like that cap, an address without a host identity is outside this one.
+ */
+template <typename Range, typename AddressOf>
+bool HasUploadSlotRoom(const CNetworkAddress &candidate, const Range &uploading, AddressOf addressOf)
+{
+	if (!IsMatchable(candidate)) {
+		return true;
+	}
+	// One value for the whole walk, as in the waiting-queue cap.
+	const CNetworkAddress scope = PeerAddressing::RateLimitScope(candidate);
+	unsigned held = 0;
+	for (const auto &peer : uploading) {
+		const CNetworkAddress &address = addressOf(peer);
+		if (IsMatchable(address) && PeerAddressing::RateLimitScope(address) == scope &&
+			++held >= MaxUploadSlotsPerScope) {
+			return false;
+		}
+	}
+	return true;
+}
 } // namespace UploadQueueAddressPolicy
 
 #endif // UPLOADQUEUEADDRESSPOLICY_H
