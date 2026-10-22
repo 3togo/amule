@@ -1033,5 +1033,11 @@
   "downloads_delete_more": "... en nog {n}",
   "downloads_confirm_delete_selected_one": "Verwijder het geselecteerde bestand van de schijf? Voltooide bestanden zullen permanent verwijderd worden, actieve downloads worden geannuleerd en verwijderd. Dit kan niet ongedaan worden gemaakt.",
   "downloads_confirm_delete_selected_other": "Verwijder de {n} geselecteerde bestanden van de schijf? Voltooide bestanden zullen permanent verwijderd worden, actieve downloads worden geannuleerd en verwijderd. Dit kan niet ongedaan worden gemaakt.",
-  "prefs_field_files_shared_file_reverify_days": "Verifiëer Lokale Gegevens van aangevraagde gedeelde bestanden elke N dagen (0 = uitgeschakeld)"
+  "prefs_field_files_shared_file_reverify_days": "Verifiëer Lokale Gegevens van aangevraagde gedeelde bestanden elke N dagen (0 = uitgeschakeld)",
+  "prefs_sources_apply_first": "Pas uw aanpassingen eerst toe",
+  "prefs_field_servers_update_list": "Bewerk serverlijst",
+  "prefs_sources_download_once": "Download een keer",
+  "prefs_sources_one_off": "Eenmalige URL",
+  "prefs_field_servers_update_urls": "Serverlijst-bron-URLs (één per regel)",
+  "prefs_sources_saved_help": "Downloads vanuit de opgeslagen bronnen."
 }

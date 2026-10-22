@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-22 09:54+0000\n"
+"PO-Revision-Date: 2026-10-22 19:03+0000\n"
 "Last-Translator: minterior <minterior@gmail.com>\n"
 "Language-Team: Català\n"
 "Language: ca\n"
@@ -2329,24 +2329,25 @@ msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Enllaç eD2k invàlid! ERROR: %s"
 
 #: src/EditServerListDlg.cpp
-#, fuzzy
 msgid "Edit server list sources"
-msgstr "Edita la llista de servidors"
+msgstr "Editar les fonts de la llista de servidors"
 
 #: src/EditServerListDlg.cpp
 msgid ""
 "Enter one server.met URL per line.\n"
 "Saving replaces the source list and removes comment lines."
 msgstr ""
+"Introduceix una URL de server.met per línia.\n"
+"En desar, es substituirà la llista de fonts i s'eliminaran les línies de comentari."
 
 #: src/EditServerListDlg.cpp src/ExternalConn.cpp
 #, c-format
 msgid "Could not save server list sources to %s. Check the URLs and file permissions."
-msgstr ""
+msgstr "No s'han pogut desar les fonts de la llista de servidors a %s. Comprova les URLs i els permisos del fitxer."
 
 #: src/EditServerListDlg.cpp
 msgid "addresses.dat in the daemon configuration directory"
-msgstr ""
+msgstr "addresses.dat al directori de configuració del dimoni"
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -3081,7 +3082,7 @@ msgstr "Port UDP extès (Kad / cerca global) "
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Enable UPnP for router port forwarding"
-msgstr "Activa UPnP per redirecció de ports"
+msgstr "Activa UPnP per a la redirecció de ports a l'encaminador"
 
 #: src/FirstRunWizard.cpp
 msgid ""
@@ -5199,9 +5200,8 @@ msgid "retries"
 msgstr "intents"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Edit sources…"
-msgstr "Fonts del fitxer:"
+msgstr "Edita les fonts…"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5816,9 +5816,8 @@ msgid "One-off URL:"
 msgstr "URL d'ús puntual:"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Download once"
-msgstr "Baixat"
+msgstr "Baixa una vegada"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -5870,7 +5869,7 @@ msgstr "Nodes (0)"
 
 #: src/muuli_wdr.cpp
 msgid "Enter the url to a nodes.dat file here and press the button to the left to update the list of known nodes."
-msgstr "Introduïu la URL d'un fitxer nodes.dat i premeu el botó de l'esquerra per a actualitzar la llista de nodes coneguts."
+msgstr "Introduïu aquí la URL d'un fitxer nodes.dat i premeu el botó de l'esquerra per actualitzar la llista de nodes coneguts."
 
 #: src/muuli_wdr.cpp
 msgid "Lookup diagnostics"
@@ -6660,7 +6659,7 @@ msgstr "S'ha acabat de refer els resums de %s"
 #: src/PartFile.cpp
 #, c-format
 msgid "Unexpected error while completing %s. File paused"
-msgstr "S'ha produït un error inesperat mentre es completava %s. S'ha pausat el fitxer."
+msgstr "S'ha produït un error inesperat mentre es completava %s. Fitxer en pausa"
 
 #: src/PartFile.cpp
 #, c-format
@@ -6689,7 +6688,7 @@ msgstr "AVÍS: No ha estat possible fer el resum de la part descarregada - conju
 #: src/PartFile.cpp
 #, c-format
 msgid "ERROR: Unable to hash downloaded part - hashset incomplete (%s). This should never happen"
-msgstr "ERROR: No ha estat possible fer el resum de la part descarregada - conjunt de resums incomplet (%s). Açò no hauria de passar mai."
+msgstr "ERROR: no s'ha pogut calcular el resum (hash) de la part descarregada - conjunt de resums (hashset) incomplet (%s). Això no hauria de passar mai"
 
 #: src/PartFile.cpp
 #, c-format
@@ -7739,7 +7738,7 @@ msgstr "Ja hi ha una descàrrega de la llista de servidors en curs."
 
 #: src/ServerList.cpp
 msgid "No server list sources configured"
-msgstr ""
+msgstr "No s'han configurat fonts de la llista de servidors"
 
 #: src/ServerList.cpp
 #, c-format

@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-21 09:04+0000\n"
+"PO-Revision-Date: 2026-10-22 19:15+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
 "Language: zh_CN\n"
@@ -2328,24 +2328,25 @@ msgid "Invalid eD2k link! ERROR: %s"
 msgstr "非法 eD2k 链接！错误: %s"
 
 #: src/EditServerListDlg.cpp
-#, fuzzy
 msgid "Edit server list sources"
-msgstr "编辑服务器列表"
+msgstr "编辑服务器列表来源"
 
 #: src/EditServerListDlg.cpp
 msgid ""
 "Enter one server.met URL per line.\n"
 "Saving replaces the source list and removes comment lines."
 msgstr ""
+"每行输入一个 server.met URL。\n"
+"保存替换来源列表并删除注释行。"
 
 #: src/EditServerListDlg.cpp src/ExternalConn.cpp
 #, c-format
 msgid "Could not save server list sources to %s. Check the URLs and file permissions."
-msgstr ""
+msgstr "无法保存服务器列表来源到 %s。检查 URL 和文件权限。"
 
 #: src/EditServerListDlg.cpp
 msgid "addresses.dat in the daemon configuration directory"
-msgstr ""
+msgstr "daemon 配置目录中的 addresses.dat"
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5198,9 +5199,8 @@ msgid "retries"
 msgstr "次连接失败，则删除该服务器"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Edit sources…"
-msgstr "文件源:"
+msgstr "编辑来源…"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5807,18 +5807,16 @@ msgid "Click this button to reset the log."
 msgstr "按此按钮清空日志。"
 
 #: src/muuli_wdr.cpp src/ServerWnd.cpp
-#, fuzzy
 msgid "Update server list"
-msgstr "编辑服务器列表"
+msgstr "更新服务器列表"
 
 #: src/muuli_wdr.cpp
 msgid "One-off URL:"
-msgstr ""
+msgstr "一次性 URL："
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Download once"
-msgstr "已下载"
+msgstr "下载一次"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -7735,11 +7733,11 @@ msgstr "写入“server.met”时发生 IO 错误： %s"
 
 #: src/ServerList.cpp
 msgid "A server list download is already in progress."
-msgstr ""
+msgstr "已经在下载服务器列表。"
 
 #: src/ServerList.cpp
 msgid "No server list sources configured"
-msgstr ""
+msgstr "未配置服务器列表来源"
 
 #: src/ServerList.cpp
 #, c-format
@@ -7960,11 +7958,11 @@ msgstr "aMule图形用户界面日志"
 
 #: src/ServerWnd.cpp
 msgid "Download and merge every saved source"
-msgstr ""
+msgstr "下载并合并每个保存的来源"
 
 #: src/ServerWnd.cpp
 msgid "Download this server.met URL once without saving it."
-msgstr ""
+msgstr "下载一次这个 server.met URL，但不保存这个 URL。"
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
