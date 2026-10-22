@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-21 09:04+0000\n"
+"PO-Revision-Date: 2026-10-22 09:54+0000\n"
 "Last-Translator: minterior <minterior@gmail.com>\n"
 "Language-Team: Català\n"
 "Language: ca\n"
@@ -3089,9 +3089,9 @@ msgid ""
 "peers can reach you (a \"HighID\"). Turn off if your router\n"
 "doesn't support UPnP or you forward ports manually."
 msgstr ""
-"Permet que l'aMule demani al vostre encaminador que reenviï els ports\n"
-"de dalt perquè altres parells us puguin arribar (una «HighID»). Desactiveu-ho\n"
-"si el vostre encaminador no admet UPnP o si reenvieu els ports manualment."
+"Permet a l'aMule demanar al vostre encaminador reenviar els ports de dalt\n"
+"perquè altres parells arribin a vosaltres (una \"ID Alta\"). Desactiveu-ho si el\n"
+"vostre encaminador no admet UPnP o si reenvieu els ports manualment."
 
 #: src/FirstRunWizard.cpp
 msgid "Bootstrap files"
@@ -3492,7 +3492,7 @@ msgstr "Nodes (%u)"
 
 #: src/KadDlg.cpp
 msgid "Invalid ip to bootstrap"
-msgstr "IP invàlida per a l'arrancada"
+msgstr "IP no vàlida per inicialitzar"
 
 #: src/KadDlg.cpp
 msgid "Invalid port to bootstrap"
@@ -4468,7 +4468,7 @@ msgstr "Extensió"
 
 #: src/muuli_wdr.cpp
 msgid "Min Size"
-msgstr "Mida Mín."
+msgstr "Mida mínima"
 
 #: src/muuli_wdr.cpp
 msgid "Bytes"
@@ -4488,7 +4488,7 @@ msgstr "GiB"
 
 #: src/muuli_wdr.cpp
 msgid "Max Size"
-msgstr "Mida Màx."
+msgstr "Mida màxima"
 
 #: src/muuli_wdr.cpp
 msgid "Availability"
@@ -5080,7 +5080,7 @@ msgstr "Aquest port UDP és utilitzat per sol·licituds eD2k i Kad exteses"
 
 #: src/muuli_wdr.cpp
 msgid "UPnP TCP Port (Optional):"
-msgstr "UPnP Port TCP (Opcional):"
+msgstr "Port TCP UPnP (opcional):"
 
 #: src/muuli_wdr.cpp
 msgid "Bind local address to IP (empty for any):"
@@ -5681,7 +5681,7 @@ msgstr "Port TCP:"
 
 #: src/muuli_wdr.cpp
 msgid "Enable UPnP port forwarding on the EC port"
-msgstr "Activa l'encaminament UPnP al port de connexions externes"
+msgstr "Activa l'encaminament UPnP al port EC (connexions externes)"
 
 #: src/muuli_wdr.cpp src/utils/wxCas/src/wxcasprefs.cpp
 msgid "Password"
@@ -5745,7 +5745,7 @@ msgstr "Plantilla web"
 
 #: src/muuli_wdr.cpp
 msgid "Full rights password"
-msgstr "Contrasenya de l'administrador:"
+msgstr "Contrasenya amb drets totals"
 
 #: src/muuli_wdr.cpp
 msgid "Enable Low rights User"
@@ -5753,19 +5753,19 @@ msgstr "Habilita l'usuari convidat"
 
 #: src/muuli_wdr.cpp
 msgid "Low rights password"
-msgstr "Contrasenya del convidat:"
+msgstr "Contrasenya amb drets restringits"
 
 #: src/muuli_wdr.cpp
 msgid "Enable UPnP port forwarding of the web server port"
-msgstr "Activa redirecció de ports UPnP en el port del servidor web"
+msgstr "Activa l'encaminament UPnP del port del servidor web"
 
 #: src/muuli_wdr.cpp
 msgid "Web server UPnP TCP port (Optional)"
-msgstr "Port TCP del servidor web (Opcional):"
+msgstr "Port TCP UPnP del servidor web (opcional)"
 
 #: src/muuli_wdr.cpp
 msgid "Page Refresh Time (in secs)"
-msgstr "Temps de refresc de la pàgina (en segons):"
+msgstr "Temps de refresc de la pàgina (en segons)"
 
 #: src/muuli_wdr.cpp
 msgid "Enable Gzip compression"
@@ -5808,13 +5808,12 @@ msgid "Click this button to reset the log."
 msgstr "Feu clic per a reiniciar el registre."
 
 #: src/muuli_wdr.cpp src/ServerWnd.cpp
-#, fuzzy
 msgid "Update server list"
-msgstr "Edita la llista de servidors"
+msgstr "Actualitza la llista de servidors"
 
 #: src/muuli_wdr.cpp
 msgid "One-off URL:"
-msgstr ""
+msgstr "URL d'ús puntual:"
 
 #: src/muuli_wdr.cpp
 #, fuzzy
@@ -7736,7 +7735,7 @@ msgstr "Error d'E/S en escriure «server.met»: %s"
 
 #: src/ServerList.cpp
 msgid "A server list download is already in progress."
-msgstr ""
+msgstr "Ja hi ha una descàrrega de la llista de servidors en curs."
 
 #: src/ServerList.cpp
 msgid "No server list sources configured"
@@ -7961,11 +7960,11 @@ msgstr "Registre de l'aMuleGUI"
 
 #: src/ServerWnd.cpp
 msgid "Download and merge every saved source"
-msgstr ""
+msgstr "Descarrega i fusiona totes les fonts desades"
 
 #: src/ServerWnd.cpp
 msgid "Download this server.met URL once without saving it."
-msgstr ""
+msgstr "Descarrega aquesta URL de server.met un cop sense desar-la."
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
