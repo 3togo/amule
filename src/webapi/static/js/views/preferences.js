@@ -168,6 +168,13 @@ const TABS = [
       { key: "ich_enabled", type: "bool" },
       { key: "trust_unverified_aich_hashes", type: "bool" },
     ] },
+    // Without the capability the group is hidden and both fields are skipped on save.
+    { legendKey: "prefs_group_kad_repair_hashes",
+      hideWhen: (v) => v["kad.protocol10_supported"] === false, fields: [
+      { key: "protocol10_supported", type: "bool", hidden: true, cat: "kad" },
+      { key: "protocol10_enabled", type: "bool", cat: "kad", gatedBy: "protocol10_supported" },
+      { key: "strict_aich_publishers", type: "bool", sub: true, cat: "kad", gatedBy: ["protocol10_supported", "protocol10_enabled"] },
+    ] },
     { legendKey: "prefs_group_media", fields: [
       { key: "media_metadata_enabled", type: "bool" },
       { key: "ffprobe_path", type: "text", sub: true, gatedBy: "media_metadata_enabled" },
