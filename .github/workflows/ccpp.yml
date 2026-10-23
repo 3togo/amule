@@ -239,9 +239,22 @@ jobs:
       # drops the executable bit (packaging.yml chmods every mach-o back after
       # its download for the same reason) and because it pins the layout
       # run-all.sh discovers binaries through.
+      #
+      # runtime-deps.txt is the Depends field Debian packaging would give these
+      # binaries. dpkg-shlibdeps fails on a library that no package ships, and
+      # it needs a debian/control, but a stub one is enough.
       - name: pack amuled + amuleapi for the curl smoke
         if: matrix.build_type == 'Release'
-        run: tar -cf curl-smoke-binaries.tar build/src/amuled build/src/webapi/amuleapi
+        run: |
+          shlibdeps="$RUNNER_TEMP/shlibdeps"
+          mkdir -p "$shlibdeps/debian"
+          printf 'Source: amule\n\nPackage: amule\nArchitecture: any\n' > "$shlibdeps/debian/control"
+          depends=$(cd "$shlibdeps" && dpkg-shlibdeps -O \
+            "$GITHUB_WORKSPACE/build/src/amuled" "$GITHUB_WORKSPACE/build/src/webapi/amuleapi")
+          printf '%s\n' "${depends#shlibs:Depends=}" > runtime-deps.txt
+          cat runtime-deps.txt
+          tar -cf curl-smoke-binaries.tar \
+            build/src/amuled build/src/webapi/amuleapi runtime-deps.txt
       - uses: actions/upload-artifact@v7
         if: matrix.build_type == 'Release'
         with:
@@ -388,14 +401,15 @@ jobs:
           name: curl-smoke-binaries
       - name: unpack amuled + amuleapi
         run: tar -xf curl-smoke-binaries.tar
-      # Nothing is compiled here, but the binaries still need their shared
-      # libraries. Installing the same -dev list is what keeps those matched
-      # to the build job; naming runtime sonames instead would drift the
-      # moment that list changes.
+      # The build job derived runtime-deps.txt from these exact binaries, so it
+      # stays matched without installing compilers and development headers here.
+      # apt-get satisfy takes it as a Depends field, versions included.
       - name: install runtime deps
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ${{ env.cmake_ubuntu_deps }} jq
+          apt_options=(-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30)
+          sudo apt-get "${apt_options[@]}" update
+          test -s runtime-deps.txt
+          sudo apt-get "${apt_options[@]}" satisfy -y --no-install-recommends "$(cat runtime-deps.txt)" jq
       # Every peer-to-peer switch is off, so the daemon joins no ed2k server,
       # bootstraps no Kad and opens no UPnP mapping. It still makes the two
       # ordinary startup fetches over HTTPS -- the release check and the GeoIP
