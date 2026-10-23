@@ -168,11 +168,7 @@ const TABS = [
       { key: "ich_enabled", type: "bool" },
       { key: "trust_unverified_aich_hashes", type: "bool" },
     ] },
-    // File repair hashes over Kad (issue #2037): the desktop keeps these on the Files
-    // tab as well, right after the I.C.H. group. They belong to the "kad" API category,
-    // like update_url on the Servers tab. A daemon that does not report the capability
-    // hides the whole group (as the geoip tab does), and collect() drops both fields for
-    // it through the gatedBy skip -- the API answers 409 for either one there.
+    // Without the capability the group is hidden and both fields are skipped on save.
     { legendKey: "prefs_group_kad_repair_hashes",
       hideWhen: (v) => v["kad.protocol10_supported"] === false, fields: [
       { key: "protocol10_supported", type: "bool", hidden: true, cat: "kad" },

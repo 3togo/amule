@@ -1831,12 +1831,7 @@ wxSizer *PreferencesFilesTab( wxWindow *parent, bool call_fit, bool set_sizer )
 
     item0->Add( item1, wxSizerFlags().Expand().CenterVertical().Border(wxALL, 0) );
 
-    // File repair hashes over Kad -- the AICH sharing/publishing controls. They used to
-    // sit on the Connection tab; they concern file repair data, not connecting, so they
-    // live here right after the I.C.H. group they belong with (issue #2037). The enable
-    // dependency between the two boxes (the strict filter only applies while hashes are
-    // shared) and the daemon-capability gating are enforced by control ID in
-    // PrefsUnifiedDlg, so they follow the boxes here.
+    // AICH over Kad, next to the I.C.H. group it relates to.
     wxStaticBox *kadProtoBox = new wxStaticBox( parent, -1, _("File repair hashes over Kad") );
     wxStaticBoxSizer *kadProtoSizer = new wxStaticBoxSizer( kadProtoBox, wxVERTICAL );
 
