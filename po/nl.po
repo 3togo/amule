@@ -5119,50 +5119,6 @@ msgstr "Autoverbind bij het opstarten"
 msgid "Reconnect on loss"
 msgstr "Verbind opnieuw bij verbroken verbinding"
 
-#: src/muuli_wdr.cpp
-msgid "File repair hashes over Kad"
-msgstr "Bestandsreparatiehashes over Kad"
-
-#: src/muuli_wdr.cpp
-msgid "Share and use file repair hashes (AICH) over Kad"
-msgstr "Deel en gebruik bestandsreparatiehashes (AICH) over Kad"
-
-#: src/muuli_wdr.cpp
-msgid ""
-"Share file repair hashes with other Kad nodes and learn them from Kad searches. These hashes can help aMule repair damaged download data without downloading an entire part again. aMule uses a hash for repair only once enough independent peers report the same one.\n"
-"\n"
-"Very old Kad clients (before eMule 0.49b) may miss search results containing these hashes. If you notice missing results, try turning this option off.\n"
-"\n"
-"Turning this option off discards the repair hashes stored in your Kad index on the next save. Turning it back on starts collecting them again.\n"
-"\n"
-"Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
-msgstr ""
-"Deel bestandsreparatiehashes met andere Kad nodes en leer over hen door Kad zoekopdrachten. Deze hashes kunnen aMule helpen om beschadigde downloadgegevens te repareren zonder het hele deel opnieuw te downloaden. aMule gebruikt alleen een hash voor reparatie als genoeg onafhankelijke peers dezelfde hash rapporteren.\n"
-"\n"
-"Hele oude Kad clients (voor eMule versie 0.49b) kunnen zoekresultaten die deze hashes bevatten missen. Als u ontbrekende zoekresultaten opmerkt, probeer dan deze optie uit te schakelen.\n"
-"\n"
-"Door deze optie uit te schakelen gooit u ook de reparatiehashes die zijn opgeslagen in uw Kad-index weg bij de volgende keer opslaan. Het opnieuw inschakelen laat het verzamelen opnieuw beginnen.\n"
-"\n"
-"Technisch detail: door dit in te schakelen adverteert Kad-protocolversie 0x0a en voegt het AICH-hashes toe aan sleutelwoordpublicaties en -zoekresultaten."
-
-#: src/muuli_wdr.cpp
-msgid "Ignore repair hashes from Kad nodes too old to support them"
-msgstr "Negeer reparatiehashes van Kad-nodes die te oud zijn om ze te ondersteunen"
-
-#: src/muuli_wdr.cpp
-msgid ""
-"Only applies when sharing and using file repair hashes over Kad is enabled. Ignore hashes published by nodes that report a Kad version too old to support them.\n"
-"\n"
-"A node's reported version may be out of date or inaccurate, so this can discard valid hashes and does not make accepted hashes trustworthy. Nodes whose version is unknown are still accepted.\n"
-"\n"
-"Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
-msgstr ""
-"Is alleen van toepassing als delen en gebruik van bestandsreparatiehashes over Kad is ingeschakeld. Negeer hashes die gepubliceerd zijn door nodes die een Kad-versie rapporteren die te oud zijn om de hashes te ondersteunen.\n"
-"\n"
-"De gerapporteerde versie van een node kan verouderd of incorrect zijn dus dit kan ook geldige hashes negeren, en maakt geaccepteerde hashes ook niet betrouwbaar. Nodes waarvan de versie onbekend is worden nog wel geaccepteerd.\n"
-"\n"
-"Technisch detail: verwerpt AICH-publicatielabels van nodes die adverteren met Kad-protocolversies voor 0x09."
-
 #: src/muuli_wdr.cpp src/PeerCapabilities.h
 msgid "IPv6"
 msgstr "IPv6"
@@ -5326,6 +5282,50 @@ msgstr "Inschakelen"
 #: src/muuli_wdr.cpp
 msgid "Advanced I.C.H. trusts every hash (not recommended)"
 msgstr "Geavanceerde I.C.H. vertrouwt elke hash (niet aanbevolen)"
+
+#: src/muuli_wdr.cpp
+msgid "File repair hashes over Kad"
+msgstr "Bestandsreparatiehashes over Kad"
+
+#: src/muuli_wdr.cpp
+msgid "Share and use file repair hashes (AICH) over Kad"
+msgstr "Deel en gebruik bestandsreparatiehashes (AICH) over Kad"
+
+#: src/muuli_wdr.cpp
+msgid ""
+"Share file repair hashes with other Kad nodes and learn them from Kad searches. These hashes can help aMule repair damaged download data without downloading an entire part again. aMule uses a hash for repair only once enough independent peers report the same one.\n"
+"\n"
+"Very old Kad clients (before eMule 0.49b) may miss search results containing these hashes. If you notice missing results, try turning this option off.\n"
+"\n"
+"Turning this option off discards the repair hashes stored in your Kad index on the next save. Turning it back on starts collecting them again.\n"
+"\n"
+"Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
+msgstr ""
+"Deel bestandsreparatiehashes met andere Kad nodes en leer over hen door Kad zoekopdrachten. Deze hashes kunnen aMule helpen om beschadigde downloadgegevens te repareren zonder het hele deel opnieuw te downloaden. aMule gebruikt alleen een hash voor reparatie als genoeg onafhankelijke peers dezelfde hash rapporteren.\n"
+"\n"
+"Hele oude Kad clients (voor eMule versie 0.49b) kunnen zoekresultaten die deze hashes bevatten missen. Als u ontbrekende zoekresultaten opmerkt, probeer dan deze optie uit te schakelen.\n"
+"\n"
+"Door deze optie uit te schakelen gooit u ook de reparatiehashes die zijn opgeslagen in uw Kad-index weg bij de volgende keer opslaan. Het opnieuw inschakelen laat het verzamelen opnieuw beginnen.\n"
+"\n"
+"Technisch detail: door dit in te schakelen adverteert Kad-protocolversie 0x0a en voegt het AICH-hashes toe aan sleutelwoordpublicaties en -zoekresultaten."
+
+#: src/muuli_wdr.cpp
+msgid "Ignore repair hashes from Kad nodes too old to support them"
+msgstr "Negeer reparatiehashes van Kad-nodes die te oud zijn om ze te ondersteunen"
+
+#: src/muuli_wdr.cpp
+msgid ""
+"Only applies when sharing and using file repair hashes over Kad is enabled. Ignore hashes published by nodes that report a Kad version too old to support them.\n"
+"\n"
+"A node's reported version may be out of date or inaccurate, so this can discard valid hashes and does not make accepted hashes trustworthy. Nodes whose version is unknown are still accepted.\n"
+"\n"
+"Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
+msgstr ""
+"Is alleen van toepassing als delen en gebruik van bestandsreparatiehashes over Kad is ingeschakeld. Negeer hashes die gepubliceerd zijn door nodes die een Kad-versie rapporteren die te oud zijn om de hashes te ondersteunen.\n"
+"\n"
+"De gerapporteerde versie van een node kan verouderd of incorrect zijn dus dit kan ook geldige hashes negeren, en maakt geaccepteerde hashes ook niet betrouwbaar. Nodes waarvan de versie onbekend is worden nog wel geaccepteerd.\n"
+"\n"
+"Technisch detail: verwerpt AICH-publicatielabels van nodes die adverteren met Kad-protocolversies voor 0x09."
 
 #: src/muuli_wdr.cpp src/PrefsUnifiedDlg.cpp
 msgid "Media metadata extraction"
@@ -6829,8 +6829,8 @@ msgstr ""
 "    %PARTNAME - alleen bestandsnaam"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Tray icon support requires libayatana-appindicator3 at compile time."
-msgstr "Ondersteuning voor systeemvakpictogram vereist libayatana-appindicator3 tijdens het compileren."
+msgid "No system tray found. Use a desktop with a system tray, or build aMule with libayatana-appindicator3."
+msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Not available on Wayland: the protocol does not report when a window is minimized, so this option cannot intercept the system minimize button. Workaround: launch aMule with `GDK_BACKEND=x11` to use XWayland instead."
@@ -10191,6 +10191,9 @@ msgstr "Kad kon de opgeslagen index niet laden. Bestaande indexbestanden zijn be
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr "Kad kon een index niet opslaan. De vorige kopie van dat bestand is bewaard."
+
+#~ msgid "Tray icon support requires libayatana-appindicator3 at compile time."
+#~ msgstr "Ondersteuning voor systeemvakpictogram vereist libayatana-appindicator3 tijdens het compileren."
 
 #~ msgid "List"
 #~ msgstr "Lijst"
