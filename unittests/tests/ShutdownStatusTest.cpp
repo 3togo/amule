@@ -1,5 +1,7 @@
 // Copyright (c) 2026 aMule Team
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "GuiTestDiagnostics.h"
+
 #include <wx/wx.h>
 
 #include "InternalEvents.h"
@@ -32,9 +34,11 @@ static void Require(bool condition, const char *message)
 
 int main(int argc, char **argv)
 {
+	InstallGuiTestDiagnostics();
 	if (!wxEntryStart(argc, argv)) {
 		return 77;
 	}
+	RestoreGuiTestLog();
 	int result = 0;
 	if (!wxTheApp->CallOnInit()) {
 		result = 1;

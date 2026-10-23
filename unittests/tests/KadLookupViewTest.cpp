@@ -22,6 +22,8 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "GuiTestDiagnostics.h"
+
 #include "KadLookupView.h"
 #include "kademlia/utils/LookupDiagnosticsEC.h"
 #include <stdexcept>
@@ -126,9 +128,11 @@ static void VerifyClosedPendingView()
 
 int main(int argc, char **argv)
 {
+	InstallGuiTestDiagnostics();
 	if (!wxEntryStart(argc, argv)) {
 		return 77;
 	}
+	RestoreGuiTestLog();
 	int result = 0;
 	if (!wxTheApp->CallOnInit()) {
 		result = 1;

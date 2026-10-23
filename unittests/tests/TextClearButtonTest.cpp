@@ -1,6 +1,8 @@
 // Copyright (c) 2026 aMule Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "GuiTestDiagnostics.h"
+
 #include <wx/wx.h>
 #include <wx/evtloop.h>
 
@@ -177,11 +179,12 @@ void CheckRow(wxWindow *field, wxSizer *outer)
 
 int main(int argc, char **argv)
 {
-	delete wxLog::SetActiveTarget(new wxLogStderr);
+	InstallGuiTestDiagnostics();
 	if (!wxEntryStart(argc, argv)) {
 		std::cerr << "No GUI display: clear-button checks skipped\n";
 		return 77;
 	}
+	RestoreGuiTestLog();
 	if (!wxTheApp->CallOnInit()) {
 		wxEntryCleanup();
 		return 1;

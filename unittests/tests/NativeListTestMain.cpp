@@ -22,6 +22,8 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "GuiTestDiagnostics.h"
+
 #include "NativeListTest.h"
 
 #include <wx/wx.h>
@@ -51,10 +53,12 @@ void Check(bool condition, const char *message)
 
 int main(int argc, char **argv)
 {
+	InstallGuiTestDiagnostics();
 	if (!wxEntryStart(argc, argv)) {
 		std::cerr << "No GUI display available; skipping native list tests\n";
 		return 77;
 	}
+	RestoreGuiTestLog();
 	int result = 0;
 	if (!wxTheApp->CallOnInit()) {
 		result = 1;

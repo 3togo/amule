@@ -22,6 +22,8 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "GuiTestDiagnostics.h"
+
 #include <wx/wx.h>
 
 #include "DialogLayout.h"
@@ -380,10 +382,12 @@ int main(int argc, char **argv)
 {
 	// GUI tests need a display (for example xvfb-run on Linux CI). Do not report
 	// success when the platform cannot initialize its GUI backend.
+	InstallGuiTestDiagnostics();
 	if (!wxEntryStart(argc, argv)) {
 		std::cerr << "No GUI display available; skipping dialog layout tests\n";
 		return 77;
 	}
+	RestoreGuiTestLog();
 	int result = 0;
 	if (!wxTheApp->CallOnInit()) {
 		result = 1;

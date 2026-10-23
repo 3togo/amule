@@ -22,6 +22,8 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA
 //
 
+#include "GuiTestDiagnostics.h"
+
 #include <wx/wx.h>
 #include "KadContactHistogram.h"
 #include <iostream>
@@ -272,9 +274,11 @@ static void VerifyRendering()
 int main(int argc, char **argv)
 {
 	wxInitAllImageHandlers();
+	InstallGuiTestDiagnostics();
 	if (!wxEntryStart(argc, argv)) {
 		return 77;
 	}
+	RestoreGuiTestLog();
 	int result = 0;
 	if (!wxTheApp->CallOnInit()) {
 		result = 1;

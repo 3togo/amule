@@ -24,8 +24,9 @@
 
 // GUI rendering regression test. CI requires a display; local headless runs may skip.
 
+#include "GuiTestDiagnostics.h"
+
 #include <wx/app.h>
-#include <wx/log.h>
 #include <wx/frame.h>
 #include <wx/mstream.h>
 #include <wx/image.h>
@@ -157,44 +158,6 @@ private:
 	std::thread m_thread; // Last: it starts running in the constructor.
 };
 
-// Keep diagnostics visible to CTest without opening modal dialogs. Optional
-// GUI startup may skip; once initialized, every warning or error is fatal.
-// The flag lives outside the target: wxEntryStart() deletes it on success.
-static bool g_startupLogFailed = false;
-
-class FailingLogStderr : public wxLogStderr
-{
-public:
-	explicit FailingLogStderr(bool failImmediately)
-	: m_failImmediately(failImmediately)
-	{
-	}
-
-protected:
-	void DoLogRecord(wxLogLevel level, const wxString &message, const wxLogRecordInfo &info) override
-	{
-		wxLogStderr::DoLogRecord(level, message, info);
-		if (level == wxLOG_Error || level == wxLOG_Warning) {
-			g_startupLogFailed = true;
-			if (m_failImmediately) {
-				Flush();
-				std::exit(EXIT_FAILURE);
-			}
-		}
-	}
-
-private:
-	bool m_failImmediately;
-};
-
-static void IconArtworkAssertHandler(
-	const wxString &file, int line, const wxString &func, const wxString &cond, const wxString &msg)
-{
-	std::cerr << file.ToUTF8().data() << ":" << line << ": " << func.ToUTF8().data() << ": assertion "
-		  << cond.ToUTF8().data() << " failed: " << msg.ToUTF8().data() << "\n";
-	std::exit(EXIT_FAILURE);
-}
-
 class CheckApp : public wxApp
 {
 public:
@@ -304,17 +267,12 @@ int main(int argc, char **argv)
 	Phase("wx startup");
 	// Cover startup without turning an optional headless skip into a failure.
 	const bool requireGui = std::getenv("AMULE_ICON_TEST_REQUIRE_GUI") != nullptr;
-	delete wxLog::SetActiveTarget(new FailingLogStderr(requireGui));
-	wxSetAssertHandler(IconArtworkAssertHandler);
+	InstallGuiTestDiagnostics(requireGui);
 	if (!wxEntryStart(argc, argv)) {
 		std::cerr << "GUI initialization failed: no native rendering checks ran\n";
 		return requireGui ? 1 : 77;
 	}
-	// Without a target, wx would create wxLogGui, whose message boxes block a test.
-	delete wxLog::SetActiveTarget(new FailingLogStderr(true));
-	if (g_startupLogFailed) {
-		return 1;
-	}
+	RestoreGuiTestLog();
 	Phase("OnInit");
 	if (!wxTheApp->CallOnInit()) {
 		wxEntryCleanup();
