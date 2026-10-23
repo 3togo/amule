@@ -1849,7 +1849,7 @@ wxSizer *PreferencesFilesTab( wxWindow *parent, bool call_fit, bool set_sizer )
           "next save. Turning it back on starts collecting them again.\n\n"
           "Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH "
           "hashes to keyword publish and search results.") );
-    kadProtoSizer->Add( kadProtoChk, wxSizerFlags().CenterVertical().Border(wxLEFT|wxRIGHT|wxBOTTOM, 5) );
+    kadProtoSizer->Add( kadProtoChk, wxSizerFlags().CenterVertical() );
 
     wxCheckBox *strictAichChk = new wxCheckBox( kadProtoBox, IDC_KADSTRICTAICHPUBLISHERS,
         _("Ignore repair hashes from Kad nodes too old to support them"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -1862,7 +1862,7 @@ wxSizer *PreferencesFilesTab( wxWindow *parent, bool call_fit, bool set_sizer )
           "is unknown are still accepted.\n\n"
           "Technical detail: rejects AICH publish tags from nodes advertising Kad protocol "
           "versions below 0x09.") );
-    kadProtoSizer->Add( strictAichChk, wxSizerFlags().CenterVertical().Border(wxLEFT|wxRIGHT|wxBOTTOM, 5) );
+    kadProtoSizer->Add( strictAichChk, wxSizerFlags().CenterVertical() );
 
     item0->Add( kadProtoSizer, wxSizerFlags().Expand().CenterVertical().Border(wxALL, 0) );
 
