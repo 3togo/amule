@@ -13,6 +13,7 @@ on:
       - 'scripts/check-unique-ids.py'
       - 'scripts/check-tray-backend-build.py'
       - '.github/workflows/ccpp.yml'
+      - '.github/apt-ci.conf'
   pull_request:
     branches: [ "**" ]
     paths:
@@ -25,6 +26,7 @@ on:
       - 'scripts/check-unique-ids.py'
       - 'scripts/check-tray-backend-build.py'
       - '.github/workflows/ccpp.yml'
+      - '.github/apt-ci.conf'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref == 'refs/heads/master' && github.sha || '' }}
@@ -188,7 +190,10 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.build_type }}-ccache-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
           restore-keys: ${{ runner.os }}-${{ matrix.build_type }}-ccache-
       - name: install deps
+        id: ubuntu-deps
+        timeout-minutes: 15
         run: |
+          sudo cp .github/apt-ci.conf /etc/apt/apt.conf.d/99-ci
           sudo apt-get update
           sudo apt-get install -y ${{ env.cmake_ubuntu_deps }}
           # Exercise grouped numbers and decimal commas in the calculator tests.
@@ -221,7 +226,7 @@ jobs:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-${{ matrix.build_type }}-ccache-${{ github.run_id }}
       - name: ccache stats
-        if: always()
+        if: always() && steps.ubuntu-deps.outcome == 'success'
         run: ccache --show-stats
       - name: run tests
         run: |
@@ -303,7 +308,10 @@ jobs:
           key: ${{ runner.os }}-experimental-${{ matrix.build_type }}-ccache-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
           restore-keys: ${{ runner.os }}-experimental-${{ matrix.build_type }}-ccache-
       - name: install deps
+        id: ubuntu-deps
+        timeout-minutes: 15
         run: |
+          sudo cp .github/apt-ci.conf /etc/apt/apt.conf.d/99-ci
           sudo apt-get update
           sudo apt-get install -y ${{ env.cmake_ubuntu_deps }}
           # Exercise grouped numbers and decimal commas in the calculator tests.
@@ -330,7 +338,7 @@ jobs:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-experimental-${{ matrix.build_type }}-ccache-${{ github.run_id }}
       - name: ccache stats
-        if: always()
+        if: always() && steps.ubuntu-deps.outcome == 'success'
         run: ccache --show-stats
       - name: run tests
         run: |
@@ -348,19 +356,22 @@ jobs:
   cmake_minimum_version:
     name: CMake minimum version (configure only)
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     env:
       CMAKE_MIN: 3.12.4
       CMAKE_MIN_SHA256: 486edd6710b5250946b4b199406ccbf8f567ef0e23cfe38f7938b8c78a2ffa5f
     steps:
       - uses: actions/checkout@v7
       - name: install deps
+        timeout-minutes: 15
         run: |
+          sudo cp .github/apt-ci.conf /etc/apt/apt.conf.d/99-ci
           sudo apt-get update
           sudo apt-get install -y ${{ env.cmake_ubuntu_deps }}
       - uses: ./.github/actions/ngtcp2
       - name: fetch CMake ${{ env.CMAKE_MIN }}
         run: |
-          curl -sSfL -o cmake.tar.gz "https://github.com/Kitware/CMake/releases/download/v${CMAKE_MIN}/cmake-${CMAKE_MIN}-Linux-x86_64.tar.gz"
+          curl --retry 3 --connect-timeout 30 --max-time 180 -sSfL -o cmake.tar.gz "https://github.com/Kitware/CMake/releases/download/v${CMAKE_MIN}/cmake-${CMAKE_MIN}-Linux-x86_64.tar.gz"
           echo "${CMAKE_MIN_SHA256}  cmake.tar.gz" | sha256sum -c -
           mkdir "$RUNNER_TEMP/cmake-min"
           tar -xzf cmake.tar.gz -C "$RUNNER_TEMP/cmake-min" --strip-components=1
@@ -406,10 +417,10 @@ jobs:
       # apt-get satisfy takes it as a Depends field, versions included.
       - name: install runtime deps
         run: |
-          apt_options=(-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30)
-          sudo apt-get "${apt_options[@]}" update
+          sudo cp .github/apt-ci.conf /etc/apt/apt.conf.d/99-ci
+          sudo apt-get update
           test -s runtime-deps.txt
-          sudo apt-get "${apt_options[@]}" satisfy -y --no-install-recommends "$(cat runtime-deps.txt)" jq
+          sudo apt-get satisfy -y "$(cat runtime-deps.txt)" jq
       # Every peer-to-peer switch is off, so the daemon joins no ed2k server,
       # bootstraps no Kad and opens no UPnP mapping. It still makes the two
       # ordinary startup fetches over HTTPS -- the release check and the GeoIP
