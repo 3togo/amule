@@ -7465,6 +7465,11 @@ msgstr ""
 
 #: src/ServerConnect.cpp
 #, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr ""
+
+#: src/ServerConnect.cpp
+#, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr ""
 

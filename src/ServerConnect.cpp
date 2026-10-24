@@ -578,11 +578,35 @@ void CServerConnect::CheckForTimeout()
 			CServerSocket *value = it->second;
 			++it;
 			if (!value->IsSolving()) {
-				AddLogLineN(CFormat(_("Connection attempt to %s (%s:%i) timed out.")) %
-					    value->info % value->cur_server->GetFullIP() %
-					    value->cur_server->GetPort());
+				// Retry with the server-list entry, not the socket-owned copy
+				// which DestroySocket() deletes.
+				CServer *retryServer = nullptr;
+				if (singleconnecting && value->IsServerCryptEnabledConnection() &&
+					!thePrefs::IsClientCryptLayerRequired()) {
+					retryServer = theApp->serverlist->GetServerByAddress(
+						value->cur_server->GetAddress(),
+						value->cur_server->GetPort());
+				}
+
+				if (retryServer) {
+					AddLogLineN(CFormat(_("Connection attempt to %s (%s:%i) timed out; "
+							      "retrying without obfuscation.")) %
+						    value->info % retryServer->GetFullIP() %
+						    retryServer->GetPort());
+				} else {
+					AddLogLineN(
+						CFormat(_("Connection attempt to %s (%s:%i) timed out.")) %
+						value->info % value->cur_server->GetFullIP() %
+						value->cur_server->GetPort());
+				}
 
 				connectionattemps.erase(key);
+				if (retryServer) {
+					DestroySocket(value);
+					ConnectToServer(retryServer, false, true);
+					// The retry replaced the whole attempt map, so this sweep is over.
+					break;
+				}
 
 				TryAnotherConnectionrequest();
 				DestroySocket(value);
