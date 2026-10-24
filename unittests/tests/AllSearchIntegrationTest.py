@@ -228,10 +228,42 @@ def stored_result(name, children=(), networks=None):
             + b''.join(children))
 
 
-def stored_search(results, kind=C['EC_SEARCH_ALL']):
+def stored_string_tag(name, value):
+    """A named TAGTYPE_STRING param tag, as CFileDataIO::WriteTag lays it out."""
+    name = name.encode()
+    value = value.encode()
+    return b'\x02' + struct.pack('<H', len(name)) + name + struct.pack('<H', len(value)) + value
+
+
+def stored_int_tag(name, value):
+    """A named integer param tag in the smallest type CTagVarInt picks."""
+    name = name.encode()
+    if value <= 0xFF:
+        return b'\x09' + struct.pack('<H', len(name)) + name + struct.pack('<B', value)
+    if value <= 0xFFFF:
+        return b'\x08' + struct.pack('<H', len(name)) + name + struct.pack('<H', value)
+    if value <= 0xFFFFFFFF:
+        return b'\x03' + struct.pack('<H', len(name)) + name + struct.pack('<I', value)
+    return b'\x0b' + struct.pack('<H', len(name)) + name + struct.pack('<Q', value)
+
+
+def stored_param_tags(*tags):
+    """The 0x02 start-parameter block: a count byte followed by the tags."""
+    if not tags:
+        return b''
+    return bytes([len(tags)]) + b''.join(tags)
+
+
+def stored_search(results, kind=C['EC_SEARCH_ALL'], params=b''):
     query = b'restored'
-    return (struct.pack('<BIIH', 1, 1, 123, len(query)) + query
-            + struct.pack('<BQI', kind, int(time.time()), len(results)) + b''.join(results))
+    data = (struct.pack('<BIIH', 1, 1, 123, len(query)) + query
+            + struct.pack('<BQ', kind, int(time.time()))
+            + struct.pack('<I', len(results)) + b''.join(results))
+    # Start parameters are a trailing block after the records: marker, count, then an id
+    # and a tag list per search. Omitted when the search has no recorded form.
+    if params:
+        data += struct.pack('<II', 0x534D5052, 1) + struct.pack('<I', 123) + params
+    return data
 
 
 def stop_daemon(proc):
