@@ -392,6 +392,7 @@ void CServerUDPSocket::SendPacket(
 
 	if (host->HasDynIP()) {
 		item.addr = host->GetDynIP();
+		item.serverPort = host->GetPort();
 	} else {
 		item.ip = host->GetIP();
 	}
@@ -458,10 +459,12 @@ void CServerUDPSocket::SendQueue()
 		wxASSERT(item.ip || !item.addr.IsEmpty());
 		if (!item.addr.IsEmpty()) {
 			// This not an ip but a hostname. Resolve it.
-			CServer *update = theApp->serverlist->GetServerByAddress(item.addr, item.port);
+			CServer *update = theApp->serverlist->GetServerByAddress(item.addr, item.serverPort);
 			if (update) {
 				const uint64 now = ::GetTickCount64();
-				if (update->GetLastDNSSolve() + DNS_SOLVE_TIME < now) {
+				// Ticks count from boot: 0 means never resolved, not checked recently.
+				if (update->GetLastDNSSolve() == 0 ||
+					update->GetLastDNSSolve() + DNS_SOLVE_TIME < now) {
 					// Its time for a new check.
 					CAsyncDNS *dns = new CAsyncDNS(item.addr, DNS_UDP, theApp, this);
 					if ((dns->Create() != wxTHREAD_NO_ERROR) ||
@@ -553,7 +556,7 @@ void CServerUDPSocket::OnHostnameResolved(uint32 ip)
 	wxCHECK_RET(!item.ip && !item.addr.IsEmpty(), "DNS resolution not expected.");
 
 	/* An asynchronous database routine completed. */
-	CServer *update = theApp->serverlist->GetServerByAddress(item.addr, item.port);
+	CServer *update = theApp->serverlist->GetServerByAddress(item.addr, item.serverPort);
 	if (ip == 0) {
 		// The server may have been removed while its name was being resolved.
 		if (update) {
