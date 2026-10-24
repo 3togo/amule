@@ -1011,15 +1011,6 @@ void CClientUDPSocket::ProcessPacket(uint8_t *packet, int16 size, int8 opcode, u
 	case OP_DIRECTCALLBACKREQ: {
 		AddDebugLogLineN(logClientUDP, "Client UDP socket: OP_DIRECTCALLBACKREQ");
 		theStats::AddDownOverheadOther(size);
-		// Layout is TCP port (2) + user hash (16) + connect options (1).
-		if (size < 19) {
-			AddDebugLogLineN(logClientUDP,
-				CFormat("Client UDP socket: rejected short OP_DIRECTCALLBACKREQ (%u bytes) "
-					"from %s:%u") %
-					static_cast<unsigned>(size) % Uint32toStringIP(host) %
-					static_cast<unsigned>(port));
-			break;
-		}
 		if (!theApp->clientlist->AllowCallbackRequest(host)) {
 			AddDebugLogLineN(logClientUDP,
 				"Ignored DirectCallback Request because this IP (" + Uint32toStringIP(host) +
@@ -1029,6 +1020,16 @@ void CClientUDPSocket::ProcessPacket(uint8_t *packet, int16 size, int8 opcode, u
 		// do we accept callbackrequests at all?
 		if (Kademlia::CKademlia::IsRunning() && Kademlia::CKademlia::IsFirewalled()) {
 			theApp->clientlist->AddTrackCallbackRequests(host);
+			// Short requests consume the same per-address cooldown as parser failures.
+			// Layout is TCP port (2) + user hash (16) + connect options (1).
+			if (size < 19) {
+				AddDebugLogLineN(logClientUDP,
+					CFormat("Client UDP socket: rejected short "
+						"OP_DIRECTCALLBACKREQ (%u bytes) from %s:%u") %
+						static_cast<unsigned>(size) % Uint32toStringIP(host) %
+						static_cast<unsigned>(port));
+				break;
+			}
 			CMemFile data(packet, size);
 			uint16_t remoteTCPPort = data.ReadUInt16();
 			CMD4Hash userHash(data.ReadHash());

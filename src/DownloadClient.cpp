@@ -827,20 +827,6 @@ void CUpDownClient::ProcessBlockPacket(const uint8_t *packet, uint32 size, bool 
 		return;
 	}
 
-	// Fixed header: file hash (16), start position (4, or 8 with largeblocks), then
-	// the compressed block size (4) or the end position (4, or 8 with largeblocks).
-	// Log a shorter packet here rather than through the reader's end-of-buffer
-	// exception.
-	const uint32 offsetFieldSize = largeblocks ? 8 : 4;
-	const uint32 minBlockHeaderSize = 16 + offsetFieldSize + (packed ? 4 : offsetFieldSize);
-	if (size < minBlockHeaderSize) {
-		AddDebugLogLineC(logRemoteClient,
-			CFormat("Error reading data packet: block header too short: RS: %i, need at least "
-				"%i") %
-				static_cast<int>(size) % static_cast<int>(minBlockHeaderSize));
-		return;
-	}
-
 	// This vars are defined here to be able to use them on the catch
 	int header_size = 16;
 	uint64 nStartPos = 0;
@@ -856,6 +842,20 @@ void CUpDownClient::ProcessBlockPacket(const uint8_t *packet, uint32 size, bool 
 
 		if ((!m_reqfile) || data.ReadHash() != m_reqfile->GetFileHash()) {
 			throw wxString("Wrong fileid sent (ProcessBlockPacket)");
+		}
+
+		// Validate the file hash first: a complete wrong hash must still disconnect
+		// the peer even when the remaining fixed header is truncated.
+		// Fixed header: file hash (16), start position (4, or 8 with largeblocks), then
+		// the compressed block size (4) or the end position (4, or 8 with largeblocks).
+		const uint32 offsetFieldSize = largeblocks ? 8 : 4;
+		const uint32 minBlockHeaderSize = 16 + offsetFieldSize + (packed ? 4 : offsetFieldSize);
+		if (size < minBlockHeaderSize) {
+			AddDebugLogLineC(logRemoteClient,
+				CFormat("Error reading data packet: block header too short: "
+					"RS: %i, need at least %i") %
+					static_cast<int>(size) % static_cast<int>(minBlockHeaderSize));
+			return;
 		}
 
 		if (largeblocks) {
