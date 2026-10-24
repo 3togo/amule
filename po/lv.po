@@ -7691,6 +7691,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "KĻŪDA: ligzda nederīga noildzes pārbaudē"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Savienojuma mēģinājumam ar %s (%s:%i) iestājās noilgums."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Savienojuma mēģinājumam ar %s (%s:%i) iestājās noilgums."

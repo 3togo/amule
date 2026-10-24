@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-22 07:18+0000\n"
+"PO-Revision-Date: 2026-10-24 07:47+0000\n"
 "Last-Translator: David Watzke <david@watzke.cz>\n"
 "Language-Team: cs <cs@li.org>\n"
 "Language: cs\n"
@@ -1052,7 +1052,7 @@ msgstr "Rychlost přenosů je hlášena daemonem. Celkové odesílání zahrnuje
 
 #: src/amuleDlg.cpp
 msgid "Live speeds are averaged over the last second. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "Rychlosti živě jsou průměrovány za poslední sekundu. Celkové odesílání zahrnuje kontrolní provoz; rychlosti odesílání peera zahrnují jen pakety souborů. Hodnoty v závorkách ukazují režii protokolu v KiB/s."
 
 #: src/amuleDlg.cpp
 #, c-format
@@ -1267,19 +1267,19 @@ msgstr "Připraveno"
 
 #: src/amule-remote-gui.cpp
 msgid "*** Solve the CAPTCHA and send its text as a message."
-msgstr ""
+msgstr "*** Vyřešte výzvu CAPTCHA a odešlete její text jako zprávu."
 
 #: src/amule-remote-gui.cpp
 msgid "*** CAPTCHA passed; your message was delivered."
-msgstr ""
+msgstr "*** CAPTCHA vyřešena správně; vaše zpráva byla doručena."
 
 #: src/amule-remote-gui.cpp
 msgid "*** CAPTCHA failed; send another message to try again."
-msgstr ""
+msgstr "*** CAPTCHA selhala; pro opakování pošlete další zprávu."
 
 #: src/amule-remote-gui.cpp
 msgid "*** CAPTCHA failed; no attempts remain."
-msgstr ""
+msgstr "*** CAPTCHA selhala; nezbývají další pokusy."
 
 #: src/amule-remote-gui.cpp src/TransferWnd.cpp
 msgid "All"
@@ -1287,7 +1287,7 @@ msgstr "Vše"
 
 #: src/amule-remote-gui.cpp
 msgid "The daemon could not apply the connection port changes."
-msgstr ""
+msgstr "Daemon nemohl použít změny portu připojení."
 
 #: src/amule-remote-gui.cpp
 msgid "not readable"
@@ -1326,7 +1326,7 @@ msgstr "Neplatná adresa URL"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
-msgstr ""
+msgstr "Jádro nepotvrdilo smazání souboru. Obnovte a zkuste to znovu."
 
 #: src/amule-remote-gui.cpp
 #, c-format
@@ -1343,7 +1343,7 @@ msgstr "Neznámý"
 
 #: src/amule-remote-gui.cpp
 msgid "The connected daemon does not support All searches."
-msgstr ""
+msgstr "Připojený daemon nepodporuje Všechna vyhledávání."
 
 #: src/BaseClient.cpp
 msgid "Searching buddy for lowid connection"
@@ -2150,9 +2150,8 @@ msgid "C&lear completed"
 msgstr "O&debrat dokončené"
 
 #: src/DownloadListCtrl.cpp src/SharedFilesCtrl.cpp
-#, fuzzy
 msgid "Delete file from &disk"
-msgstr "Mazání souboru: %s"
+msgstr "Smazat soubor z &disk"
 
 #: src/DownloadListCtrl.cpp
 msgid "Swap every A4AF to this file now"
@@ -2339,24 +2338,25 @@ msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Neplatný odkaz eD2k! CHYBA: %s"
 
 #: src/EditServerListDlg.cpp
-#, fuzzy
 msgid "Edit server list sources"
-msgstr "Upravit seznam serverů"
+msgstr "Upravit zdroje seznamu serverů"
 
 #: src/EditServerListDlg.cpp
 msgid ""
 "Enter one server.met URL per line.\n"
 "Saving replaces the source list and removes comment lines."
 msgstr ""
+"Zadejte jednu URL server.met na řádek.\n"
+"Uložení nahradí seznam zdrojů a odebere řádky komentářů."
 
 #: src/EditServerListDlg.cpp src/ExternalConn.cpp
 #, c-format
 msgid "Could not save server list sources to %s. Check the URLs and file permissions."
-msgstr ""
+msgstr "Nepodařilo se uložit zdroje seznamu serverů do %s. Zkontrolujte adresy a oprávnění souborů."
 
 #: src/EditServerListDlg.cpp
 msgid "addresses.dat in the daemon configuration directory"
-msgstr ""
+msgstr "addresses.dat v adresáři nastavení daemona"
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -2459,9 +2459,8 @@ msgid "Unauthorized access attempt from %s. Connection closed."
 msgstr "Pokus o neoprávněný přístup z %s. Připojení bylo uzavřeno."
 
 #: src/ExternalConn.cpp
-#, fuzzy
 msgid "Invalid partfile command target."
-msgstr "Neplatný název souboru."
+msgstr "Neplatný cíl partfile příkazu."
 
 #: src/ExternalConn.cpp
 #, c-format
@@ -2474,18 +2473,18 @@ msgid "FileHash not found: %s"
 msgstr "Hash souboru nebyl nalezen: %s"
 
 #: src/ExternalConn.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot cancel a finished download: %s"
-msgstr "Stahování dokončeno: %s"
+msgstr "Nelze zrušit dokončené stahování: %s"
 
 #: src/ExternalConn.cpp
 msgid "The selected download has changed or is completing. Refresh and try again."
-msgstr ""
+msgstr "Vybrané stahování bylo změněno, nebo je dokončováno. Obnovte a zkuste to znovu."
 
 #: src/ExternalConn.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "No such category: %u"
-msgstr "Tato kategorie neexistuje."
+msgstr "Neexistující kategorie: %u"
 
 #: src/ExternalConn.cpp
 msgid "OOPS! OpCode processing error!"
@@ -2575,9 +2574,8 @@ msgid "Version check is not available on this daemon."
 msgstr "Kontrola verze není u tohoto démona k dispozici."
 
 #: src/ExternalConn.cpp
-#, fuzzy
 msgid "Invalid complete-file deletion target."
-msgstr "Neplatný název souboru."
+msgstr "Neplatný cíl smazání kompletních souborů."
 
 #: src/ExternalConn.cpp
 msgid "File not found."
@@ -2634,7 +2632,7 @@ msgstr "Prázdná zpráva chatu"
 
 #: src/ExternalConn.cpp
 msgid "CAPTCHA challenge is no longer pending"
-msgstr ""
+msgstr "Výzva CAPTCHA již není ve stavu čekání"
 
 #: src/ExternalConn.cpp
 msgid "Unknown chat target"
@@ -2930,7 +2928,7 @@ msgstr "Přejmenování souboru"
 
 #: src/ExternalCommand.cpp
 msgid "The command has no executable."
-msgstr ""
+msgstr "Příkaz nemá spustitelný soubor."
 
 #: src/ExternalCommand.cpp
 msgid "The command template or an argument contains a NUL character."
@@ -7694,6 +7692,11 @@ msgstr "Připojení k %s (%s:%i) se nezdařilo."
 #: src/ServerConnect.cpp
 msgid "ERROR: Socket invalid at timeout check"
 msgstr "CHYBA: Socket neplatný při kontrole časového limitu"
+
+#: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Vypršel časový limit pokusu o připojení k %s (%s:%i)."
 
 #: src/ServerConnect.cpp
 #, c-format

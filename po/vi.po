@@ -7600,6 +7600,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "LỖI: Socket không hợp lệ khi kiểm tra hết thời gian chờ"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Nỗ lực kết nối đến %s (%s:%i) đã hết thời gian chờ."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Nỗ lực kết nối đến %s (%s:%i) đã hết thời gian chờ."

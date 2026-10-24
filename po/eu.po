@@ -7699,6 +7699,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "ERROREA: Socket baliogabea denbora-muga egiaztapenean"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "%s (%s:%i) -ra konexio saiakera denboraz kanpo geratu da."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "%s (%s:%i) -ra konexio saiakera denboraz kanpo geratu da."

@@ -7738,6 +7738,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "EROARE: Soclu nevalid la expirarea verificării"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Încercarea conectării la %s (%s:%i) a expirat."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Încercarea conectării la %s (%s:%i) a expirat."

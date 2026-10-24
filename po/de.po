@@ -7725,6 +7725,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "FEHLER: Ungültiger Socket bei Prüfung auf Zeitüberschreitung"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Verbindungsversuch zu %s (%s:%i): Zeitüberschreitung."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Verbindungsversuch zu %s (%s:%i): Zeitüberschreitung."

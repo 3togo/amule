@@ -7634,6 +7634,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "ত্রুটি: টাইমআউট পরীক্ষায় সকেট অবৈধ"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "%s (%s:%i) এর সাথে সংযোগের চেষ্টা টাইমআউট হয়েছে।"
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "%s (%s:%i) এর সাথে সংযোগের চেষ্টা টাইমআউট হয়েছে।"

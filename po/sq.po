@@ -7695,6 +7695,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "GABIM: Socket i pavlefshëm gjatë kontrollit të kohës së skadimit"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Lidhja tek %s (%s:%i) nuk u vendos per time-out."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Lidhja tek %s (%s:%i) nuk u vendos per time-out."

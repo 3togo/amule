@@ -1043,5 +1043,14 @@
   "downloads_confirm_delete_selected_one": "Eliminare dal disco il file selezionato? I file completati verranno eliminati definitivamente; i download attivi verranno annullati e rimossi. L'operazione non può essere annullata.",
   "downloads_confirm_delete_selected_many": "Eliminare dal disco i {n} file selezionati? I file completati verranno eliminati definitivamente; i download attivi verranno annullati e rimossi. L'operazione non può essere annullata.",
   "downloads_confirm_delete_selected_other": "Eliminare dal disco i {n} file selezionati? I file completati verranno eliminati definitivamente; i download attivi verranno annullati e rimossi. L'operazione non può essere annullata.",
-  "prefs_field_files_shared_file_reverify_days": "Verifica i dati locali dei file condivisi richiesti ogni N giorni (0 = disattivato)"
+  "prefs_field_files_shared_file_reverify_days": "Verifica i dati locali dei file condivisi richiesti ogni N giorni (0 = disattivato)",
+  "prefs_group_kad_repair_hashes": "Hash di riparazione dei file su Kad",
+  "prefs_field_kad_protocol10_enabled": "Condividi e usa gli hash di riparazione dei file (AICH) su Kad",
+  "prefs_field_kad_strict_aich_publishers": "Ignora gli hash di riparazione dai nodi Kad troppo vecchi per supportarli",
+  "prefs_field_servers_update_urls": "URL delle sorgenti della lista server (uno per riga)",
+  "prefs_field_servers_update_list": "Aggiorna lista server",
+  "prefs_sources_apply_first": "Applica prima le modifiche",
+  "prefs_sources_saved_help": "Scarica dalle sorgenti salvate.",
+  "prefs_sources_one_off": "URL una tantum",
+  "prefs_sources_download_once": "Scarica una volta"
 }

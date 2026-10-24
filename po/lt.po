@@ -7735,6 +7735,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "KLAIDA: neteisingas lizdas (socket) baigiantis laiko limitui"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Baigėsi bandymo susijungti laikas %s (%s:%i)."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Baigėsi bandymo susijungti laikas %s (%s:%i)."

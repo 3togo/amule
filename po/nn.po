@@ -7701,6 +7701,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "FEIL: Ugangbar sokkel ved uttellingssjekk"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Tilkoplingsfreisting til %s·(%s:%i)·gjekk over tida."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Tilkoplingsfreisting til %s·(%s:%i)·gjekk over tida."

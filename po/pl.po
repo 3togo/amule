@@ -7735,6 +7735,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "BŁĄD: nieprawidłowe gniazdo przy sprawdzaniu timeouta"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Próba połączenia z %s (%s:%i) przedawniła się."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Próba połączenia z %s (%s:%i) przedawniła się."

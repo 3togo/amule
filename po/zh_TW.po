@@ -7672,6 +7672,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "錯誤：連接端點於逾時查驗時失效"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "連線到 %s (%s:%i) 時逾時。"
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "連線到 %s (%s:%i) 時逾時。"

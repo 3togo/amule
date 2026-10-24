@@ -7694,6 +7694,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "VIGA: Vigane socket aegumise kontrollil"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Serveriga '%s (%s:%i)' ühendumise katsed aegusid."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Serveriga '%s (%s:%i)' ühendumise katsed aegusid."

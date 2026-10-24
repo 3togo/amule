@@ -20,7 +20,7 @@ msgstr ""
 "Project-Id-Version: aMule 2.3.3\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-20 14:05+0000\n"
+"PO-Revision-Date: 2026-10-24 07:47+0000\n"
 "Last-Translator: got3nks <got3nks@users.noreply.github.com>\n"
 "Language-Team: SebastianoPistore.info@protonmail.ch\n"
 "Language: it\n"
@@ -1060,11 +1060,11 @@ msgstr "Up: %.1f%s | Down: %.1f%s"
 
 #: src/amuleDlg.cpp
 msgid "Transfer speeds are reported by the daemon. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "Le velocità di trasferimento sono riportate dal demone. L’upload totale include il traffico di controllo; le velocità di upload verso i peer includono solo i pacchetti dei file. I valori tra parentesi indicano l’overhead di protocollo in KiB/s."
 
 #: src/amuleDlg.cpp
 msgid "Live speeds are averaged over the last second. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "Le velocità in tempo reale sono una media sull’ultimo secondo. L’upload totale include il traffico di controllo; le velocità di upload verso i peer includono solo i pacchetti dei file. I valori tra parentesi indicano l’overhead di protocollo in KiB/s."
 
 #: src/amuleDlg.cpp
 #, c-format
@@ -2338,24 +2338,25 @@ msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Collegamento eD2k non valido! ERRORE: %s"
 
 #: src/EditServerListDlg.cpp
-#, fuzzy
 msgid "Edit server list sources"
-msgstr "Modifica la lista dei server"
+msgstr "Modifica sorgenti lista server"
 
 #: src/EditServerListDlg.cpp
 msgid ""
 "Enter one server.met URL per line.\n"
 "Saving replaces the source list and removes comment lines."
 msgstr ""
+"Inserisci un URL server.met per riga.\n"
+"Il salvataggio sostituisce l'elenco delle sorgenti e rimuove le righe di commento."
 
 #: src/EditServerListDlg.cpp src/ExternalConn.cpp
 #, c-format
 msgid "Could not save server list sources to %s. Check the URLs and file permissions."
-msgstr ""
+msgstr "Impossibile salvare le sorgenti della lista server in %s. Controlla gli URL e i permessi del file."
 
 #: src/EditServerListDlg.cpp
 msgid "addresses.dat in the daemon configuration directory"
-msgstr ""
+msgstr "addresses.dat nella cartella di configurazione del demone"
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -5064,9 +5065,8 @@ msgid "Slot Allocation"
 msgstr "Allocazione slot"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Bandwidth calculator..."
-msgstr "Limiti di banda"
+msgstr "Calcolatore di banda..."
 
 #: src/muuli_wdr.cpp
 msgid "Ports"
@@ -5165,9 +5165,8 @@ msgid "retries"
 msgstr "tentativi"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Edit sources…"
-msgstr "Fonti del file:"
+msgstr "Modifica sorgenti…"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5818,18 +5817,16 @@ msgid "Click this button to reset the log."
 msgstr "Fai clic su questo pulsante per cancellare i log."
 
 #: src/muuli_wdr.cpp src/ServerWnd.cpp
-#, fuzzy
 msgid "Update server list"
-msgstr "Modifica la lista dei server"
+msgstr "Aggiorna lista server"
 
 #: src/muuli_wdr.cpp
 msgid "One-off URL:"
-msgstr ""
+msgstr "URL una tantum:"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Download once"
-msgstr "Scaricato"
+msgstr "Scarica una volta"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -6842,7 +6839,7 @@ msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "No system tray found. Use a desktop with a system tray, or build aMule with libayatana-appindicator3."
-msgstr ""
+msgstr "Nessuna barra di sistema trovata. Usa un desktop con barra di sistema oppure compila aMule con libayatana-appindicator3."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Not available on Wayland: the protocol does not report when a window is minimized, so this option cannot intercept the system minimize button. Workaround: launch aMule with `GDK_BACKEND=x11` to use XWayland instead."
@@ -7232,23 +7229,20 @@ msgid "Server connection refresh interval: Disabled"
 msgstr "Intervallo aggiornamento connessione ai server: disabilitato"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Bandwidth calculator"
-msgstr "Limiti di banda"
+msgstr "Calcolatore di banda"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Enter limits in Mbit/s. Zero means unlimited."
-msgstr ""
+msgstr "Inserisci i limiti in Mbit/s. Zero significa illimitato."
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Download (Mbit/s)"
-msgstr "Download (%i)"
+msgstr "Download (Mbit/s)"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Upload (Mbit/s)"
-msgstr "Limite di invio"
+msgstr "Upload (Mbit/s)"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "disabled"
@@ -7661,6 +7655,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "ERRORE: Nessun socket valido trovato entro il tempo massimo"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Connessione a %s (%s:%i) non riuscita per timeout."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Connessione a %s (%s:%i) non riuscita per timeout."
@@ -7750,11 +7749,11 @@ msgstr "Errore I/O durante la scrittura del file 'server.met': %s"
 
 #: src/ServerList.cpp
 msgid "A server list download is already in progress."
-msgstr ""
+msgstr "Un download della lista server è già in corso."
 
 #: src/ServerList.cpp
 msgid "No server list sources configured"
-msgstr ""
+msgstr "Nessuna sorgente della lista server configurata"
 
 #: src/ServerList.cpp
 #, c-format
@@ -7975,11 +7974,11 @@ msgstr "log di aMuleGUI"
 
 #: src/ServerWnd.cpp
 msgid "Download and merge every saved source"
-msgstr ""
+msgstr "Scarica e unisci tutte le sorgenti salvate"
 
 #: src/ServerWnd.cpp
 msgid "Download this server.met URL once without saving it."
-msgstr ""
+msgstr "Scarica questo URL server.met una volta senza salvarlo."
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."

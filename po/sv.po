@@ -7661,6 +7661,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "FEL: Socket ogiltig vid timeout-kontroll"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Anslutningsförsöket till %s (%s:%i) tog för lång tid."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Anslutningsförsöket till %s (%s:%i) tog för lång tid."
