@@ -524,9 +524,19 @@ CAICHHashSet::~CAICHHashSet(void)
 
 bool CAICHHashSet::CreatePartRecoveryData(uint64 nPartStartPos, CFileDataIO *fileDataOut, bool bDbgDontLoad)
 {
-	wxASSERT(m_pOwner);
+	if (m_pOwner == nullptr || fileDataOut == nullptr) {
+		return false;
+	}
 	if (m_pOwner->IsPartFile() || m_eStatus != AICH_HASHSETCOMPLETE) {
 		wxFAIL;
+		return false;
+	}
+	// Recovery data describes a complete part, starting at a part boundary.
+	// Reject invalid offsets before subtracting or looking up a tree range.
+	if (nPartStartPos >= m_pOwner->GetFileSize() || nPartStartPos % PARTSIZE != 0) {
+		AddDebugLogLineN(logSHAHashSet,
+			CFormat("Created RecoveryData error: invalid part start %llu for file '%s'") %
+				nPartStartPos % m_pOwner->GetFileName());
 		return false;
 	}
 	if (m_pHashTree.m_nDataSize <= EMBLOCKSIZE) {
@@ -592,6 +602,10 @@ wxString CAICHHashSet::OwnerName() const
 
 bool CAICHHashSet::ReadRecoveryData(uint64 nPartStartPos, CMemFile *fileDataIn)
 {
+	if (fileDataIn == nullptr || nPartStartPos >= m_pHashTree.m_nDataSize ||
+		nPartStartPos % PARTSIZE != 0) {
+		return false;
+	}
 	if (/*eMule TODO !m_pOwner->IsPartFile() ||*/ !(
 		m_eStatus == AICH_VERIFIED || m_eStatus == AICH_TRUSTED)) {
 		wxFAIL;
@@ -1225,6 +1239,9 @@ CAICHRequestedData CAICHHashSet::GetAICHReqDetails(const CUpDownClient *pClient)
 
 bool CAICHHashSet::IsPartDataAvailable(uint64 nPartStartPos)
 {
+	if (nPartStartPos >= m_pHashTree.m_nDataSize || nPartStartPos % PARTSIZE != 0) {
+		return false;
+	}
 	if (!(m_eStatus == AICH_VERIFIED || m_eStatus == AICH_TRUSTED || m_eStatus == AICH_HASHSETCOMPLETE)) {
 		wxFAIL;
 		return false;

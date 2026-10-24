@@ -31,6 +31,7 @@
 #include <numeric>
 #include <random>
 #include <stdexcept>
+#include <limits>
 #include <KadAICHVotes.h>
 #include <tags/FileTags.h>
 #include <MemFile.h>
@@ -837,6 +838,48 @@ TEST(AICHSearchResult, RestoredGroupKeepsItsEd2kRoot)
 }
 
 DECLARE_SIMPLE(AICHHashTree)
+
+TEST(AICHHashTree, OwnerlessRecoveryWriterRejectsWithoutWriting)
+{
+	CAICHHashSet hashes(nullptr);
+	CMemFile output;
+	output.WriteUInt8(0xAB);
+	ASSERT_FALSE(hashes.CreatePartRecoveryData(0, &output));
+	ASSERT_EQUALS(uint64(1), output.GetLength());
+	ASSERT_EQUALS(uint64(1), output.GetPosition());
+}
+
+TEST(AICHHashTree, InvalidRecoveryOffsetsDoNotReadOrChangeTrustedRoot)
+{
+	const CAICHHash root = MakeRoot(0xAB);
+	for (uint64 size : { uint64(0), uint64(3 * PARTSIZE), uint64(3 * PARTSIZE + 1) }) {
+		for (uint64 start : { uint64(1),
+			     uint64(PARTSIZE - 1),
+			     size,
+			     size + 1,
+			     std::numeric_limits<uint64>::max() }) {
+			CAICHHashSet hashes(nullptr);
+			hashes.SetFileSize(size);
+			hashes.SetMasterHash(root, AICH_VERIFIED);
+			CMemFile packet;
+			packet.WriteUInt16(0xFFFF);
+			packet.Seek(0, wxFromStart);
+			ASSERT_FALSE(hashes.ReadRecoveryData(start, &packet));
+			ASSERT_FALSE(hashes.IsPartDataAvailable(start));
+			ASSERT_EQUALS(uint64(0), packet.GetPosition());
+			ASSERT_EQUALS(AICH_VERIFIED, hashes.GetStatus());
+			ASSERT_TRUE(root == hashes.GetMasterHash());
+		}
+	}
+}
+
+TEST(AICHHashTree, NullRecoveryInputIsRejected)
+{
+	CAICHHashSet hashes(nullptr);
+	hashes.SetFileSize(PARTSIZE);
+	hashes.SetMasterHash(MakeRoot(0xAB), AICH_VERIFIED);
+	ASSERT_FALSE(hashes.ReadRecoveryData(0, nullptr));
+}
 
 namespace
 {

@@ -33,6 +33,7 @@
 #include <PartFile.h>
 #include <updownclient.h>
 #include <SearchList.h>
+#include <Packet.h>
 
 using namespace muleunit;
 
@@ -150,6 +151,13 @@ CDownloadQueue::~CDownloadQueue()
 {
 	UnexpectedApplicationCall("CDownloadQueue::~CDownloadQueue");
 }
+CSearchList::~CSearchList()
+{
+	UnexpectedApplicationCall("CSearchList::~CSearchList");
+}
+wxBEGIN_EVENT_TABLE(CSearchList, wxEvtHandler)
+wxEND_EVENT_TABLE()
+
 CKnownFile::~CKnownFile()
 {
 	UnexpectedApplicationCall("CKnownFile::~CKnownFile");

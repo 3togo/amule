@@ -81,6 +81,15 @@ there client on the eMule forum..
 #define CHECK_PACKET_MIN_SIZE(SIZE) CHECK_PACKET_SIZE(<, SIZE)
 #define CHECK_PACKET_EXACT_SIZE(SIZE) CHECK_PACKET_SIZE(!=, SIZE)
 
+// A count read from a peer must be consistent with the bytes that follow it:
+// every record needs at least a fixed-size prefix, so an impossible count is
+// rejected before the processing loop can apply a partial result set and then
+// fail half-way through on the truncated remainder.
+#define CHECK_PACKET_SANE_COUNT(COUNT, MIN_RECORD_SIZE) \
+	if ((sint64)(COUNT) * (sint64)(MIN_RECORD_SIZE) > bio.GetAvailable()) \
+	throw wxString(CFormat("***NOTE: Received impossible count (%u) with %u bytes available in %s") % \
+		       (uint32_t)(COUNT) % (uint32_t)bio.GetAvailable() % wxString::FromAscii(__FUNCTION__))
+
 #define CHECK_TRACKED_PACKET(OPCODE) \
 	if (!IsOnOutTrackList(ip, OPCODE)) \
 	throw wxString(CFormat("***NOTE: Received unrequested response packet, size (%u) in %s") % \
@@ -89,6 +98,23 @@ there client on the eMule forum..
 ////////////////////////////////////////
 using namespace Kademlia;
 ////////////////////////////////////////
+
+namespace
+{
+// The minimum-size check alone cannot detect a truncated variable-length tag in
+// a later record. Parse all records before the caller applies any of them.
+void CheckTagRecords(CMemFile &bio, uint16_t count)
+{
+	CHECK_PACKET_SANE_COUNT(count, 17);
+	const uint64 start = bio.GetPosition();
+	for (uint16_t i = 0; i < count; ++i) {
+		bio.ReadUInt128();
+		CScopedContainer<TagPtrList> tags;
+		bio.ReadTagPtrList(tags.get(), true /*bOptUTF8*/);
+	}
+	bio.Seek(static_cast<sint64>(start), wxFromStart);
+}
+} // namespace
 
 CKademliaUDPListener::~CKademliaUDPListener()
 {
@@ -544,6 +570,9 @@ void CKademliaUDPListener::Process2BootstrapResponse(const uint8_t *packetData,
 	CUInt128 contactID = bio.ReadUInt128();
 	uint16_t tport = bio.ReadUInt16();
 	uint8_t version = bio.ReadUInt8();
+	uint16_t numContacts = bio.ReadUInt16();
+	// Validate the whole contact list before adding even the responding peer.
+	CHECK_PACKET_SANE_COUNT(numContacts, 25);
 	// If we know no contacts yet and try to bootstrap, assume every contact is verified to
 	// speed the connect up. The attack vectors for exploiting this are very small with no major
 	// effects, so it is a good trade.
@@ -554,7 +583,6 @@ void CKademliaUDPListener::Process2BootstrapResponse(const uint8_t *packetData,
 			contactID, ip, port, tport, version, senderKey, validReceiverKey, true, false);
 	}
 
-	uint16_t numContacts = bio.ReadUInt16();
 	while (numContacts) {
 		contactID = bio.ReadUInt128();
 		ip = bio.ReadUInt32();
@@ -1113,6 +1141,8 @@ void CKademliaUDPListener::ProcessSearchResponse(CMemFile &bio, uint32_t fromIP,
 	CUInt128 target = bio.ReadUInt128();
 
 	uint16_t count = bio.ReadUInt16();
+	// Each result carries at least a 16-byte answer ID plus a tag-count byte.
+	CheckTagRecords(bio, count);
 	while (count > 0) {
 		CUInt128 answer = bio.ReadUInt128();
 
@@ -1186,6 +1216,8 @@ void CKademliaUDPListener::Process2PublishKeyRequest(const uint8_t *packetData,
 
 	DEBUG_ONLY(wxString strInfo;)
 	uint16_t count = bio.ReadUInt16();
+	// Each entry carries at least a 16-byte source ID plus a tag-count byte.
+	CheckTagRecords(bio, count);
 	uint8_t load = 0;
 	while (count > 0) {
 		DEBUG_ONLY(strInfo.Clear();)
