@@ -1280,6 +1280,38 @@ target_include_directories (FileAutoCloseTest PRIVATE
 )
 target_link_libraries (FileAutoCloseTest muleunit)
 
+# File-area flush errors retain their buffers and reach the existing write retry path.
+add_executable (FileAreaTest
+	FileAreaTest.cpp
+	${CMAKE_SOURCE_DIR}/src/FileArea.cpp
+	${CMAKE_SOURCE_DIR}/src/FileAutoClose.cpp
+	${CMAKE_SOURCE_DIR}/src/SafeFile.cpp
+	${CMAKE_SOURCE_DIR}/src/CFile.cpp
+	${CMAKE_SOURCE_DIR}/src/MemFile.cpp
+	${CMAKE_SOURCE_DIR}/src/kademlia/utils/UInt128.cpp
+	${CMAKE_SOURCE_DIR}/src/Tag.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Path.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/Format.cpp
+	${CMAKE_SOURCE_DIR}/src/libs/common/strerror_r.c
+)
+add_test (NAME FileAreaTest COMMAND FileAreaTest)
+target_include_directories (FileAreaTest PRIVATE
+	${CMAKE_BINARY_DIR}
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_SOURCE_DIR}/src/include
+)
+target_link_libraries (FileAreaTest muleunit)
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	set_property (TARGET FileAreaTest APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--wrap=msync")
+	target_compile_definitions (FileAreaTest PRIVATE AMULE_TEST_WRAP_MSYNC=1)
+endif ()
+
+add_executable (PartFileBufferingTest PartFileBufferingTest.cpp)
+add_test (NAME PartFileBufferingTest COMMAND PartFileBufferingTest)
+target_include_directories (PartFileBufferingTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (PartFileBufferingTest muleunit mulecommon)
+
 add_executable (FileDataIOTest
 	FileDataIOTest.cpp
 	${CMAKE_SOURCE_DIR}/src/SafeFile.cpp

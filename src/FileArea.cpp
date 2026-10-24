@@ -40,6 +40,7 @@
 #include "FileAutoClose.h" // Needed for CFileAutoClose
 
 #include <atomic> // std::atomic<bool> for the cross-thread MMapEnabled toggle
+#include <memory>
 
 // MMAP_SUPPORTED is set by cmake only when the whole mmap file-I/O path is available on this
 // platform (mmap / munmap / sysconf / _SC_PAGESIZE / sigaction). It gates the code below, the
@@ -318,22 +319,36 @@ void CFileArea::StartWriteAt(CFileAutoClose &, uint64, size_t count)
 }
 #endif
 
-bool CFileArea::FlushAt(CFileAutoClose &file, uint64 offset, size_t count)
+void CFileArea::FlushAt(CFileAutoClose &file, uint64 offset, size_t count)
 {
-	if (!m_buffer)
-		return false;
+	if (m_buffer == nullptr) {
+		throw CIOFailureException("Cannot flush an uninitialized file area.");
+	}
 
 #ifdef MMAP_SUPPORTED
-	if (m_mmap_buffer) {
-		if (msync(m_mmap_buffer, m_length, MS_SYNC))
-			return false;
+	if (m_mmap_buffer != nullptr) {
+		if (msync(m_mmap_buffer, m_length, MS_SYNC) != 0) {
+			const CIOFailureException failure(
+				wxString("Failed to flush mapped file: ") + wxSysErrorMsg());
+			// Failed writeback can leave clean pages, so another msync may succeed
+			// without writing anything. Preserve just the requested bytes before
+			// unmapping; the caller's retry must write them again through WriteAt.
+			auto buffer = std::make_unique<uint8_t[]>(count);
+			memcpy(buffer.get(), m_buffer, count);
+			// A page that can no longer be read raises SIGBUS during the copy: the
+			// handler maps zeros and sets m_error. Clear it, or ~CFileArea would throw
+			// and terminate. The zeroed range then fails the part's hash check.
+			m_error = false;
+			Close();
+			m_buffer = buffer.release();
+			throw failure;
+		}
 		Close();
-		return true;
+		return;
 	}
 #endif
 	file.WriteAt(m_buffer, offset, count);
 	Close();
-	return true;
 }
 
 void CFileArea::Prefault()

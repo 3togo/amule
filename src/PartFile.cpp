@@ -26,6 +26,7 @@
 #include <wx/wx.h>
 
 #include "PartFile.h"            // Interface declarations.
+#include "PartFileBuffering.h"   // Needed for ordered buffered writes
 #include "BlockReservation.h"    // Needed for selecting unreserved block intervals
 #include "PartFileWriteThread.h" // Needed for PB_READY etc.
 #include "PartMetWriter.h"       // Needed for CPartMetWriter
@@ -3523,27 +3524,7 @@ uint32 CPartFile::WriteToBuffer(uint32 transize,
 	// Create a new buffered queue entry
 	PartFileBufferedData *item = new PartFileBufferedData(m_hpartfile, data, start, end, block);
 
-	// Add to the queue in the correct position (most likely the end)
-	bool added = false;
-
-	std::list<PartFileBufferedData *>::iterator it = m_BufferedData_list.begin();
-	for (; it != m_BufferedData_list.end(); ++it) {
-		PartFileBufferedData *queueItem = *it;
-
-		if (item->end <= queueItem->end) {
-			if (it != m_BufferedData_list.begin()) {
-				added = true;
-
-				m_BufferedData_list.insert(--it, item);
-			}
-
-			break;
-		}
-	}
-
-	if (!added) {
-		m_BufferedData_list.push_front(item);
-	}
+	InsertPartFileBufferedWrite(m_BufferedData_list, item);
 
 	// Increment buffer size marker
 	m_nTotalBufferData += lenData;
