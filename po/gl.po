@@ -7712,6 +7712,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "ERRO: Conector inválido durante comprobación tras expirar o tempo"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "O intento de conexión %s (%s:%i) tardou demasiado."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "O intento de conexión %s (%s:%i) tardou demasiado."

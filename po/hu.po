@@ -7662,6 +7662,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "HIBA: A socket érvénytelen az időtúllépés-ellenőrzés során"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Kapcsolódási kísérlet %s-hez (%s:%i): időtúllépés."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Kapcsolódási kísérlet %s-hez (%s:%i): időtúllépés."

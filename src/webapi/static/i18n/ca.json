@@ -1049,5 +1049,8 @@
   "prefs_sources_apply_first": "Aplica primer els teus canvis",
   "prefs_field_servers_update_list": "Actualitza la llista de servidors",
   "prefs_sources_download_once": "Descarregar un cop",
-  "prefs_sources_one_off": "URL d'ús puntual"
+  "prefs_sources_one_off": "URL d'ús puntual",
+  "prefs_group_kad_repair_hashes": "Hashes de reparació de fitxers a Kad",
+  "prefs_field_kad_protocol10_enabled": "Comparteix i utilitza hashes de reparació de fitxers (AICH) a Kad",
+  "prefs_field_kad_strict_aich_publishers": "Ignora els hashes de reparació dels nodes Kad massa antics per admetre'ls"
 }

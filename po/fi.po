@@ -7701,6 +7701,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "VIRHE: Pistukka virheellinen aikakatkaisutarkistuksessa"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Yhteysyritys kohteeseen %s (%s:%i) aikakatkaistiin."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Yhteysyritys kohteeseen %s (%s:%i) aikakatkaistiin."

@@ -7644,6 +7644,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "错误：连接超时，端口无效"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "连接 %s（%s:%i）的尝试超时。"
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "连接 %s（%s:%i）的尝试超时。"

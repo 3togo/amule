@@ -7693,6 +7693,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "오류: 시간 초과 확인 시 소켓이 유효하지 않습니다"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "%s(%s:%i)에 접속을 시도하는데 시간이 지났습니다."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "%s(%s:%i)에 접속을 시도하는데 시간이 지났습니다."

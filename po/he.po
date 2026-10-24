@@ -7691,6 +7691,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "שגיאה: השקע אינו תקין בבדיקת תפוגת הזמן"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "פג הזמן עבור ניסיון ההתחברות ל %s·(%s:%i)"
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "פג הזמן עבור ניסיון ההתחברות ל %s·(%s:%i)"

@@ -7697,6 +7697,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "ГРЕШКА: Невалиден сокет при проверка за изтичане на времето"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Опитът за свързване с %s (%s:%i) изтече."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Опитът за свързване с %s (%s:%i) изтече."

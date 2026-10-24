@@ -7662,6 +7662,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "HATA: Zaman aşımı denetlemesinde soket geçersiz"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "%s (%s:%i) adresine bağlanma denemesi zaman aşımına uğradı."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "%s (%s:%i) adresine bağlanma denemesi zaman aşımına uğradı."

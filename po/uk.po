@@ -7742,6 +7742,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "ПОМИЛКА: невірний сокет після сплину часу"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Спроба з'єднання з %s (%s:%i) добігла кінця."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Спроба з'єднання з %s (%s:%i) добігла кінця."

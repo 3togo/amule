@@ -7668,6 +7668,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "ERREUR : Socket invalide lors de la vérification du délai"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Délai d'attente de la connexion à %s (%s : %i) dépassé."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Délai d'attente de la connexion à %s (%s : %i) dépassé."

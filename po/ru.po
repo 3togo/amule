@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-22 19:12+0000\n"
+"PO-Revision-Date: 2026-10-24 07:47+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
 "Language: ru\n"
@@ -6883,7 +6883,7 @@ msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "No system tray found. Use a desktop with a system tray, or build aMule with libayatana-appindicator3."
-msgstr ""
+msgstr "Системный трей не найден. Используйте рабочий стол с системным треем или соберите aMule с libayatana-appindicator3."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Not available on Wayland: the protocol does not report when a window is minimized, so this option cannot intercept the system minimize button. Workaround: launch aMule with `GDK_BACKEND=x11` to use XWayland instead."
@@ -7707,6 +7707,11 @@ msgstr "Подключение к %s (%s:%i) завершилось ошибко
 #: src/ServerConnect.cpp
 msgid "ERROR: Socket invalid at timeout check"
 msgstr "ОШИБКА: сокет был закрыт по таймауту"
+
+#: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Время ожидания соединения с %s (%s:%i) вышло."
 
 #: src/ServerConnect.cpp
 #, c-format

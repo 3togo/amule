@@ -7631,6 +7631,11 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "ERROR: Socket invalid at timeout check"
 
 #: src/ServerConnect.cpp
+#, fuzzy, c-format
+msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
+msgstr "Connection attempt to %s (%s:%i) timed out."
+
+#: src/ServerConnect.cpp
 #, c-format
 msgid "Connection attempt to %s (%s:%i) timed out."
 msgstr "Connection attempt to %s (%s:%i) timed out."
