@@ -2884,6 +2884,13 @@ if (ENABLE_INTEGRATION_TESTS AND BUILD_DAEMON AND UNIX AND NOT APPLE)
 	endif ()
 endif ()
 
+# Verify shutdown reaches the core before the text client exits.
+if (BUILD_AMULECMD AND Python3_Interpreter_FOUND)
+	add_test (NAME AmulecmdShutdownTest
+		COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/AmulecmdShutdownTest.py
+			$<TARGET_FILE:amulecmd>)
+endif ()
+
 # Exercise native scrolling/sizer behavior without starting the aMule application.
 # MuleUnit defines wxUSE_GUI=0, so this test owns a minimal wxApp instead.
 if (TARGET wxWidgets::CORE)

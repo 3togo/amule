@@ -266,6 +266,7 @@ private:
 	// that predates the hash tag would merge two such sessions under one legacy id.
 	bool m_serverChatPeerHash;
 	bool m_serverDeleteComplete;
+	bool m_closeExpected = false;
 
 	void WriteDoneAndQueueEmpty();
 
@@ -371,6 +372,10 @@ public:
 
 	virtual void OnConnect(); // To override connection events
 	virtual void OnLost();    // To override close events
+
+	// The core may close instead of replying, e.g. to a shutdown request; OnLost()
+	// then stays silent and returns.
+	void ExpectClose() noexcept { m_closeExpected = true; }
 
 	void SendRequest(CECPacketHandlerBase *handler, const CECPacket *request);
 	void SendPacket(const CECPacket *request);

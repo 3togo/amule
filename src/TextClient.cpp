@@ -782,7 +782,11 @@ int CamulecmdApp::ProcessCommand(int CmdId)
 		while (it != request_list.end()) {
 			CECPacket *curr = *it++;
 			if (curr->GetOpCode() == EC_OP_SHUTDOWN) {
-				SendPacket(curr);
+				// Keep the connection alive until the core acknowledges shutdown or
+				// closes it. Exiting immediately can reset the stream before delivery.
+				// The monolithic app closes EC without a reply.
+				ExpectClose();
+				delete SendRecvMsg_v2(curr);
 				delete curr;
 				return CMD_ID_QUIT;
 			}

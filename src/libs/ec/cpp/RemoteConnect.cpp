@@ -422,6 +422,9 @@ void CRemoteConnect::OnLost()
 		m_notifier->AddPendingEvent(event);
 		return;
 	}
+	if (m_closeExpected) {
+		return;
+	}
 	// Headless EC clients (amulecmd, amuleweb) pass a NULL m_notifier. Continuing
 	// would mean amuleweb serving an empty shell with no error, or amulecmd at a
 	// prompt with a dead socket. Failing fast is right; the supervisor recovers.
