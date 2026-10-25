@@ -61,6 +61,9 @@
 #include "DownloadQueue.h"
 #include "PartFile.h"
 
+using UploadQueueAddressPolicy::HardMaxUploadSlotsPerScope;
+using UploadQueueAddressPolicy::MaxUploadSlotsPerScope;
+
 // TODO rewrite the whole networkcode, use overlapped sockets
 
 CUploadQueue::CUploadQueue()
@@ -121,7 +124,7 @@ void CUploadQueue::SortGetBestClient(CClientRef *bestClient)
 	// clients as enabled for upload.
 	uint16 rank = 1;
 	bool bestClientFound = false;
-	// The first client its scope cap holds back that could take a slot now.
+	// The first client its scope cap holds back that could take a spare slot now.
 	CClientRefList::iterator overCap = m_waitinglist.end();
 	for (it = m_waitinglist.begin(); it != m_waitinglist.end();) {
 		CClientRefList::iterator it2 = it++;
@@ -133,9 +136,11 @@ void CUploadQueue::SortGetBestClient(CClientRef *bestClient)
 		} else {
 			const bool waitsForConnect = cur_client->HasLowID() && !cur_client->IsConnected() &&
 						     !cur_client->IsCallableIPv6Contact();
-			if (!HasUploadSlotRoom(cur_client)) {
+			const unsigned held = UploadSlotsInScope(cur_client);
+			if (held >= MaxUploadSlotsPerScope) {
 				cur_client->m_bAddNextConnect = false;
-				if (!waitsForConnect && overCap == m_waitinglist.end()) {
+				if (!waitsForConnect && overCap == m_waitinglist.end() &&
+					held < HardMaxUploadSlotsPerScope) {
 					overCap = it2;
 				}
 			} else if (waitsForConnect) {
@@ -165,7 +170,8 @@ void CUploadQueue::SortGetBestClient(CClientRef *bestClient)
 	}
 
 	// A soft cap. A slot is free whenever bestClient is asked for, so with nobody else able to
-	// take it, a capped client gets spare capacity only. Once others wait, slots fill, kicking
+	// take it, a capped client gets spare capacity only, up to the hard cap. A LowID client still
+	// waiting to connect gets none above the soft cap. Once others wait, slots fill, kicking
 	// resumes, and rotation brings the scope back under its cap.
 	if (bestClient && !bestClientFound && overCap != m_waitinglist.end()) {
 		for (it = std::next(overCap); it != m_waitinglist.end(); ++it) {
@@ -192,15 +198,17 @@ void CUploadQueue::SortGetBestClient(CClientRef *bestClient)
 #endif // __DEBUG__
 }
 
-bool CUploadQueue::HasUploadSlotRoom(const CUpDownClient *client) const
+unsigned CUploadQueue::UploadSlotsInScope(const CUpDownClient *client) const
 {
-	// A friend slot is the user's own grant.
-	return client->GetFriendSlot() ||
-	       UploadQueueAddressPolicy::HasUploadSlotRoom(client->GetUserAddress(),
-		       m_uploadinglist,
-		       [](const CClientRef &ref) -> const CNetworkAddress & {
-			       return ref.GetClient()->GetUserAddress();
-		       });
+	// A friend slot is the user's own grant, so no scope cap applies.
+	if (client->GetFriendSlot()) {
+		return 0;
+	}
+	return UploadQueueAddressPolicy::UploadSlotsInScope(client->GetUserAddress(),
+		m_uploadinglist,
+		[](const CClientRef &ref) -> const CNetworkAddress & {
+			return ref.GetClient()->GetUserAddress();
+		});
 }
 
 void CUploadQueue::AddUpNextClient(CUpDownClient *directadd)
@@ -507,7 +515,8 @@ void CUploadQueue::AddClientToQueue(CUpDownClient *client)
 					if (lastupslotHighID) {
 						maxSlots++;
 					}
-					if (m_uploadinglist.size() < maxSlots && HasUploadSlotRoom(client)) {
+					if (m_uploadinglist.size() < maxSlots &&
+						UploadSlotsInScope(client) < MaxUploadSlotsPerScope) {
 						client->m_bAddNextConnect = false;
 						RemoveFromWaitingQueue(client);
 						AddUpNextClient(client);
@@ -607,9 +616,10 @@ void CUploadQueue::AddClientToQueue(CUpDownClient *client)
 
 	uint64 tick = GetTickCount64();
 	client->ClearWaitStartTime();
-	// if possible start upload right away
+	// if possible start upload right away; with nobody waiting the slot is spare capacity
 	if (m_waitinglist.empty() && tick - m_nLastStartUpload >= 1000 &&
-		m_uploadinglist.size() < GetMaxSlots() && !theApp->listensocket->TooManySockets()) {
+		m_uploadinglist.size() < GetMaxSlots() && !theApp->listensocket->TooManySockets() &&
+		UploadSlotsInScope(client) < HardMaxUploadSlotsPerScope) {
 		AddUpNextClient(client);
 		m_nLastStartUpload = tick;
 	} else {
