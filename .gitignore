@@ -1,4 +1,5 @@
 # Files created by the Visual Studio build process
+*.lock
 platforms/Windows/**/Debug30ALC
 platforms/Windows/**/Debug
 platforms/Windows/**/Debug30
