@@ -227,8 +227,6 @@ void CUpDownClient::Init()
 	m_bUnicodeSupport = false;
 
 	m_fSentOutOfPartReqs = 0;
-	m_nCurQueueSessionPayloadUp = 0;
-	m_addedPayloadQueueSession = 0;
 	m_nUpDatarate = 0;
 	m_nSumForAvgUpDataRate = 0;
 

@@ -89,7 +89,6 @@ CEMSocket::CEMSocket(const CProxyData *ProxyData)
 	m_bAccelerateUpload = false;
 
 	m_actualPayloadSize = 0;
-	m_actualPayloadSizeSent = 0;
 
 	m_bBusy = false;
 	m_hasSent = false;
@@ -415,33 +414,20 @@ uint64 CEMSocket::GetSentFileBytesForDisplayAndReset()
 	return bytes;
 }
 
-uint64 CEMSocket::GetSentPayloadSinceLastCallAndReset()
+uint64 CEMSocket::QueuedUploadPayload() const
 {
 	std::lock_guard<std::mutex> lock(m_sendLocker);
-
-	uint64 sentBytes = m_actualPayloadSizeSent;
-	m_actualPayloadSizeSent = 0;
-
-	return sentBytes;
+	return m_uploadRefill.Queued();
 }
 
 void CEMSocket::SetUploadBufferTarget(uint32 payload)
 {
 	std::lock_guard<std::mutex> lock(m_sendLocker);
 	if (m_uploadRefill.SetTarget(payload) && theApp->uploadDiskIOThread) {
-		// PrepareRead's payload snapshot precedes this lock. If the target grew
-		// above the remaining queue, keep a refill pending for a fresh snapshot.
+		// A larger target can require another read even when no completion
+		// crosses the old threshold. Keep a fresh worker pass pending.
 		theApp->uploadDiskIOThread->SocketNeedsMoreData();
 	}
-}
-
-// Non-resetting peek at bytes sent since the last GetSentPayloadSinceLastCallAndReset(). Used by
-// the disk I/O thread for a fresh view without consuming the counter SendBlockData() drains every
-// CORE_TIMER_PERIOD. Must not be called with m_sendLocker already held.
-uint64 CEMSocket::PeekSentPayload()
-{
-	std::lock_guard<std::mutex> lock(m_sendLocker);
-	return m_actualPayloadSizeSent;
 }
 
 bool CEMSocket::HasQueues(bool bOnlyStandardPackets) const
@@ -728,7 +714,6 @@ SocketSentBytes CEMSocket::Send(
 				sendblen = 0;
 
 				if (!m_currentPacket_is_controlpacket) {
-					m_actualPayloadSizeSent += m_actualPayloadSize;
 					// Match the disk worker's send-ahead check. Wake once when the
 					// original payload crosses below its target, or the queue drains.
 					if (m_uploadRefill.Complete(m_actualPayloadSize) &&

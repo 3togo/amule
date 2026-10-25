@@ -876,9 +876,6 @@ private:
 	CFriend *m_Friend;
 
 	uint64 m_nTransferredUp;
-	// atomic: CUploadDiskIOThread reads both, and adds to m_addedPayloadQueueSession
-	std::atomic<sint64> m_nCurQueueSessionPayloadUp;
-	std::atomic<sint64> m_addedPayloadQueueSession;
 	uint64 m_uploadReadSession = 0; // protected by m_blockListLock; rejects late read completions
 
 	struct TransferredData
@@ -1010,8 +1007,7 @@ private:
 
 	std::list<Requested_Block_Struct *> m_BlockRequests_queue;
 	std::list<Requested_Block_Struct *> m_DoneBlocks_list;
-	wxMutex m_blockListLock; // protects m_BlockRequests_queue, m_DoneBlocks_list,
-				 // m_addedPayloadQueueSession
+	wxMutex m_blockListLock; // protects m_BlockRequests_queue, m_DoneBlocks_list
 	// atomic: the disk I/O thread sets them, the main thread reads and resets them
 	std::atomic<bool> m_bDisableCompression{ false };
 	std::atomic<bool> m_bIOError{ false };

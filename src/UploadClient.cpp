@@ -392,8 +392,7 @@ void CUpDownClient::AddReqBlock(Requested_Block_Struct *reqblock, bool bSignalIO
 
 	{
 		// Hold m_blockListLock for all reads and writes of the block queues. The disk I/O
-		// thread accesses m_DoneBlocks_list, m_BlockRequests_queue and
-		// m_addedPayloadQueueSession under this same lock.
+		// thread accesses m_DoneBlocks_list and m_BlockRequests_queue under this same lock.
 		wxMutexLocker lock(m_blockListLock);
 
 		{
@@ -462,17 +461,9 @@ void CUpDownClient::ResetSessionUp()
 {
 	m_nCurSessionUp = m_nTransferredUp;
 	{
-		// The disk I/O thread reads the two as a pair under this lock.
+		// The disk I/O thread checks the read session under this lock.
 		wxMutexLocker lock(m_blockListLock);
 		++m_uploadReadSession;
-		m_addedPayloadQueueSession = 0;
-		m_nCurQueueSessionPayloadUp = 0;
-	}
-	// If upload was resumed there can be a remaining payload in the socket
-	// causing (prepared - sent) getting negative. So reset the counter here.
-	if (m_socket) {
-		CEMSocket *s = m_socket;
-		s->GetSentPayloadSinceLastCallAndReset();
 	}
 }
 
@@ -481,7 +472,6 @@ uint32 CUpDownClient::SendBlockData()
 	uint64 curTick = ::GetTickCount64();
 	uint64 sentBytesCompleteFile = 0;
 	uint64 sentBytesPartFile = 0;
-	uint64 sentBytesPayload = 0;
 	uint64 displayBytes = 0;
 
 	if (m_socket) {
@@ -497,15 +487,6 @@ uint32 CUpDownClient::SendBlockData()
 		credits->AddUploaded(sentBytesCompleteFile + sentBytesPartFile,
 			GetUserAddress(),
 			theApp->CryptoAvailable());
-
-		{
-			// PrepareRead holds this lock while reading the session total and peeking
-			// at the socket counter. Transfer both together so a refill wake cannot
-			// see the reset counter before the session total includes those bytes.
-			wxMutexLocker lockBlockLists(m_blockListLock);
-			sentBytesPayload = s->GetSentPayloadSinceLastCallAndReset();
-			m_nCurQueueSessionPayloadUp += static_cast<sint64>(sentBytesPayload);
-		}
 
 		if (theApp->uploadqueue->CheckForTimeOver(this)) {
 			theApp->uploadqueue->RemoveFromUploadQueue(this);

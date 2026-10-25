@@ -11,6 +11,7 @@
 class UploadRefill
 {
 public:
+	uint64_t Queued() const { return m_queued; }
 	bool SetTarget(uint32_t target)
 	{
 		// A completion may have drained below a larger target before it was installed.

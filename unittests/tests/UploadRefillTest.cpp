@@ -110,3 +110,22 @@ TEST(UploadRefill, LoweringTargetDoesNotScheduleAnUnneededRefill)
 	ASSERT_FALSE(refill.SetTarget(block + 1));
 	ASSERT_TRUE(refill.Complete(block));
 }
+
+TEST(UploadRefill, QueuedPayloadTracksCompletionDiscardAndDisconnect)
+{
+	UploadRefill refill;
+	ASSERT_EQUALS(uint64_t(0), refill.Queued());
+	refill.Queue(2 * block);
+	refill.Queue(4096);
+	ASSERT_EQUALS(uint64_t(2 * block + 4096), refill.Queued());
+	// Compressed packets retire their original payload, not their wire size.
+	refill.Complete(block);
+	ASSERT_EQUALS(uint64_t(block + 4096), refill.Queued());
+	// Truncation drops waiting packets while preserving the current packet.
+	refill.Discard(block);
+	ASSERT_EQUALS(uint64_t(4096), refill.Queued());
+	refill.Clear();
+	ASSERT_EQUALS(uint64_t(0), refill.Queued());
+	refill.Queue(block);
+	ASSERT_EQUALS(uint64_t(block), refill.Queued());
+}
