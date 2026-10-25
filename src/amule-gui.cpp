@@ -113,6 +113,11 @@ wxBEGIN_EVENT_TABLE(CamuleGuiApp, wxApp)
 	EVT_END_SESSION(CamuleGuiApp::OnEndSession)
 wxEND_EVENT_TABLE()
 
+CamuleGuiApp::CamuleGuiApp()
+{
+	theApp = this;
+}
+
 IMPLEMENT_APP(CamuleGuiApp)
 
 #endif // CLIENT_GUI

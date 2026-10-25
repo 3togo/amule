@@ -118,6 +118,11 @@ wxBEGIN_EVENT_TABLE(CamuleDaemonApp, wxAppConsole)
 	EVT_MULE_ALLOC_FINISHED(CamuleDaemonApp::OnFinishedAllocation)
 wxEND_EVENT_TABLE()
 
+CamuleDaemonApp::CamuleDaemonApp()
+{
+	theApp = this;
+}
+
 IMPLEMENT_APP_NO_MAIN(CamuleDaemonApp)
 
 #ifndef __WINDOWS__

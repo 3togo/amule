@@ -764,6 +764,8 @@ class CamuleGuiApp : public CamuleApp, public CamuleGuiBase
 	CShutdownStatus *m_shutdownStatus = nullptr;
 
 public:
+	CamuleGuiApp();
+
 	void UpdateShutdownStatus(const wxString &status);
 	void FinishShutdownStatus();
 
@@ -804,6 +806,8 @@ private:
 	virtual bool Initialize(int &argc_, wxChar **argv_);
 
 public:
+	CamuleDaemonApp();
+
 	bool CopyTextToClipboard(wxString strText);
 
 	virtual int ShowAlert(wxString msg, wxString title, int flags);

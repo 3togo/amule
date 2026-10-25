@@ -237,8 +237,6 @@ CamuleApp::CamuleApp()
 	// Initialization
 	m_app_state = APP_STATE_STARTING;
 
-	theApp = &wxGetApp();
-
 	clientlist = NULL;
 	chatsessions = nullptr;
 	searchlist = NULL;

@@ -45,6 +45,8 @@ void CamuleApp::ShowConnectionState(bool)
 		verifiedDuringNotification = CUDPFirewallTester::IsVerified();
 	}
 }
+CamuleDaemonApp::CamuleDaemonApp() = default;
+
 bool CamuleDaemonApp::OnInit()
 {
 	FAIL_M("Unexpected daemon startup");
