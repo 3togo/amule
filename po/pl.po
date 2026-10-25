@@ -9505,6 +9505,16 @@ msgstr "Żądanie skrótu dla nieznanego pliku: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Nie można rozpocząć wyszukiwania Kad"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "Wybierz kto może zażądać pokazania listy twoich udostępnionych plików."
 

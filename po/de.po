@@ -9478,6 +9478,16 @@ msgstr "Prüfsummensatz angefordert für unbekannte Datei '%s'"
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Kann Ports nicht mit der festgelegten Adresse verbinden: %s"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "Wähle, wer deine freigegebenen Dateien einsehen darf."
 

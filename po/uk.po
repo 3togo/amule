@@ -9518,6 +9518,16 @@ msgstr "Запитано набір хешів для невідомого фа�
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Не вдалося розпочати пошук у Kad"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "Оберіть тих, хто може запитати перелік ваших спільних файлів."
 

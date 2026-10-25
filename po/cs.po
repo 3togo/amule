@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-25 09:57+0000\n"
+"PO-Revision-Date: 2026-10-25 21:07+0000\n"
 "Last-Translator: David Watzke <david@watzke.cz>\n"
 "Language-Team: cs <cs@li.org>\n"
 "Language: cs\n"
@@ -198,9 +198,8 @@ msgid "Later"
 msgstr "Později"
 
 #: src/GuiEvents.cpp src/ExternalConn.cpp
-#, fuzzy
 msgid "The selected download has changed. Refresh and try again."
-msgstr "Vybrané stahování bylo změněno, nebo je dokončováno. Obnovte a zkuste to znovu."
+msgstr "Vybrané stahování bylo změněno. Obnovte a zkuste znovu."
 
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
@@ -2478,9 +2477,9 @@ msgid "FileHash not found: %s"
 msgstr "Hash souboru nebyl nalezen: %s"
 
 #: src/ExternalConn.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot cancel a hashing or finished download: %s"
-msgstr "Nelze zrušit dokončené stahování: %s"
+msgstr "Nelze zrušit hashování nebo dokončené stahování: %s"
 
 #: src/ExternalConn.cpp
 msgid "The selected download has changed or is completing. Refresh and try again."
@@ -3076,7 +3075,7 @@ msgstr "Sítě a porty"
 
 #: src/FirstRunWizard.cpp
 msgid "aMule can use two networks. We recommend keeping both enabled."
-msgstr "aMule může používat dvě sítě. Doporučujeme ponechat obě zapnuté."
+msgstr "aMule může používat dvě sítě. Doporučujeme ponechat obě povolené."
 
 #: src/FirstRunWizard.cpp src/TextClient.cpp
 msgid "eD2k"
@@ -3310,9 +3309,9 @@ msgid "Failed to open MaxMindDB database '%s': %s"
 msgstr "Selhalo otevření databáze MaxMindDB '%s': %s"
 
 #: src/geoip/MaxMindDBDatabase.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to replace MaxMindDB database '%s': %s"
-msgstr "Selhalo otevření databáze MaxMindDB '%s': %s"
+msgstr "Selhalo nahrazení databáze MaxMindDB '%s': %s"
 
 #: src/HTTPDownload.cpp
 msgid "Downloading..."
@@ -3325,7 +3324,7 @@ msgstr "Stahování přes HTTP bylo zrušeno"
 #: src/HTTPDownload.cpp
 #, c-format
 msgid "HTTP download of %s stopped: it is larger than %u MiB."
-msgstr ""
+msgstr "HTTP stažení %s zastaveno: je větší než %u MiB."
 
 #: src/HTTPDownload.cpp
 msgid "The URL to download can't be empty"
@@ -3463,32 +3462,32 @@ msgstr "Filtr IP adres je připraven"
 
 #: src/KadContactHistogram.h
 msgid "Contacts grouped by the first twelve bits of their KadID. Blue: all contacts; green: verified addresses. The marker shows your own KadID; clustering near it is expected."
-msgstr ""
+msgstr "Kontakty jsou seskupeny podle prvních dvanácti bitů jejich KadID. Modrá: všechny kontakty; zelená: ověřené adresy. Značka ukazuje vaše vlastní KadID; shlukování v blízkosti se očekává."
 
 #: src/KadContactHistogram.h
 msgid "Loading contact distribution..."
-msgstr ""
+msgstr "Načítání distribuce kontaktů..."
 
 #: src/KadContactHistogram.h
 msgid "This core does not send the contact distribution. Update the core to see the chart."
-msgstr ""
+msgstr "Toto jádro nezasílá distribuci kontaktů. Pro zobrazení grafu aktualizujte jádro."
 
 #: src/KadContactHistogram.h
 msgid "The core sent contact distribution data that could not be read."
-msgstr ""
+msgstr "Jádro zaslalo nečitelná data distribuce kontaktů."
 
 #: src/KadContactHistogram.h
 #, c-format
 msgid "Routing-table contacts: %u; verified: %u; distinct /24s: %u"
-msgstr ""
+msgstr "Kontakty tabulky směrování: %u; ověřené: %u; odlišné /24: %u"
 
 #: src/KadDlg.cpp
 msgid "Requesting Kad lookup diagnostics..."
-msgstr ""
+msgstr "Žádám o diagnostiku hledání Kad..."
 
 #: src/KadDlg.cpp
 msgid "The connected core does not support Kad lookup diagnostics."
-msgstr ""
+msgstr "Připojené jádro nepodporuje diagnostiku hledání Kad."
 
 #: src/KadDlg.cpp src/muuli_wdr.cpp src/StatisticsDlg.cpp
 msgid "Current"
@@ -3537,19 +3536,19 @@ msgstr "Pokračovat?"
 
 #: src/KadLookupView.h
 msgid "Kad lookup diagnostics"
-msgstr ""
+msgstr "Diagnostika hledání Kad"
 
 #: src/KadLookupView.h
 msgid "The core does not support Kad lookup diagnostics."
-msgstr ""
+msgstr "Jádro nepodporuje diagnostiku hledání Kad."
 
 #: src/KadLookupView.h
 msgid "Invalid Kad lookup diagnostics reply."
-msgstr ""
+msgstr "Neplatná odpověď diagnostiky hledání Kad."
 
 #: src/KadLookupView.h
 msgid "Connection lost. Reconnect and request lookup diagnostics again."
-msgstr ""
+msgstr "Spojení ztraceno. Znovu se připojte a požádejte o diagnostiku hledání."
 
 #: src/kademlia/kademlia/SearchManager.cpp
 msgid "Kademlia: search keyword too short"
@@ -3592,120 +3591,109 @@ msgstr[1] "Zapsány %d kontakty Kad"
 msgstr[2] "Zapsáno %d kontaktů Kad"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "Node"
-msgstr "Uzly (0)"
+msgstr "Uzel"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "Complete node"
-msgstr "Dokončeno"
+msgstr "Kompletní uzel"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "File"
-msgstr "Soubory"
+msgstr "Soubor"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Keyword"
-msgstr ""
+msgstr "Klíčové slovo"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Notes"
-msgstr ""
+msgstr "Poznámky"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Publish file"
-msgstr ""
+msgstr "Zveřejnit soubor"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Publish keyword"
-msgstr ""
+msgstr "Zveřejnit klíčové slovo"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Publish notes"
-msgstr ""
+msgstr "Zveřejnit poznámky"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "Find buddy"
-msgstr "Žádný kamarád"
+msgstr "Vyhledat kamaráda"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "Find source"
-msgstr "Zdroje souboru:"
+msgstr "Vyhledat zdroj"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "Special node"
-msgstr "Nový uzel"
+msgstr "Speciální uzel"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "UDP firewall check"
-msgstr "za firewallem"
+msgstr "UDP kontrola firewallu"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 #, c-format
 msgid "type %u"
-msgstr ""
+msgstr "typ %u"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 #, c-format
 msgid "Lookup %s (%s, %s): %u peers, %u overdue routing requests, %u omitted peers, %u evicted referrals"
-msgstr ""
+msgstr "Hledání %s (%s, %s): %u peerů, %u nesplněných žádosti o směrování, %u vynechaných peerů, %u vyřazených referentů"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "active lookup"
-msgstr ""
+msgstr "aktivní hledání"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "finished lookup"
-msgstr "dokončené"
+msgstr "dokončené hledání"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Keyword: %s"
-msgstr "Filtrovaní: %s"
+msgstr "Klíčové slovo: %s"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 #, c-format
 msgid "%s [%s], distance %s, Kad version %u (%s): %u routing requests, %u replies, last RTT %u ms, %u item requests, %u result packets, %u result records"
-msgstr ""
+msgstr "%s [%s]], vzdálenost %s, Verze Kad %u (%s): %u požadavků směrování, %u odpovědí, poslední RTT %u ms, %u požadavků na položky, %u výsledných paketů, %u výsledných záznamů"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "awaiting reply"
-msgstr ""
+msgstr "čekání na odpověď"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "reply received"
-msgstr "Neobdrženo"
+msgstr "odpověď obdržena"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 #, c-format
 msgid "+%u ms: %s referred %s (distance %s, %s)"
-msgstr ""
+msgstr "+%u ms: %s referoval %s (vzdálenost %s, %s)"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "closer to target"
-msgstr ""
+msgstr "blíže k cíli"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "no closer to target"
-msgstr "Neznámý cíl chatu"
+msgstr "žádný blíže k cíli"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Overdue means a routing request unanswered for at least 3 seconds; late replies may still arrive. Result records are received records, not unique files. Only bounded recent history is retained."
-msgstr ""
+msgstr "Nesplněnými se rozumí žádosti, které nedostaly odpověď po dobu nejméně 3 sekund; zpožděné odpovědi mohou stále dorazit. Výsledné záznamy jsou přijaté záznamy, nikoli unikátní soubory. Je uchovávána jen omezená nedávná historie."
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "No Kad lookup history available."
-msgstr "nejsou k dispozici žádné možnosti"
+msgstr "Není k dispozici žádná historie hledání Kad."
 
 #: src/KnownFile.cpp
 msgid "Kad user"
@@ -3714,7 +3702,7 @@ msgstr "Uživatel Kad"
 #: src/KnownFile.cpp
 #, c-format
 msgid "Verify Local Data: %s is still downloading, so it was not checked."
-msgstr ""
+msgstr "Ověření místních dat: %s je stahováno, takže kontrola neproběhla."
 
 #: src/KnownFile.cpp
 #, c-format
@@ -4041,9 +4029,9 @@ msgid "External Connection: Handshake failed."
 msgstr "Externí připojení: Handshake selhal."
 
 #: src/LibSocketAsio.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
-msgstr "VAROVÁNÍ: nepodařilo se navázat na síťové rozhraní '%s' - provoz může odcházet přes výchozí trasu."
+msgstr "VAROVÁNÍ: síťové rozhraní '%s' není k dispozici - síťový provoz není k němu vázán a může uniknout přes výchozí trasu."
 
 #: src/LibSocketAsio.cpp
 #, c-format
@@ -4074,7 +4062,7 @@ msgstr "VAROVÁNÍ: "
 #: src/MediaProbe.cpp
 #, c-format
 msgid "Media metadata: not using %s, because another user owns it or a folder above it."
-msgstr ""
+msgstr "Mediální metadata: nepoužívá se %s, protože tuto a nebo nadřazenou složku vlastní jiný uživatel."
 
 #: src/MediaProbe.cpp
 msgid "Media metadata: no ffprobe binary found. Install ffmpeg, or set the ffprobe path in preferences; length, bitrate and codec will not be extracted."
@@ -4153,20 +4141,19 @@ msgstr "Zavřít"
 
 #: src/MuleDataViewCtrl.cpp
 msgid "Fit column to contents"
-msgstr ""
+msgstr "Přizpůsobit sloupec obsahu"
 
 #: src/MuleDataViewCtrl.cpp
 msgid "Fit visible columns to contents"
-msgstr ""
+msgstr "Přizpůsobit viditelné sloupce obsahu"
 
 #: src/MuleDataViewCtrl.cpp
-#, fuzzy
 msgid "Show all columns (keep widths)"
-msgstr "Zobrazit všechny komentáře"
+msgstr "Zobrazit všechny sloupce (zachovat šířky)"
 
 #: src/MuleDataViewCtrl.cpp
 msgid "Restore default columns and widths"
-msgstr ""
+msgstr "Obnovit výchozí sloupce a šířky"
 
 #: src/MuleTextCtrl.cpp
 msgid "Cut"
@@ -4451,9 +4438,8 @@ msgid "Type"
 msgstr "Typ"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Search network"
-msgstr "Chyba vyhledávání"
+msgstr "Prohledat síť"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -5069,7 +5055,7 @@ msgstr "Přehrávač videa"
 
 #: src/muuli_wdr.cpp
 msgid "Line capacities"
-msgstr ""
+msgstr "Kapacita linky"
 
 #: src/muuli_wdr.cpp
 msgid "Upload"
@@ -5080,23 +5066,20 @@ msgid "Bandwidth limits"
 msgstr "Limity šířky pásma"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Enable download limit"
-msgstr "Limit stahování"
+msgstr "Povolit limit stahování"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Enable upload limit"
-msgstr "Limit odesílání"
+msgstr "Povolit limit odesílání"
 
 #: src/muuli_wdr.cpp
 msgid "Slot Allocation"
 msgstr "Přidělování slotů"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Bandwidth calculator..."
-msgstr "Limity šířky pásma"
+msgstr "Kalkulačka šířky pásma..."
 
 #: src/muuli_wdr.cpp
 msgid "Ports"
@@ -5135,9 +5118,8 @@ msgid "Bind to network interface (empty for any):"
 msgstr "Vázat na síťové rozhraní (prázdné pro libovolné):"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Advanced users only: pin aMule's peer-to-peer traffic, and its HTTP updates where the platform allows, to one network interface, chosen from the list or typed in by name (e.g. tun0, eth0, en0) or index. Unlike binding to an IP, this stops traffic leaking out via the default route - useful with a VPN. On Linux before kernel 5.7 it needs the CAP_NET_RAW capability."
-msgstr "Pouze pro pokročilé uživatele: připoutá veškerý provoz aMule k jednomu síťovému rozhraní, vybranému ze seznamu nebo zadanému názvem (např. tun0, eth0, en0) či indexem. Na rozdíl od vázání na IP adresu toto zabraňuje úniku provozu přes výchozí trasu - užitečné při použití VPN. Nevyžaduje zvýšená oprávnění."
+msgstr "Pouze pro pokročilé uživatele: připnout P2P síťový provoz aMule a související HTTP aktualizace tam kde to platforma umožňuje, k jednomu síťovému rozhraní, vybranému ze seznamu nebo zadanému názvem (např. tun0, eth0, en0) či indexem. Na rozdíl od vázání na IP adresu toto zabraňuje úniku provozu přes výchozí trasu - užitečné při použití VPN. Na Linuxu verzi nižší než je 5.7, vyžaduje schopnost CAP_NET_RAW."
 
 #: src/muuli_wdr.cpp
 msgid "Max sources per downloading file:"
@@ -5165,23 +5147,23 @@ msgstr "IPv6"
 
 #: src/muuli_wdr.cpp
 msgid "Address families:"
-msgstr ""
+msgstr "Rodiny adres:"
 
 #: src/muuli_wdr.cpp
 msgid "IPv4 only"
-msgstr ""
+msgstr "Pouze IPv4"
 
 #: src/muuli_wdr.cpp
 msgid "IPv4 and IPv6"
-msgstr ""
+msgstr "IPv4 a IPv6"
 
 #: src/muuli_wdr.cpp
 msgid "Takes effect after restarting aMule."
-msgstr ""
+msgstr "Vejde v platnost po restartování aMule."
 
 #: src/muuli_wdr.cpp
 msgid "Advertise my IPv6 address to other peers"
-msgstr ""
+msgstr "Propagovat mojí IPv6 adresu k jiným peerům"
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"
@@ -5196,9 +5178,8 @@ msgid "retries"
 msgstr "pokusech"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Edit sources…"
-msgstr "Zdroje souboru:"
+msgstr "Upravit zdroje…"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -9062,7 +9043,7 @@ msgstr "Vypnout filtrování IP pro klienty i servery."
 
 #: src/TextClient.cpp
 msgid "Enable/Disable IP filtering for clients."
-msgstr "Zapnout/vypnout filtrování IP pro klienty."
+msgstr "Povolit/zakázat filtrování IP pro klienty."
 
 #: src/TextClient.cpp
 msgid "Turn IP filtering on for clients."
@@ -9074,7 +9055,7 @@ msgstr "Vypnout filtrování IP pro klienty."
 
 #: src/TextClient.cpp
 msgid "Enable/Disable IP filtering for servers."
-msgstr "Zapnout/vypnout filtrování IP pro servery."
+msgstr "Povolit/zakázat filtrování IP pro servery."
 
 #: src/TextClient.cpp
 msgid "Turn IP filtering on for servers."
@@ -9118,7 +9099,7 @@ msgstr "Nastavit limit šířky pásma pro stahování."
 
 #: src/TextClient.cpp
 msgid "Enable or disable endgame source rotation."
-msgstr "Zapnout nebo vypnout střídání zdrojů v závěrečné fázi."
+msgstr "Povolit nebo zakázat střídání zdrojů v koncovce."
 
 #: src/TextClient.cpp
 msgid "The given value must be 1/ON (enable) or 0/OFF (disable).\n"
@@ -9453,6 +9434,16 @@ msgstr "Odebrat kategorii"
 #, c-format
 msgid "Hashset requested for unknown file: %s"
 msgstr "Vyžádána hashová sada pro neznámý soubor: %s"
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Nepodařilo se zahájit Kad hledání"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
 
 #: src/UploadDiskIOThread.cpp
 #, c-format

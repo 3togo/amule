@@ -9507,6 +9507,16 @@ msgstr "Indexare solicitată pentru fișierul necunoscut: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Nu se pot lega porturile la adresa specificată: %s"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "Selectați cine poate solicita să vizualizeze o listă a fișierelor partajate."
 

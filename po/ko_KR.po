@@ -9443,6 +9443,16 @@ msgstr "알수 없는 파일의 해시설정이 요청되었습니다: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Kad 검색을 시작할 수 없습니다"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "공유 파일 목록 보기를 요청할 수 있는 사람을 선택하세요."
 

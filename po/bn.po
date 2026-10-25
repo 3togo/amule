@@ -9378,6 +9378,16 @@ msgid "Hashset requested for unknown file: %s"
 msgstr "অজানা ফাইলের জন্য হ্যাশসেট অনুরোধ করা হয়েছে: %s"
 
 #: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Kad অনুসন্ধান শুরু করা যায়নি"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
 #, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr ""

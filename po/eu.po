@@ -9451,6 +9451,16 @@ msgstr "Egiaztapena eskaturik fitxategi ezezagunarentzat: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Ezin izan da Kad bilaketa bat hasi"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "Hautatu zure partekatutako fitxategiak nork ikus ditzakeen."
 

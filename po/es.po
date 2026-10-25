@@ -9408,6 +9408,16 @@ msgid "Hashset requested for unknown file: %s"
 msgstr "Solicitado hashset de un archivo desconocido: %s"
 
 #: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "No se pudo iniciar una búsqueda Kad"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
 #, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "Fallo al abrir archivo (%s), eliminando de la lista de archivos compartidos."

@@ -9395,6 +9395,16 @@ msgstr "不明なファイルのハッシュセットが要求されました：
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Kad検索を開始できませんでした"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "あなたの共有ファイル・リストを要求できるユーザを選択してください。"
 

@@ -9407,6 +9407,16 @@ msgid "Hashset requested for unknown file: %s"
 msgstr "HashSet begärd för okänd fil: %s"
 
 #: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Kunde inte starta en Kad-sökning"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
 #, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "Kunde inte öppna filen (%s); tar bort den från listan över delade filer."
