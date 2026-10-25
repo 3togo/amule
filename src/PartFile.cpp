@@ -1653,7 +1653,9 @@ uint32 CPartFile::Process(uint8 m_icounter)
 	// bypass drains Phase 3 at Process()-tick rate (~100 ms) instead of every 60 s when the
 	// file is idle.
 	if ((m_nTotalBufferData > thePrefs::GetFileBufferSize()) ||
-		(dwCurTick > (m_nLastBufferFlushTime + BUFFER_TIME_LIMIT)) || HasPendingHashWork()) {
+		(dwCurTick > (m_nLastBufferFlushTime + BUFFER_TIME_LIMIT)) || HasPendingHashWork() ||
+		(m_nTotalBufferData != 0 && WriteBufferBudget::Get().ShouldFlush(
+						    GetFilePath().GetRaw().ToStdString(wxConvUTF8)))) {
 		FlushBuffer();
 	}
 
@@ -2241,9 +2243,24 @@ void CPartFile::UpdatePartsInfo()
 }
 
 // [Maella -Enhanced Chunk Selection- (based on jicxicmic)]
-bool CPartFile::GetNextRequestedBlock(
-	CUpDownClient *sender, std::vector<Requested_Block_Struct *> &toadd, uint16 &count)
+bool CPartFile::GetNextRequestedBlock(CUpDownClient *sender,
+	std::vector<Requested_Block_Struct *> &toadd,
+	uint16 &count,
+	bool *writeLimited)
 {
+	if (writeLimited != nullptr) {
+		*writeLimited = false;
+	}
+
+	// Only resident dirty payload applies backpressure. Outstanding requests do
+	// not occupy memory and must not constrain a healthy network pipeline.
+	if (WriteBufferBudget::Get().IsPressured(GetFilePath().GetRaw().ToStdString(wxConvUTF8))) {
+		if (writeLimited != nullptr) {
+			*writeLimited = true;
+		}
+		count = 0;
+		return false;
+	}
 
 	// Returns a list of blocks (~180KB) to download. To avoid prematurely stopping the
 	// download, all blocks requested from the same source must lie within the same chunk
@@ -3511,43 +3528,57 @@ uint32 CPartFile::WriteToBuffer(uint32 transize,
 		}
 	}
 
-	// log transferinformation in our "blackbox"
-	m_CorruptionBlackBox->TransferredData(start, end, client->GetIP());
-
-	// Stamp for FlushBuffer's Phase 3 quiescent guard, and for the download-list "Last
-	// Reception" column. The latter must stamp on real data arrival, not on every periodic
-	// FlushBuffer call, or idle/paused/stalled files all read "now" and the column stops
-	// being useful.
+	// A cancelled or invalidated range must not create new dirty payload.
+	if (std::find(m_requestedblocks_list.begin(), m_requestedblocks_list.end(), block) ==
+		m_requestedblocks_list.end()) {
+		return 0;
+	}
+	// Stamp real accepted reception, rather than periodic flushing.
 	m_nLastBlockReceivedTick = GetTickCount64();
 	m_lastDateChanged = wxDateTime::GetTimeNow();
 
-	// Create a new buffered queue entry
-	PartFileBufferedData *item = new PartFileBufferedData(m_hpartfile, data, start, end, block);
-
-	InsertPartFileBufferedWrite(m_BufferedData_list, item);
-
-	// Increment buffer size marker
-	m_nTotalBufferData += lenData;
-
-	// Mark this small section of the file as filled
-	FillGap(item->start, item->end);
-
-	// Update the flushed mark on the requested block
-	// The loop here is unfortunate but necessary to detect deleted blocks.
-
-	std::list<Requested_Block_Struct *>::iterator it2 = m_requestedblocks_list.begin();
-	for (; it2 != m_requestedblocks_list.end(); ++it2) {
-		if (*it2 == item->block) {
-			item->block->transferred += lenData;
+	struct Fragment
+	{
+		uint64 start;
+		uint64 end;
+	};
+	std::vector<Fragment> fragments;
+	for (auto gap = m_gaplist.begin(); gap != m_gaplist.end(); ++gap) {
+		if (gap.start() > end) {
+			break;
+		}
+		if (gap.end() >= start) {
+			fragments.push_back({ std::max(start, gap.start()), std::min(end, gap.end()) });
 		}
 	}
+	uint32 buffered = 0;
+	for (const auto &fragment : fragments) {
+		auto *item = new PartFileBufferedData(m_hpartfile,
+			data + fragment.start - start,
+			fragment.start,
+			fragment.end,
+			block,
+			WriteBufferBudget::Get().Charge(GetFilePath().GetRaw().ToStdString(wxConvUTF8),
+				fragment.end - fragment.start + 1));
+		InsertPartFileBufferedWrite(m_BufferedData_list, item);
+		const uint32 bytes = static_cast<uint32>(fragment.end - fragment.start + 1);
+		m_nTotalBufferData += bytes;
+		buffered += bytes;
+		// Attribute only the bytes actually retained, not overlapping duplicates.
+		m_CorruptionBlackBox->TransferredData(fragment.start, fragment.end, client->GetIP());
+		FillGap(fragment.start, fragment.end);
+	}
+	block->transferred += buffered;
 
-	if (m_gaplist.IsComplete()) {
+	// Start draining on reception instead of waiting for the periodic file
+	// tick; at high rates that delay alone can fill a healthy volume's budget.
+	if (m_gaplist.IsComplete() ||
+		WriteBufferBudget::Get().ShouldFlush(GetFilePath().GetRaw().ToStdString(wxConvUTF8))) {
 		FlushBuffer();
 	}
 
 	// Return the length of data written to the buffer
-	return lenData;
+	return buffered;
 }
 
 void CPartFile::FlushBuffer(bool fromAICHRecoveryDataAvailable)
