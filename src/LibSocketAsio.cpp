@@ -40,6 +40,7 @@
 #endif
 
 #include <algorithm> // Needed for std::min - Boost up to 1.54 fails to compile with MSVC 2013 otherwise
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <optional>
@@ -106,7 +107,39 @@
 
 using namespace boost::asio;
 using namespace boost::system; // for error_code
-static io_context s_io_service;
+// Keep one event loop per worker: posting a TCP write wakes only its owner.
+// UDP, the listener and the resolver continue to use the first context.
+static constexpr int s_numberOfAsioThreads = 4;
+class CAsioContext : public io_context
+{
+public:
+	void Shutdown() { shutdown(); }
+};
+
+struct CAsioContextPool
+{
+	~CAsioContextPool()
+	{
+		// An accept handler on the first context can own a socket on any other
+		// context. Release every pending handler while all socket services still
+		// exist, before any individual io_context destroys its services.
+		for (auto &context : contexts) {
+			context.Shutdown();
+		}
+	}
+
+	std::array<CAsioContext, s_numberOfAsioThreads> contexts;
+};
+
+static CAsioContextPool s_contextPool;
+static auto &s_ioContexts = s_contextPool.contexts;
+static io_context &s_io_service = s_ioContexts.front();
+
+static io_context &NextTcpContext()
+{
+	static std::atomic<unsigned> next{ 0 };
+	return s_ioContexts[next.fetch_add(1, std::memory_order_relaxed) % s_ioContexts.size()];
+}
 
 // The network interface to bind every socket to (empty = system default). Pushed in by the
 // core via SetSocketBindInterface() rather than read from thePrefs directly: mulesocket
@@ -406,9 +439,6 @@ BindInterfaceStatus TestSocketBindInterface(const wxString &ifname)
 	return status;
 }
 
-// Number of threads in the Asio thread pool
-const int CAsioService::m_numberOfThreads = 4;
-
 /** ASIO Client TCP socket implementation */
 
 class CamuleIPV4Endpoint : public ip::tcp::endpoint
@@ -452,9 +482,10 @@ class CAsioSocketImpl : public std::enable_shared_from_this<CAsioSocketImpl>
 
 public:
 	// cppcheck-suppress uninitMemberVar m_readBufferPtr
-	CAsioSocketImpl(CLibSocket *libSocket)
-	: m_libSocket(libSocket)
-	, m_strand(s_io_service)
+	CAsioSocketImpl(CLibSocket *libSocket, io_context &context = NextTcpContext())
+	: m_ioc(context)
+	, m_libSocket(libSocket)
+	, m_strand(m_ioc)
 	{
 		m_OK = false;
 		m_blocksRead = false;
@@ -481,7 +512,7 @@ public:
 		// stalled / desynced peer (see ReadSync). Kept generous so slow-but-progressing large
 		// transfers cannot false-trip it.
 		m_syncReadTimeoutMs = 30000;
-		m_socket = new ip::tcp::socket(s_io_service);
+		m_socket = new ip::tcp::socket(m_ioc);
 
 		// Set socket to non blocking
 		m_socket->non_blocking();
@@ -708,7 +739,7 @@ public:
 		if (!m_closed) {
 			m_closed = true;
 			m_connected = false;
-			if (m_sync || s_io_service.stopped()) {
+			if (m_sync || m_ioc.stopped()) {
 				DispatchClose();
 			} else {
 				auto self = shared_from_this();
@@ -756,7 +787,7 @@ public:
 			}
 		};
 
-		if (m_sync || s_io_service.stopped()) {
+		if (m_sync || m_ioc.stopped()) {
 			teardown();
 		} else {
 			post(m_strand, teardown);
@@ -857,9 +888,8 @@ public:
 	}
 
 private:
-	// Dispatch handlers. Access to m_socket is all bundled in the thread running s_io_service
-	// to avoid concurrent access from several threads, so once things are running (after
-	// connect) all access goes through one of these.
+	// Once connected, asynchronous access to m_socket runs through its owning strand.
+	// Keep close, destroy and completion handlers serialised on the socket's context.
 	void DispatchClose()
 	{
 		error_code ec;
@@ -1211,15 +1241,16 @@ private:
 			error_code ec;
 			if (m_connectTimeoutMs > 0) {
 				// Bounded synchronous connect: async_connect raced against a steady_timer,
-				// both driven here on the io_service. A synchronous EC connection may use
-				// the global s_io_service before the CAsioService thread pool is started,
-				// and if the synchronous operation leaves the io_context stopped it must be
-				// restarted before run() is called. Portable through asio with no per-OS
+				// both driven here on the socket's own context. A synchronous EC connection
+				// may precede the CAsioService worker pool. Restart a stopped context before
+				// running another connect. It must precede the pool: run_one() returns only
+				// for handlers run on this thread, so a worker that took the completion would
+				// leave this loop waiting for the timer. Portable through asio with no per-OS
 				// socket-timeout handling: a wrong or unreachable host fails in
 				// m_connectTimeoutMs instead of hanging on the OS TCP connect timeout.
 				ec = boost::asio::error::would_block;
 				m_socket->async_connect(endpoint, [&ec](const error_code &e) { ec = e; });
-				steady_timer timer(s_io_service);
+				steady_timer timer(m_ioc);
 				timer.expires_after(std::chrono::milliseconds(m_connectTimeoutMs));
 				bool timedOut = false;
 				timer.async_wait([this, &timedOut](const error_code &e) {
@@ -1231,14 +1262,14 @@ private:
 						m_socket->close(ignore);
 					}
 				});
-				s_io_service.restart();
+				m_ioc.restart();
 				while (ec == boost::asio::error::would_block) {
-					if (s_io_service.run_one() == 0) {
+					if (m_ioc.run_one() == 0) {
 						break;
 					}
 				}
 				timer.cancel();
-				s_io_service.poll(); // drain the cancelled timer handler
+				m_ioc.poll(); // drain the cancelled timer handler
 				if (timedOut) {
 					ec = boost::asio::error::timed_out;
 				}
@@ -1298,6 +1329,8 @@ private:
 		return false;
 	}
 #endif
+
+	io_context &m_ioc; // Fixed for the socket lifetime, including accepted sockets.
 
 	// Atomic so OnWrapperGone() (called from the wrapper's dtor on any thread) and the
 	// strand-side load in Destroy() can both touch it without an external lock.
@@ -1715,7 +1748,7 @@ public:
 		socket.LinkSocketImpl(std::move(m_currentSocket));
 
 		// check if we have another socket ready for reception
-		m_currentSocket = std::make_shared<CAsioSocketImpl>(nullptr);
+		m_currentSocket = NewAcceptSocket();
 		error_code ec;
 		// async_accept does not work if server is non-blocking
 		// temporarily switch it to non-blocking
@@ -1725,7 +1758,11 @@ public:
 		// back to blocking
 		non_blocking(false);
 		if (ec || !m_currentSocket->UpdateIP()) {
-			// nothing there
+			// Keep an unopened probe for the next async accept. Discarding it would
+			// consume another context without accepting a connection.
+			if (m_currentSocket->GetAsioSocket().is_open()) {
+				m_currentSocket.reset();
+			}
 			m_socketAvailable = false;
 			// start getting another one
 			auto self = shared_from_this();
@@ -1749,6 +1786,15 @@ public:
 	bool SocketAvailable() const { return m_socketAvailable; }
 
 private:
+	std::shared_ptr<CAsioSocketImpl> NewAcceptSocket()
+	{
+		// Accepting into a CLibSocket replaces its temporary, unconnected impl.
+		// Give this listener its own rotation so those wrappers cannot skip workers.
+		const size_t index =
+			m_nextAcceptContext.fetch_add(1, std::memory_order_relaxed) % s_ioContexts.size();
+		return std::make_shared<CAsioSocketImpl>(nullptr, s_ioContexts[index]);
+	}
+
 	// Throws system_error and leaves the acceptor open on failure. isV6 selects the
 	// bind-to-interface option and is independent of the protocol for the IPv4 path, which has
 	// always passed false.
@@ -1818,7 +1864,9 @@ private:
 		if (m_acceptStopped.load(std::memory_order_acquire)) {
 			return;
 		}
-		m_currentSocket = std::make_shared<CAsioSocketImpl>(nullptr);
+		if (!m_currentSocket) {
+			m_currentSocket = NewAcceptSocket();
+		}
 		auto self = shared_from_this();
 		async_accept(m_currentSocket->GetAsioSocket(),
 			bind_executor(m_strand, [self](const error_code &ec) { self->HandleAccept(ec); }));
@@ -1849,7 +1897,8 @@ private:
 				AddDebugLogLineN(logAsio, "Error in HandleAccept: invalid socket");
 			}
 		}
-		// We were not successful. Try again.
+		// We were not successful. Try again with a fresh socket.
+		m_currentSocket.reset();
 		// Post the request to the event queue to make sure it doesn't get called immediately.
 		auto self = shared_from_this();
 		post(m_strand, [self]() { self->StartAccept(); });
@@ -1867,6 +1916,7 @@ private:
 	std::optional<ip::tcp::endpoint> m_boundEndpoint;
 	// The last socket that connected to us
 	std::shared_ptr<CAsioSocketImpl> m_currentSocket;
+	std::atomic<size_t> m_nextAcceptContext{ 0 };
 	// Is there a socket available?
 	bool m_socketAvailable;
 	io_context::strand m_strand; // handle synchronisation in io_service thread pool
@@ -2348,51 +2398,64 @@ public:
 	CAsioServiceThread()
 	: wxThread(wxTHREAD_JOINABLE)
 	{
-		static int count = 0;
-		m_threadNumber = ++count;
+	}
+
+	void Start(io_context &context, int number)
+	{
+		m_context = &context;
+		m_threadNumber = number;
 		Create();
 		Run();
 	}
 
-	void *Entry()
+	void *Entry() override
 	{
 		AddLogLineNS(CFormat(_("Asio thread %d started")) % m_threadNumber);
-		auto worker = make_work_guard(s_io_service); // keep io_service running
-		s_io_service.run();
+		auto worker = make_work_guard(*m_context);
+		m_context->run();
 		AddDebugLogLineN(logAsio, CFormat("Asio thread %d stopped") % m_threadNumber);
 
-		return NULL;
+		return nullptr;
 	}
 
 private:
-	int m_threadNumber;
+	io_context *m_context = nullptr;
+	int m_threadNumber = 0;
 };
 
-/** The constructor starts the thread. */
+/** The constructor starts the threads. */
 CAsioService::CAsioService()
 {
-	// Synchronous users such as amuleweb connect to the EC server before starting their
-	// long-lived Asio worker pool. A completed run()/run_one() leaves the process-global
-	// io_context stopped, in which state new work is ignored until restart() is called.
-	s_io_service.restart();
-	m_threads = new CAsioServiceThread[m_numberOfThreads];
+	// Synchronous EC connects can leave their context stopped before this pool starts.
+	// Restart all contexts before launching any worker, also when recreating the service.
+	for (auto &context : s_ioContexts) {
+		context.restart();
+	}
+	m_threads = new CAsioServiceThread[s_numberOfAsioThreads];
+	for (int i = 0; i < s_numberOfAsioThreads; ++i) {
+		m_threads[i].Start(s_ioContexts[i], i + 1);
+	}
 }
 
-CAsioService::~CAsioService() {}
+CAsioService::~CAsioService()
+{
+	Stop();
+}
 
 void CAsioService::Stop()
 {
 	if (!m_threads) {
 		return;
 	}
-	s_io_service.stop();
-	// Wait for threads to exit
-	for (int i = 0; i < m_numberOfThreads; i++) {
-		CAsioServiceThread *t = m_threads + i;
-		t->Wait();
+	for (auto &context : s_ioContexts) {
+		context.stop();
+	}
+	// Stop every context before waiting for any worker to exit.
+	for (int i = 0; i < s_numberOfAsioThreads; ++i) {
+		m_threads[i].Wait();
 	}
 	delete[] m_threads;
-	m_threads = 0;
+	m_threads = nullptr;
 }
 
 /** amuleIPV4Address */

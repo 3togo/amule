@@ -32,13 +32,14 @@
 #include <atomic>
 #include <chrono>
 #include <cstring>
+#include <future>
 #include <memory>
 #include <mutex>
 #include <thread>
 #include <utility>
 #include <vector>
 
-// Access to the production io_context lets the asynchronous tests drain ready
+// Access to the production io_context pool lets the asynchronous tests drain ready
 // handlers after joining the worker pool, without adding a socket API just for tests.
 // NOLINTNEXTLINE(bugprone-suspicious-include)
 #include "LibSocket.cpp"
@@ -64,6 +65,7 @@ DECLARE_SIMPLE(LibSocketTransport)
 namespace
 {
 std::atomic<int> s_queuedNotifications{ 0 };
+std::atomic<bool> s_deliverDirectly{ false };
 std::mutex s_notificationMutex;
 bool s_captureNotifications = false;
 std::vector<std::unique_ptr<MuleNotify::CMuleNotiferBase>> s_notifications;
@@ -76,6 +78,10 @@ void HandleNotificationAlways(const CMuleNotiferBase &);
 void HandleNotificationAlways(const CMuleNotiferBase &notification)
 {
 	++s_queuedNotifications;
+	if (s_deliverDirectly.load()) {
+		notification.Notify();
+		return;
+	}
 	std::lock_guard<std::mutex> lock(s_notificationMutex);
 	if (s_captureNotifications) {
 		s_notifications.emplace_back(notification.Clone());
@@ -91,6 +97,20 @@ bool StringIPtoUint32(const wxString &, uint32 &)
 
 namespace
 {
+void DrainSocketContexts()
+{
+	// The workers have been joined. A handler can enqueue work on another context,
+	// so keep polling all of them until a complete pass makes no progress.
+	size_t handled;
+	do {
+		handled = 0;
+		for (auto &context : s_ioContexts) {
+			context.restart();
+			handled += context.poll();
+		}
+	} while (handled);
+}
+
 class CSendEventSocket : public CLibSocket
 {
 public:
@@ -134,8 +154,7 @@ public:
 	{
 		m_service->Stop();
 		socket.Close();
-		s_io_service.restart();
-		s_io_service.poll();
+		DrainSocketContexts();
 		std::lock_guard<std::mutex> lock(s_notificationMutex);
 		s_captureNotifications = false;
 		s_notifications.clear();
@@ -165,8 +184,7 @@ public:
 		// Receiving the bytes alone does not prove HandleSend has run. Join the
 		// workers, then drain ready handlers on this thread before checking events.
 		m_service->Stop();
-		s_io_service.restart();
-		s_io_service.poll();
+		DrainSocketContexts();
 		std::vector<std::unique_ptr<MuleNotify::CMuleNotiferBase>> notifications;
 		{
 			std::lock_guard<std::mutex> lock(s_notificationMutex);
@@ -242,17 +260,262 @@ CFakeTransport *Attach(CLibSocket &socket, CNetworkAddress peer = CNetworkAddres
 }
 } // namespace
 
+TEST(LibSocketTransport, ContextPoolReleasesCrossContextAcceptsBeforeDestroyingServices)
+{
+	std::weak_ptr<boost::asio::ip::tcp::socket> pending;
+	{
+		CAsioContextPool pool;
+		// Keep the acceptor alive through its pending handler, as the production listener does.
+		auto listener = std::make_shared<boost::asio::ip::tcp::acceptor>(pool.contexts.front(),
+			boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::loopback(), 0));
+		auto peer = std::make_shared<boost::asio::ip::tcp::socket>(pool.contexts.back());
+		pending = peer;
+		// Even an error completion owns an open peer until the handler is released.
+		peer->open(boost::asio::ip::tcp::v4());
+		listener->async_accept(*peer, [listener, peer](const boost::system::error_code &) {});
+	}
+	ASSERT_TRUE(pending.expired());
+}
+
+TEST(LibSocketTransport, ListenerSpreadsBurstAndIdleAcceptsAcrossAllWorkers)
+{
+	struct CDirectNotifications
+	{
+		CDirectNotifications() { s_deliverDirectly.store(true); }
+		~CDirectNotifications() { s_deliverDirectly.store(false); }
+	} directNotifications;
+	class CReadProbe : public CLibSocket
+	{
+	public:
+		void OnReceive(int error) override
+		{
+			if (!announced.exchange(true)) {
+				char byte = 0;
+				const bool valid = !error && Read(&byte, 1) == 1 && byte == 'x';
+				completed.set_value({ valid, std::this_thread::get_id() });
+			}
+		}
+		std::atomic<bool> announced{ false };
+		std::promise<std::pair<bool, std::thread::id>> completed;
+	};
+	for (bool burst : { false, true }) {
+		amuleIPV4Address address;
+		address.Hostname(wxString("127.0.0.1"));
+		address.Service(0);
+		auto listener = std::make_shared<CAsioSocketServerImpl>(address, nullptr);
+		listener->Init();
+		ASSERT_TRUE(listener->IsOk());
+		boost::asio::io_context clientsContext;
+		std::vector<std::unique_ptr<boost::asio::ip::tcp::socket>> clients;
+		std::vector<std::unique_ptr<CReadProbe>> peers;
+		std::vector<std::future<std::pair<bool, std::thread::id>>> results;
+		const auto connect = [&]() {
+			auto client = std::make_unique<boost::asio::ip::tcp::socket>(clientsContext);
+			client->connect(listener->local_endpoint());
+			clients.push_back(std::move(client));
+		};
+		if (burst) {
+			for (int i = 0; i < 2 * s_numberOfAsioThreads; ++i) {
+				connect();
+			}
+		}
+		for (int i = 0; i < 2 * s_numberOfAsioThreads; ++i) {
+			if (!burst) {
+				connect();
+			}
+			const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+			do {
+				DrainSocketContexts();
+				if (listener->SocketAvailable()) {
+					break;
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			} while (std::chrono::steady_clock::now() < deadline);
+			ASSERT_TRUE(listener->SocketAvailable());
+			// Its constructor creates the temporary impl that used to skip a worker.
+			auto peer = std::make_unique<CReadProbe>();
+			results.push_back(peer->completed.get_future());
+			ASSERT_TRUE(listener->AcceptWith(*peer));
+			peers.push_back(std::move(peer));
+			DrainSocketContexts();
+		}
+		CAsioService service;
+		for (const auto &client : clients) {
+			boost::asio::write(*client, boost::asio::buffer("x", 1));
+		}
+		std::vector<std::pair<bool, std::thread::id>> received;
+		for (auto &result : results) {
+			if (result.wait_for(std::chrono::seconds(2)) == std::future_status::ready) {
+				received.push_back(result.get());
+			}
+		}
+		service.Stop();
+		for (const auto &peer : peers) {
+			peer->Close();
+		}
+		listener->Close();
+		DrainSocketContexts();
+		ASSERT_EQUALS(peers.size(), received.size());
+		std::vector<std::thread::id> workers;
+		for (const auto &result : received) {
+			ASSERT_TRUE(result.first);
+			ASSERT_TRUE(result.second != std::this_thread::get_id());
+			if (std::find(workers.begin(), workers.end(), result.second) == workers.end()) {
+				workers.push_back(result.second);
+			}
+		}
+		ASSERT_EQUALS(static_cast<size_t>(s_numberOfAsioThreads), workers.size());
+		for (const auto &worker : workers) {
+			ASSERT_EQUALS(
+				2, std::count_if(received.begin(), received.end(), [&](const auto &result) {
+					return result.second == worker;
+				}));
+		}
+	}
+}
+
+TEST(LibSocketTransport, AcceptedPeerReadsOnItsOwnContext)
+{
+	boost::asio::ip::tcp::acceptor listener(
+		s_ioContexts.front(), { boost::asio::ip::address_v4::loopback(), 0 });
+	boost::asio::ip::tcp::socket peer(s_ioContexts.back());
+	boost::asio::io_context clientContext;
+	boost::asio::ip::tcp::socket client(clientContext);
+	std::promise<std::pair<int, std::thread::id>> accepted;
+	std::promise<std::pair<int, std::thread::id>> received;
+	auto acceptResult = accepted.get_future();
+	auto readResult = received.get_future();
+	char payload = 0;
+	// Declare last so workers are joined before any callback captures go out of scope.
+	CAsioService service;
+	listener.async_accept(peer, [&](const boost::system::error_code &error) {
+		accepted.set_value({ error.value(), std::this_thread::get_id() });
+		if (!error) {
+			boost::asio::async_read(peer,
+				boost::asio::buffer(&payload, 1),
+				[&](const boost::system::error_code &readError, size_t) {
+					received.set_value({ readError.value(), std::this_thread::get_id() });
+				});
+		}
+	});
+	boost::system::error_code clientError;
+	client.connect(listener.local_endpoint(), clientError);
+	if (!clientError) {
+		boost::asio::write(client, boost::asio::buffer("x", 1), clientError);
+	}
+	const auto acceptStatus = acceptResult.wait_for(std::chrono::seconds(2));
+	const auto readStatus = readResult.wait_for(std::chrono::seconds(2));
+	service.Stop();
+	boost::system::error_code ignored;
+	peer.close(ignored);
+	listener.close(ignored);
+	DrainSocketContexts();
+	ASSERT_TRUE(!clientError);
+	ASSERT_TRUE(acceptStatus == std::future_status::ready);
+	ASSERT_TRUE(readStatus == std::future_status::ready);
+	const auto accept = acceptResult.get();
+	const auto read = readResult.get();
+	ASSERT_EQUALS(0, accept.first);
+	ASSERT_EQUALS(0, read.first);
+	ASSERT_EQUALS('x', payload);
+	ASSERT_TRUE(accept.second != std::this_thread::get_id());
+	ASSERT_TRUE(read.second != std::this_thread::get_id());
+	ASSERT_TRUE(accept.second != read.second);
+}
+
+// Check actual socket executors, including wraparound, rather than only the selector.
+TEST(LibSocketTransport, TcpSocketsUseEveryContextInRoundRobinOrder)
+{
+	std::vector<boost::asio::execution_context *> contexts;
+	for (int i = 0; i < 2 * s_numberOfAsioThreads; ++i) {
+		CAsioSocketImpl socket(nullptr);
+		contexts.push_back(&socket.GetAsioSocket().get_executor().context());
+	}
+	for (int i = 0; i < s_numberOfAsioThreads; ++i) {
+		ASSERT_TRUE(contexts[i] == contexts[i + s_numberOfAsioThreads]);
+		for (int j = 0; j < i; ++j) {
+			ASSERT_TRUE(contexts[i] != contexts[j]);
+		}
+	}
+}
+
+TEST(LibSocketTransport, RecreatedServicesRunEveryContextOnADistinctWorker)
+{
+	for (int generation = 0; generation < 8; ++generation) {
+		std::array<std::promise<std::thread::id>, s_numberOfAsioThreads> completed;
+		std::array<std::future<std::thread::id>, s_numberOfAsioThreads> futures;
+		for (int i = 0; i < s_numberOfAsioThreads; ++i) {
+			futures[i] = completed[i].get_future();
+			boost::asio::post(s_ioContexts[i],
+				[&completed, i]() { completed[i].set_value(std::this_thread::get_id()); });
+		}
+		{
+			CAsioService service;
+			std::vector<std::thread::id> workers;
+			for (auto &future : futures) {
+				ASSERT_TRUE(future.wait_for(std::chrono::seconds(2)) ==
+					    std::future_status::ready);
+				const auto worker = future.get();
+				ASSERT_TRUE(worker != std::this_thread::get_id());
+				for (const auto &previous : workers) {
+					ASSERT_TRUE(worker != previous);
+				}
+				workers.push_back(worker);
+			}
+			if (generation % 2) {
+				service.Stop();
+				service.Stop();
+			}
+		} // Also exercise automatic stop and join in the destructor.
+		for (auto &context : s_ioContexts) {
+			ASSERT_TRUE(context.stopped());
+		}
+	}
+}
+
+TEST(LibSocketTransport, BoundedSynchronousConnectRunsOnEverySocketContext)
+{
+	boost::asio::io_context io;
+	boost::asio::ip::tcp::acceptor listener(io, { boost::asio::ip::address_v4::loopback(), 0 });
+	amuleIPV4Address address;
+	address.Hostname(wxString("127.0.0.1"));
+	address.Service(listener.local_endpoint().port());
+	for (int i = 0; i < 2 * s_numberOfAsioThreads; ++i) {
+		CLibSocket socket;
+		socket.Notify(false);
+		socket.SetConnectTimeout(1000);
+		ASSERT_TRUE(socket.Connect(address, false));
+		ASSERT_TRUE(socket.IsConnected());
+		boost::asio::ip::tcp::socket peer(io);
+		listener.accept(peer);
+		socket.Close();
+	}
+	// A failed connect must also consume its timer before the stack frame disappears.
+	listener.close();
+	for (int i = 0; i < s_numberOfAsioThreads; ++i) {
+		CLibSocket socket;
+		socket.Notify(false);
+		socket.SetConnectTimeout(1000);
+		ASSERT_FALSE(socket.Connect(address, false));
+		ASSERT_FALSE(socket.IsConnected());
+		ASSERT_TRUE(socket.LastError() != 0);
+	}
+	DrainSocketContexts();
+}
+
 TEST(LibSocketTransport, AcceptedAsyncWriteQueuesNoSendEvent)
 {
-	CAsyncSendPeer peer;
-	const char payload[] = "accepted";
-	for (int completion = 0; completion < 2; ++completion) {
-		// The second accepted write also proves the first completion cleared its buffer.
-		ASSERT_EQUALS(sizeof(payload), peer.socket.Write(payload, sizeof(payload)));
-		peer.FinishSend(sizeof(payload));
-		ASSERT_EQUALS(0, peer.socket.sendEvents);
-		ASSERT_FALSE(peer.socket.BlocksWrite());
-		peer.StartWorkers();
+	for (int context = 0; context < s_numberOfAsioThreads; ++context) {
+		CAsyncSendPeer peer;
+		const char payload[] = "accepted";
+		for (int completion = 0; completion < 2; ++completion) {
+			// The second accepted write also proves the first completion cleared its buffer.
+			ASSERT_EQUALS(sizeof(payload), peer.socket.Write(payload, sizeof(payload)));
+			peer.FinishSend(sizeof(payload));
+			ASSERT_EQUALS(0, peer.socket.sendEvents);
+			ASSERT_FALSE(peer.socket.BlocksWrite());
+			peer.StartWorkers();
+		}
 	}
 }
 

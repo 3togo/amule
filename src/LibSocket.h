@@ -313,7 +313,6 @@ public:
 	void Stop();
 
 private:
-	static const int m_numberOfThreads;
 	class CAsioServiceThread *m_threads;
 };
 

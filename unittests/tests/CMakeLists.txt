@@ -491,7 +491,7 @@ target_link_libraries (UtpSocketTransportTest
 
 add_executable (LibSocketTransportTest
 	LibSocketTransportTest.cpp
-	# The test includes LibSocket.cpp so it can drain the process-global io_context
+	# The test includes LibSocket.cpp so it can drain the process-global io_context pool
 	# after joining CAsioService, including completions that intentionally queue no event.
 	# Same reason NetworkFunctionsTest compiles it: LibSocket.cpp includes
 	# LibSocketAsio.cpp, whose Windows interface-resolution path calls
