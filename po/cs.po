@@ -197,6 +197,11 @@ msgstr "Restartovat nyní"
 msgid "Later"
 msgstr "Později"
 
+#: src/GuiEvents.cpp src/ExternalConn.cpp
+#, fuzzy
+msgid "The selected download has changed. Refresh and try again."
+msgstr "Vybrané stahování bylo změněno, nebo je dokončováno. Obnovte a zkuste to znovu."
+
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
 msgstr "Připojené jádro nepodporuje smazání kompletních souborů z disku."
@@ -2473,8 +2478,8 @@ msgid "FileHash not found: %s"
 msgstr "Hash souboru nebyl nalezen: %s"
 
 #: src/ExternalConn.cpp
-#, c-format
-msgid "Cannot cancel a finished download: %s"
+#, fuzzy, c-format
+msgid "Cannot cancel a hashing or finished download: %s"
 msgstr "Nelze zrušit dokončené stahování: %s"
 
 #: src/ExternalConn.cpp

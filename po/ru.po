@@ -203,6 +203,11 @@ msgstr "Перезапустить сейчас"
 msgid "Later"
 msgstr "Позже"
 
+#: src/GuiEvents.cpp src/ExternalConn.cpp
+#, fuzzy
+msgid "The selected download has changed. Refresh and try again."
+msgstr "Выбранная загрузка изменилась или завершается. Обновите список и повторите попытку."
+
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
 msgstr "Подключённое ядро не поддерживает удаление завершённых файлов с диска."
@@ -2487,8 +2492,8 @@ msgid "FileHash not found: %s"
 msgstr "Хеш файла не найден: %s"
 
 #: src/ExternalConn.cpp
-#, c-format
-msgid "Cannot cancel a finished download: %s"
+#, fuzzy, c-format
+msgid "Cannot cancel a hashing or finished download: %s"
 msgstr "Невозможно отменить завершённую загрузку: %s"
 
 #: src/ExternalConn.cpp

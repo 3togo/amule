@@ -193,6 +193,10 @@ msgstr "এখন পুনরায় চালু করুন"
 msgid "Later"
 msgstr "পরে"
 
+#: src/GuiEvents.cpp src/ExternalConn.cpp
+msgid "The selected download has changed. Refresh and try again."
+msgstr ""
+
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
 msgstr ""
@@ -2443,7 +2447,7 @@ msgstr "FileHash পাওয়া যায়নি: %s"
 
 #: src/ExternalConn.cpp
 #, fuzzy, c-format
-msgid "Cannot cancel a finished download: %s"
+msgid "Cannot cancel a hashing or finished download: %s"
 msgstr "ডাউনলোড সম্পন্ন: %s"
 
 #: src/ExternalConn.cpp

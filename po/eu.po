@@ -198,6 +198,10 @@ msgstr "Berrabiarazi orain"
 msgid "Later"
 msgstr "Geroago"
 
+#: src/GuiEvents.cpp src/ExternalConn.cpp
+msgid "The selected download has changed. Refresh and try again."
+msgstr ""
+
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
 msgstr ""
@@ -2468,7 +2472,7 @@ msgstr "Ez da %s fitxategi egiaztapena aurkitu"
 
 #: src/ExternalConn.cpp
 #, fuzzy, c-format
-msgid "Cannot cancel a finished download: %s"
+msgid "Cannot cancel a hashing or finished download: %s"
 msgstr "Deskarga amaiturik: %s"
 
 #: src/ExternalConn.cpp

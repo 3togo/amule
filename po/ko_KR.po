@@ -198,6 +198,10 @@ msgstr "지금 다시 시작"
 msgid "Later"
 msgstr "나중에"
 
+#: src/GuiEvents.cpp src/ExternalConn.cpp
+msgid "The selected download has changed. Refresh and try again."
+msgstr ""
+
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
 msgstr ""
@@ -2467,7 +2471,7 @@ msgstr "파일해시를 찾을 수 없음: %s"
 
 #: src/ExternalConn.cpp
 #, fuzzy, c-format
-msgid "Cannot cancel a finished download: %s"
+msgid "Cannot cancel a hashing or finished download: %s"
 msgstr "내려받기 완료: %s"
 
 #: src/ExternalConn.cpp

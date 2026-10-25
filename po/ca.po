@@ -201,6 +201,11 @@ msgstr "Reinicia ara"
 msgid "Later"
 msgstr "Més tard"
 
+#: src/GuiEvents.cpp src/ExternalConn.cpp
+#, fuzzy
+msgid "The selected download has changed. Refresh and try again."
+msgstr "La baixada seleccionada ha canviat o s'està completant. Refresqueu i torneu-ho a provar."
+
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
 msgstr "El nucli connectat no admet esborrar del disc fitxers completats."
@@ -2464,8 +2469,8 @@ msgid "FileHash not found: %s"
 msgstr "No s'ha trobat el resum del fitxer: %s"
 
 #: src/ExternalConn.cpp
-#, c-format
-msgid "Cannot cancel a finished download: %s"
+#, fuzzy, c-format
+msgid "Cannot cancel a hashing or finished download: %s"
 msgstr "No es pot cancel·lar una baixada acabada: %s"
 
 #: src/ExternalConn.cpp

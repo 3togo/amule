@@ -197,6 +197,11 @@ msgstr "إعادة التشغيل الآن"
 msgid "Later"
 msgstr "لاحقًا"
 
+#: src/GuiEvents.cpp src/ExternalConn.cpp
+#, fuzzy
+msgid "The selected download has changed. Refresh and try again."
+msgstr "تغير التحميل المحدد أو أنه يقترب من الاكتمال. يرجى التحديث وإعادة المحاولة."
+
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
 msgstr "النواة المتصلة لا تدعم حذف الملفات الكاملة من القرص."
@@ -2460,8 +2465,8 @@ msgid "FileHash not found: %s"
 msgstr "تجزئة الملف غير موجودة: %s"
 
 #: src/ExternalConn.cpp
-#, c-format
-msgid "Cannot cancel a finished download: %s"
+#, fuzzy, c-format
+msgid "Cannot cancel a hashing or finished download: %s"
 msgstr "لا يمكن إلغاء تحميل مكتمل: %s"
 
 #: src/ExternalConn.cpp
