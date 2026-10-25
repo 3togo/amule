@@ -25,8 +25,12 @@
 #include <muleunit/test.h>
 
 #include <ec/cpp/ECCodes.h>
+#include <ec/cpp/ECPacket.h>
 #include <ec/cpp/ECMemSocket.h>
 #include <ec/cpp/ECSocket.h>
+
+#include <algorithm>
+#include <cstring>
 
 using namespace muleunit;
 
@@ -154,4 +158,121 @@ TEST(ECSocketFlags, TxChunkSizeStopsAtTheCap)
 	ASSERT_EQUALS(kCap, CTxChunkProbe::TxChunkSize(kCap));
 	ASSERT_EQUALS(kCap, CTxChunkProbe::TxChunkSize(4 * 1024 * 1024));
 	ASSERT_EQUALS(kCap, CTxChunkProbe::TxChunkSize(256u * 1024 * 1024));
+}
+
+namespace
+{
+
+// Closing the Asio socket does not discard bytes already buffered for reading
+// or set a socket error. Preserve that behavior here to exercise the EC loop.
+class CInputProbe : public CECMemSocket
+{
+public:
+	void AppendPacket(unsigned char flags = 0x20)
+	{
+		const unsigned char packet[] = { 0, 0, 0, flags, 0, 0, 0, 3, EC_OP_NOOP, 0, 0 };
+		input.insert(input.end(), std::begin(packet), std::end(packet));
+	}
+
+	void OnLost() override { ++lost; }
+	const CECPacket *OnPacketReceived(const CECPacket *, uint32) override
+	{
+		++received;
+		if (closeOnPacket) {
+			CloseAndDispatchLost();
+		}
+		return reply ? new CECPacket(EC_OP_NOOP) : nullptr;
+	}
+
+	bool closeOnPacket = false;
+	bool closeOnRead = false;
+	bool reply = false;
+	unsigned int received = 0;
+	unsigned int lost = 0;
+
+private:
+	uint32 InternalRead(void *buffer, uint32 length) override
+	{
+		const size_t count = std::min(static_cast<size_t>(length), input.size() - consumed);
+		if (count != 0) {
+			std::memcpy(buffer, input.data() + consumed, count);
+			consumed += count;
+		}
+		if (closeOnRead) {
+			InternalClose();
+		}
+		return static_cast<uint32>(count);
+	}
+	void InternalClose() override { connected = false; }
+	bool InternalIsConnected() override { return connected; }
+
+	std::vector<unsigned char> input;
+	size_t consumed = 0;
+	bool connected = true;
+};
+
+} // namespace
+
+TEST(ECSocketFlags, ConnectedPacketsStillDispatchAndReply)
+{
+	CInputProbe socket;
+	socket.reply = true;
+	socket.AppendPacket();
+	socket.AppendPacket();
+	socket.OnInput();
+	ASSERT_EQUALS(2u, socket.received);
+	ASSERT_EQUALS(0u, socket.lost);
+	ASSERT_FALSE(socket.TakeBytes().empty());
+}
+
+TEST(ECSocketFlags, InvalidFlagsStopTheBufferedBatch)
+{
+	CInputProbe socket;
+	socket.AppendPacket(0x60);
+	socket.AppendPacket();
+	socket.OnInput();
+	ASSERT_EQUALS(0u, socket.received);
+	ASSERT_EQUALS(1u, socket.lost);
+}
+
+TEST(ECSocketFlags, PacketHandlerDisconnectStopsTheBufferedBatch)
+{
+	CInputProbe socket;
+	socket.closeOnPacket = true;
+	socket.AppendPacket();
+	socket.AppendPacket();
+	socket.OnInput();
+	ASSERT_EQUALS(1u, socket.received);
+	ASSERT_EQUALS(1u, socket.lost);
+}
+
+TEST(ECSocketFlags, PacketHandlerDisconnectSuppressesItsReply)
+{
+	CInputProbe socket;
+	socket.closeOnPacket = true;
+	socket.reply = true;
+	socket.AppendPacket();
+	socket.OnInput();
+	ASSERT_EQUALS(1u, socket.received);
+	ASSERT_TRUE(socket.TakeBytes().empty());
+}
+
+TEST(ECSocketFlags, DisconnectedReadDoesNotDispatchAPacket)
+{
+	CInputProbe socket;
+	socket.closeOnRead = true;
+	socket.AppendPacket();
+	socket.OnInput();
+	ASSERT_EQUALS(0u, socket.received);
+}
+
+TEST(ECSocketFlags, InputEventAfterCloseIsIgnored)
+{
+	CInputProbe socket;
+	socket.AppendPacket(0x60);
+	socket.AppendPacket();
+	socket.OnInput();
+	socket.OnInput();
+	ASSERT_EQUALS(0u, socket.received);
+	ASSERT_EQUALS(1u, socket.lost);
 }

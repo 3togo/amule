@@ -829,12 +829,17 @@ const CECPacket *CECServerSocket::OnPacketReceived(const CECPacket *packet, uint
 {
 	packet->DebugPrint(true, trueSize);
 
-	const CECPacket *reply = NULL;
+	const CECPacket *reply = nullptr;
+	if (IsDestroying()) {
+		return nullptr;
+	}
 
 	if (m_conn_state == CONN_FAILED) {
 		// Client didn't close the socket when authentication failed.
 		AddLogLineN(_("Client sent packet after authentication failed."));
-		CloseSocket();
+		// A local close raises no lost event, and OnLost is what destroys the socket.
+		CloseAndDispatchLost();
+		return nullptr;
 	}
 
 	if (m_conn_state != CONN_ESTABLISHED) {
@@ -849,7 +854,7 @@ const CECPacket *CECServerSocket::OnPacketReceived(const CECPacket *packet, uint
 			// legitimate clear packet, a terminal AUTH_FAIL, only arrives before
 			// CONN_ESTABLISHED.
 			AddDebugLogLineN(logEC, "EC: cleartext packet on an encrypted session, dropping");
-			CloseSocket();
+			CloseAndDispatchLost();
 			return nullptr;
 		}
 		reply = ProcessRequest2(packet);
@@ -859,6 +864,7 @@ const CECPacket *CECServerSocket::OnPacketReceived(const CECPacket *packet, uint
 
 void CECServerSocket::OnLost()
 {
+	m_conn_state = CONN_FAILED;
 	CancelNotifications();
 	AddLogLineN(_("External connection closed."));
 	theApp->ECServerHandler->m_ec_notifier->Remove_EC_Client(this);
