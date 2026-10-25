@@ -598,21 +598,13 @@ void CDownloadListCtrl::OnItemRightClicked(wxDataViewEvent &event)
 
 void CDownloadListCtrl::OnCancelFile(wxCommandEvent &WXUNUSED(event))
 {
-	std::vector<wxUIntPtr> files = GetSelectedItemData();
-	files.erase(std::remove_if(files.begin(),
-			    files.end(),
-			    [](wxUIntPtr data) {
-				    switch (reinterpret_cast<CPartFile *>(data)->GetStatus()) {
-				    case PS_WAITING_FOR_HASH:
-				    case PS_HASHING:
-				    case PS_COMPLETING:
-				    case PS_COMPLETE:
-					    return true;
-				    default:
-					    return false;
-				    }
-			    }),
-		files.end());
+	std::vector<CDownloadTarget> files;
+	for (wxUIntPtr data : GetSelectedItemData()) {
+		const CPartFile *file = reinterpret_cast<CPartFile *>(data);
+		if (CanCancelDownload(file->GetStatus())) {
+			files.push_back(MuleNotify::Download_Target(file));
+		}
+	}
 	if (files.empty()) {
 		return;
 	}
@@ -621,8 +613,8 @@ void CDownloadListCtrl::OnCancelFile(wxCommandEvent &WXUNUSED(event))
 		files.size() == 1 ? wxString(_("Are you sure that you wish to delete the selected file?"))
 				  : wxString(_("Are you sure that you wish to delete the selected files?"));
 	if (wxMessageBox(question, _("Cancel"), wxICON_QUESTION | wxYES_NO | wxNO_DEFAULT, this) == wxYES) {
-		for (wxUIntPtr data : files) {
-			CoreNotify_PartFile_Delete(reinterpret_cast<CPartFile *>(data));
+		for (const CDownloadTarget &target : files) {
+			MuleNotify::DoNotify(&MuleNotify::Download_Execute, target, DownloadCommand::Cancel);
 		}
 	}
 }
@@ -705,19 +697,28 @@ void CDownloadListCtrl::OnSetCategory(wxCommandEvent &event)
 
 void CDownloadListCtrl::OnSetStatus(wxCommandEvent &event)
 {
+	DownloadCommand command;
+	switch (event.GetId()) {
+	case MP_PAUSE:
+		command = DownloadCommand::Pause;
+		break;
+	case MP_RESUME:
+		command = DownloadCommand::Resume;
+		break;
+	case MP_STOP:
+		command = DownloadCommand::Stop;
+		break;
+	default:
+		return;
+	}
+
+	std::vector<CDownloadTarget> selected;
 	for (wxUIntPtr data : GetSelectedItemData()) {
-		CPartFile *file = reinterpret_cast<CPartFile *>(data);
-		switch (event.GetId()) {
-		case MP_PAUSE:
-			CoreNotify_PartFile_Pause(file);
-			break;
-		case MP_RESUME:
-			CoreNotify_PartFile_Resume(file);
-			break;
-		case MP_STOP:
-			CoreNotify_PartFile_Stop(file);
-			break;
-		}
+		const CPartFile *file = reinterpret_cast<CPartFile *>(data);
+		selected.push_back(MuleNotify::Download_Target(file));
+	}
+	for (const CDownloadTarget &target : selected) {
+		MuleNotify::DoNotify(&MuleNotify::Download_Execute, target, command);
 	}
 }
 

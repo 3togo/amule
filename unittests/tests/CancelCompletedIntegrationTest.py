@@ -16,7 +16,7 @@ import tempfile
 import time
 
 from AllSearchIntegrationTest import (C, connect_daemon, free_ports, log_snapshot,
-                                      retry_port_collisions, stop_daemon, tag)
+                                      retry_port_collisions, stop_daemon, tag, integer)
 from DaemonConfig import write_amule_conf
 
 DONE_NAME = 'done.bin'
@@ -107,6 +107,37 @@ def run(binary, root):
         for extension in MET_SIDECARS:
             (root / 'Temp' / f'002.part.met{extension}').write_bytes(b'stale metadata')
 
+        # Match amulegui's value-based commands, including its optional instance guard.
+        def active():
+            _, rows = ec.call(C['EC_OP_GET_DLOAD_QUEUE'])
+            ecid, fields = rows[C['EC_TAG_PARTFILE']]
+            assert fields[C['EC_TAG_PARTFILE_HASH']][0] == ACTIVE_HASH, fields
+            return ecid, fields
+
+        active_id, _ = active()
+        def command(opcode, expected_id):
+            return ec.call(C[opcode], [tag(C['EC_TAG_PARTFILE'], ACTIVE_HASH, 9,
+                [integer(C['EC_TAG_ECID'], expected_id)])])[0]
+
+        for opcode in ('EC_OP_PARTFILE_PAUSE', 'EC_OP_PARTFILE_RESUME',
+                       'EC_OP_PARTFILE_STOP', 'EC_OP_PARTFILE_DELETE'):
+            assert command(opcode, active_id + 1) == C['EC_OP_FAILED'], opcode
+            assert active()[0] == active_id, 'a stale selection removed the download'
+
+        assert command('EC_OP_PARTFILE_PAUSE', active_id) == C['EC_OP_NOOP']
+        assert active()[1][C['EC_TAG_PARTFILE_STATUS']][0] == 7  # PS_PAUSED
+        assert command('EC_OP_PARTFILE_STOP', active_id) == C['EC_OP_NOOP']
+        assert active()[1][C['EC_TAG_PARTFILE_STOPPED']][0] != 0
+        assert command('EC_OP_PARTFILE_RESUME', active_id) == C['EC_OP_NOOP']
+        _, resumed = active()
+        assert resumed[C['EC_TAG_PARTFILE_STATUS']][0] in (0, 1)  # READY / EMPTY
+        assert resumed[C['EC_TAG_PARTFILE_STOPPED']][0] == 0
+        # A malformed guard must also fail without changing state.
+        op, _ = ec.call(C['EC_OP_PARTFILE_PAUSE'], [tag(C['EC_TAG_PARTFILE'], ACTIVE_HASH, 9,
+            [tag(C['EC_TAG_ECID'], b'not-an-integer\0', 6)])])
+        assert op == C['EC_OP_FAILED']
+        assert active()[1][C['EC_TAG_PARTFILE_STATUS']][0] in (0, 1)
+
         # One packet for both files, as `amulecmd cancel all` sends it.
         op, tags = ec.call(C['EC_OP_PARTFILE_DELETE'],
                            [tag(C['EC_TAG_PARTFILE'], h, 9) for h in (done_hash, ACTIVE_HASH)])
@@ -114,6 +145,22 @@ def run(binary, root):
         assert DONE_NAME in tags[C['EC_TAG_STRING']][0].decode(), tags
         assert done.exists() and done.read_bytes() == DONE_DATA, 'the finished download was deleted'
         assert not list((root / 'Temp').glob('002.part*')), 'cancellation left part files behind'
+        assert command('EC_OP_PARTFILE_PAUSE', active_id) == C['EC_OP_FAILED']
+
+        # Re-adding the same hash creates a new instance. The old selection must not
+        # cancel it, but a fresh selection must remove it and all of its metadata.
+        link = f'ed2k://|file|active.bin|{ACTIVE_SIZE}|{ACTIVE_HASH.hex()}|/'
+        op, _ = ec.call(C['EC_OP_ADD_LINK'],
+                        [tag(C['EC_TAG_STRING'], link.encode() + b'\0', 6)])
+        assert op == C['EC_OP_NOOP']
+        replacement_id, _ = active()
+        assert replacement_id != active_id
+        assert command('EC_OP_PARTFILE_DELETE', active_id) == C['EC_OP_FAILED']
+        assert active()[0] == replacement_id
+        assert command('EC_OP_PARTFILE_DELETE', replacement_id) == C['EC_OP_NOOP']
+        _, remaining = ec.call(C['EC_OP_GET_DLOAD_QUEUE'])
+        assert C['EC_TAG_PARTFILE'] not in remaining, remaining
+
         ec.sock.close()
     finally:
         # Checks the exit code: deleting a finished file left it freed in the known list,

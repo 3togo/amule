@@ -70,6 +70,7 @@
 #include "PartStatusWriter.h" // Needed for WritePartBitmap
 #include "Preferences.h"      // Needed for CPreferences
 #include "DownloadQueue.h"    // Needed for CDownloadQueue
+#include "DownloadCommand.h"  // Needed for CanCancelDownload
 #include "amule.h"            // Needed for theApp
 #include "ED2KLink.h"         // Needed for CED2KLink
 #include "Packet.h"           // Needed for CTag
@@ -2679,10 +2680,11 @@ void CPartFile::RemoveAllSources(bool bTryToSwap)
 
 void CPartFile::Delete()
 {
-	// Once complete, m_fullname is the file in Incoming. While completing, the completion
+	// Once complete, m_fullname is the file in Incoming. While completing or hashing, a
 	// task still holds this object.
-	if (status == PS_COMPLETE || status == PS_COMPLETING) {
-		AddDebugLogLineC(logPartFile, CFormat("Not deleting finished download '%s'") % GetFileName());
+	if (!CanCancelDownload(status)) {
+		AddDebugLogLineC(logPartFile,
+			CFormat("Not deleting finished or hashing download '%s'") % GetFileName());
 		return;
 	}
 

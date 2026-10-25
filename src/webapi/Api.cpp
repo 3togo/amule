@@ -5248,6 +5248,14 @@ bool MatchesDeleteTarget(const picojson::value &value, const webapi::FileSnapsho
 		       : obj.at("status").get<std::string>() == file.download.status);
 }
 
+const char *const kHashingCancelMessage =
+	"The download is being hashed. Wait for the hash check to finish and try again.";
+
+bool IsHashingStatus(const std::string &status)
+{
+	return status == "waiting" || status == "hashing";
+}
+
 std::unique_ptr<CECPacket> FileDeleteRequest(
 	const webapi::FileSnapshot &file, const CMD4Hash &hash, bool shared = false)
 {
@@ -5314,6 +5322,10 @@ CHttpServer::Response CApiDispatcher::HandleDownloadDelete(
 		return ErrorResponse(409,
 			"download_completed",
 			"The download is completing. Wait for completion and confirm again.");
+	}
+	// The core's hashing task holds the part file until the check finishes.
+	if (IsHashingStatus(d.download.status)) {
+		return ErrorResponse(409, "download_hashing", kHashingCancelMessage);
 	}
 	if (d.download.status == "completed" && !m_app.IsServerDeleteCompleteActive()) {
 		return ErrorResponse(503,
@@ -9265,6 +9277,10 @@ CHttpServer::Response CApiDispatcher::HandleDownloadsBulkDelete(const CHttpServe
 				409,
 				"download_completed",
 				"The download is completing. Wait for completion and confirm again."));
+			continue;
+		}
+		if (IsHashingStatus(d.download.status)) {
+			results.push_back(BulkErr(raw, 409, "download_hashing", kHashingCancelMessage));
 			continue;
 		}
 		if (d.download.status == "completed" && !m_app.IsServerDeleteCompleteActive()) {

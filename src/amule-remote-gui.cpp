@@ -833,6 +833,10 @@ void CamuleRemoteGuiApp::BeginReconnect()
 	if (m_reconnecting) {
 		return;
 	}
+	// ECIDs can be reused by a restarted daemon. Retire selections held by open dialogs.
+	if (downloadqueue) {
+		downloadqueue->InvalidateCommands();
+	}
 	m_reconnecting = true;
 	m_reconnectAttempt = 0;
 
@@ -929,6 +933,10 @@ void CamuleRemoteGuiApp::FinishReconnect(int result)
 	connect_timeout_timer = nullptr;
 
 	if (result == wxID_OK) {
+		// Also retire selections made while disconnected, before the fresh snapshot arrives.
+		if (downloadqueue) {
+			downloadqueue->EnableCommands();
+		}
 		AddLogLineCS(_("Reconnected to the remote core."));
 
 		// The daemon may have been upgraded while we were away, so re-read
@@ -3579,10 +3587,14 @@ void CKnownFilesRem::ProcessItemUpdatePartfile(const CEC_PartFile_Tag *tag, CPar
 	}
 }
 
-void CDownQueueRem::SendFileCommand(CPartFile *file, ec_tagname_t cmd)
+void CDownQueueRem::SendFileCommand(CPartFile *file, ec_tagname_t cmd, uint32 expectedId)
 {
 	CECPacket req(cmd);
-	req.AddTag(CECTag(EC_TAG_PARTFILE, file->GetFileHash()));
+	CECTag target(EC_TAG_PARTFILE, file->GetFileHash());
+	if (expectedId != 0) {
+		target.AddTag(CECTag(EC_TAG_ECID, expectedId));
+	}
+	req.AddTag(target);
 
 	m_conn->SendPacket(&req);
 }

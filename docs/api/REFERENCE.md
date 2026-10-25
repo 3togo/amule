@@ -1142,7 +1142,7 @@ curl -s -X PATCH -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application
 
 Bulk cancel + remove of active downloads (deletes each `.part`/`.met` from disk). Completed entries are deleted from disk through `EC_OP_KNOWNFILE_DELETE` only when `confirmed_target` is supplied. Without it they report `409 download_completed` and their Incoming files are preserved, including when a v1 client submits every hash from `GET /downloads`. Use `POST /downloads_clear_completed` to clear entries while keeping the files.
 
-Entries still completing also report `download_completed`; wait for completion and confirm again.
+Entries still completing also report `download_completed`; wait for completion and confirm again. Entries waiting for or in a hash check (`status` `waiting` or `hashing`) report `409 download_hashing`; retry once the check has finished.
 
 **Body:** `{ "hashes": ["<md4>", …] }` (non-empty, max 500).
 
@@ -1151,7 +1151,7 @@ accepted by single-file DELETE. All supplied preconditions are validated before 
 file is mutated; stale entries report `selection_changed` per item. The Web UI freezes
 this map and the selected hashes while its confirmation dialog is open.
 
-**Response:** the [bulk `results` envelope](#bulk-mutations-and-the-results-envelope), keyed by hash. Per-item `error.code` is `not_found`, `download_completed`, `selection_changed`, `ec_unsupported`, `amuled_rejected`, `ec_protocol_error`, or `ec_unavailable`.
+**Response:** the [bulk `results` envelope](#bulk-mutations-and-the-results-envelope), keyed by hash. Per-item `error.code` is `not_found`, `download_completed`, `download_hashing`, `selection_changed`, `ec_unsupported`, `amuled_rejected`, `ec_protocol_error`, or `ec_unavailable`.
 
 **Errors:** `400 bad_request` (missing/empty `hashes`), `503 ec_unavailable`.
 
@@ -1200,7 +1200,7 @@ Requests without `confirmed_target` retain the existing v1 behavior: active down
 
 **Response:** `204 No Content`.
 
-**Errors:** `400 bad_request` (`{hash}` is not 32 hex characters), `400 amuled_rejected`, `404 not_found`, `409 download_completed` (still completing, or completed without `confirmed_target`), `409 selection_changed`, `502 ec_protocol_error` (unexpected core acknowledgment), `503 ec_unsupported`, `503 ec_unavailable`.
+**Errors:** `400 bad_request` (`{hash}` is not 32 hex characters), `400 amuled_rejected`, `404 not_found`, `409 download_completed` (still completing, or completed without `confirmed_target`), `409 download_hashing` (waiting for or in a hash check), `409 selection_changed`, `502 ec_protocol_error` (unexpected core acknowledgment), `503 ec_unsupported`, `503 ec_unavailable`.
 
 #### `POST /api/v1/downloads_clear_completed`
 
@@ -3428,6 +3428,7 @@ Every error code emitted by `/api/v1/*`, sorted by what triggered it. Two codes 
 | `not_shared` | 409 | A comment or rating was posted against a file that is not shared. |
 | `not_completed` | 409 | `clear_completed` named a `hash` that is not a completed download. |
 | `download_completed` | 409 | DELETE matched a download still completing, or a completed entry without `confirmed_target`; wait for completion and explicitly confirm disk deletion, or clear the completed row to keep its file. |
+| `download_hashing` | 409 | DELETE matched a download that is waiting for or in a hash check; retry once the check has finished. |
 | `selection_changed` | 409 | The confirmed deletion target changed; refresh and confirm again. |
 | `ec_protocol_error` | 502 | The core returned an unexpected deletion acknowledgment; success could not be confirmed. |
 | `kad_more_exhausted` | 409 | `POST /search/{id}/more` on a Kad search that can no longer be widened — its 4-reask budget is spent, or it has entered the stopping window Kad begins 20 s before a keyword search ends. Terminal for that search; re-run the query for more. |

@@ -2297,6 +2297,16 @@ static CECPacket *Get_EC_Response_PartFile_Cmd(const CECPacket *request)
 			// return response;
 			break;
 		}
+		// Optional identity guard: older EC clients continue to address files by hash.
+		// A GUI selection must not act on a replacement created while its dialog was open.
+		const CECTag *expectedId = hashtag.GetTagByName(EC_TAG_ECID);
+		if (expectedId && (!expectedId->IsInt() || expectedId->GetInt() != pfile->ECID())) {
+			delete response;
+			response = new CECPacket(EC_OP_FAILED);
+			response->AddTag(CECTag(EC_TAG_STRING,
+				wxTRANSLATE("The selected download has changed. Refresh and try again.")));
+			return response;
+		}
 		switch (request->GetOpCode()) {
 		case EC_OP_PARTFILE_SWAP_A4AF_THIS:
 			CoreNotify_PartFile_Swap_A4AF(pfile);
@@ -2336,25 +2346,23 @@ static CECPacket *Get_EC_Response_PartFile_Cmd(const CECPacket *request)
 			}
 		} break;
 		case EC_OP_PARTFILE_DELETE: {
-			// Legacy multi-file cancel skips finished entries and still cancels
-			// active entries later in the same packet.
-			if (pfile->IsCompleted() || pfile->GetStatus() == PS_COMPLETING) {
+			// Legacy multi-file cancel skips finished and hashing entries and still
+			// cancels active entries later in the same packet.
+			if (pfile->IsCompleted() || !CanCancelDownload(pfile->GetStatus())) {
 				if (!response) {
 					response = new CECPacket(EC_OP_FAILED);
 					response->AddTag(CECTag(EC_TAG_STRING,
-						CFormat(wxString(wxTRANSLATE(
-							"Cannot cancel a finished download: %s"))) %
+						CFormat(wxString(wxTRANSLATE("Cannot cancel a hashing or "
+									     "finished download: %s"))) %
 							pfile->GetFileName()));
 				}
 				break;
 			}
-			const CECTag *expectedId = hashtag.GetTagByName(EC_TAG_ECID);
 			const CECTag *expectedName = hashtag.GetTagByName(EC_TAG_PARTFILE_NAME);
 			const CECTag *expectedDir = hashtag.GetTagByName(EC_TAG_KNOWNFILE_PATH);
-			if ((expectedId && (!expectedId->IsInt() || expectedId->GetInt() != pfile->ECID())) ||
-				(expectedName && (!expectedName->IsString() ||
-							 expectedName->GetStringData() !=
-								 pfile->GetFileName().GetPrintable())) ||
+			if ((expectedName && (!expectedName->IsString() ||
+						     expectedName->GetStringData() !=
+							     pfile->GetFileName().GetPrintable())) ||
 				(expectedDir && (!expectedDir->IsString() ||
 							expectedDir->GetStringData() !=
 								pfile->GetFilePath().GetPrintable()))) {
