@@ -200,6 +200,11 @@ msgstr "立即重启"
 msgid "Later"
 msgstr "稍后重启"
 
+#: src/GuiEvents.cpp src/ExternalConn.cpp
+#, fuzzy
+msgid "The selected download has changed. Refresh and try again."
+msgstr "所选下载已更改或正在完成。刷新并重试。"
+
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
 msgstr "已连接的核心不支持从磁盘删除完整文件。"
@@ -2463,8 +2468,8 @@ msgid "FileHash not found: %s"
 msgstr "文件校验码不存在：%s"
 
 #: src/ExternalConn.cpp
-#, c-format
-msgid "Cannot cancel a finished download: %s"
+#, fuzzy, c-format
+msgid "Cannot cancel a hashing or finished download: %s"
 msgstr "无法取消已完成的下载：%s"
 
 #: src/ExternalConn.cpp

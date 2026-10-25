@@ -199,6 +199,11 @@ msgstr "Nu opnieuw starten"
 msgid "Later"
 msgstr "Later"
 
+#: src/GuiEvents.cpp src/ExternalConn.cpp
+#, fuzzy
+msgid "The selected download has changed. Refresh and try again."
+msgstr "De geselecteerde download is veranderd of wordt voltooid. Ververs en probeer opnieuw."
+
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
 msgstr "De verbonden kern ondersteunt verwijderen van volledige bestanden van de schijf niet."
@@ -2463,8 +2468,8 @@ msgid "FileHash not found: %s"
 msgstr "Bestandshash niet gevonden: %s"
 
 #: src/ExternalConn.cpp
-#, c-format
-msgid "Cannot cancel a finished download: %s"
+#, fuzzy, c-format
+msgid "Cannot cancel a hashing or finished download: %s"
 msgstr "Annuleren van een voltooide download mislukt: %s"
 
 #: src/ExternalConn.cpp
