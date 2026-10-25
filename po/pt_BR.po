@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-25 09:58+0000\n"
+"PO-Revision-Date: 2026-10-25 21:07+0000\n"
 "Last-Translator: Marcelo Jimenez <mroberto@users.sourceforge.com>\n"
 "Language-Team: Português (Brasileiro) <pt@li.org>\n"
 "Language: pt_BR\n"
@@ -204,9 +204,8 @@ msgid "Later"
 msgstr "Mais tarde"
 
 #: src/GuiEvents.cpp src/ExternalConn.cpp
-#, fuzzy
 msgid "The selected download has changed. Refresh and try again."
-msgstr "O download selecionado mudou ou está sendo concluído. Atualize e tente novamente."
+msgstr "O download selecionado mudou. Atualize e tente novamente."
 
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
@@ -2472,9 +2471,9 @@ msgid "FileHash not found: %s"
 msgstr "Hash do arquivo não encontrado: %s"
 
 #: src/ExternalConn.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot cancel a hashing or finished download: %s"
-msgstr "Não é possível cancelar um download concluído: %s"
+msgstr "Não é possível cancelar um download em cálculo de hash ou concluído: %s"
 
 #: src/ExternalConn.cpp
 msgid "The selected download has changed or is completing. Refresh and try again."
@@ -9392,6 +9391,16 @@ msgstr "Remover categoria"
 #, c-format
 msgid "Hashset requested for unknown file: %s"
 msgstr "Hashset solicitado para arquivo desconhecido: %s"
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Não foi possível começar uma busca Kad"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
 
 #: src/UploadDiskIOThread.cpp
 #, c-format

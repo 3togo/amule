@@ -9399,6 +9399,16 @@ msgstr "Hash-készlet kérés az ismeretlen %s fájlhoz"
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Nem sikerült elindítani a Kad keresést"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "Válaszd ki, hogy kik kérdezhetik le megosztott fájlaid listáját."
 

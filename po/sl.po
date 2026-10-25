@@ -9553,6 +9553,16 @@ msgstr "Zahtevan je bil nabor kod za neznano datoteko: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Iskanja Kad ni bilo mogoče začeti"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "Izberite, kdo lahko zahteva vaš seznam deljenih datotek."
 

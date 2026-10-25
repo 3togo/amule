@@ -9406,6 +9406,16 @@ msgstr "要求不明檔案 %s 的 hash 值組"
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "無法開始 Kad 搜尋"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "選取可以瀏覽分享檔案清單的使用者。"
 

@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-25 09:58+0000\n"
+"PO-Revision-Date: 2026-10-25 21:07+0000\n"
 "Last-Translator: Mike Akiba <mike2718@gmail.com>\n"
 "Language-Team: Chinese Simplified <kde-i18n-doc@kde.org>\n"
 "Language: zh_CN\n"
@@ -201,9 +201,8 @@ msgid "Later"
 msgstr "稍后重启"
 
 #: src/GuiEvents.cpp src/ExternalConn.cpp
-#, fuzzy
 msgid "The selected download has changed. Refresh and try again."
-msgstr "所选下载已更改或正在完成。刷新并重试。"
+msgstr "所选下载已更改。刷新并重试。"
 
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
@@ -2468,9 +2467,9 @@ msgid "FileHash not found: %s"
 msgstr "文件校验码不存在：%s"
 
 #: src/ExternalConn.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot cancel a hashing or finished download: %s"
-msgstr "无法取消已完成的下载：%s"
+msgstr "无法取消正在进行哈希计算或已完成的下载：%s"
 
 #: src/ExternalConn.cpp
 msgid "The selected download has changed or is completing. Refresh and try again."
@@ -9385,6 +9384,16 @@ msgstr "删除分类"
 #, c-format
 msgid "Hashset requested for unknown file: %s"
 msgstr "请求未知文件校检码：%s"
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "无法启动 Kad 搜索"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
 
 #: src/UploadDiskIOThread.cpp
 #, c-format

@@ -9406,6 +9406,16 @@ msgid "Hashset requested for unknown file: %s"
 msgstr "Bilinmeyen dosya için adresleme seti istendi: %s"
 
 #: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Kad araması başlatılamadı"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
 #, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "Dosyanın açılması başarısız oldu (%s), paylaşılan dosyalar listesinden kaldırılıyor."

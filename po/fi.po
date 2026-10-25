@@ -9453,6 +9453,16 @@ msgstr "Tarkistejoukkoa pyydettiin tuntemattomalle tiedostolle: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Kad-hakua ei voitu käynnistää"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "Valitse ketkä voivat pyytää nähtäville sinun jaettujen tiedostojen listaasi."
 

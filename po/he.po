@@ -9444,6 +9444,16 @@ msgstr "התבקשה קבוצת הגיבובים של קובץ לא ידוע: %s
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "לא ניתן היה להתחיל חיפוש Kad"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "טעינת קובץ מסננים עם סיומת '.dat' '%s', נכשלה. לא ניתן לפתוח את הקובץ."
 

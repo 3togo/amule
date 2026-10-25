@@ -9391,6 +9391,16 @@ msgid "Hashset requested for unknown file: %s"
 msgstr "S'ha demanat un conjunt de resums d'un fitxer desconegut: %s"
 
 #: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "No s'ha pogut iniciar una cerca de Kad"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
 #, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "No s'ha pogut obrir el fitxer (%s); s'elimina de la llista de fitxers compartits."

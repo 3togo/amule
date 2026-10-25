@@ -9441,6 +9441,16 @@ msgstr "Tundmatu faili '%s' jaoks küsiti kontrollsummat."
 
 #: src/UploadDiskIOThread.cpp
 #, fuzzy, c-format
+msgid "Could not start the upload disk readers: %s"
+msgstr "Kad otsingut ei õnnestunud alustada"
+
+#: src/UploadDiskIOThread.cpp
+#, c-format
+msgid "Upload disk reader error: %s"
+msgstr ""
+
+#: src/UploadDiskIOThread.cpp
+#, fuzzy, c-format
 msgid "Failed to open file (%s), removing from list of shared files."
 msgstr "Vali, kes võib vaatamiseks küsida sinu jagatud falide nimekira."
 
