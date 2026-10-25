@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-24 07:47+0000\n"
+"PO-Revision-Date: 2026-10-25 09:58+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
 "Language: ru\n"
@@ -7709,9 +7709,9 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "ОШИБКА: сокет был закрыт по таймауту"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
-msgstr "Время ожидания соединения с %s (%s:%i) вышло."
+msgstr "Время ожидания подключения к %s (%s:%i) истекло; повторная попытка без обфускации."
 
 #: src/ServerConnect.cpp
 #, c-format

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: es\n"
 "POT-Creation-Date: 2026-10-07 10:08-0400\n"
-"PO-Revision-Date: 2026-10-07 16:31+0000\n"
+"PO-Revision-Date: 2026-10-25 09:58+0000\n"
 "Last-Translator: Mad-Soft <mad.soft@gmail.com>\n"
 "Language-Team: Spanish <es_ES@li.org>\n"
 "Language: es\n"
@@ -108,15 +108,14 @@ msgstr "Leer configuración desde I<E<lt>pathE<gt>> en lugar de home"
 
 #. type: TP
 #: amule.1.in amuled.1.in amulegui.1.in
-#, fuzzy, no-wrap
-#| msgid "B<[ --amule-config-file>=I<E<lt>pathE<gt>> B<]>"
+#, no-wrap
 msgid "B<[ --log-file>=I<E<lt>fileE<gt>> B<]>"
-msgstr "B<[ --amule-config-file>=I<E<lt>pathE<gt>> B<]>"
+msgstr "B<[ --log-file>=I<E<lt>fileE<gt>> B<]>"
 
 #. type: Plain text
 #: amule.1.in amuled.1.in
 msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<amule.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<logfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
-msgstr ""
+msgstr "Escribe el registro en el archivo especificado en lugar del archivo de registro predeterminado.  Anula el ajuste B<LogFilePath> en B<[eMule]> de I<amule.conf> solo para esta ejecución.  Las rutas relativas se resuelven en función del directorio de configuración.  El directorio padre debe existir previamente y tener permisos de escritura; no se crea automáticamente.  Una configuración vacía o inexistente utiliza I<logfile> en el directorio de configuración.  Al iniciar, el registro anterior se guarda en la misma ruta con la extensión I<.bak> añadida.  Si no se puede crear la copia de seguridad, se registra una advertencia y la sesión actual se añade al registro existente.  Los cambios de configuración surten efecto tras el reinicio."
 
 #. type: TP
 #: amule.1.in amulegui.1.in
@@ -217,7 +216,7 @@ msgstr "El enlace eD2k para ser añadido puede ser:"
 #. type: Plain text
 #: amule.1.in amulecmd.1.in amuled.1.in amulegui.1.in ed2k.1.in
 msgid "a file link (ed2k://|file|...), it will be added to the download queue;"
-msgstr "un enlace de archivo (ed2k://|archivo|...), será añadido a la cola de descarga;"
+msgstr "un enlace de archivo (ed2k://|file|...), será añadido a la cola de descarga;"
 
 #. type: Plain text
 #: amule.1.in amulecmd.1.in amuled.1.in amulegui.1.in ed2k.1.in
@@ -283,7 +282,7 @@ msgstr "INFORMANDO ERRORES"
 #: ../../src/utils/aLinkCreator/docs/alcc.1.in
 #: ../../src/utils/cas/docs/cas.1.in ../../src/utils/wxCas/docs/wxcas.1.in
 msgid "Please report bugs either on our forum (I<https://github.com/amule-org/amule/discussions>), or in our bugtracker (I<https://github.com/amule-org/amule/issues>).  Please do not report bugs in e-mail, neither to our mailing list nor directly to any team member."
-msgstr "Por favor informe de fallos ya sea en nuestro foro (I<https://github.com/amule-org/amule/discussions>), o en nuestro bugtracker (I<https://github.com/amule-org/amule/issues>). Por favor no informe de fallos por correo, ni en nuestras listas, ni directamente al correo de algun miembro del equipo."
+msgstr "Por favor informe de fallos ya sea en nuestro foro (I<https://github.com/amule-org/amule/discussions>), o en nuestro bugtracker (I<https://github.com/amule-org/amule/issues>). Por favor no informe de fallos por correo, ni en nuestras listas, ni directamente al correo de algún miembro del equipo."
 
 #. type: SH
 #: amule.1.in amulecmd.1.in amuled.1.in amulegui.1.in amuleweb.1.in ed2k.1.in
@@ -347,7 +346,7 @@ msgstr "aMuleCmd v@PACKAGE_VERSION@"
 #: ../../src/utils/cas/docs/cas.1.in ../../src/utils/wxCas/docs/wxcas.1.in
 #, no-wrap
 msgid "aMule utilities"
-msgstr "aMule utilidades"
+msgstr "Utilidades de aMule"
 
 #. type: Plain text
 #: amulecmd.1.in
@@ -394,7 +393,7 @@ msgstr "B<[ -p> I<E<lt>portE<gt>>, B<--port>=I<E<lt>portE<gt>> B<]>"
 #. type: Plain text
 #: amulecmd.1.in amuleweb.1.in
 msgid "aMule's port for External Connections, as set in Preferences-E<gt>Remote Controls (default: I<4712>)"
-msgstr "Puerto de conexión externa de aMule, puesto en Opciones-E<gt>Controles Remotos (por defecto: 4712)"
+msgstr "Puerto de conexión externa de aMule, puesto en Opciones-E<gt>Controles Remotos (por defecto: I<4712>)"
 
 #. type: TP
 #: amulecmd.1.in amuleweb.1.in
@@ -520,7 +519,7 @@ msgstr "Conectar a la red."
 #. type: Plain text
 #: amulecmd.1.in
 msgid "This will connect to all networks that are enabled in Preferences."
-msgstr "Esto conectará a todas las redes que estén habilitadas en las preferencias."
+msgstr "Esto conectará a todas las redes que estén habilitadas en Preferencias."
 
 #. type: Plain text
 #: amulecmd.1.in
@@ -570,7 +569,7 @@ msgstr "Obtener opciones del filtro IP."
 #. type: Plain text
 #: amulecmd.1.in
 msgid "Prints a short usage description.  If called without parameter, it shows a list of available commands.  If called with I<E<lt>commandE<gt>>, it shows a short description of the given command."
-msgstr "Muestra una breve descripción de uso. Si se llama sin parámetros, muestra una lista de comando disponibles.  Si se llama con I<E<lt>commandE<gt>>, mostrará una breve descripción de dicho comando."
+msgstr "Muestra una breve descripción de uso. Si se invoca sin parámetros, muestra una lista de comandos disponibles.  Si se invoca con I<E<lt>commandE<gt>>, mostrará una descripción breve de dicho comando."
 
 #. type: Plain text
 #: amulecmd.1.in
@@ -950,7 +949,7 @@ msgstr "B<amulegui> es un programa cliente, y puede conectarse a amule o amuled 
 #. type: Plain text
 #: amulegui.1.in
 msgid "Write logs to the specified filename instead of the default log file.  Overrides the B<LogFilePath> setting under B<[eMule]> in I<remote.conf> for this run only.  Relative paths are resolved against the configuration directory.  The parent directory must already exist and be writable; it is not created automatically.  An empty or absent configuration setting uses I<remotelogfile> in the configuration directory.  On startup, the previous log is backed up to the same path with I<.bak> appended.  If the backup cannot be created, a warning is logged and the current session is appended to the existing log.  Configuration changes take effect after restart."
-msgstr ""
+msgstr "Escribe el registro en el archivo especificado en lugar del archivo de registro predeterminado.  Anula el ajuste B<LogFilePath> en B<[eMule]> de I<remote.conf> solo para esta ejecución.  Las rutas relativas se resuelven en función del directorio de configuración.  El directorio padre debe existir previamente y tener permisos de escritura; no se crea automáticamente.  Una configuración vacía o inexistente utiliza I<remotelogfile> en el directorio de configuración.  Al iniciar, el registro anterior se guarda en la misma ruta con la extensión I<.bak> añadida.  Si no se puede crear la copia de seguridad, se registra una advertencia y la sesión actual se añade al registro existente.  Los cambios de configuración surten efecto tras el reinicio."
 
 #. type: Plain text
 #: amulegui.1.in

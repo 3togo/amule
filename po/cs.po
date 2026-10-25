@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-24 07:47+0000\n"
+"PO-Revision-Date: 2026-10-25 09:57+0000\n"
 "Last-Translator: David Watzke <david@watzke.cz>\n"
 "Language-Team: cs <cs@li.org>\n"
 "Language: cs\n"
@@ -2932,23 +2932,23 @@ msgstr "Příkaz nemá spustitelný soubor."
 
 #: src/ExternalCommand.cpp
 msgid "The command template or an argument contains a NUL character."
-msgstr ""
+msgstr "Šablona příkazu nebo argument obsahuje znak NUL."
 
 #: src/ExternalCommand.cpp
 msgid "An event value cannot select the executable."
-msgstr ""
+msgstr "Hodnota události nemůže vybrat spustitelný soubor."
 
 #: src/ExternalCommand.cpp
 msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
-msgstr ""
+msgstr "Hodnota události by byla použita jako kód interpretu, název skriptu nebo nepodporovaný argument spouštěče."
 
 #: src/ExternalCommand.cpp
 msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
-msgstr ""
+msgstr "Argument příkazového řádku obsahuje uvozovku, znak procenta, vykřičník nebo konec řádku."
 
 #: src/ExternalCommand.cpp
 msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
-msgstr ""
+msgstr "Program cmd.exe vyžaduje pevně zadaný vestavěný příkaz nebo explicitní cíl s příponou .exe, .com, .bat nebo .cmd, za kterým následují samostatné datové argumenty."
 
 #: src/FileLaunch.cpp
 msgid "File preview"
@@ -2957,12 +2957,12 @@ msgstr "Náhled souboru"
 #: src/FileLaunch.cpp
 #, c-format
 msgid "Media-player command '%s' was not run: %s"
-msgstr ""
+msgstr "Příkaz přehrávače médií '%s' nebyl spuštěn: %s"
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player is unavailable inside aMule's Flatpak sandbox: %s. Programs installed on the host are not directly available here. Completed files can still open with the desktop's default application; previewing an unfinished download needs a player the sandbox can run, such as a self-contained player saved in your home folder."
-msgstr ""
+msgstr "Nastavený přehrávač videa není v sandboxu aMule pro Flatpak k dispozici: %s. Programy nainstalované na hostitelském počítači zde nejsou přímo dostupné. Dokončené soubory lze i nadále otevírat pomocí výchozí aplikace na desktopu; k náhledu nedokončeného souboru je zapotřebí přehrávač, který lze spustit v sandboxu, například samostatný přehrávač uložený ve vaší domovské složce."
 
 #: src/FileLaunch.cpp
 #, c-format

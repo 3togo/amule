@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-15 19:15+0000\n"
+"PO-Revision-Date: 2026-10-25 09:57+0000\n"
 "Last-Translator: saleh alhathal <hathalsal@hotmail.com>\n"
 "Language-Team: \n"
 "Language: ar\n"
@@ -198,9 +198,8 @@ msgid "Later"
 msgstr "لاحقًا"
 
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
-#, fuzzy
 msgid "The connected core does not support deleting complete files from disk."
-msgstr "لا يدعم برنامج الخلفية المتصل عمليات البحث من نوع «الكل»."
+msgstr "النواة المتصلة لا تدعم حذف الملفات الكاملة من القرص."
 
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "Delete from disk"
@@ -339,19 +338,15 @@ msgstr "جارٍ الآن إنهاء التطبيق الرئيسي..."
 
 #: src/amule.cpp
 msgid "Saving window settings..."
-msgstr ""
+msgstr "جارٍ حفظ إعدادات النوافذ..."
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Saving client credits..."
-msgstr ""
-"\n"
-"جارٍ إنشاء العميل...\n"
+msgstr "جارٍ حفظ أرصدة العملاء..."
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Stopping helper applications..."
-msgstr "يخرج من التطبيق."
+msgstr "جارٍ إيقاف التطبيقات المساعدة..."
 
 #: src/amule.cpp
 #, c-format
@@ -383,19 +378,16 @@ msgid "aMule OnExit: Terminating core."
 msgstr "aMule OnExit: جارٍ إنهاء النواة."
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Saving search results..."
-msgstr "نتيجة البحث"
+msgstr "جارٍ حفظ نتائج البحث..."
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Saving downloads and shared files..."
-msgstr "إعادة تحميل الملفات المشتركة..."
+msgstr "جارٍ حفظ التحميلات والملفات المشتركة..."
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Flushing download buffers..."
-msgstr "سعة نطاق التحميل الحقيقية"
+msgstr "جارٍ تفريغ ذاكرة التخزين المؤقت للتحميلات..."
 
 #: src/amule.cpp
 msgid "aMule shutdown completed."
@@ -407,7 +399,7 @@ msgstr "نتائج تصحيح الذاكرة عند خروج aMule:"
 
 #: src/amule.cpp
 msgid "Finishing shutdown..."
-msgstr ""
+msgstr "جارٍ إنهاء الإغلاق..."
 
 #: src/amule.cpp
 #, c-format
@@ -524,7 +516,7 @@ msgstr "عُقد تمهيد Kad (nodes.dat)"
 #: src/amule.cpp
 #, c-format
 msgid "Not starting %s: it is neither next to aMule nor on PATH."
-msgstr ""
+msgstr "تعذر تشغيل %s: لأنه لا يوجد بجانب aMule ولا في مسار PATH."
 
 #: src/amule.cpp
 #, c-format
@@ -547,7 +539,7 @@ msgstr "تعذر كتابة رمز EC الخاص بـ amuleapi في %s؛ سيس�
 
 #: src/amule.cpp
 msgid "An exception occurred while launching amuleapi."
-msgstr ""
+msgstr "حدث استثناء أثناء تشغيل amuleapi."
 
 #: src/amule.cpp
 #, c-format
@@ -556,21 +548,21 @@ msgstr "amuleapi قيد التشغيل بالمعرّف %d"
 
 #: src/amule.cpp
 msgid "Could not launch amuleapi during automatic restart."
-msgstr ""
+msgstr "تعذر تشغيل amuleapi أثناء إعادة التشغيل التلقائية."
 
 #: src/amule.cpp
 msgid "You requested to run amuleapi on startup, but the amuleapi binary cannot be run. Please install the package containing aMule's REST API server, or build aMule from source with -DBUILD_AMULEAPI=YES and install it."
 msgstr "طلبت تشغيل amuleapi عند بدء التشغيل، لكن الملف التنفيذي لـ amuleapi لا يمكن تشغيله. يرجى تثبيت الحزمة التي تحتوي على خادم REST API الخاص بـ aMule، أو بناء aMule من المصدر مع -DBUILD_AMULEAPI=YES وتثبيته."
 
 #: src/amule.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not remove the amuleapi EC token file: %s"
-msgstr "تعذر حفظ كلمة مرور amuleapi: %s"
+msgstr "تعذر حذف ملف رمز EC الخاص بـ amuleapi: %s"
 
 #: src/amule.cpp
 #, c-format
 msgid "amuleapi will restart in %u seconds."
-msgstr ""
+msgstr "سيعاد تشغيل amuleapi بعد %u ثانية."
 
 #: src/amule.cpp
 #, c-format
@@ -723,25 +715,23 @@ msgstr "فشل حجز مساحة القرص مسبقًا للملف '%s': %s"
 
 #: src/amule.cpp
 msgid "Stopping network services..."
-msgstr ""
+msgstr "جارٍ إيقاف خدمات الشبكة..."
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Saving source seeds..."
-msgstr "بذور المصادر"
+msgstr "جارٍ حفظ بذور المصادر..."
 
 #: src/amule.cpp
 msgid "Stopping background downloads and workers..."
-msgstr ""
+msgstr "جارٍ إيقاف التحميلات في الخلفية وخيوط العمل..."
 
 #: src/amule.cpp
-#, fuzzy
 msgid "Closing connections..."
-msgstr " يتصل الآن..."
+msgstr "جارٍ إغلاق الاتصالات..."
 
 #: src/amule.cpp
 msgid "Saving known files and statistics..."
-msgstr ""
+msgstr "جارٍ حفظ الملفات المعروفة والإحصائيات..."
 
 #: src/amule.cpp
 msgid "ERROR: can't open logfile"
@@ -1057,11 +1047,11 @@ msgstr "رفع: %.1f%s | تحميل: %.1f%s"
 
 #: src/amuleDlg.cpp
 msgid "Transfer speeds are reported by the daemon. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "يتم الإبلاغ عن سرعات النقل بواسطة البرنامج الخلفي Daemon. يشتمل إجمالي الرفع على حركة مرور التحكم؛ بينما تشمل سرعات رفع النظراء حزم الملفات فقط. توضح القيم بين القوسين العبء الإضافي للبروتوكول بوحدة KiB/s."
 
 #: src/amuleDlg.cpp
 msgid "Live speeds are averaged over the last second. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "يتم حساب متوسط السرعات الحية خلال الثانية الأخيرة. يشتمل إجمالي الرفع على حركة مرور التحكم؛ بينما تشمل سرعات رفع النظراء حزم الملفات فقط. توضح القيم بين القوسين العبء الإضافي للبروتوكول بوحدة KiB/s."
 
 #: src/amuleDlg.cpp
 #, c-format
@@ -1276,19 +1266,19 @@ msgstr "جاهز"
 
 #: src/amule-remote-gui.cpp
 msgid "*** Solve the CAPTCHA and send its text as a message."
-msgstr ""
+msgstr "*** قم بحل CAPTCHA وأرسل نصها في رسالة."
 
 #: src/amule-remote-gui.cpp
 msgid "*** CAPTCHA passed; your message was delivered."
-msgstr ""
+msgstr "*** تم اجتياز CAPTCHA؛ تم إيصال رسالتك."
 
 #: src/amule-remote-gui.cpp
 msgid "*** CAPTCHA failed; send another message to try again."
-msgstr ""
+msgstr "*** فشل اجتياز CAPTCHA؛ أرسل رسالة أخرى لإعادة المحاولة."
 
 #: src/amule-remote-gui.cpp
 msgid "*** CAPTCHA failed; no attempts remain."
-msgstr ""
+msgstr "*** لم يتم تجاوز CAPTCHA؛ لم يعد لديك محاولات."
 
 #: src/amule-remote-gui.cpp src/TransferWnd.cpp
 msgid "All"
@@ -1335,7 +1325,7 @@ msgstr "عنوان شبكي غير صحيح"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
-msgstr ""
+msgstr "لم تؤكد النواة حذف الملف. يرجى التحديث وإعادة المحاولة."
 
 #: src/amule-remote-gui.cpp
 #, c-format
@@ -1662,13 +1652,12 @@ msgid "%.1f KiB/s"
 msgstr "%.1f KiB/s"
 
 #: src/ClientHistoryListCtrl.cpp src/ClientsListCtrl.cpp src/muuli_wdr.cpp
-#, fuzzy
 msgid "Name"
-msgstr "اسم الملف"
+msgstr "الاسم"
 
 #: src/ClientHistoryListCtrl.cpp src/ClientsListCtrl.cpp
 msgid "Software"
-msgstr ""
+msgstr "البرنامج"
 
 #: src/ClientHistoryListCtrl.cpp src/ClientsListCtrl.cpp src/muuli_wdr.cpp
 msgid "IP Address"
@@ -1681,17 +1670,15 @@ msgstr "المصدر"
 
 #: src/ClientHistoryListCtrl.cpp
 msgid "First seen"
-msgstr ""
+msgstr "أول ظهور"
 
 #: src/ClientHistoryListCtrl.cpp
-#, fuzzy
 msgid "Last seen"
-msgstr "اخر إستقبال"
+msgstr "آخر ظهور"
 
 #: src/ClientHistoryListCtrl.cpp
-#, fuzzy
 msgid "Sessions"
-msgstr "نسخة"
+msgstr "جلسات الاتصال"
 
 #: src/ClientHistoryListCtrl.cpp src/ClientsListCtrl.cpp
 #: src/SharedFilePeersListCtrl.cpp
@@ -1704,22 +1691,20 @@ msgid "Download Speed"
 msgstr "سرعة التحميل"
 
 #: src/ClientHistoryListCtrl.cpp src/ClientsListCtrl.cpp
-#, fuzzy
 msgid "Total Uploaded"
-msgstr "سرعة-الرفع"
+msgstr "إجمالي البيانات المرفوعة"
 
 #: src/ClientHistoryListCtrl.cpp src/ClientsListCtrl.cpp
-#, fuzzy
 msgid "Total Downloaded"
-msgstr "التحميل"
+msgstr "إجمالي البيانات المحمّلة"
 
 #: src/ClientHistoryListCtrl.cpp src/ClientsListCtrl.cpp src/muuli_wdr.cpp
 msgid "DL/UP modifier"
-msgstr ""
+msgstr "معامل التحميل/الرفع"
 
 #: src/ClientHistoryListCtrl.cpp
 msgid "Online now"
-msgstr ""
+msgstr "متصل الآن"
 
 #: src/ClientRef.cpp
 msgid "Not complete"
@@ -1745,8 +1730,8 @@ msgstr "غير متوفر"
 #, c-format
 msgid "Could not ask %u selected client for its shared files."
 msgid_plural "Could not ask %u selected clients for their shared files."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "تعذر طلب الملفات المشتركة من %u عميل محدد."
+msgstr[1] "تعذر طلب الملفات المشتركة من %u عملاء محددين."
 
 #: src/ClientsListCtrl.cpp src/PrefsUnifiedDlg.cpp src/ServerListCtrl.cpp
 msgid "Files"
@@ -1763,23 +1748,20 @@ msgid "Downloaded"
 msgstr "تم التحميل"
 
 #: src/ClientsWnd.cpp
-#, fuzzy
 msgid "Downloading from"
-msgstr "تحميل"
+msgstr "جارٍ التحميل من"
 
 #: src/ClientsWnd.cpp
-#, fuzzy
 msgid "Uploading to"
-msgstr "الرفع"
+msgstr "جارٍ الرفع إلى"
 
 #: src/ClientsWnd.cpp src/OtherFunctions.cpp src/TransferWnd.cpp
 msgid "Active"
 msgstr "نشط"
 
 #: src/ClientsWnd.cpp
-#, fuzzy
 msgid "Known"
-msgstr "غير معرف"
+msgstr "معروف"
 
 #: src/ClientTCPSocket.cpp
 #, c-format
@@ -1927,7 +1909,7 @@ msgstr "عالي جدا"
 
 #: src/DataToText.cpp src/SharedFilesCtrl.cpp
 msgid "Release"
-msgstr ""
+msgstr "إطلاق"
 
 #: src/DataToText.cpp
 msgid "Asking"
@@ -2071,15 +2053,15 @@ msgstr "تنسيق ملف مؤقت غير معروف أو تالف."
 
 #: src/DirectoryTreeCtrl.cpp
 msgid "This directory is part of a recursive share. To remove it, un-share or modify the recursive share root above it."
-msgstr ""
+msgstr "هذا المجلد جزء من مشاركة تشمل المجلدات الفرعية. لإزالته، ألغِ مشاركة جذر تلك المشاركة الموجود فوقه أو عدّله."
 
 #: src/DirectoryTreeCtrl.cpp
 msgid "Cannot unshare inside a recursive share"
-msgstr ""
+msgstr "لا يمكن إلغاء المشاركة داخل مشاركة تشمل المجلدات الفرعية"
 
 #: src/DirectoryTreeCtrl.cpp
 msgid "Cannot modify inside a recursive share"
-msgstr ""
+msgstr "لا يمكن التعديل داخل مشاركة تشمل المجلدات الفرعية"
 
 #: src/DownloadListCtrl.cpp
 msgid "Part"
@@ -2157,9 +2139,8 @@ msgid "C&lear completed"
 msgstr "إ&نتهاء التنظيف"
 
 #: src/DownloadListCtrl.cpp src/SharedFilesCtrl.cpp
-#, fuzzy
 msgid "Delete file from &disk"
-msgstr "جارٍ حذف الملف: %s"
+msgstr "حذف الملف من &القرص"
 
 #: src/DownloadListCtrl.cpp
 msgid "Swap every A4AF to this file now"
@@ -2183,7 +2164,7 @@ msgstr "مشاهدة"
 
 #: src/DownloadListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Show in file manager"
-msgstr ""
+msgstr "إظهار في مدير الملفات"
 
 #: src/DownloadListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Show file &details"
@@ -2243,7 +2224,7 @@ msgstr ""
 #: src/SharedFilesCtrl.cpp
 #, c-format
 msgid "%.1f MiB/s"
-msgstr ""
+msgstr "%.1f MiB/s"
 
 #: src/DownloadListCtrl.cpp
 #, c-format
@@ -2251,9 +2232,9 @@ msgid "Downloads (%i)"
 msgstr "تحميل (%i)"
 
 #: src/DownloadListCtrl.cpp src/TransferWnd.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Total queue size: %s"
-msgstr "مجموع حجم ملفات المشاركة : %s"
+msgstr "إجمالي حجم قائمة الانتظار: %s"
 
 #: src/DownloadQueue.cpp
 #, c-format
@@ -2276,7 +2257,7 @@ msgstr "جارٍ تحميل الملف الجزئي %u من %u"
 
 #: src/DownloadQueue.cpp
 msgid "ERROR: Failed to load backup file. Search https://github.com/amule-org/amule/discussions for .part.met recovery solutions."
-msgstr ""
+msgstr "خطأ: فشل تحميل ملف النسخة الاحتياطية. ابحث في https://github.com/amule-org/amule/discussions عن حلول لاسترداد ملفات .part.met."
 
 #: src/DownloadQueue.cpp
 msgid "All PartFiles Loaded."
@@ -2344,24 +2325,25 @@ msgid "Invalid eD2k link! ERROR: %s"
 msgstr "رابط eD2k غير صالح! خطأ: %s"
 
 #: src/EditServerListDlg.cpp
-#, fuzzy
 msgid "Edit server list sources"
-msgstr "تحرير قائمة الخوادم"
+msgstr "تحرير مصادر قائمة الخوادم"
 
 #: src/EditServerListDlg.cpp
 msgid ""
 "Enter one server.met URL per line.\n"
 "Saving replaces the source list and removes comment lines."
 msgstr ""
+"أدخل عنوان URL لملف server.met واحد في كل سطر.\n"
+"الحفظ يستبدل قائمة المصادر ويحذف أسطر التعليقات."
 
 #: src/EditServerListDlg.cpp src/ExternalConn.cpp
 #, c-format
 msgid "Could not save server list sources to %s. Check the URLs and file permissions."
-msgstr ""
+msgstr "تعذر حفظ مصادر قائمة الخوادم في %s. تحقق من عناوين URL وصلاحيات الملف."
 
 #: src/EditServerListDlg.cpp
 msgid "addresses.dat in the daemon configuration directory"
-msgstr ""
+msgstr "ملف addresses.dat في مجلد إعدادات الخدمة الخلفية (daemon)"
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -2417,9 +2399,9 @@ msgid "Missing protocol version tag."
 msgstr "علامة إصدار البروتوكول مفقودة."
 
 #: src/ExternalConn.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Too many failed connection attempts; try again in %d seconds."
-msgstr "اﻹتصال الذاتي بالخادم سيعيد المحاولة بعد %d ثانية"
+msgstr "محاولات اتصال فاشلة كثيرة جدًا؛ حاول مرة أخرى بعد %d ثانية."
 
 #: src/ExternalConn.cpp
 msgid "Authentication failed: invalid hash specified as EC password."
@@ -2427,15 +2409,15 @@ msgstr "فشلت المصادقة: تجزئة غير صالحة تم تحديد�
 
 #: src/ExternalConn.cpp
 msgid "Authentication failed: the client offered an encrypted External Connection but sent no usable key."
-msgstr ""
+msgstr "فشل المصادقة: قدّم العميل اتصالاً خارجيًا مشفرًا لكنه لم يرسل مفتاحًا صالحًا للاستخدام."
 
 #: src/ExternalConn.cpp
 msgid "Authentication failed: this aMule requires an encrypted External Connection, and the client did not negotiate one."
-msgstr ""
+msgstr "فشل المصادقة: يتطلب برنامج aMule هذا اتصالاً خارجيًا مشفرًا، ولم يقم العميل بالتفاوض على ذلك."
 
 #: src/ExternalConn.cpp
 msgid "Authentication failed: the client could not confirm the encrypted session."
-msgstr ""
+msgstr "فشل المصادقة: تعذر على العميل تأكيد الجلسة المشفرة."
 
 #: src/ExternalConn.cpp
 msgid "Authentication failed: wrong password."
@@ -2464,9 +2446,8 @@ msgid "Unauthorized access attempt from %s. Connection closed."
 msgstr "محاولة وصول غير مصرح بها من %s. تم إغلاق الاتصال."
 
 #: src/ExternalConn.cpp
-#, fuzzy
 msgid "Invalid partfile command target."
-msgstr "اسم ملف غير صالح."
+msgstr "وجهة أمر الملف الجزئي غير صالحة."
 
 #: src/ExternalConn.cpp
 #, c-format
@@ -2479,18 +2460,18 @@ msgid "FileHash not found: %s"
 msgstr "تجزئة الملف غير موجودة: %s"
 
 #: src/ExternalConn.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot cancel a finished download: %s"
-msgstr "اكتمل تحميل: %s"
+msgstr "لا يمكن إلغاء تحميل مكتمل: %s"
 
 #: src/ExternalConn.cpp
 msgid "The selected download has changed or is completing. Refresh and try again."
-msgstr ""
+msgstr "تغير التحميل المحدد أو أنه يقترب من الاكتمال. يرجى التحديث وإعادة المحاولة."
 
 #: src/ExternalConn.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "No such category: %u"
-msgstr "الغاء المجموعة"
+msgstr "الفئة غير موجودة: %u"
 
 #: src/ExternalConn.cpp
 msgid "OOPS! OpCode processing error!"
@@ -2519,7 +2500,7 @@ msgstr "eD2k معطّل في الإعدادات."
 
 #: src/ExternalConn.cpp
 msgid "No address known for that friend yet."
-msgstr ""
+msgstr "لا يوجد عنوان معروف لهذا الصديق بعد."
 
 #: src/ExternalConn.cpp
 msgid "Friend not found."
@@ -2531,7 +2512,7 @@ msgstr "العميل غير موجود."
 
 #: src/ExternalConn.cpp
 msgid "EC_TAG_FRIEND_SHARED requires EC_TAG_FRIEND or EC_TAG_CLIENT."
-msgstr ""
+msgstr "يتطلب EC_TAG_FRIEND_SHARED وجود EC_TAG_FRIEND أو EC_TAG_CLIENT."
 
 #: src/ExternalConn.cpp
 msgid "WebSearch from remote interface makes no sense."
@@ -2539,11 +2520,11 @@ msgstr "البحث عبر الويب من الواجهة البعيدة غير �
 
 #: src/ExternalConn.cpp
 msgid "A browse is not a search that can be started."
-msgstr ""
+msgstr "التصفح ليس عملية بحث يمكن بدؤها."
 
 #: src/ExternalConn.cpp
 msgid "Search in progress. Refetch results in a moment!"
-msgstr "جاري البحث ستم جلب النتيجة في لحظة"
+msgstr "البحث جاري. سيتم جلب النتائج في لحظة!"
 
 #: src/ExternalConn.cpp
 msgid "No points for graph."
@@ -2580,9 +2561,8 @@ msgid "Version check is not available on this daemon."
 msgstr "التحقق من الإصدار غير متاح على هذا الخادم الخلفي."
 
 #: src/ExternalConn.cpp
-#, fuzzy
 msgid "Invalid complete-file deletion target."
-msgstr "اسم ملف غير صالح."
+msgstr "الهدف المحدد لحذف الملف الكامل غير صالح."
 
 #: src/ExternalConn.cpp
 msgid "File not found."
@@ -2598,7 +2578,7 @@ msgstr "تعذّر إعادة تسمية الملف."
 
 #: src/ExternalConn.cpp
 msgid "Client could not be swapped to that file."
-msgstr ""
+msgstr "تعذر تبديل العميل إلى ذلك الملف."
 
 #: src/ExternalConn.cpp
 #, c-format
@@ -2606,49 +2586,48 @@ msgid "Could not save the amuleapi password: %s"
 msgstr "تعذر حفظ كلمة مرور amuleapi: %s"
 
 #: src/ExternalConn.cpp
-#, fuzzy
 msgid "No such category."
-msgstr "الغاء المجموعة"
+msgstr "لا توجد فئة كهذه."
 
 #: src/ExternalConn.cpp
 msgid "Malformed category request."
-msgstr ""
+msgstr "طلب فئة غير صالح."
 
 #: src/ExternalConn.cpp
 msgid "The default category cannot be deleted."
-msgstr ""
+msgstr "لا يمكن حذف الفئة الافتراضية."
 
 #: src/ExternalConn.cpp
 msgid "Missing chat session id"
-msgstr ""
+msgstr "لا يوجد معرف لجلسة المحادثة"
 
 #: src/ExternalConn.cpp
 msgid "No such chat session"
-msgstr ""
+msgstr "لا توجد جلسة محادثة كهذه"
 
 #: src/ExternalConn.cpp
 msgid "Media metadata extraction is disabled in preferences"
-msgstr ""
+msgstr "استخراج البيانات الوصفية للوسائط معطل في الإعدادات"
 
 #: src/ExternalConn.cpp
 msgid "File is not eligible for media metadata extraction (not an audio/video file, or an incomplete download)"
-msgstr ""
+msgstr "الملف غير مؤهل لاستخراج البيانات الوصفية للوسائط (ليس ملفاً صوتياً/مرئياً، أو أن التحميل غير مكتمل)"
 
 #: src/ExternalConn.cpp
 msgid "Empty chat message"
-msgstr ""
+msgstr "رسالة المحادثة فارغة"
 
 #: src/ExternalConn.cpp
 msgid "CAPTCHA challenge is no longer pending"
-msgstr ""
+msgstr "تحدي CAPTCHA لم يعد معلقًا"
 
 #: src/ExternalConn.cpp
 msgid "Unknown chat target"
-msgstr ""
+msgstr "هدف المحادثة غير معروف"
 
 #: src/ExternalConn.cpp
 msgid "Chat unavailable: peer identity or route is not available"
-msgstr ""
+msgstr "المحادثة غير متاحة: هوية النظير أو المسار غير متوفرين"
 
 #: src/ExternalConn.cpp
 msgid "Kad is disabled in preferences."
@@ -2893,7 +2872,7 @@ msgstr "طباعة إصدار البرنامج."
 
 #: src/ExternalConnector.cpp
 msgid "Do not encrypt the External Connect session. Encryption is on by default whenever the remote aMule supports it; turning it off leaves everything after the login readable and modifiable by anyone on the path."
-msgstr ""
+msgstr "لا تشفر جلسة الاتصال الخارجي. يكون التشفير مفعلاً بشكل افتراضي عندما يدعمه تطبيق aMule البعيد؛ وإيقاف تفعيله يجعل كل شيء بعد تسجيل الدخول قابلاً للقراءة والتعديل من قبل أي شخص على مسار الاتصال."
 
 #: src/ExternalConnector.cpp
 msgid "Force ZLIB compression regardless of dialed-IP locality (useful when the server is reachable over a VPN tunnel that resolves to a LAN IP)."
@@ -2919,7 +2898,7 @@ msgstr "%.1f%% مكتمل"
 #: src/FileDetailDialog.cpp src/utils/wxCas/src/wxcasframe.cpp
 #, c-format
 msgid "%.2f KiB/s"
-msgstr ""
+msgstr "%.2f KiB/s"
 
 #: src/FileDetailDialog.cpp src/muuli_wdr.cpp src/ServerWnd.cpp
 #: src/SharedFilesCtrl.cpp
@@ -2936,27 +2915,27 @@ msgstr "إعادة تسمية الملف"
 
 #: src/ExternalCommand.cpp
 msgid "The command has no executable."
-msgstr ""
+msgstr "الأمر لا يحتوي على ملف تنفيذي."
 
 #: src/ExternalCommand.cpp
 msgid "The command template or an argument contains a NUL character."
-msgstr ""
+msgstr "قالب الأمر أو أحد الوسائط يحتوي على محرف NUL."
 
 #: src/ExternalCommand.cpp
 msgid "An event value cannot select the executable."
-msgstr ""
+msgstr "لا يمكن لقيمة الحدث تحديد الملف التنفيذي."
 
 #: src/ExternalCommand.cpp
 msgid "An event value would be used as interpreter code, a script name, or an unsupported launcher argument."
-msgstr ""
+msgstr "كانت قيمة الحدث ستُستخدم كشيفرة للمفسّر، أو كاسم برنامج نصي، أو كوسيط غير مدعوم لأداة التشغيل."
 
 #: src/ExternalCommand.cpp
 msgid "A command-shell argument contains a double quote, percent sign, exclamation mark, or line break."
-msgstr ""
+msgstr "يحتوي أحد وسائط صدفة الأوامر على علامة اقتباس مزدوجة، أو علامة نسبة مئوية، أو علامة تعجب، أو فاصل أسطر."
 
 #: src/ExternalCommand.cpp
 msgid "cmd.exe requires a fixed builtin or an explicit .exe, .com, .bat, or .cmd target followed by separate data arguments."
-msgstr ""
+msgstr "يتطلب cmd.exe هدفاً داخلياً ثابتاً أو هدفاً صريحاً بامتداد .exe أو .com أو .bat أو .cmd، متبوعاً بوَسائط بيانات منفصلة."
 
 #: src/FileLaunch.cpp
 msgid "File preview"
@@ -2965,41 +2944,41 @@ msgstr "معاينة الملف"
 #: src/FileLaunch.cpp
 #, c-format
 msgid "Media-player command '%s' was not run: %s"
-msgstr ""
+msgstr "لم يُنفَّذ أمر مشغل الوسائط '%s': %s"
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player is unavailable inside aMule's Flatpak sandbox: %s. Programs installed on the host are not directly available here. Completed files can still open with the desktop's default application; previewing an unfinished download needs a player the sandbox can run, such as a self-contained player saved in your home folder."
-msgstr ""
+msgstr "مشغل الفيديو المكون غير متاح داخل بيئة عزل Flatpak الخاصة بتطبيق aMule‏: %s. البرامج المثبتة على الجهاز المضيف غير متوفرة هنا بشكل مباشر. ومع ذلك، يمكن فتح الملفات المكتملة باستخدام التطبيق الافتراضي لسطح المكتب؛ أما معاينة التحميلات غير المكتملة فتتطلب مشغلاً يمكن لبيئة العزل تشغيله، مثل مشغل مستقل محفوظ في المجلد الرئيسي (home)."
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "The configured video player was not found: %s"
-msgstr ""
+msgstr "لم يتم العثور على مشغل الفيديو المكون: %s"
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "ERROR: Failed to execute external media-player! Command: '%s'"
-msgstr ""
+msgstr "خطأ: فشل في تشغيل مشغل الوسائط الخارجي! الأمر: '%s'"
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "Cannot open '%s': the file is not present on this computer."
-msgstr ""
+msgstr "تعذر فتح '%s': الملف غير موجود على هذا الحاسوب."
 
 #: src/FileLaunch.cpp
 msgid "Previewing an unfinished download needs a video player: the partly-downloaded file has no type the system can open on its own. One can be set in Preferences -> General."
-msgstr ""
+msgstr "تتطلب معاينة التحميل غير المكتمل مشغل فيديو: الملف المحمّل جزئيًا ليس له نوع يمكن للنظام فتحه بمفرده. يمكن تعيين مشغل في الإعدادات -> عام."
 
 #: src/FileLaunch.cpp
 #, c-format
 msgid "ERROR: Failed to open '%s' with the default application."
-msgstr ""
+msgstr "خطأ: فشل فتح '%s' باستخدام التطبيق الافتراضي."
 
 #: src/FileLaunch.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "ERROR: Failed to show '%s' in the file manager."
-msgstr "خطأ: فشل في تكوين ملف اجزاء)"
+msgstr "خطأ: فشل إظهار '%s' في مدير الملفات."
 
 #: src/FirstRunWizard.cpp
 msgid "Mobile / 4G-5G (20 / 5 Mbit)"
@@ -3067,11 +3046,11 @@ msgstr "أخرى / تعيين يدوي"
 
 #: src/FirstRunWizard.cpp
 msgid "Upload limit (KiB/s, 0 = unlimited):"
-msgstr ""
+msgstr "حد الرفع (KiB/s، 0 = غير محدود):"
 
 #: src/FirstRunWizard.cpp
 msgid "Download limit (KiB/s, 0 = unlimited):"
-msgstr ""
+msgstr "حد التحميل (KiB/s، 0 = غير محدود):"
 
 #: src/FirstRunWizard.cpp
 msgid "Networks & ports"
@@ -3222,7 +3201,7 @@ msgstr "فشل فتح ملف قائمة الأصدقاء 'emfriends.met' للك�
 #: src/FriendList.cpp
 #, c-format
 msgid "No address known for friend '%s' yet, cannot browse them."
-msgstr ""
+msgstr "لا يوجد عنوان معروف للصديق '%s' بعد، لا يمكن تصفحه."
 
 #: src/FriendList.cpp
 msgid "CRITICAL - no client on StartChatSession"
@@ -3247,7 +3226,7 @@ msgstr "ارسل &رسالة"
 #: src/FriendListCtrl.cpp
 #, c-format
 msgid "No address known for friend '%s' yet, cannot message them."
-msgstr ""
+msgstr "لا يوجد عنوان معروف للصديق '%s' بعد، لا يمكن مراسلته."
 
 #: src/FriendListCtrl.cpp
 msgid "Are you sure that you wish to delete the selected friend?"
@@ -3271,7 +3250,7 @@ msgstr "التبديل إلى هذا الملف"
 
 #: src/GenericClientListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Colour legend"
-msgstr ""
+msgstr "دليل الألوان"
 
 #: src/GenericClientListCtrl.cpp
 #, c-format
@@ -3308,14 +3287,14 @@ msgid "Yes"
 msgstr "نعم"
 
 #: src/geoip/MaxMindDBDatabase.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to open MaxMindDB database '%s': %s"
-msgstr "فشل لفتح %s (%s)"
+msgstr "تعذر فتح قاعدة بيانات MaxMindDB '%s': %s"
 
 #: src/geoip/MaxMindDBDatabase.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to replace MaxMindDB database '%s': %s"
-msgstr "فشل لفتح %s (%s)"
+msgstr "فشل استبدال قاعدة بيانات MaxMindDB '%s': %s"
 
 #: src/HTTPDownload.cpp
 msgid "Downloading..."
@@ -3328,7 +3307,7 @@ msgstr "تم إلغاء تحميل HTTP"
 #: src/HTTPDownload.cpp
 #, c-format
 msgid "HTTP download of %s stopped: it is larger than %u MiB."
-msgstr ""
+msgstr "توقف تحميل HTTP لـ %s: إنه أكبر من %u MiB."
 
 #: src/HTTPDownload.cpp
 msgid "The URL to download can't be empty"
@@ -3377,7 +3356,7 @@ msgstr "تم ترحيل GeoLite2-Country.mmdb الحالي إلى %s"
 #: src/IP2Country.cpp
 #, c-format
 msgid "%s is not a readable MaxMindDB file - discarding it. A fresh copy will be downloaded on the next start, or now via Preferences -> IP2Country -> 'Update now'."
-msgstr ""
+msgstr "‏%s ليس ملف MaxMindDB قابلاً للقراءة - سيتم تجاهله. سيتم تحميل نسخة جديدة عند التشغيل القادم، أو الآن عبر الإعدادات -> IP2Country -> 'تحديث الآن'."
 
 #: src/IP2Country.cpp
 msgid "IP2Country: MaxMind selected as the GeoIP source but no License Key configured. Open Preferences -> IP2Country, paste your free MaxMind License Key and click 'Update now'."
@@ -3464,32 +3443,32 @@ msgstr "مرشح IP جاهز"
 
 #: src/KadContactHistogram.h
 msgid "Contacts grouped by the first twelve bits of their KadID. Blue: all contacts; green: verified addresses. The marker shows your own KadID; clustering near it is expected."
-msgstr ""
+msgstr "جهات الاتصال مجمعة حسب أول اثني عشر بتًا من معرف KadID الخاص بها. الأزرق: جميع جهات الاتصال؛ الأخضر: العناوين التي تم التحقق منها. تعرض العلامة معرف KadID الخاص بك؛ ومن المتوقع حدوث تكتل بالقرب منه."
 
 #: src/KadContactHistogram.h
 msgid "Loading contact distribution..."
-msgstr ""
+msgstr "جارٍ تحميل توزيع جهات الاتصال..."
 
 #: src/KadContactHistogram.h
 msgid "This core does not send the contact distribution. Update the core to see the chart."
-msgstr ""
+msgstr "هذه النواة لا ترسل توزيع جهات الاتصال. قم بتحديث النواة لرؤية المخطط."
 
 #: src/KadContactHistogram.h
 msgid "The core sent contact distribution data that could not be read."
-msgstr ""
+msgstr "أرسلت النواة بيانات توزيع جهات الاتصال التي تعذر قراءتها."
 
 #: src/KadContactHistogram.h
 #, c-format
 msgid "Routing-table contacts: %u; verified: %u; distinct /24s: %u"
-msgstr ""
+msgstr "جهات اتصال جدول التوجيه: %u؛ المُتحقق منها: %u؛ شبكات /24 المختلفة: %u"
 
 #: src/KadDlg.cpp
 msgid "Requesting Kad lookup diagnostics..."
-msgstr ""
+msgstr "جارٍ طلب تشخيصات بحث Kad..."
 
 #: src/KadDlg.cpp
 msgid "The connected core does not support Kad lookup diagnostics."
-msgstr ""
+msgstr "النواة المتصلة لا تدعم تشخيصات بحث Kad."
 
 #: src/KadDlg.cpp src/muuli_wdr.cpp src/StatisticsDlg.cpp
 msgid "Current"
@@ -3538,19 +3517,19 @@ msgstr "متابعة؟"
 
 #: src/KadLookupView.h
 msgid "Kad lookup diagnostics"
-msgstr ""
+msgstr "تشخيصات بحث Kad"
 
 #: src/KadLookupView.h
 msgid "The core does not support Kad lookup diagnostics."
-msgstr ""
+msgstr "النواة لا تدعم تشخيصات بحث Kad."
 
 #: src/KadLookupView.h
 msgid "Invalid Kad lookup diagnostics reply."
-msgstr ""
+msgstr "رد تشخيصات بحث Kad غير صالح."
 
 #: src/KadLookupView.h
 msgid "Connection lost. Reconnect and request lookup diagnostics again."
-msgstr ""
+msgstr "فُقد الاتصال. أعد الاتصال واطلب تشخيصات البحث مجددًا."
 
 #: src/kademlia/kademlia/SearchManager.cpp
 msgid "Kademlia: search keyword too short"
@@ -3590,53 +3569,48 @@ msgstr[0] "تمت كتابة %d جهة اتصال Kad"
 msgstr[1] "تمت كتابة %d جهات اتصال Kad"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "Node"
-msgstr "العُقد (0)"
+msgstr "عقدة"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "Complete node"
-msgstr "اكمل"
+msgstr "عقدة كاملة"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "File"
-msgstr "ملفات"
+msgstr "ملف"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Keyword"
-msgstr ""
+msgstr "كلمة مفتاحية"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Notes"
-msgstr ""
+msgstr "ملاحظات"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Publish file"
-msgstr ""
+msgstr "نشر ملف"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Publish keyword"
-msgstr ""
+msgstr "نشر كلمة مفتاحية"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Publish notes"
-msgstr ""
+msgstr "نشر ملاحظات"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "Find buddy"
-msgstr "لا يوجد وسيط"
+msgstr "البحث عن وسيط"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "Find source"
-msgstr "مصادر الملف:"
+msgstr "البحث عن مصدر"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Special node"
-msgstr ""
+msgstr "عقدة خاصة"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 #, fuzzy
