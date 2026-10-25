@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-19 09:22+0000\n"
+"PO-Revision-Date: 2026-10-25 09:58+0000\n"
 "Last-Translator: Marcelo Jimenez <mroberto@users.sourceforge.com>\n"
 "Language-Team: Português (Brasileiro) <pt@li.org>\n"
 "Language: pt_BR\n"
@@ -1054,11 +1054,11 @@ msgstr "Up: %.1f%s | Down: %.1f%s"
 
 #: src/amuleDlg.cpp
 msgid "Transfer speeds are reported by the daemon. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "Velocidades de transferências são relatadas pelo daemon. O upload total inclui controle de trafego; as velocidade de controle por pares incluem apenas pastas de arquivos. Valores em parênteses indicam sobrecarga de protocolo em KiB/s."
 
 #: src/amuleDlg.cpp
 msgid "Live speeds are averaged over the last second. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "As velocidades em tempo real são médias do último segundo. O upload total inclui o tráfego de controle; as velocidades de upload dos clientes incluem apenas pacotes de arquivos. Os valores entre parênteses mostram o overhead do protocolo em KiB/s."
 
 #: src/amuleDlg.cpp
 #, c-format
@@ -2332,24 +2332,25 @@ msgid "Invalid eD2k link! ERROR: %s"
 msgstr "Link eD2k inválido! ERRO: %s"
 
 #: src/EditServerListDlg.cpp
-#, fuzzy
 msgid "Edit server list sources"
-msgstr "Editar lista de servidores"
+msgstr "Editar fontes da lista de servidores"
 
 #: src/EditServerListDlg.cpp
 msgid ""
 "Enter one server.met URL per line.\n"
 "Saving replaces the source list and removes comment lines."
 msgstr ""
+"Informe uma URL de server.met por linha.\n"
+"Salvar substitui a lista de fontes e remove as linhas de comentário."
 
 #: src/EditServerListDlg.cpp src/ExternalConn.cpp
 #, c-format
 msgid "Could not save server list sources to %s. Check the URLs and file permissions."
-msgstr ""
+msgstr "Não foi possível salvar as fontes da lista de servidores em %s. Verifique as URLs e as permissões de arquivo."
 
 #: src/EditServerListDlg.cpp
 msgid "addresses.dat in the daemon configuration directory"
-msgstr ""
+msgstr "addresses.dat no diretório de configuração do daemon"
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -4128,13 +4129,12 @@ msgid "Fit visible columns to contents"
 msgstr "Ajustar colunas visíveis ao conteúdo"
 
 #: src/MuleDataViewCtrl.cpp
-#, fuzzy
 msgid "Show all columns (keep widths)"
-msgstr "Exibir todos os comentários"
+msgstr "Exibir todas as colunas (manter larguras)"
 
 #: src/MuleDataViewCtrl.cpp
 msgid "Restore default columns and widths"
-msgstr ""
+msgstr "Restaurar colunas e larguras padrão"
 
 #: src/MuleTextCtrl.cpp
 msgid "Cut"
@@ -5059,9 +5059,8 @@ msgid "Slot Allocation"
 msgstr "Alocação de Slots"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Bandwidth calculator..."
-msgstr "Limites de banda"
+msgstr "Calculador de banda..."
 
 #: src/muuli_wdr.cpp
 msgid "Ports"
@@ -5160,9 +5159,8 @@ msgid "retries"
 msgstr "tentativas"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Edit sources…"
-msgstr "Fontes de arquivos:"
+msgstr "Editar fontes…"
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5813,18 +5811,16 @@ msgid "Click this button to reset the log."
 msgstr "Clique nesse botão para limpar o log."
 
 #: src/muuli_wdr.cpp src/ServerWnd.cpp
-#, fuzzy
 msgid "Update server list"
-msgstr "Editar lista de servidores"
+msgstr "Atualizar lista de servidores"
 
 #: src/muuli_wdr.cpp
 msgid "One-off URL:"
-msgstr ""
+msgstr "URL de uso único:"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Download once"
-msgstr "Baixado"
+msgstr "Baixar uma vez"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -6837,7 +6833,7 @@ msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "No system tray found. Use a desktop with a system tray, or build aMule with libayatana-appindicator3."
-msgstr ""
+msgstr "Nenhuma bandeja do sistema encontrada. Use um ambiente de trabalho com bandeja do sistema ou compile o aMule com libayatana-appindicator3."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Not available on Wayland: the protocol does not report when a window is minimized, so this option cannot intercept the system minimize button. Workaround: launch aMule with `GDK_BACKEND=x11` to use XWayland instead."
@@ -7227,23 +7223,20 @@ msgid "Server connection refresh interval: Disabled"
 msgstr "Intervalo de renovação da conexão com o servidor: desativado"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Bandwidth calculator"
-msgstr "Limites de banda"
+msgstr "Calculador de banda"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Enter limits in Mbit/s. Zero means unlimited."
-msgstr ""
+msgstr "Informe os limites em Mbit/s. Zero significa ilimitado."
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Download (Mbit/s)"
-msgstr "Downloads (%i)"
+msgstr "Download (Mbit/s)"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Upload (Mbit/s)"
-msgstr "Limite de envio"
+msgstr "Upload (Mbit/s)"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "disabled"
@@ -7655,9 +7648,9 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "ERRO: Socket inválido na verificação de tempo limite"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
-msgstr "Expirado tempo de espera para conectar a %s (%s:%i)."
+msgstr "Tempo esgotado na tentativa de conexão a %s (%s:%i); tentando novamente sem ofuscação."
 
 #: src/ServerConnect.cpp
 #, c-format
@@ -7749,11 +7742,11 @@ msgstr "Erro de I/O escrevendo o arquivo 'server.met': %s"
 
 #: src/ServerList.cpp
 msgid "A server list download is already in progress."
-msgstr ""
+msgstr "Já há um download da lista de servidores em andamento."
 
 #: src/ServerList.cpp
 msgid "No server list sources configured"
-msgstr ""
+msgstr "Nenhuma fonte de lista de servidores configurada"
 
 #: src/ServerList.cpp
 #, c-format
@@ -7974,11 +7967,11 @@ msgstr "Log do aMuleGUI"
 
 #: src/ServerWnd.cpp
 msgid "Download and merge every saved source"
-msgstr ""
+msgstr "Baixar e mesclar todas as fontes salvas"
 
 #: src/ServerWnd.cpp
 msgid "Download this server.met URL once without saving it."
-msgstr ""
+msgstr "Baixar esta URL de server.met uma vez, sem salvá-la."
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."

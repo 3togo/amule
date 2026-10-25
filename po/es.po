@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-17 10:20+0000\n"
+"PO-Revision-Date: 2026-10-25 09:57+0000\n"
 "Last-Translator: Diego Heras <ngosang@hotmail.es>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/amule/amule-application/es/>\n"
 "Language: es\n"
@@ -5136,7 +5136,7 @@ msgstr "IPv6"
 
 #: src/muuli_wdr.cpp
 msgid "Address families:"
-msgstr ""
+msgstr "Familias de direcciones:"
 
 #: src/muuli_wdr.cpp
 msgid "IPv4 only"
@@ -6939,9 +6939,8 @@ msgid "- External connect port changed.\n"
 msgstr "- El puerto para la conexión externa ha cambiado.\n"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "- Address families changed.\n"
-msgstr "- Se ha cambiado la asignación de la dirección local.\n"
+msgstr "- Se han modificado las familias de direcciones.\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- External connect acceptance changed.\n"

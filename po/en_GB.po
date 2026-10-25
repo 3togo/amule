@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-15 19:15+0000\n"
+"PO-Revision-Date: 2026-10-25 09:57+0000\n"
 "Last-Translator: Dévai Tamás <devait@vnet.hu>\n"
 "Language-Team: aMule Team <https://github.com/amule-org/amule>\n"
 "Language: en_GB\n"
@@ -28,51 +28,55 @@ msgstr "aMule remote control "
 
 #: src/AboutDialog.cpp
 msgid "Snapshot:"
-msgstr ""
+msgstr "Snapshot:"
 
 #: src/AboutDialog.cpp src/SplashScreen.cpp
 msgid ""
 "'All-Platform' p2p client based on eMule \n"
 "\n"
 msgstr ""
+"'All-Platform' p2p client based on eMule \n"
+"\n"
 
 #: src/AboutDialog.cpp
 msgid ""
 "Copyright (c) 2003-2026 aMule Team \n"
 "\n"
 msgstr ""
+"Copyright (c) 2003-2026 aMule Team \n"
+"\n"
 
 #: src/AboutDialog.cpp
 msgid "Part of aMule is based on \n"
-msgstr ""
+msgstr "Part of aMule is based on \n"
 
 #: src/AboutDialog.cpp
 msgid "Kademlia: Peer-to-peer routing based on the XOR metric.\n"
-msgstr ""
+msgstr "Kademlia: Peer-to-peer routing based on the XOR metric.\n"
 
 #: src/AboutDialog.cpp
 msgid " Copyright (c) 2002-2011 Petar Maymounkov ( petar@maymounkov.org )\n"
-msgstr ""
+msgstr " Copyright (c) 2002-2011 Petar Maymounkov ( petar@maymounkov.org )\n"
 
 #: src/AboutDialog.cpp
 msgid "Website:"
-msgstr ""
+msgstr "Website:"
 
 #: src/AboutDialog.cpp
 msgid "Forum:"
-msgstr ""
+msgstr "Forum:"
 
 #: src/AboutDialog.cpp
 msgid "Documentation:"
-msgstr ""
+msgstr "Documentation:"
 
 #: src/AboutDialog.cpp
 msgid "Issues:"
-msgstr ""
+msgstr "Issues:"
 
 #: src/AboutDialog.cpp
 msgid "Click to check for a newer version."
-msgstr ""
+msgstr "Click to check for a newer version."
 
 #: src/AboutDialog.cpp
 msgid "Check for updates"
