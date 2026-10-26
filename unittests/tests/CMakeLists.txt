@@ -2942,6 +2942,19 @@ if (TARGET wxWidgets::CORE)
 	target_link_libraries (DialogLayoutTest PRIVATE wxWidgets::CORE mulecommon)
 	add_test (NAME DialogLayoutTest COMMAND DialogLayoutTest)
 	set_tests_properties (DialogLayoutTest PROPERTIES SKIP_RETURN_CODE 77)
+	add_executable (EditServerListDlgTest
+		EditServerListDlgTest.cpp
+		${CMAKE_SOURCE_DIR}/src/EditServerListDlg.cpp
+	)
+	if (WIN32)
+		target_sources (EditServerListDlgTest PRIVATE DialogLayoutTest.rc)
+	endif()
+	target_include_directories (EditServerListDlgTest PRIVATE
+		${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src
+		${CMAKE_SOURCE_DIR}/src/include ${CMAKE_SOURCE_DIR}/src/libs)
+	target_link_libraries (EditServerListDlgTest PRIVATE wxWidgets::CORE)
+	add_test (NAME EditServerListDlgTest COMMAND EditServerListDlgTest)
+	set_tests_properties (EditServerListDlgTest PROPERTIES SKIP_RETURN_CODE 77)
 	add_executable (BandwidthLimitSliderTest BandwidthLimitSliderTest.cpp)
 	if (WIN32)
 		target_sources (BandwidthLimitSliderTest PRIVATE DialogLayoutTest.rc)
