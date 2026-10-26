@@ -6179,6 +6179,22 @@ msgid "add here the words amule should filter and block messages including it"
 msgstr "tilføj her de ord, aMule skal filtrere og blokere beskeder, der indeholder dem"
 
 #: src/muuli_wdr.cpp
+msgid "Enable advanced spam filter"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Block unsolicited links and repeated messages from non-friends."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Require a CAPTCHA for first messages from non-friends"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Withhold the message until the sender solves the challenge. Clients without CAPTCHA support cannot start a chat."
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid "Show received messages in the log"
 msgstr "Vis modtagne beskeder i loggen"
 
