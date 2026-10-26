@@ -135,13 +135,17 @@ FIXTURES = [
     (b'The quick brown fox jumps over the lazy dog', '1bee69a46ba811185c194762abaeae90'),
     (b'The quick brown fox jumps over the lazy dog.', '2812c6c7136898c51f6f6739ad08750e'),
     (b'ab', 'ec388dd78999dfc7cf4632465693b6bf'),
+    # Completes into an excluded name. Incomplete downloads are exempt from the filter.
+    (b'The quick brown fox jumps over the lazy dog!', '087bccb2b4007ab7d394dbfacc111c34'),
 ]
+# Matches ExcludeSharePatterns below, so the last fixture is the one that becomes excluded.
+EXCLUDED_NAME = 'completed-9.docx'
 
 
-def seed_part(root, number, content, file_hash):
+def seed_part(root, number, content, file_hash, name=None):
     part = root / 'Temp' / f'{number:03}.part'
     part.write_bytes(content)
-    filename = f'completed-{number}.txt'.encode()
+    filename = (name or f'completed-{number}.txt').encode()
     tags = (b'\x02\x01\x00\x01' + struct.pack('<H', len(filename)) + filename +
             b'\x03\x01\x00\x02' + struct.pack('<I', len(content)))
     part.with_suffix('.part.met').write_bytes(
@@ -159,12 +163,14 @@ def run(daemon, api):
         incoming.mkdir()
         (root / 'Temp').mkdir()
         for number, (content, file_hash) in enumerate(FIXTURES, 1):
-            seed_part(root, number, content, file_hash)
+            seed_part(root, number, content, file_hash,
+                      EXCLUDED_NAME if number == len(FIXTURES) else None)
         # A complete shared file which was never a download.
         shared_hash = '043f8582f241db351ce627e153e7f0e4'  # MD4(ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)
         (incoming / 'shared.txt').write_bytes(b'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789')
         ec_port, peer_port, udp_port = free_ports(3, udp_indices=(2,), peer_index=1)
-        write_amule_conf(root, ec_port, Port=peer_port, UDPPort=udp_port)
+        write_amule_conf(root, ec_port, Port=peer_port, UDPPort=udp_port,
+                         ExcludeSharePatterns='*.docx')
         env = dict(os.environ, HOME=tmp, XDG_CONFIG_HOME=tmp+'/xdg', LC_ALL='C.UTF-8')
         processes = []
         ec = None
@@ -179,12 +185,17 @@ def run(daemon, api):
                     except ConnectionRefusedError:
                         return None
                 ec = eventually(connect)
-                eventually(lambda: len(ec.files()) == len(FIXTURES) and
-                           all(field(row[1], 'EC_TAG_PARTFILE_STATUS') == 9 for row in ec.files().values()))
+                eventually(lambda: len(rows := ec.files()) == len(FIXTURES) and
+                           all(field(row[1], 'EC_TAG_PARTFILE_STATUS') == 9 for row in rows.values()))
                 eventually(lambda: shared_hash in ec.files(True))
                 # Malformed input, active files, stale identity/path must never unlink.
                 assert ec.call('EC_OP_KNOWNFILE_DELETE')[0] == C['EC_OP_FAILED']
                 first = FIXTURES[0][1]
+                # Completion must leave the excluded file on disk but out of the shared list.
+                excluded_hash = FIXTURES[-1][1]
+                assert (incoming / EXCLUDED_NAME).exists()
+                eventually(lambda: excluded_hash not in ec.files(True))
+                assert first in ec.files(True)
                 original = ec.target(first)
                 # A stale active cancel must never call delete-this on a completed row.
                 assert ec.call('EC_OP_PARTFILE_DELETE', [tag(C['EC_TAG_PARTFILE'], bytes.fromhex(first), 9)])[0] == C['EC_OP_FAILED']
@@ -334,7 +345,9 @@ def run(daemon, api):
                 old_path = incoming / 'completed-6.txt'
                 old_path.rename(root / 'saved-sixth.txt')
                 (incoming / 'alternate-sixth.txt').write_bytes(FIXTURES[5][0])
-                eventually(lambda: sixth in ec.files(True) and ec.files(True)[sixth][0] != old_id)
+                # One shared-list lookup per attempt: a record can vanish between a
+                # membership test and the read that follows it when tests run in parallel.
+                eventually(lambda: sixth in (shared := ec.files(True)) and shared[sixth][0] != old_id)
                 canonical_id = ec.files(True)[sixth][0]
                 assert ec.call('EC_OP_KNOWNFILE_DELETE', old_target)[0] == C['EC_OP_NOOP']
                 assert ec.files(True)[sixth][0] == canonical_id
@@ -350,15 +363,16 @@ def run(daemon, api):
                 replacement.rename(root / 'saved-seventh.txt')
                 other_copy = incoming / 'alternate-seventh.txt'
                 other_copy.write_bytes(FIXTURES[6][0])
-                eventually(lambda: seventh in ec.files(True) and ec.files(True)[seventh][0] != completed_id)
+                eventually(lambda: seventh in (shared := ec.files(True)) and shared[seventh][0] != completed_id)
                 assert ec.call('EC_OP_KNOWNFILE_DELETE', ec.target(seventh, True))[0] == C['EC_OP_NOOP']
                 assert not other_copy.exists() and ec.files()[seventh][0] == completed_id
                 assert (root / 'saved-seventh.txt').read_bytes() == FIXTURES[6][0]
                 replacement.write_bytes(FIXTURES[6][0])
                 os.utime(replacement, (changed_time, changed_time))
-                eventually(lambda: seventh in ec.files(True) and ec.files(True)[seventh][0] != completed_id)
+                eventually(lambda: seventh in (shared := ec.files(True)) and shared[seventh][0] != completed_id)
                 assert ec.files()[seventh][0] == completed_id
-                eventually(lambda: http(base, '/shared/'+seventh, admin)[1].get('ecid') == ec.files(True)[seventh][0])
+                eventually(lambda: seventh in (shared := ec.files(True)) and
+                           http(base, '/shared/'+seventh, admin)[1].get('ecid') == shared[seventh][0])
                 shared_detail = http(base, '/shared/'+seventh, admin)[1]
                 target = {k: shared_detail[k] for k in ('ecid', 'name', 'directory', 'incomplete')}
                 assert http(base, '/shared/'+seventh, admin, 'DELETE', {'confirmed_target': target})[0] == 204
@@ -410,8 +424,8 @@ def run(daemon, api):
                 stale_path = incoming / 'completed-8.txt'
                 stale_path.rename(root / 'saved-eighth.txt')
                 stale_path.write_bytes(FIXTURES[0][0])
-                eventually(lambda: first in ec.files(True) and
-                    field(ec.files(True)[first][1], 'EC_TAG_PARTFILE_NAME').rstrip(b'\0') == b'completed-8.txt')
+                eventually(lambda: first in (shared := ec.files(True)) and
+                    field(shared[first][1], 'EC_TAG_PARTFILE_NAME').rstrip(b'\0') == b'completed-8.txt')
                 assert ec.call('EC_OP_KNOWNFILE_DELETE', old_target)[0] == C['EC_OP_FAILED'], 'stale completed target deleted a different-hash replacement'
                 assert stale_path.read_bytes() == FIXTURES[0][0]
                 status, result = http(base, '/downloads/'+eighth, admin, 'DELETE', {'confirmed_target': old_confirmation})

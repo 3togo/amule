@@ -904,6 +904,17 @@ bool CSharedFileList::RefreshMediaMetadata(const CMD4Hash &hash)
 
 void CSharedFileList::SafeAddKFile(CKnownFile *toadd, bool bOnlyAdd)
 {
+	// Incomplete downloads remain shared even when their names match the filter.
+	// Completion must also detach an existing share, rather than just refuse a new insert.
+	if (!toadd->IsPartFile() && thePrefs::IsShareExcluded(toadd->GetFileName().GetPrintable())) {
+		if (GetFileByID(toadd->GetFileHash()) == toadd) {
+			// RemoveFile erases the current path key. Replace the old Temp/name key first.
+			RefreshPathIndex(toadd);
+			RemoveFile(toadd);
+		}
+		return;
+	}
+
 	// Straight insert first. If the hash isn't already in m_Files_map
 	// this succeeds and fires the notifier as before.
 	if (AddFile(toadd)) {
@@ -1889,7 +1900,26 @@ bool CSharedFileList::RenameFile(CKnownFile *file, const CPath &newName)
 			Kademlia::WordList oldwords = file->GetKadKeywords();
 			file->SetFileName(newName);
 			theApp->knownfiles->Save();
-			UpdateItem(file);
+			// Renaming a completed file changes its index key just like completion does.
+			// Do not index a known file that is no longer shared.
+			if (GetFileByID(file->GetFileHash()) != file) {
+				Notify_DownloadCtrlUpdateItem(file);
+				return true;
+			}
+			RefreshPathIndex(file);
+			if (thePrefs::IsShareExcluded(newName.GetPrintable())) {
+				// Remove the old keywords too: SetFileName has already replaced the word
+				// list.
+				{
+					wxMutexLocker lock(list_mut);
+					for (const wxString &word : oldwords) {
+						m_keywords->RemoveKeyword(word, file);
+					}
+				}
+				RemoveFile(file);
+				Notify_DownloadCtrlUpdateItem(file);
+				return true;
+			}
 			RepublishFile(file);
 
 			const Kademlia::WordList &newwords = file->GetKadKeywords();
