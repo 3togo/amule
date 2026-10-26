@@ -597,6 +597,13 @@ jobs:
             ${{ env.cmake_macos_config_flags }}
       - name: zero ccache stats
         run: ccache --zero-stats
+      # Exercise the native API and command-routing changes before spending
+      # the rest of the job compiling unrelated application/test targets.
+      - name: native tray and artwork regression tests
+        run: |
+          cmake --build build --target NativeTrayIconMacTest IconArtworkTest --parallel 3
+          ctest --test-dir build --output-on-failure --timeout 30 --no-tests=error \
+            -R '^(NativeTrayIconMacTest|IconArtworkTest)$'
       - name: make
         run: cmake --build build
       - name: save ccache

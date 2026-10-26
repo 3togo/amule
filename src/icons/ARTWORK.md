@@ -136,9 +136,9 @@ On Windows, preferred sizes use the system small-icon metrics at the taskbar's D
 (typically 16/24 pixels at 100/150%), with system metrics as the older-OS fallback.
 wx passes the scale of a hidden window that keeps its startup DPI, so that scale is
 only the fallback when the taskbar's DPI is unavailable.
-Linux AppIndicator continues to resolve the existing
-scalable `org.amule.aMule` icon from the desktop theme. macOS template styling
-and Linux per-state named icons remain separate work.
+Linux AppIndicator resolves the installed per-state named icons, falling back
+to `org.amule.aMule` when they are unavailable. Cocoa uses the monochrome
+template artwork described below.
 
 `IconArtworkTest` also checks tray composition at 16, 17, 22, 24, 33, 39, 44, 66, 88 and 100 pixels,
 including a return from 4x to 1x, empty/half/full bars, percentages above 100,
@@ -150,3 +150,29 @@ out-of-range percentages before converting to an integer.
 `AMULE_ICON_TEST_OUTPUT` exports tray
 renders. Native Windows/macOS tray sizing and physical display transitions still
 need desktop verification.
+
+## Template tray artwork
+
+`tray_{high,low,disconnected}_template.svg` are adem4ik's monochrome tray
+artwork contributed in [issue #2041](https://github.com/amule-org/amule/issues/2041),
+from `amule_22_mono_.zip` (SHA-256
+`a4dd1646802a54e6733368ddd7c5b0df3bfe1d0458ac6406998c9db091ead4a8`).
+The `amule_22_mono_high.svg`, `amule_22_mono_low.svg` and `amule_22_mono_dis.svg`
+files map to `tray_high_template`, `tray_low_template` and
+`tray_disconnected_template`, respectively. The artwork is black on transparent
+with default fills and carries no stylesheet rules or SVG filters, so both
+NanoSVG and librsvg render the same shapes. Distinct silhouettes distinguish
+connection states after AppKit applies its template tint. The final two columns
+remain clear for the speed bar. Windows and Linux continue using the coloured
+tray artwork. Render the 22-pixel PNG twins with librsvg and regenerate
+`icon_data.c` using `embed_icons.py`; both vector and raster fallbacks are
+checked in.
+
+## Installed tray state variants
+
+CMake generates the installed SNI variants from the existing coloured tray artwork
+at configure time and regenerates them when the originals change. They shift its
+20-pixel-wide content right by one pixel on the 22-pixel canvas, replacing the
+asymmetric speed-bar reserve with equal margins. SVGs use a `-1 0 22 22` viewBox;
+only scalable SVGs are installed for AppIndicator theme lookup. No duplicate
+sources or shifted PNGs are retained, and these variants are not separately embedded.

@@ -127,6 +127,11 @@ linuxdeploy \
 ( cd "${APPDIR}/usr/lib" \
     && rm -f libreadline.so* libhistory.so* libtinfo.so* )
 
+# The SNI host searches this exported theme path in its own process.
+# Ship the hicolor index so GTK can discover scalable/apps inside the AppDir.
+install -Dm644 /usr/share/icons/hicolor/index.theme \
+    "${APPDIR}/usr/share/icons/hicolor/index.theme"
+
 # 6. Seal the AppDir into the final AppImage with appimagetool directly.
 #    We deliberately do NOT use `linuxdeploy --output appimage` here
 #    because it re-walks the binaries' library deps and would re-bundle

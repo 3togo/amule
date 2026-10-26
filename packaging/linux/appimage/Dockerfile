@@ -74,6 +74,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libgdk-pixbuf-2.0-0 \
         librsvg2-common \
         gtk-update-icon-cache \
+        hicolor-icon-theme \
         desktop-file-utils \
         # zsync delta-update tool used by appimagetool
         zsync \
