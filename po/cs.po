@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-25 21:07+0000\n"
+"PO-Revision-Date: 2026-10-26 13:07+0000\n"
 "Last-Translator: David Watzke <david@watzke.cz>\n"
 "Language-Team: cs <cs@li.org>\n"
 "Language: cs\n"
@@ -5266,13 +5266,12 @@ msgid "Enter here the min disk space desired."
 msgstr "Zadejte požadované minimální volné místo na disku."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Save up to 10 HighID sources of rare files (20 or fewer sources) on exit"
-msgstr "Uložit 10 zdrojů u vzácných souborů (< 20 zdrojů)"
+msgstr "Při ukončení uložit až 10 HighID zdrojů vzácných souborů (20 nebo méně zdrojů)"
 
 #: src/muuli_wdr.cpp
 msgid "The saved sources are used again only if aMule restarts within 2 hours. LowID sources are not saved: a LowID only identifies a peer on the server that assigned it."
-msgstr ""
+msgstr "Uložené zdroje jsou opět použity v případě, že je aMule restartován během 2 hodin. LowID zdroje nejsou uloženy: LowID identifikuje pouze peera na serveru, který je přiřadil."
 
 #: src/muuli_wdr.cpp src/Statistics.cpp
 msgid "Uploads"
@@ -5284,15 +5283,15 @@ msgstr "Přidávat nové sdílené soubory s automatickou prioritou"
 
 #: src/muuli_wdr.cpp
 msgid "Verify local data of requested shared files every"
-msgstr ""
+msgstr "Ověřit místní data požadovaných sdílených souborů každých"
 
 #: src/muuli_wdr.cpp
 msgid "Re-read requested complete files in the background and compare them with their stored MD4/AICH hashes, as Verify Local Data does. Corrupt parts stop being shared. Uploads continue during the check."
-msgstr ""
+msgstr "Znovu načíst požadované kompletní soubory na pozadí a porovnat je s jejich uloženými kontrolními součty (hash) MD4/AICH, tedy to co dělá volba Ověřit místní data. Porušené části se přestanou sdílet. Odesílání bude během kontroly pokračovat."
 
 #: src/muuli_wdr.cpp
 msgid "days (0 = off)"
-msgstr ""
+msgstr "dny (0 = vypnuto)"
 
 #: src/muuli_wdr.cpp
 msgid "Intelligent Corruption Handling (I.C.H.)"
@@ -5308,11 +5307,11 @@ msgstr "Pokročilé I.C.H. důvěřuje každému hashi (není doporučeno)"
 
 #: src/muuli_wdr.cpp
 msgid "File repair hashes over Kad"
-msgstr ""
+msgstr "Opravné hashe souborů přes Kad"
 
 #: src/muuli_wdr.cpp
 msgid "Share and use file repair hashes (AICH) over Kad"
-msgstr ""
+msgstr "Sdílet a použít opravné hashe souborů (AICH) přes Kad"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -5324,10 +5323,17 @@ msgid ""
 "\n"
 "Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
+"Sdílejte hodnoty opravných hashů souborů s ostatními uzly Kad a získávejte je z vyhledávání v síti Kad. Tyto hashové hodnoty mohou pomoci aMule opravit poškozená stažená data, aniž by bylo nutné stahovat celou část znovu. Program aMule použije opravný hash pouze tehdy, když jej nahlásí dostatečný počet nezávislých peerů.\n"
+"\n"
+"Velmi staré klienty Kad (starší než eMule 0.49b) mohou vynechávat výsledky vyhledávání obsahující tyto hashové hodnoty. Pokud si všimnete chybějících výsledků, zkuste tuto možnost vypnout.\n"
+"\n"
+"Vypnutím této možnosti dojde při příštím uložení k odstranění opravných hashů uložených ve vašem indexu Kad. Opětovným zapnutím se začnou znovu shromažďovat.\n"
+"\n"
+"Technický detail: zapnutím této možnosti dojde k oznamování verze protokolu Kad 0x0a a do zveřejňování klíčových slov a výsledků vyhledávání budou přidány hashe AICH."
 
 #: src/muuli_wdr.cpp
 msgid "Ignore repair hashes from Kad nodes too old to support them"
-msgstr ""
+msgstr "Ignorovat opravné hashe z Kad uzlů příliš starých na jejich podporování"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -5337,6 +5343,11 @@ msgid ""
 "\n"
 "Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
+"Používá se pouze pokud je povoleno sdílení a použití opravných hashů souborů přes Kad. Ignoruje hashe zveřejněné uzly, které hlásí příliš starou verzi Kad, na to, aby je podporovala.\n"
+"\n"
+"Verze hlášená uzly může být zastaralá nebo nepřesná, takže toto může zahodit platné hashe a nezpůsobí důvěryhodnost přijatých hashů. Uzly, jejichž verze není známá jsou přijímány.\n"
+"\n"
+"Technický detail: odmítá veřejné štítky AICH od uzlů, které hlásí verze protokolu Kad nižší než 0x09."
 
 #: src/muuli_wdr.cpp src/PrefsUnifiedDlg.cpp
 msgid "Media metadata extraction"
@@ -5592,23 +5603,23 @@ msgstr "Zakázat časovaný úsporný režim počítače"
 
 #: src/muuli_wdr.cpp
 msgid "Appearance: "
-msgstr ""
+msgstr "Vzhled: "
 
 #: src/muuli_wdr.cpp
 msgid "Follow system"
-msgstr ""
+msgstr "Podle systému"
 
 #: src/muuli_wdr.cpp
 msgid "Light mode"
-msgstr ""
+msgstr "Světlý režim"
 
 #: src/muuli_wdr.cpp
 msgid "Dark mode"
-msgstr ""
+msgstr "Tmavý režim"
 
 #: src/muuli_wdr.cpp
 msgid "Appearance changes take effect after restarting aMule."
-msgstr ""
+msgstr "Změny vzhledu se projeví po restartování aMule."
 
 #: src/muuli_wdr.cpp
 msgid "Skin to use: "
@@ -5819,18 +5830,16 @@ msgid "Click this button to reset the log."
 msgstr "Kliknutím na toto tlačítko vymažete protokol."
 
 #: src/muuli_wdr.cpp src/ServerWnd.cpp
-#, fuzzy
 msgid "Update server list"
-msgstr "Upravit seznam serverů"
+msgstr "Aktualizovat seznam serverů"
 
 #: src/muuli_wdr.cpp
 msgid "One-off URL:"
-msgstr ""
+msgstr "Jednorázová URL:"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Download once"
-msgstr "Staženo"
+msgstr "Stáhnout jakmile"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -5886,7 +5895,7 @@ msgstr "Zde zadejte URL souboru nodes.dat a stiskněte tlačítko vlevo pro aktu
 
 #: src/muuli_wdr.cpp
 msgid "Lookup diagnostics"
-msgstr ""
+msgstr "Diagnostika hledání"
 
 #: src/muuli_wdr.cpp
 msgid "Nodes stats"
@@ -6123,13 +6132,12 @@ msgid "Download the GeoIP database from the selected source."
 msgstr "Stáhnout GeoIP databázi z vybraného zdroje."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Auto-update on startup and weekly"
-msgstr "Automaticky aktualizovat při spuštění"
+msgstr "Automaticky aktualizovat při spuštění a týdně"
 
 #: src/muuli_wdr.cpp
 msgid "Check for a newer GeoIP database at startup and every week while aMule is running."
-msgstr ""
+msgstr "Zkontrolovat aktualizace GeoIP databáze při spuštění a každý týden, pokud aMule běží."
 
 #: src/muuli_wdr.cpp
 msgid "Filter incoming messages (except current chat):"
@@ -6154,6 +6162,22 @@ msgstr "Filtrovat zprávy obsahující některý z výrazů (oddělujte je čár
 #: src/muuli_wdr.cpp
 msgid "add here the words amule should filter and block messages including it"
 msgstr "Sem zadejte slova, podle kterých má aMule filtrovat a blokovat zprávy"
+
+#: src/muuli_wdr.cpp
+msgid "Enable advanced spam filter"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Block unsolicited links and repeated messages from non-friends."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Require a CAPTCHA for first messages from non-friends"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Withhold the message until the sender solves the challenge. Clients without CAPTCHA support cannot start a chat."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Show received messages in the log"
@@ -6777,7 +6801,7 @@ msgstr "Bude použit výchozí port (%d)"
 
 #: src/BandwidthLimitSlider.h
 msgid "Adjust the enabled limit from 1 KiB/s to line capacity."
-msgstr ""
+msgstr "Upravte povolený limit z 1 KiB/s na kapacitu připojení."
 
 #: src/BandwidthLimitSlider.h src/PrefsUnifiedDlg.cpp
 #, fuzzy, c-format

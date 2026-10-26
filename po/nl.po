@@ -13,7 +13,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-24 07:47+0000\n"
+"PO-Revision-Date: 2026-10-26 13:07+0000\n"
 "Last-Translator: Marcel Pol <marcel@timelord.nl>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "Language: nl\n"
@@ -40,7 +40,7 @@ msgid ""
 "'All-Platform' p2p client based on eMule \n"
 "\n"
 msgstr ""
-"'Alle-Platformen' p2p client gebaseerd op eMule \n"
+"p2p-client voor alle platformen gebaseerd op eMule \n"
 "\n"
 
 #: src/AboutDialog.cpp
@@ -102,7 +102,7 @@ msgstr "Een nieuwe versie (%s) is beschikbaar:"
 
 #: src/AboutDialog.cpp
 msgid "Could not check for updates. Please try again later."
-msgstr "Controleren op updates mislukt. Probeer het later opnieuw."
+msgstr "Kon niet controleren op updates. Probeer het later opnieuw."
 
 #: src/AddFriend.cpp
 msgid "Add a Friend"
@@ -200,9 +200,8 @@ msgid "Later"
 msgstr "Later"
 
 #: src/GuiEvents.cpp src/ExternalConn.cpp
-#, fuzzy
 msgid "The selected download has changed. Refresh and try again."
-msgstr "De geselecteerde download is veranderd of wordt voltooid. Ververs en probeer opnieuw."
+msgstr "De geselecteerde download is veranderd. Ververs en probeer opnieuw."
 
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
@@ -266,7 +265,7 @@ msgstr ""
 
 #: src/amuleAppCommon.cpp
 msgid "Failed to open ED2KLinks file."
-msgstr "Kon bestand ED2KLinks niet openen."
+msgstr "ED2KLinks-bestand openen mislukt."
 
 #: src/amuleAppCommon.cpp
 msgid "WARNING: You can't add yourself as a source for an eD2k link while having a lowid."
@@ -426,12 +425,12 @@ msgstr "WAARSCHUWING: geconfigureerde netwerkinterface '%s' is niet gevonden - v
 #: src/amule.cpp
 #, c-format
 msgid "WARNING: binding to network interface '%s' requires elevated privileges and was NOT applied - traffic may leave via the default route. Grant the capability (e.g. 'sudo setcap cap_net_raw+ep' on the aMule binary) or run with sufficient privileges."
-msgstr "WAARSCHUWING: binden aan netwerkinterface '%s' vereist verhoogde rechten en is NIET toegepast - verkeer kan via de standaardroute verlopen. Verleen de capability (bijv. 'sudo setcap cap_net_raw+ep' op het aMule-programma) of voer uit met voldoende rechten."
+msgstr "WAARSCHUWING: koppelen aan netwerkinterface '%s' vereist verhoogde rechten en is NIET toegepast - verkeer kan via de standaardroute verlopen. Verleen de capability (bijv. 'sudo setcap cap_net_raw+ep' op het aMule-programma) of voer uit met voldoende rechten."
 
 #: src/amule.cpp src/LibSocketAsio.cpp
 #, c-format
 msgid "WARNING: could not bind to network interface '%s' - traffic may leave via the default route."
-msgstr "WAARSCHUWING: binden aan netwerkinterface '%s' mislukt - verkeer kan via de standaardroute verlopen."
+msgstr "WAARSCHUWING: kon niet koppelen aan netwerkinterface '%s' - verkeer kan via de standaardroute verlopen."
 
 #: src/amule.cpp
 msgid "Your locale has been changed to System Default due to a configuration change. Sorry."
@@ -542,7 +541,7 @@ msgstr "FOUT"
 #: src/amule.cpp
 #, c-format
 msgid "Could not write the amuleapi EC token to %s; amuleapi will fall back to its configured password."
-msgstr "De amuleapi EC token naar %s schrijven mislukt; amuleapi zal terugvallen op het ingestelde wachtwoord."
+msgstr "De amuleapi EC token kon niet naar %s geschreven worden; amuleapi zal terugvallen op het ingestelde wachtwoord."
 
 #: src/amule.cpp
 msgid "An exception occurred while launching amuleapi."
@@ -555,7 +554,7 @@ msgstr "amuleapi actief met pid %d"
 
 #: src/amule.cpp
 msgid "Could not launch amuleapi during automatic restart."
-msgstr "Opstarten van amuleapi tijdens automatisch herstarten mislukt."
+msgstr "Kon amuleapi tijdens automatisch herstarten niet opstarten."
 
 #: src/amule.cpp
 msgid "You requested to run amuleapi on startup, but the amuleapi binary cannot be run. Please install the package containing aMule's REST API server, or build aMule from source with -DBUILD_AMULEAPI=YES and install it."
@@ -564,7 +563,7 @@ msgstr "U hebt gevraagd om amuleapi bij het opstarten uit te voeren, maar het pr
 #: src/amule.cpp
 #, c-format
 msgid "Could not remove the amuleapi EC token file: %s"
-msgstr "Verwijderen van amuleapi EC-tokenbestand mislukt: %s"
+msgstr "Kon het amuleapi EC-tokenbestand niet verwijderen: %s"
 
 #: src/amule.cpp
 #, c-format
@@ -574,12 +573,12 @@ msgstr "amuleapi zal opnieuw opstarten over %u seconden."
 #: src/amule.cpp
 #, c-format
 msgid "Could not bind ports to the specified address: %s"
-msgstr "Kon geen poorten koppelen aan het opgegeven adres: %s"
+msgstr "Kon poorten niet koppelen aan het opgegeven adres: %s"
 
 #: src/amule.cpp
 #, c-format
 msgid "External connection: could not bind to '%s', listening on 127.0.0.1 only."
-msgstr "Externe verbinding: binden aan '%s' mislukt, alleen aan het luisteren naar 127.0.0.1."
+msgstr "Externe verbinding: kon niet koppelen aan '%s', alleen aan het luisteren naar 127.0.0.1."
 
 #: src/amule.cpp
 #, c-format
@@ -616,12 +615,12 @@ msgstr "De client-UDP-poort conflicteert met de server-UDP-poort (TCP+3). Socket
 #: src/amule.cpp
 #, c-format
 msgid "Could not rebind the server UDP port %u; no sockets were changed.\n"
-msgstr "Herbinden van de server-UDP-poort %u mislukt; sockets zijn niet veranderd.\n"
+msgstr "Kon de server-UDP-poort niet herkoppelen %u; sockets zijn niet veranderd.\n"
 
 #: src/amule.cpp
 #, c-format
 msgid "Could not rebind the P2P TCP port %u. %s"
-msgstr "Herbinden van de P2P-TCP-poort %u mislukt. %s"
+msgstr "Kon de P2P-TCP-poort %u niet herkoppelen. %s"
 
 #: src/amule.cpp
 msgid "The previous listener and server UDP socket remain active.\n"
@@ -629,7 +628,7 @@ msgstr "De vorige luisteraar en server-UDP-socket blijven actief.\n"
 
 #: src/amule.cpp
 msgid "The server UDP socket could not be restored; restart aMule.\n"
-msgstr "Herstellen van server-UDP-socket mislukt; herstart aMule.\n"
+msgstr "De server-UDP-socket kon niet hersteld worden; herstart aMule.\n"
 
 #: src/amule.cpp
 msgid "The previous P2P listeners remain active.\n"
@@ -646,7 +645,7 @@ msgstr "Sommige vorige P2P-sockets konden niet worden hersteld; herstart aMule.\
 #: src/amule.cpp
 #, c-format
 msgid "Could not rebind the client UDP port %u. %s"
-msgstr "Herbinden van de client-UDP-poort %u mislukt. %s"
+msgstr "Kon de client-UDP-poort %u niet herkoppelen. %s"
 
 #: src/amule.cpp
 msgid "P2P listening sockets rebound; established peer connections were kept."
@@ -654,11 +653,11 @@ msgstr "P2P-luistersockets worden afgeslagen; bestaande peerverbindingen zijn be
 
 #: src/amule.cpp
 msgid "Failed to create OnlineSig File"
-msgstr "Kon bestand met online handtekening niet maken"
+msgstr "Maken van online-handtekeningbestand mislukt"
 
 #: src/amule.cpp
 msgid "Failed to create aMule OnlineSig File"
-msgstr "Kon aMule OnlineHandtekening Bestand niet maken"
+msgstr "Maken van aMule Online-Handtekeningbestand mislukt"
 
 #: src/amule.cpp
 msgid "The selected locale seems not to be installed on your box. (Note: I'll try to set it anyway)"
@@ -764,11 +763,11 @@ msgstr "Download van %s overgeslagen, omdat gevraagd bestand niet nieuwer is."
 
 #: src/amule.cpp
 msgid "Failed to download the nodes list."
-msgstr "Kon nodelijst niet downloaden."
+msgstr "Downloaden nodelijst mislukt."
 
 #: src/amule.cpp
 msgid "Failed to open the downloaded version check file"
-msgstr "Kon gedownload versie controle bestand niet openen"
+msgstr "Openen gedownload versiecontrolebestand mislukt"
 
 #: src/amule.cpp
 msgid "Corrupted version check file"
@@ -798,7 +797,7 @@ msgstr "U heeft de nieuwste aMule-versie."
 
 #: src/amule.cpp
 msgid "Failed to download the version check file"
-msgstr "Kon bestand voor versiecontrole niet downloaden"
+msgstr "Downloaden versiecontrolebestand mislukt"
 
 #: src/amule.cpp src/amule-remote-gui.cpp
 #, c-format
@@ -905,7 +904,7 @@ msgstr "Bezoek https://github.com/amule-org/amule/releases/latest om te zien of 
 
 #: src/amuleDlg.cpp
 msgid "FATAL ERROR: Failed to create Timer"
-msgstr "FATALE FOUT: Kon Timer niet aanmaken"
+msgstr "FATALE FOUT: Timer aanmaken mislukt"
 
 #: src/amuleDlg.cpp
 msgid "Error! Unable to load Preferences"
@@ -1167,7 +1166,7 @@ msgstr "aMule"
 
 #: src/amule-gui.cpp
 msgid "Fatal Error: Failed to create Core Timer"
-msgstr "Fatale fout: Kon Core Timer niet aanmaken"
+msgstr "Fatale fout: Aanmaken Core Timer mislukt"
 
 #: src/amule-remote-gui.cpp
 msgid "Connect to remote amule"
@@ -1206,7 +1205,7 @@ msgstr ""
 
 #: src/amule-remote-gui.cpp
 msgid "Fatal Error: Failed to create Poll Timer"
-msgstr "Fatale fout: Kon Poll Timer niet aanmaken"
+msgstr "Fatale fout: Aanmaken Poll Timer mislukt"
 
 #: src/amule-remote-gui.cpp
 msgid "Going to event loop..."
@@ -1223,7 +1222,7 @@ msgstr "Externe GUI EV gebeurtenisafhandelaar"
 #: src/amule-remote-gui.cpp src/ExternalConnector.cpp
 #, c-format
 msgid "Connection Failed. Unable to connect to %s:%d\n"
-msgstr "Verbinding mislukt. Kon niet verbinden met %s:%d\n"
+msgstr "Verbinding Mislukt. Verbinden met %s:%d mislukt\n"
 
 #: src/amule-remote-gui.cpp
 msgid "Going down"
@@ -1419,7 +1418,7 @@ msgstr "Gebruiker %s (%u) vroeg uw gedeelde-bestandenlijst van niet-bestaande ma
 #: src/BrowseManager.cpp
 #, c-format
 msgid "Failed to retrieve shared files from user '%s'"
-msgstr "Kon gedeelde bestanden niet ontvangen van gebruiker '%s'"
+msgstr "Ophalen van gedeelde bestanden van gebruiker '%s' mislukt"
 
 #: src/HashListFile.cpp src/KnownFileList.cpp src/SearchList.cpp
 #, c-format
@@ -1468,7 +1467,7 @@ msgstr "U moet een pad opgeven voor de categorie!"
 
 #: src/CatDialog.cpp
 msgid "Failed to create incoming dir for category. Please specify a valid path!"
-msgstr "Kon binnenkomende map niet aanmaken voor categorie. Geef een geldig pad op!"
+msgstr "Maken van binnenkomende map voor categorie mislukt. Geef een geldig pad op!"
 
 #: src/ChatSelector.cpp
 #, c-format
@@ -1737,8 +1736,8 @@ msgstr "Niet Beschikbaar"
 #, c-format
 msgid "Could not ask %u selected client for its shared files."
 msgid_plural "Could not ask %u selected clients for their shared files."
-msgstr[0] "Kon %u geselecteerde client niet bevragen om hun gedeelde bestanden."
-msgstr[1] "Kon %u geselecteerde clients niet bevragen om hun gedeelde bestanden."
+msgstr[0] "Bevragen van %u geselecteerde client om hun gedeelde bestanden mislukt."
+msgstr[1] "Bevragen van %u geselecteerde clients om hun gedeelde bestanden mislukt."
 
 #: src/ClientsListCtrl.cpp src/PrefsUnifiedDlg.cpp src/ServerListCtrl.cpp
 msgid "Files"
@@ -2347,7 +2346,7 @@ msgstr ""
 #: src/EditServerListDlg.cpp src/ExternalConn.cpp
 #, c-format
 msgid "Could not save server list sources to %s. Check the URLs and file permissions."
-msgstr "Serverlijst-bronnen opslaan naar %s mislukt. Controleer de URLs en bestandstoestemmingen."
+msgstr "Kon Serverlijst-bronnen niet opslaan naar %s. Controleer de URLs en bestandstoestemmingen."
 
 #: src/EditServerListDlg.cpp
 msgid "addresses.dat in the daemon configuration directory"
@@ -2468,9 +2467,9 @@ msgid "FileHash not found: %s"
 msgstr "Bestandshash niet gevonden: %s"
 
 #: src/ExternalConn.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot cancel a hashing or finished download: %s"
-msgstr "Annuleren van een voltooide download mislukt: %s"
+msgstr "Kan een hashbewerking of voltooide download niet annuleren: %s"
 
 #: src/ExternalConn.cpp
 msgid "The selected download has changed or is completing. Refresh and try again."
@@ -3200,7 +3199,7 @@ msgstr "Installatie niet voltooid"
 
 #: src/FriendList.cpp
 msgid "Failed to open friend list file 'emfriends.met' for reading!"
-msgstr "Kon vriendenlijst-bestand 'emfriends.met' niet lezen!"
+msgstr "Openen van vriendenlijstbestand 'emfriends.met' om te lezen mislukt!"
 
 #: src/FriendList.cpp
 msgid "Failed to open friend list file 'emfriends.met' for writing!"
@@ -3324,7 +3323,7 @@ msgstr "De URL om te downloaden mag niet leeg zijn"
 #: src/HTTPDownload.cpp
 #, c-format
 msgid "Failed to create HTTP request for %s"
-msgstr "Kon geen HTTP-verzoek maken voor %s"
+msgstr "Maken van HTTP-verzoek voor %s mislukt"
 
 #: src/HTTPDownload.cpp
 #, c-format
@@ -3405,7 +3404,7 @@ msgstr "DB-IP-download voor de huidige maand is mislukt - opnieuw proberen met d
 #: src/IP2Country.cpp src/IPFilter.cpp src/ServerList.cpp
 #, c-format
 msgid "Failed to download %s from %s"
-msgstr "Kon %s niet downloaden van %s"
+msgstr "Downloaden van %s vanuit %s mislukt"
 
 #: src/IPFilter.cpp
 msgid "Loading IP filters 'ipfilter.dat' and 'ipfilter_static.dat'."
@@ -3414,12 +3413,12 @@ msgstr "IP-filters 'ipfilter.dat' en 'ipfilter_static.dat' worden geladen."
 #: src/IPFilter.cpp
 #, c-format
 msgid "Failed to load ipfilter.dat file '%s', unknown format encountered."
-msgstr "Kon ipfilter.dat bestand '%s' niet laden, onbekend formaat."
+msgstr "Laden van ipfilter.dat-bestand '%s' mislukt, onbekend formaat."
 
 #: src/IPFilter.cpp
 #, c-format
 msgid "Failed to load ipfilter.dat file '%s', could not open file."
-msgstr "Kon ipfilter.dat bestand '%s' niet laden, kon bestand niet openen."
+msgstr "Laden van ipfilter.dat-bestand '%s' mislukt, kon bestand niet openen."
 
 #: src/IPFilter.cpp
 #, c-format
@@ -3438,12 +3437,12 @@ msgstr[1] "%u misvormde regels zijn genegeerd."
 #: src/IPFilter.cpp
 #, c-format
 msgid "Failed to remove %s file, aborting update."
-msgstr "Kon bestand %s niet verwijderen, update wordt gestopt."
+msgstr "Verwijderen van bestand %s mislukt, update wordt afgebroken."
 
 #: src/IPFilter.cpp
 #, c-format
 msgid "Failed to rename new %s file, aborting update."
-msgstr "Kon nieuw bestand %s niet hernoemen, update wordt gestopt."
+msgstr "Heroemen van nieuw bestand %s mislukt, update wordt afgebroken."
 
 #: src/IPFilter.cpp
 msgid "IP filter is ready"
@@ -3549,7 +3548,7 @@ msgstr "Kademlia: Zoekwoord staat al op de zoeklijst: "
 
 #: src/kademlia/routing/RoutingZone.cpp
 msgid "Failed to read nodes.dat file - too old. This version (0) is not supported anymore."
-msgstr "Kon bestand nodes.dat niet lezen - te oud. Deze versie (0) wordt niet meer ondersteund."
+msgstr "Lezen van nodes.dat-bestand mislukt - te oud. Deze versie (0) wordt niet meer ondersteund."
 
 #: src/kademlia/routing/RoutingZone.cpp
 #, c-format
@@ -3745,7 +3744,7 @@ msgstr "WAARSCHUWING: Bekende-bestandenlijst beschadigd, bevat ongeldige header.
 
 #: src/KnownFileList.cpp
 msgid "Failed to load entry in known file list, file may be corrupt"
-msgstr "Kon vermelding in bekende-bestandenlijst niet laden, bestand kan beschadigd zijn"
+msgstr "Laden van vermelding in bekende-bestandenlijst mislukt, bestand kan beschadigd zijn"
 
 #: src/KnownFileList.cpp
 msgid "Invalid entry in known file list, file may be corrupt: "
@@ -5090,7 +5089,7 @@ msgstr "UPnP TCP-Poort (optioneel):"
 
 #: src/muuli_wdr.cpp
 msgid "Bind local address to IP (empty for any):"
-msgstr "Bind lokaal adres aan IP (laat leeg voor elk):"
+msgstr "Koppel lokaal adres aan IP (laat leeg voor elk):"
 
 #: src/muuli_wdr.cpp
 msgid "Advanced users only: If you have multiple network interfaces, enter the address of the interface to which aMule should be bound."
@@ -5098,11 +5097,11 @@ msgstr "Enkel voor gevorderde gebruikers: Als u meerdere netwerk-interfaces hebt
 
 #: src/muuli_wdr.cpp
 msgid "Bind to network interface (empty for any):"
-msgstr "Bind aan netwerkinterface (laat leeg voor elk):"
+msgstr "Koppel aan netwerkinterface (laat leeg voor elk):"
 
 #: src/muuli_wdr.cpp
 msgid "Advanced users only: pin aMule's peer-to-peer traffic, and its HTTP updates where the platform allows, to one network interface, chosen from the list or typed in by name (e.g. tun0, eth0, en0) or index. Unlike binding to an IP, this stops traffic leaking out via the default route - useful with a VPN. On Linux before kernel 5.7 it needs the CAP_NET_RAW capability."
-msgstr "Alleen voor gevorderde gebruikers: bind al het peer-to-peer verkeer van aMule, en de HTTP-updates waar het platform dat toestaat, aan één netwerkinterface, gekozen uit de lijst of ingevoerd op naam (bijv. tun0, eth0, en0) of index. In tegenstelling tot binden aan een IP-adres voorkomt dit dat verkeer via de standaardroute weglekt - nuttig bij een VPN. Op Linux voor kernel versie 5.7 vereist dit de CAP_NET_RAW capaciteit."
+msgstr "Alleen voor gevorderde gebruikers: koppel al het peer-to-peer verkeer van aMule, en de HTTP-updates waar het platform dat toestaat, aan één netwerkinterface, gekozen uit de lijst of ingevoerd op naam (bijv. tun0, eth0, en0) of index. In tegenstelling tot koppelen aan een IP-adres voorkomt dit dat verkeer via de standaardroute weglekt - nuttig bij een VPN. Op Linux voor kernel versie 5.7 vereist dit de CAP_NET_RAW capaciteit."
 
 #: src/muuli_wdr.cpp
 msgid "Max sources per downloading file:"
@@ -6147,6 +6146,22 @@ msgid "add here the words amule should filter and block messages including it"
 msgstr "voeg hier de woorden toe die amule moet filteren en berichten daarmee blokkeren"
 
 #: src/muuli_wdr.cpp
+msgid "Enable advanced spam filter"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Block unsolicited links and repeated messages from non-friends."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Require a CAPTCHA for first messages from non-friends"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Withhold the message until the sender solves the challenge. Clients without CAPTCHA support cannot start a chat."
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid "Show received messages in the log"
 msgstr "Toon ontvangen berichten in het logbestand"
 
@@ -6555,7 +6570,7 @@ msgstr "Verwijder bronnen?"
 
 #: src/PartFile.cpp
 msgid "ERROR: Failed to create partfile"
-msgstr "FOUT: Kon deelbestand niet aanmaken"
+msgstr "FOUT: Aanmaken deelbestand mislukt"
 
 #: src/PartFile.cpp
 #, c-format
@@ -6565,7 +6580,7 @@ msgstr "Proberen backup van met-bestand te laden van %s"
 #: src/PartFile.cpp
 #, c-format
 msgid "ERROR: Failed to open part.met file: %s ==> %s"
-msgstr "FOUT: Kon part.met bestand niet openen: %s ==> %s"
+msgstr "FOUT: Openen part.met-bestand mislukt: %s ==> %s"
 
 #: src/PartFile.cpp
 #, c-format
@@ -6606,7 +6621,7 @@ msgstr "Kon bestandsinfo niet herstellen :("
 #: src/PartFile.cpp
 #, c-format
 msgid "Failed to open %s (%s)"
-msgstr "Kon %s (%s) niet openen"
+msgstr "Openen van %s (%s) mislukt"
 
 #: src/PartFile.cpp
 #, c-format
@@ -6625,7 +6640,7 @@ msgstr "0/onbekend aantal bytes geschreven naar '%s' -- bestaand .part.met wordt
 #: src/PartFile.cpp
 #, c-format
 msgid "Failed to save part.met.seeds file for %s"
-msgstr "Kon bestand part.met.seeds niet bewaren voor %s"
+msgstr "Opslaan van part.met.seeds-bestand voor %s mislukt"
 
 #: src/PartFile.cpp
 #, c-format
@@ -6723,7 +6738,7 @@ msgstr "ICH: beschadigd deel %i van %s hersteld -> Bespaarde bytes: %s"
 #: src/PartFile.cpp
 #, c-format
 msgid "ERROR: Failed to open partfile '%s'"
-msgstr "FOUT: Kon deelbestand '%s' niet openen"
+msgstr "FOUT: Openen deelbestand '%s' mislukt"
 
 #: src/PeerCapabilities.h
 msgid "Extended source exchange"
@@ -6860,12 +6875,12 @@ msgstr ""
 #: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Failed to connect Cfg to widget with the ID %d and key %s"
-msgstr "Kon Cfg niet verbinden met widget met ID %d en sleutel %s"
+msgstr "Verbinden van Cfg met widget met ID %d en sleutel %s mislukt"
 
 #: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Failed to transfer data from Cfg to Widget with the ID %d and key %s"
-msgstr "Kon gegevens niet overdragen van Cfg naar widget met ID %d en sleutel %s"
+msgstr "Overdragen van gegevens van Cfg naar widget met ID %d en sleutel %s mislukt"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The type of proxy you are connecting to"
@@ -6874,7 +6889,7 @@ msgstr "Het type proxy waarmee u verbinding maakt"
 #: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Failed to transfer data from Widget to Cfg with the ID %d and key %s"
-msgstr "Kon gegevens niet overdragen van Widget naar Cfg met ID %d en sleutel %s"
+msgstr "Overdragen van gegevens van Widget naar Cfg met ID %d en sleutel %s mislukt"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "No password set."
@@ -6910,11 +6925,11 @@ msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- Network interface binding changed.\n"
-msgstr "- Binding van netwerkinterface gewijzigd.\n"
+msgstr "- Koppeling van netwerkinterface gewijzigd.\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- Local address binding changed.\n"
-msgstr "- Lokale adresbinding veranderd.\n"
+msgstr "- Lokale adreskoppeling veranderd.\n"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "- TCP port changed.\n"
@@ -7577,7 +7592,7 @@ msgstr "Directe client-eindpunten: %u"
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated static servers listed. Making another pass without obfuscation."
-msgstr "Kon geen verbinding maken met alle vermelde geobfusceerde statische servers. Er wordt nog een poging gedaan zonder obfuscatie."
+msgstr "Verbinding maken met alle vermelde geobfusceerde statische servers mislukt. Er wordt nog een poging gedaan zonder obfuscatie."
 
 #: src/ServerConnect.cpp
 msgid "Failed to connect to all obfuscated servers listed. Making another pass without obfuscation."
@@ -7650,9 +7665,9 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "FOUT: Socket ongeldig op timeoutcheck"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
-msgstr "Poging tot verbinden met %s (%s:%i) gaf time-out."
+msgstr "Poging tot verbinden met %s (%s:%i) gaf time-out. Wordt opnieuw geprobeerd zonder obfuscatie."
 
 #: src/ServerConnect.cpp
 #, c-format
@@ -7675,11 +7690,11 @@ msgstr "Bestand server.met niet gevonden!"
 #: src/ServerList.cpp
 #, c-format
 msgid "Failed to load server.met file '%s', unknown format encountered."
-msgstr "Kon server.met bestand '%s' niet laden, onbekend formaat."
+msgstr "Laden van server.met-bestand '%s' mislukt, onbekend formaat."
 
 #: src/ServerList.cpp
 msgid "Failed to open server.met!"
-msgstr "Kon server.met niet openen!"
+msgstr "Openen van server.met mislukt!"
 
 #: src/ServerList.cpp
 #, c-format
@@ -7731,11 +7746,11 @@ msgstr "Server toegevoegd: Server op [%s:%d] met naam '%s'."
 #: src/ServerList.cpp
 #, c-format
 msgid "Failed to open '%s'"
-msgstr "Kon '%s' niet openen"
+msgstr "Openen '%s' mislukt"
 
 #: src/ServerList.cpp
 msgid "Failed to save server.met!"
-msgstr "Kon server.met niet opslaan!"
+msgstr "Opslaan server.met mislukt!"
 
 #: src/ServerList.cpp
 #, c-format
@@ -8162,7 +8177,7 @@ msgstr "Het geselecteerde bestand is veranderd of het is geen volledig bestand."
 #: src/SharedFileList.cpp
 #, c-format
 msgid "Could not delete '%s' from disk."
-msgstr "'%s' verwijderen van schijf mislukt."
+msgstr "Kon '%s' niet verwijderen van de schijf."
 
 #: src/SharedFileList.cpp
 #, c-format
@@ -9392,14 +9407,14 @@ msgid "Hashset requested for unknown file: %s"
 msgstr "Hashset opgevraagd voor onbekend bestand: %s"
 
 #: src/UploadDiskIOThread.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not start the upload disk readers: %s"
-msgstr "Kon geen Kad-zoekopdracht starten"
+msgstr "Kon upload-schijflezers niet starten: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, c-format
 msgid "Upload disk reader error: %s"
-msgstr ""
+msgstr "Upload schijflezerfout: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, c-format
@@ -9424,7 +9439,7 @@ msgstr "Commando '%s' werd niet uitgeoerd tijdens gebeurtenis '%s': %s"
 #: src/UserEvents.cpp
 #, c-format
 msgid "Failed to execute command '%s' on '%s' event."
-msgstr "Kon commando '%s' niet uitvoeren bij gebeurtenis '%s'."
+msgstr "Uitvoeren commando '%s' bij gebeurtenis '%s' mislukt."
 
 #: src/UserEvents.h
 msgid "Download completed"
