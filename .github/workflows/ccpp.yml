@@ -54,6 +54,7 @@ env:
   # in MuleTrayIcon.cpp is #ifdef'd out and never compiled here -- only
   # packaging.yml built it, and that runs after merge, so a break in that
   # half landed on master before anything noticed.
+  # Only Boost headers are used; avoid unused MPI and GPU runtime downloads.
   cmake_ubuntu_deps: |-
     binutils-dev \
     build-essential \
@@ -61,7 +62,7 @@ env:
     cmake \
     gettext \
     libayatana-appindicator3-dev \
-    libboost-all-dev \
+    libboost-dev \
     libcrypto++-dev \
     libgd-dev \
     libglib2.0-dev \
