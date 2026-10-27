@@ -20,7 +20,7 @@ msgstr ""
 "Project-Id-Version: aMule 2.3.3\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-24 07:47+0000\n"
+"PO-Revision-Date: 2026-10-27 11:03+0000\n"
 "Last-Translator: got3nks <got3nks@users.noreply.github.com>\n"
 "Language-Team: SebastianoPistore.info@protonmail.ch\n"
 "Language: it\n"
@@ -207,9 +207,8 @@ msgid "Later"
 msgstr "Più tardi"
 
 #: src/GuiEvents.cpp src/ExternalConn.cpp
-#, fuzzy
 msgid "The selected download has changed. Refresh and try again."
-msgstr "Il download selezionato è cambiato o è in completamento. Aggiorna e riprova."
+msgstr "Il download selezionato è cambiato. Aggiorna e riprova."
 
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
