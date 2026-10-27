@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-25 09:57+0000\n"
+"PO-Revision-Date: 2026-10-27 11:03+0000\n"
 "Last-Translator: Diego Heras <ngosang@hotmail.es>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/amule/amule-application/es/>\n"
 "Language: es\n"
@@ -206,12 +206,11 @@ msgstr "Más tarde"
 
 #: src/GuiEvents.cpp src/ExternalConn.cpp
 msgid "The selected download has changed. Refresh and try again."
-msgstr ""
+msgstr "La descarga seleccionada ha cambiado. Actualice e inténtelo de nuevo."
 
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
-#, fuzzy
 msgid "The connected core does not support deleting complete files from disk."
-msgstr "El núcleo conectado no admite diagnósticos de búsqueda Kad."
+msgstr "El núcleo conectado no permite borrar del disco archivos completos."
 
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "Delete from disk"
@@ -1059,11 +1058,11 @@ msgstr "Su: %.1f%s | De: %.1f%s"
 
 #: src/amuleDlg.cpp
 msgid "Transfer speeds are reported by the daemon. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "Las velocidades de transferencia las proporciona el demonio. La subida total incluye el tráfico de control; las velocidades de subida de los pares incluyen únicamente los paquetes de archivos. Los valores entre paréntesis indican la sobrecarga del protocolo en KiB/s."
 
 #: src/amuleDlg.cpp
 msgid "Live speeds are averaged over the last second. Total upload includes control traffic; peer upload speeds include file packets only. Values in parentheses show protocol overhead in KiB/s."
-msgstr ""
+msgstr "Las velocidades en tiempo real son el promedio del último segundo. La subida total incluye el tráfico de control; las velocidades de subida entre pares incluyen únicamente los paquetes de archivos. Los valores entre paréntesis indican la sobrecarga del protocolo en KiB/s."
 
 #: src/amuleDlg.cpp
 #, c-format
@@ -1337,7 +1336,7 @@ msgstr "URL no válido"
 
 #: src/amule-remote-gui.cpp
 msgid "The core did not confirm deleting the file. Refresh and try again."
-msgstr ""
+msgstr "El núcleo no ha confirmado la eliminación del archivo. Actualice e inténtelo de nuevo."
 
 #: src/amule-remote-gui.cpp
 #, c-format
@@ -2337,24 +2336,25 @@ msgid "Invalid eD2k link! ERROR: %s"
 msgstr "¡Enlace eD2k inválido! ERROR: %s"
 
 #: src/EditServerListDlg.cpp
-#, fuzzy
 msgid "Edit server list sources"
-msgstr "Editar la lista de servidores"
+msgstr "Editar las fuentes de la lista de servidores"
 
 #: src/EditServerListDlg.cpp
 msgid ""
 "Enter one server.met URL per line.\n"
 "Saving replaces the source list and removes comment lines."
 msgstr ""
+"Introduzca una URL de «server.met» por línea.\n"
+"Al guardar, se sustituye la lista de fuentes y se eliminan las líneas de comentario."
 
 #: src/EditServerListDlg.cpp src/ExternalConn.cpp
 #, c-format
 msgid "Could not save server list sources to %s. Check the URLs and file permissions."
-msgstr ""
+msgstr "No se han podido guardar las fuentes de la lista de servidores en %s. Compruebe las URL y los permisos del archivo."
 
 #: src/EditServerListDlg.cpp
 msgid "addresses.dat in the daemon configuration directory"
-msgstr ""
+msgstr "addresses.dat en el directorio de configuración del demonio"
 
 #: src/ExternalConn.cpp
 msgid "Client sent packet after authentication failed."
@@ -2457,9 +2457,8 @@ msgid "Unauthorized access attempt from %s. Connection closed."
 msgstr "Intento de acceso no autorizado desde %s. Conexión cerrada."
 
 #: src/ExternalConn.cpp
-#, fuzzy
 msgid "Invalid partfile command target."
-msgstr "Nombre de archivo incorrecto."
+msgstr "Destino no válido para la orden del archivo de partes."
 
 #: src/ExternalConn.cpp
 #, c-format
@@ -2472,13 +2471,13 @@ msgid "FileHash not found: %s"
 msgstr "Hash de archivo no encontrado: %s"
 
 #: src/ExternalConn.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot cancel a hashing or finished download: %s"
-msgstr "No se puede cancelar una descarga finalizada: %s"
+msgstr "No se puede cancelar una descarga finalizada o cuyo hash se está creando: %s"
 
 #: src/ExternalConn.cpp
 msgid "The selected download has changed or is completing. Refresh and try again."
-msgstr ""
+msgstr "La descarga seleccionada ha cambiado o se está completando. Actualice e inténtelo de nuevo."
 
 #: src/ExternalConn.cpp
 #, c-format
@@ -2573,9 +2572,8 @@ msgid "Version check is not available on this daemon."
 msgstr "La comprobación de versión no está disponible en este demonio."
 
 #: src/ExternalConn.cpp
-#, fuzzy
 msgid "Invalid complete-file deletion target."
-msgstr "Nombre de archivo incorrecto."
+msgstr "Destino no válido para el borrado del archivo completo."
 
 #: src/ExternalConn.cpp
 msgid "File not found."
@@ -4132,20 +4130,19 @@ msgstr "Cerrar"
 
 #: src/MuleDataViewCtrl.cpp
 msgid "Fit column to contents"
-msgstr ""
+msgstr "Ajustar la columna al contenido"
 
 #: src/MuleDataViewCtrl.cpp
 msgid "Fit visible columns to contents"
-msgstr ""
+msgstr "Ajustar las columnas visibles al contenido"
 
 #: src/MuleDataViewCtrl.cpp
-#, fuzzy
 msgid "Show all columns (keep widths)"
-msgstr "Mostrar todos los comentarios"
+msgstr "Mostrar todas las columnas (mantener los anchos)"
 
 #: src/MuleDataViewCtrl.cpp
 msgid "Restore default columns and widths"
-msgstr ""
+msgstr "Restablecer las columnas y los anchos predeterminados"
 
 #: src/MuleTextCtrl.cpp
 msgid "Cut"
@@ -5070,9 +5067,8 @@ msgid "Slot Allocation"
 msgstr "Asignación de puesto reservado"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Bandwidth calculator..."
-msgstr "Límites del ancho de banda"
+msgstr "Calculadora de ancho de banda..."
 
 #: src/muuli_wdr.cpp
 msgid "Ports"
@@ -5144,20 +5140,19 @@ msgstr "Familias de direcciones:"
 
 #: src/muuli_wdr.cpp
 msgid "IPv4 only"
-msgstr ""
+msgstr "Solo IPv4"
 
 #: src/muuli_wdr.cpp
 msgid "IPv4 and IPv6"
-msgstr ""
+msgstr "IPv4 y IPv6"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Takes effect after restarting aMule."
-msgstr "Los cambios de aspecto surtirán efecto tras reiniciar aMule."
+msgstr "Surtirá efecto tras reiniciar aMule."
 
 #: src/muuli_wdr.cpp
 msgid "Advertise my IPv6 address to other peers"
-msgstr ""
+msgstr "Anunciar mi dirección IPv6 a otros pares"
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"
@@ -5172,9 +5167,8 @@ msgid "retries"
 msgstr "reintentos"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Edit sources..."
-msgstr "Fuentes del archivo:"
+msgstr "Editar fuentes..."
 
 #: src/muuli_wdr.cpp
 msgid "Update server list when connecting to a server"
@@ -5278,15 +5272,15 @@ msgstr "Añadir los nuevos archivos compartidos con prioridad automática"
 
 #: src/muuli_wdr.cpp
 msgid "Verify local data of requested shared files every"
-msgstr ""
+msgstr "Verificar los datos locales de los archivos compartidos solicitados cada"
 
 #: src/muuli_wdr.cpp
 msgid "Re-read requested complete files in the background and compare them with their stored MD4/AICH hashes, as Verify Local Data does. Corrupt parts stop being shared. Uploads continue during the check."
-msgstr ""
+msgstr "Vuelve a leer en segundo plano los archivos completos solicitados y los compara con sus hash MD4/AICH almacenados, tal y como hace «Verificar datos locales». Las partes dañadas dejan de compartirse. Las subidas continúan durante la comprobación."
 
 #: src/muuli_wdr.cpp
 msgid "days (0 = off)"
-msgstr ""
+msgstr "días (0 = desactivado)"
 
 #: src/muuli_wdr.cpp
 msgid "Intelligent Corruption Handling (I.C.H.)"
@@ -5825,18 +5819,16 @@ msgid "Click this button to reset the log."
 msgstr "Pulse este botón para borrar el registro."
 
 #: src/muuli_wdr.cpp src/ServerWnd.cpp
-#, fuzzy
 msgid "Update server list"
-msgstr "Editar la lista de servidores"
+msgstr "Actualizar la lista de servidores"
 
 #: src/muuli_wdr.cpp
 msgid "One-off URL:"
-msgstr ""
+msgstr "URL de un solo uso:"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Download once"
-msgstr "Descargado"
+msgstr "Descargar una vez"
 
 #: src/muuli_wdr.cpp
 msgid "Add server manually: Name"
@@ -6162,19 +6154,19 @@ msgstr "añada aquí las palabras que amule debe filtrar para bloquear los mensa
 
 #: src/muuli_wdr.cpp
 msgid "Enable advanced spam filter"
-msgstr ""
+msgstr "Activar filtro avanzado de spam"
 
 #: src/muuli_wdr.cpp
 msgid "Block unsolicited links and repeated messages from non-friends."
-msgstr ""
+msgstr "Bloquea los enlaces no solicitados y los mensajes repetidos de personas que no son tus amigos."
 
 #: src/muuli_wdr.cpp
 msgid "Require a CAPTCHA for first messages from non-friends"
-msgstr ""
+msgstr "Solicitar un CAPTCHA para los primeros mensajes de personas que no sean amigos"
 
 #: src/muuli_wdr.cpp
 msgid "Withhold the message until the sender solves the challenge. Clients without CAPTCHA support cannot start a chat."
-msgstr ""
+msgstr "Retener el mensaje hasta que el remitente resuelva el desafío. Los clientes que no sean compatibles con CAPTCHA no podrán iniciar un chat."
 
 #: src/muuli_wdr.cpp
 msgid "Show received messages in the log"
@@ -6865,7 +6857,7 @@ msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "No system tray found. Use a desktop with a system tray, or build aMule with libayatana-appindicator3."
-msgstr ""
+msgstr "No se ha encontrado ninguna bandeja del sistema. Utilice un escritorio que cuente con una bandeja del sistema o compile aMule con libayatana-appindicator3."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Not available on Wayland: the protocol does not report when a window is minimized, so this option cannot intercept the system minimize button. Workaround: launch aMule with `GDK_BACKEND=x11` to use XWayland instead."
@@ -7255,23 +7247,20 @@ msgid "Server connection refresh interval: Disabled"
 msgstr "Intervalo de actualización de la conexión al servidor: deshabilitado"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Bandwidth calculator"
-msgstr "Límites del ancho de banda"
+msgstr "Calculadora de ancho de banda"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Enter limits in Mbit/s. Zero means unlimited."
-msgstr ""
+msgstr "Introduzca los límites en Mbit/s. El valor cero significa que no hay límite."
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Download (Mbit/s)"
-msgstr "Descargas (%i)"
+msgstr "Descarga (Mbit/s)"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Upload (Mbit/s)"
-msgstr "Límite de subida"
+msgstr "Subida (Mbit/s)"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "disabled"
@@ -7683,9 +7672,9 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "ERROR: socket no válido en la comprobación de tiempo de espera"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
-msgstr "Tiempo de espera agotado al intentar conectar con %s (%s:%i)."
+msgstr "Se agotó el tiempo de espera al intentar conectar con %s (%s:%i); se vuelve a intentar sin ofuscación."
 
 #: src/ServerConnect.cpp
 #, c-format
@@ -7777,11 +7766,11 @@ msgstr "Error de E/S al escribir 'server.met': %s"
 
 #: src/ServerList.cpp
 msgid "A server list download is already in progress."
-msgstr ""
+msgstr "Ya se está llevando a cabo la descarga de la lista de servidores."
 
 #: src/ServerList.cpp
 msgid "No server list sources configured"
-msgstr ""
+msgstr "No hay fuentes de listas de servidores configuradas"
 
 #: src/ServerList.cpp
 #, c-format
@@ -8002,11 +7991,11 @@ msgstr "Registro de aMuleGUI"
 
 #: src/ServerWnd.cpp
 msgid "Download and merge every saved source"
-msgstr ""
+msgstr "Descargar e integrar todas las fuentes guardadas"
 
 #: src/ServerWnd.cpp
 msgid "Download this server.met URL once without saving it."
-msgstr ""
+msgstr "Descarga esta URL de server.met una sola vez sin guardarla."
 
 #: src/ServerWnd.cpp
 msgid "Server not added: No IP or hostname specified."
@@ -8190,7 +8179,7 @@ msgstr[1] "Reextrayendo metadatos multimedia de %u archivos compartidos"
 
 #: src/SharedFileList.cpp
 msgid "The selected file has changed or is not a complete file."
-msgstr ""
+msgstr "El archivo seleccionado ha cambiado o no está completo."
 
 #: src/SharedFileList.cpp
 #, c-format
@@ -9358,9 +9347,9 @@ msgid "Verify Local Data: %s is empty, so there is nothing to check."
 msgstr "Verificar datos locales: %s está vacío, por lo que no hay nada que comprobar."
 
 #: src/ThreadTasks.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Verify Local Data: missing MD4 hashes for %s, so it was not checked."
-msgstr "Verificar datos locales: no se pudo leer %s, por lo que no se comprobó."
+msgstr "Verificar datos locales: faltan los hash MD4 de %s, por lo que no fue comprobado."
 
 #: src/ThreadTasks.cpp
 #, c-format
@@ -9424,14 +9413,14 @@ msgid "Hashset requested for unknown file: %s"
 msgstr "Solicitado hashset de un archivo desconocido: %s"
 
 #: src/UploadDiskIOThread.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not start the upload disk readers: %s"
-msgstr "No se pudo iniciar una búsqueda Kad"
+msgstr "No se han podido iniciar los lectores de disco de subida: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, c-format
 msgid "Upload disk reader error: %s"
-msgstr ""
+msgstr "Error del lector de discos de subida: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, c-format

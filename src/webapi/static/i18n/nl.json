@@ -1043,5 +1043,8 @@
   "prefs_sources_saved_help": "Downloads vanuit de opgeslagen bronnen.",
   "prefs_group_kad_repair_hashes": "Bestandsreparatiehashes via Kad",
   "prefs_field_kad_protocol10_enabled": "Deel en gebruik bestandsreparatiehashes (AICH) via Kad",
-  "prefs_field_kad_strict_aich_publishers": "Negeer reparatiehashes van Kad-nodes die te oud zijn om ze te ondersteunen"
+  "prefs_field_kad_strict_aich_publishers": "Negeer reparatiehashes van Kad-nodes die te oud zijn om ze te ondersteunen",
+  "prefs_field_message_filter_advanced_spam_filter": "Schakel geavanceerd spamfilter in",
+  "prefs_field_message_filter_use_captchas": "Vereis een CAPTCHA voor eerste berichten van niet-vrienden",
+  "prefs_field_message_filter_use_captchas_help": "Berichten blijven verborgen totdat de stuurder de uitdaging oplost. Clients zonder CAPTCHA-ondersteuning kunnen geen chatbericht sturen."
 }

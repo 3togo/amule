@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-25 09:57+0000\n"
+"PO-Revision-Date: 2026-10-27 11:00+0000\n"
 "Last-Translator: saleh alhathal <hathalsal@hotmail.com>\n"
 "Language-Team: \n"
 "Language: ar\n"
@@ -3618,69 +3618,65 @@ msgid "Special node"
 msgstr "عقدة خاصة"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "UDP firewall check"
-msgstr "محجوب بجدار حماية"
+msgstr "التحقق من جدار حماية UDP"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 #, c-format
 msgid "type %u"
-msgstr ""
+msgstr "صنف %u"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 #, c-format
 msgid "Lookup %s (%s, %s): %u peers, %u overdue routing requests, %u omitted peers, %u evicted referrals"
-msgstr ""
+msgstr "البحث عن %s (%s، %s): %u من النظراء، %u من طلبات التوجيه المتأخرة، %u من النظراء الذين تم تخطيهم، %u من الإحالات المُزالة"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "active lookup"
-msgstr ""
+msgstr "بحث نشط"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "finished lookup"
-msgstr "الفلنديه"
+msgstr "انتهى البحث"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Keyword: %s"
-msgstr "مُصفّى: %s"
+msgstr "كلمة مفتاحية: %s"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 #, c-format
 msgid "%s [%s], distance %s, Kad version %u (%s): %u routing requests, %u replies, last RTT %u ms, %u item requests, %u result packets, %u result records"
-msgstr ""
+msgstr "%s [%s]، المسافة %s، إصدار Kad %u (%s): %u من طلبات التوجيه، %u من الردود، آخر وقت ذهاب وإياب %u ms، %u من طلبات العناصر، %u من حزم النتائج، %u من سجلات النتائج"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "awaiting reply"
-msgstr ""
+msgstr "في انتظار الاستجابة"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "reply received"
-msgstr "لم يُستلم"
+msgstr "تم استلام الرد"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 #, c-format
 msgid "+%u ms: %s referred %s (distance %s, %s)"
-msgstr ""
+msgstr "+%u ms: أحال %s إلى %s (المسافة %s، %s)"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "closer to target"
-msgstr ""
+msgstr "أقرب إلى الهدف"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "no closer to target"
-msgstr ""
+msgstr "لم يقترب من الهدف"
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
 msgid "Overdue means a routing request unanswered for at least 3 seconds; late replies may still arrive. Result records are received records, not unique files. Only bounded recent history is retained."
-msgstr ""
+msgstr "المتأخرة تعني طلب توجيه لم يتلقَّ ردًا لمدة 3 ثوانٍ على الأقل؛ قد تصل الردود المتأخرة لاحقًا. سجلات النتائج هي سجلات مستلمة وليست ملفات فريدة. لا يُحتفظ إلا بسجل حديث محدود."
 
 #: src/kademlia/utils/LookupDiagnostics.cpp
-#, fuzzy
 msgid "No Kad lookup history available."
-msgstr "لا توجد خيارات متاحة"
+msgstr "لا يتوفر سجل لعمليات بحث Kad."
 
 #: src/KnownFile.cpp
 msgid "Kad user"
@@ -3689,7 +3685,7 @@ msgstr "مستخدم Kad"
 #: src/KnownFile.cpp
 #, c-format
 msgid "Verify Local Data: %s is still downloading, so it was not checked."
-msgstr ""
+msgstr "التحقق من البيانات المحلية: %s لا يزال قيد التحميل، لذا لم يتم فحصه."
 
 #: src/KnownFile.cpp
 #, c-format
@@ -3969,7 +3965,7 @@ msgstr "كلمة مرور غير صالحة، ليست تجزئة MD5!"
 #: src/libs/ec/cpp/RemoteConnect.cpp
 #, c-format
 msgid "Could not resolve %s to an IPv4 address."
-msgstr ""
+msgstr "تعذر تحويل %s إلى عنوان IPv4."
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 msgid "Connection failure"
@@ -3985,11 +3981,11 @@ msgstr "فشل اتصال EC. رد فارغ."
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 msgid "Could not set up connection encryption. Connection closed."
-msgstr ""
+msgstr "تعذر إعداد تشفير الاتصال. تم إغلاق الاتصال."
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 msgid "The core did not negotiate an encrypted connection. It may be an older aMule without encryption support, or the connection may have been tampered with. To connect without encryption, turn it off in the connection settings."
-msgstr ""
+msgstr "لم تتفاوض النواة على اتصال مشفّر. قد يكون إصدارًا قديمًا من aMule لا يدعم التشفير، أو ربما تم التلاعب بالاتصال. للاتصال بدون تشفير، أوقف التشفير من إعدادات الاتصال."
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 msgid "External Connection: Bad reply, handshake failed. Connection closed."
@@ -3997,7 +3993,7 @@ msgstr "الاتصال الخارجي: رد سيئ، فشلت المصافحة. 
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 msgid "External Connection: the daemon failed to prove it knows the password. Connection closed."
-msgstr ""
+msgstr "الاتصال الخارجي: فشل البرنامج الخلفي (daemon) في إثبات معرفته بكلمة المرور. تم إغلاق الاتصال."
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 msgid "Succeeded! Connection established to aMule "
@@ -4018,12 +4014,12 @@ msgstr "الاتصال الخارجي: فشلت المصافحة."
 #: src/LibSocketAsio.cpp
 #, c-format
 msgid "WARNING: network interface '%s' is gone - traffic is no longer bound to it and may leave via the default route."
-msgstr ""
+msgstr "تحذير: اختفت واجهة الشبكة '%s' - لم تعد حركة المرور مرتبطة بها وقد تخرج عبر المسار الافتراضي."
 
 #: src/LibSocketAsio.cpp
 #, c-format
 msgid "Error creating UDP socket %s %d : %s"
-msgstr ""
+msgstr "خطأ في إنشاء مقبس UDP ‏%s %d : %s"
 
 #: src/LibSocketAsio.cpp
 #, c-format
@@ -4049,74 +4045,74 @@ msgstr "تحذير: "
 #: src/MediaProbe.cpp
 #, c-format
 msgid "Media metadata: not using %s, because another user owns it or a folder above it."
-msgstr ""
+msgstr "معلومات الوسائط: لن يتم استخدام %s لأن مستخدمًا آخر يملكه أو يملك أحد المجلدات الأعلى منه."
 
 #: src/MediaProbe.cpp
 msgid "Media metadata: no ffprobe binary found. Install ffmpeg, or set the ffprobe path in preferences; length, bitrate and codec will not be extracted."
-msgstr ""
+msgstr "معلومات الوسائط: لم يتم العثور على ملف ffprobe التنفيذي. ثبّت ffmpeg، أو حدد مسار ffprobe في الإعدادات؛ لن يتم استخراج المدة ومعدل البت والترميز."
 
 #: src/MediaProbe.cpp
 #, c-format
 msgid "Media metadata: %s is gone, nothing to extract"
-msgstr ""
+msgstr "معلومات الوسائط: اختفى %s، ولا يوجد شيء لاستخراجه"
 
 #: src/MediaProbe.cpp
 #, c-format
 msgid "Extracting media metadata with ffprobe: %s"
-msgstr ""
+msgstr "جارٍ استخراج معلومات الوسائط باستخدام ffprobe: %s"
 
 #: src/MediaProbe.cpp
 #, c-format
 msgid "Media metadata: ffprobe timed out or was cancelled for %s"
-msgstr ""
+msgstr "معلومات الوسائط: انتهت مهلة ffprobe أو أُلغي لـ %s"
 
 #: src/MediaProbe.cpp
 #, c-format
 msgid "Media metadata: ignoring implausibly large ffprobe output for %s"
-msgstr ""
+msgstr "معلومات الوسائط: تم تجاهل نتائج ffprobe لأن حجمها كبير جداً وغير طبيعي لـ %s"
 
 #: src/MediaProbe.cpp
 #, c-format
 msgid "Media metadata: could not run ffprobe (%s) -- check the media metadata settings"
-msgstr ""
+msgstr "معلومات الوسائط: تعذر تشغيل ffprobe (%s) -- يرجى التحقق من إعدادات معلومات الوسائط"
 
 #: src/MediaProbe.cpp
 #, c-format
 msgid "Media metadata: ffprobe failed (code %d) for %s"
-msgstr ""
+msgstr "معلومات الوسائط: فشل ffprobe (رمز الخطأ %d) لـ %s"
 
 #: src/MediaProbe.cpp
 #, c-format
 msgid "Media metadata: ffprobe found nothing usable in %s"
-msgstr ""
+msgstr "معلومات الوسائط: لم يعثر ffprobe على أي بيانات يمكن استخدامها في %s"
 
 #: src/MediaProbeThread.cpp
 #, c-format
 msgid "Finished extracting media metadata from %u shared file (%u failed)"
 msgid_plural "Finished extracting media metadata from %u shared files (%u failed)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "تم الانتهاء من استخراج معلومات الوسائط من %u ملف مشترك (فشل %u)"
+msgstr[1] "تم الانتهاء من استخراج معلومات الوسائط من %u ملفات مشتركة (فشل %u)"
 
 #: src/MediaProbeThread.cpp
 #, c-format
 msgid "Finished extracting media metadata from %u shared file"
 msgid_plural "Finished extracting media metadata from %u shared files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "تم الانتهاء من استخراج معلومات الوسائط من %u ملف مشترك"
+msgstr[1] "تم الانتهاء من استخراج معلومات الوسائط من %u ملفات مشتركة"
 
 #: src/MediaProbeThread.cpp
 #, c-format
 msgid "%u further file failed media metadata extraction (not listed individually)"
 msgid_plural "%u further files failed media metadata extraction (not listed individually)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "فشل استخراج معلومات الوسائط لـ %u ملف إضافي (غير مدرج بشكل منفصل)"
+msgstr[1] "فشل استخراج معلومات الوسائط لـ %u ملفات إضافية (غير مدرجة بشكل منفصل)"
 
 #: src/MediaProbeThread.cpp
 #, c-format
 msgid "%u further shared file is gone (not listed individually)"
 msgid_plural "%u further shared files are gone (not listed individually)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "اختفى %u ملف مشترك إضافي (غير مدرج بشكل منفصل)"
+msgstr[1] "اختفت %u ملفات مشتركة إضافية (غير مدرجة بشكل منفصل)"
 
 #: src/MuleNotebook.cpp src/muuli_wdr.cpp
 msgid "Close"
@@ -4124,20 +4120,19 @@ msgstr "اغلق"
 
 #: src/MuleDataViewCtrl.cpp
 msgid "Fit column to contents"
-msgstr ""
+msgstr "ملاءمة العمود للمحتوى"
 
 #: src/MuleDataViewCtrl.cpp
 msgid "Fit visible columns to contents"
-msgstr ""
+msgstr "ملاءمة الأعمدة المرئية للمحتوى"
 
 #: src/MuleDataViewCtrl.cpp
-#, fuzzy
 msgid "Show all columns (keep widths)"
-msgstr "اعرض كل التعليقات"
+msgstr "إظهار جميع الأعمدة (مع الحفاظ على العرض)"
 
 #: src/MuleDataViewCtrl.cpp
 msgid "Restore default columns and widths"
-msgstr ""
+msgstr "استعادة الأعمدة وعرضها الافتراضي"
 
 #: src/MuleTextCtrl.cpp
 msgid "Cut"
@@ -4164,7 +4159,7 @@ msgstr "تحديد الكل"
 #: src/MuleTrayIcon.cpp src/muuli_wdr.cpp src/OtherFunctions.cpp
 #: src/StatisticsDlg.cpp
 msgid "KiB/s"
-msgstr ""
+msgstr "KiB/s"
 
 #: src/MuleTrayIcon.cpp src/BandwidthLimitSlider.h src/PrefsUnifiedDlg.cpp
 msgid "Unlimited"
@@ -4354,12 +4349,12 @@ msgstr "إجمالي الرفع: %s"
 #: src/MuleUDPSocket.cpp
 #, c-format
 msgid "Created %s at port %u"
-msgstr ""
+msgstr "تم إنشاء %s على المنفذ %u"
 
 #: src/MuleUDPSocket.cpp
 #, c-format
 msgid "WARNING! %s: Packet to %s discarded due to error (%s) while sending."
-msgstr ""
+msgstr "تحذير! %s: تم تجاهل الحزمة الموجهة إلى %s بسبب خطأ (%s) أثناء الإرسال."
 
 #: src/muuli_wdr.cpp
 msgid "Paste eD2k or magnet links here"
@@ -4375,7 +4370,7 @@ msgstr "انقر هنا لإضافة رابط eD2k الموجود في حقل ا
 
 #: src/muuli_wdr.cpp
 msgid "Events are displayed here. For a complete list of events, refer to the log in the Networks tab."
-msgstr ""
+msgstr "تُعرض الأحداث هنا. للحصول على قائمة كاملة بالأحداث، يرجى مراجعة سجل العمليات في تبويب الشبكات."
 
 #: src/muuli_wdr.cpp
 msgid "Loading ..."
@@ -4407,7 +4402,7 @@ msgstr "يعرض حالة الاتصال ونقل البيانات النشط. �
 
 #: src/muuli_wdr.cpp
 msgid "Not Connected ..."
-msgstr "غير متصل"
+msgstr "غير متصل…"
 
 #: src/muuli_wdr.cpp
 msgid "Currently connected server."
@@ -4422,9 +4417,8 @@ msgid "Type"
 msgstr "نوع"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Search network"
-msgstr "خطأ في البحث"
+msgstr "البحث في الشبكة"
 
 #: src/muuli_wdr.cpp
 msgid "Extended Parameters"
@@ -4452,7 +4446,7 @@ msgstr "سمعي"
 
 #: src/muuli_wdr.cpp src/OtherFunctions.cpp src/TransferWnd.cpp
 msgid "Disc images"
-msgstr ""
+msgstr "ملفات صور الأقراص"
 
 #: src/muuli_wdr.cpp src/OtherFunctions.cpp src/TransferWnd.cpp
 msgid "Pictures"
@@ -4484,15 +4478,15 @@ msgstr "بايت"
 
 #: src/muuli_wdr.cpp src/OtherFunctions.cpp
 msgid "KiB"
-msgstr ""
+msgstr "KiB"
 
 #: src/muuli_wdr.cpp src/OtherFunctions.cpp src/PrefsUnifiedDlg.cpp
 msgid "MiB"
-msgstr ""
+msgstr "MiB"
 
 #: src/muuli_wdr.cpp src/OtherFunctions.cpp
 msgid "GiB"
-msgstr ""
+msgstr "GiB"
 
 #: src/muuli_wdr.cpp
 msgid "Max Size"
@@ -4503,9 +4497,8 @@ msgid "Availability"
 msgstr "التوفر"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Filter"
-msgstr "تم ترشيح : %i"
+msgstr "مرشح"
 
 #: src/muuli_wdr.cpp
 msgid "Invert Result"
@@ -4516,18 +4509,16 @@ msgid "Hide Known Files"
 msgstr "إخفاء الملفات المعروفة"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Reset Filters"
-msgstr "اعرض الملفات"
+msgstr "إعادة ضبط المرشحات"
 
 #: src/muuli_wdr.cpp src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Start"
 msgstr "ابدء"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Extend"
-msgstr "إمتداد"
+msgstr "توسيع البحث"
 
 #: src/muuli_wdr.cpp
 msgid "Ask already-responded Kad peers to widen the search. Each click queries the next-closest peer for more contacts (KADEMLIA_FIND_VALUE_MORE), surfacing additional file matches that the search's initial alpha frontier missed."
@@ -4547,7 +4538,7 @@ msgstr "التحميل في الفئة"
 
 #: src/muuli_wdr.cpp
 msgid "Clear Search Results"
-msgstr ""
+msgstr "مسح نتائج البحث"
 
 #: src/muuli_wdr.cpp
 msgid "Reset Fields"
@@ -4578,13 +4569,12 @@ msgid "Full Name"
 msgstr "الاسم الكامل"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "met-File"
-msgstr "ملفات"
+msgstr "ملف met"
 
 #: src/muuli_wdr.cpp
 msgid "Hash"
-msgstr ""
+msgstr "التجزئة"
 
 #: src/muuli_wdr.cpp
 msgid "Filesize"
@@ -4623,9 +4613,8 @@ msgid "Datarate"
 msgstr "معدل البيانات"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Download Active Time"
-msgstr "سرعة-التحميل"
+msgstr "وقت التحميل النشط"
 
 #: src/muuli_wdr.cpp
 msgid "Completed Size"
@@ -4645,7 +4634,7 @@ msgstr "المكتسب بالضغط"
 
 #: src/muuli_wdr.cpp
 msgid "Packages saved by I.C.H."
-msgstr ""
+msgstr "الحزم المحفوظة بواسطة I.C.H."
 
 #: src/muuli_wdr.cpp
 msgid "Sharing"
@@ -4697,11 +4686,11 @@ msgstr "الترميز"
 
 #: src/muuli_wdr.cpp src/SearchListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Artist"
-msgstr ""
+msgstr "الفنان"
 
 #: src/muuli_wdr.cpp src/SearchListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Album"
-msgstr ""
+msgstr "الألبوم"
 
 #: src/muuli_wdr.cpp src/SearchListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Title"
@@ -4804,9 +4793,8 @@ msgid "Additional Information"
 msgstr "معلومت إضافية"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Userhash"
-msgstr "مستخدمين"
+msgstr "تجزئة المستخدم"
 
 #: src/muuli_wdr.cpp src/utils/aLinkCreator/src/alcframe.cpp
 msgid "Add"
@@ -4841,75 +4829,64 @@ msgid "Statistics Tree"
 msgstr "شجرة اﻻحصائيات"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Client software"
-msgstr "عميل"
+msgstr "برمجية العميل"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Client version"
-msgstr "عميل"
+msgstr "إصدار العميل"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "User ID"
-msgstr "مستخدمين: 0"
+msgstr "معرف المستخدم"
 
 #: src/muuli_wdr.cpp
 msgid "Server IP"
 msgstr "عنوان الخادم"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Server name"
-msgstr "إسم الخادم"
+msgstr "اسم الخادم"
 
 #: src/muuli_wdr.cpp
 msgid "Obfuscation"
-msgstr ""
+msgstr "التعمية"
 
 #: src/muuli_wdr.cpp
 msgid "Protocol extensions"
-msgstr ""
+msgstr "امتدادات البروتوكول"
 
 #: src/muuli_wdr.cpp
 msgid "Transfers to client"
 msgstr "عمليات النقل إلى العميل"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Current request"
-msgstr "الحالي"
+msgstr "الطلب الحالي"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Average upload rate"
-msgstr "متوسط زمن التحميل : %s"
+msgstr "متوسط سرعة الرفع"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Average download rate"
-msgstr "متوسط زمن التحميل : %s"
+msgstr "متوسط سرعة التحميل"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Uploaded (session)"
-msgstr "معدل رفع الجلسة"
+msgstr "المرفوع (الجلسة)"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Downloaded (session)"
-msgstr "معدل تحميل الجلسة"
+msgstr "المحمَّل (الجلسة)"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Uploaded (total)"
-msgstr "الرفع"
+msgstr "المرفوع (الإجمالي)"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Downloaded (total)"
-msgstr "تحميل (%i)"
+msgstr "المحمَّل (الإجمالي)"
 
 #: src/muuli_wdr.cpp
 msgid "Scores"
@@ -4917,17 +4894,15 @@ msgstr "مصدر"
 
 #: src/muuli_wdr.cpp
 msgid "Secure ident"
-msgstr ""
+msgstr "التعريف الآمن"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Queue rank"
-msgstr "اﻻنتظار ممتلئ"
+msgstr "الترتيب في قائمة الانتظار"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Queue score"
-msgstr "اﻻنتظار ممتلئ"
+msgstr "نقاط قائمة الانتظار"
 
 #: src/muuli_wdr.cpp
 msgid "Nick"
@@ -5059,7 +5034,7 @@ msgstr "مشغل الفيديو"
 
 #: src/muuli_wdr.cpp
 msgid "Line capacities"
-msgstr ""
+msgstr "سرعة الاتصال القصوى"
 
 #: src/muuli_wdr.cpp
 msgid "Upload"
@@ -5070,23 +5045,20 @@ msgid "Bandwidth limits"
 msgstr "حدود النطاق الترددي"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Enable download limit"
-msgstr "حد التحميل"
+msgstr "تفعيل حد للتحميل"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Enable upload limit"
-msgstr "حد الرفع"
+msgstr "تفعيل حد للرفع"
 
 #: src/muuli_wdr.cpp
 msgid "Slot Allocation"
 msgstr "تخصيص الفتحات"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Bandwidth calculator..."
-msgstr "حدود النطاق الترددي"
+msgstr "حاسبة عرض النطاق الترددي..."
 
 #: src/muuli_wdr.cpp
 msgid "Ports"
@@ -5126,7 +5098,7 @@ msgstr "الربط بواجهة الشبكة (اتركه فارغًا لأي و�
 
 #: src/muuli_wdr.cpp
 msgid "Advanced users only: pin aMule's peer-to-peer traffic, and its HTTP updates where the platform allows, to one network interface, chosen from the list or typed in by name (e.g. tun0, eth0, en0) or index. Unlike binding to an IP, this stops traffic leaking out via the default route - useful with a VPN. On Linux before kernel 5.7 it needs the CAP_NET_RAW capability."
-msgstr ""
+msgstr "للمستخدمين المتقدمين فقط: ربط حركة مرور aMule بين النظراء، وتحديثات HTTP حيث تسمح المنصة بذلك، بواجهة شبكة واحدة تختارها من القائمة أو تكتب اسمها (مثل tun0 أو eth0 أو en0) أو رقمها. بخلاف الربط بعنوان IP، يمنع هذا تسرب حركة المرور عبر المسار الافتراضي - وهو مفيد مع VPN. على لينكس قبل النواة 5.7 يتطلب ذلك صلاحية CAP_NET_RAW."
 
 #: src/muuli_wdr.cpp
 msgid "Max sources per downloading file:"
@@ -5150,27 +5122,27 @@ msgstr "إعادة اﻹتصال عند الفصل"
 
 #: src/muuli_wdr.cpp src/PeerCapabilities.h
 msgid "IPv6"
-msgstr ""
+msgstr "IPv6"
 
 #: src/muuli_wdr.cpp
 msgid "Address families:"
-msgstr ""
+msgstr "أنواع بروتوكولات الشبكة:"
 
 #: src/muuli_wdr.cpp
 msgid "IPv4 only"
-msgstr ""
+msgstr "IPv4 فقط"
 
 #: src/muuli_wdr.cpp
 msgid "IPv4 and IPv6"
-msgstr ""
+msgstr "IPv4 و IPv6"
 
 #: src/muuli_wdr.cpp
 msgid "Takes effect after restarting aMule."
-msgstr ""
+msgstr "يسري المفعول بعد إعادة تشغيل aMule."
 
 #: src/muuli_wdr.cpp
 msgid "Advertise my IPv6 address to other peers"
-msgstr ""
+msgstr "إعلان عنوان IPv6 الخاص بي للمستخدمين الآخرين"
 
 #: src/muuli_wdr.cpp
 msgid "Remove dead server after"
@@ -5274,13 +5246,12 @@ msgid "Enter here the min disk space desired."
 msgstr "أدخل هنا الحد الأدنى المطلوب لمساحة القرص."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Save up to 10 HighID sources of rare files (20 or fewer sources) on exit"
-msgstr "حفظ 10 مصادر للملفات النادرة (< 20 مصدرًا)"
+msgstr "حفظ ما يصل إلى 10 مصادر HighID للملفات النادرة (20 مصدرًا أو أقل) عند الإغلاق"
 
 #: src/muuli_wdr.cpp
 msgid "The saved sources are used again only if aMule restarts within 2 hours. LowID sources are not saved: a LowID only identifies a peer on the server that assigned it."
-msgstr ""
+msgstr "تُستخدم المصادر المحفوظة مجددًا فقط إذا أُعيد تشغيل aMule خلال ساعتين. لا تُحفظ مصادر LowID: فمعرّف LowID لا يحدد هوية النظير إلا على الخادم الذي منحه إياه."
 
 #: src/muuli_wdr.cpp src/Statistics.cpp
 msgid "Uploads"
@@ -5292,15 +5263,15 @@ msgstr "أضف ملفات مشاركة جديدة بوضع ذاتي"
 
 #: src/muuli_wdr.cpp
 msgid "Verify local data of requested shared files every"
-msgstr ""
+msgstr "التحقق من البيانات المحلية للملفات المشتركة المطلوبة كل"
 
 #: src/muuli_wdr.cpp
 msgid "Re-read requested complete files in the background and compare them with their stored MD4/AICH hashes, as Verify Local Data does. Corrupt parts stop being shared. Uploads continue during the check."
-msgstr ""
+msgstr "إعادة قراءة الملفات الكاملة المطلوبة في الخلفية ومقارنتها بتجزئات MD4/AICH المخزنة لها، كما يفعل التحقق من البيانات المحلية. تتوقف مشاركة الأجزاء التالفة. تستمر عمليات الرفع أثناء الفحص."
 
 #: src/muuli_wdr.cpp
 msgid "days (0 = off)"
-msgstr ""
+msgstr "أيام (0 = إيقاف)"
 
 #: src/muuli_wdr.cpp
 msgid "Intelligent Corruption Handling (I.C.H.)"
@@ -5316,11 +5287,11 @@ msgstr "المعالجة الذكية المتقدمة للتلف تثق بكل 
 
 #: src/muuli_wdr.cpp
 msgid "File repair hashes over Kad"
-msgstr ""
+msgstr "تجزئات إصلاح الملفات عبر Kad"
 
 #: src/muuli_wdr.cpp
 msgid "Share and use file repair hashes (AICH) over Kad"
-msgstr ""
+msgstr "مشاركة واستخدام تجزئات إصلاح الملفات (AICH) عبر Kad"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -5332,6 +5303,13 @@ msgid ""
 "\n"
 "Technical detail: enabling this advertises Kad protocol version 0x0a and adds AICH hashes to keyword publish and search results."
 msgstr ""
+"مشاركة تجزئات إصلاح الملفات مع عُقد Kad الأخرى والتعرّف عليها من عمليات بحث Kad. يمكن لهذه التجزئات أن تساعد aMule على إصلاح بيانات التحميل التالفة دون إعادة تحميل جزء كامل من جديد. لا يستخدم aMule أي تجزئة للإصلاح إلا بعد أن يُبلغ عدد كافٍ من النظراء المستقلين عن التجزئة نفسها.\n"
+"\n"
+"قد لا تصل نتائج البحث التي تحتوي على هذه التجزئات إلى عملاء Kad القديمة جدًا (قبل eMule 0.49b). إذا لاحظت نقصًا في النتائج، فجرّب إيقاف هذا الخيار.\n"
+"\n"
+"إيقاف هذا الخيار يحذف تجزئات الإصلاح المخزنة في فهرس Kad الخاص بك عند الحفظ التالي. وإعادة تفعيله تستأنف جمعها من جديد.\n"
+"\n"
+"تفصيل تقني: تفعيل هذا الخيار يعلن عن الإصدار 0x0a من بروتوكول Kad ويضيف تجزئات AICH إلى نشر الكلمات المفتاحية ونتائج البحث."
 
 #: src/muuli_wdr.cpp
 msgid "Ignore repair hashes from Kad nodes too old to support them"
