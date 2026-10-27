@@ -1043,5 +1043,18 @@
   "messages_captcha_passed": "CAPTCHA superado. Tu mensaje se ha entregado.",
   "messages_captcha_retry": "CAPTCHA fallido. Envía otro mensaje para volver a intentarlo.",
   "messages_captcha_exhausted": "CAPTCHA fallido. No quedan más intentos.",
-  "messages_captcha_image": "CAPTCHA del chat"
+  "messages_captcha_image": "CAPTCHA del chat",
+  "prefs_field_files_shared_file_reverify_days": "Comprobar los datos locales de los archivos compartidos solicitados cada N días (0 = desactivado)",
+  "prefs_field_kad_protocol10_enabled": "Compartir y utilizar los hash de reparación de archivos (AICH) a través de Kad",
+  "prefs_field_kad_strict_aich_publishers": "Ignorar los hash de reparación de los nodos Kad que sean demasiado antiguos para admitirlos",
+  "prefs_field_servers_update_urls": "URL de origen de la lista de servidores (una por línea)",
+  "prefs_field_servers_update_list": "Actualizar la lista de servidores",
+  "prefs_sources_apply_first": "Aplica tus cambios primero",
+  "prefs_sources_saved_help": "Descarga desde las fuentes guardadas.",
+  "prefs_sources_download_once": "Descargar una vez",
+  "prefs_sources_one_off": "URL de un solo uso",
+  "prefs_group_kad_repair_hashes": "Hashes de reparación de archivos a través de Kad",
+  "prefs_field_message_filter_advanced_spam_filter": "Activar el filtro avanzado de spam",
+  "prefs_field_message_filter_use_captchas": "Solicitar un CAPTCHA para los primeros mensajes de personas que no sean amigos",
+  "prefs_field_message_filter_use_captchas_help": "Los mensajes permanecen ocultos hasta que el remitente resuelva el reto. Los usuarios que no dispongan de compatibilidad con CAPTCHA no pueden iniciar un chat."
 }

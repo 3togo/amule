@@ -1053,5 +1053,8 @@
   "prefs_sources_saved_help": "Скачивание из сохранённых источников.",
   "prefs_group_kad_repair_hashes": "Хеши восстановления файлов через Kad",
   "prefs_field_kad_protocol10_enabled": "Публиковать и использовать хеши восстановления файлов (AICH) через Kad",
-  "prefs_field_kad_strict_aich_publishers": "Игнорировать хеши восстановления от слишком старых узлов Kad"
+  "prefs_field_kad_strict_aich_publishers": "Игнорировать хеши восстановления от слишком старых узлов Kad",
+  "prefs_field_message_filter_advanced_spam_filter": "Включить расширенный фильтр спама",
+  "prefs_field_message_filter_use_captchas": "Требовать CAPTCHA для первых сообщений от пользователей, не входящих в список друзей",
+  "prefs_field_message_filter_use_captchas_help": "Сообщения остаются скрытыми, пока отправитель не пройдёт проверку. Клиенты без поддержки CAPTCHA не смогут начать чат."
 }
