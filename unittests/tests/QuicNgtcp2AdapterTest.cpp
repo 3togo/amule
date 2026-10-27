@@ -37,6 +37,8 @@
 using namespace muleunit;
 DECLARE_SIMPLE(QuicNgtcp2Adapter)
 
+void QuicClientRefTestForget(CUpDownClient *client);
+
 namespace
 {
 struct Session : IQuicNgtcp2TlsSession
@@ -85,6 +87,20 @@ struct Engine : IQuicNgtcp2Engine
 	{
 		lastMetadata = metadata;
 		++created;
+		return create ? &token : nullptr;
+	}
+	unsigned clientCreated = 0;
+	std::array<uint8_t, 16> lastExpectedIdentity{};
+	Handle CreateClient(const CQuicTlsPolicy &,
+		const CNetworkAddress &address,
+		uint16_t port,
+		const std::array<uint8_t, 16> &expectedIdentity,
+		uint64_t) override
+	{
+		++clientCreated;
+		lastAddress = address;
+		lastPort = port;
+		lastExpectedIdentity = expectedIdentity;
 		return create ? &token : nullptr;
 	}
 	bool Read(Handle handle, const uint8_t *, size_t, uint64_t) override
@@ -148,6 +164,14 @@ struct Engine : IQuicNgtcp2Engine
 	uint64_t GetAdvertisedReadWindow(Handle handle) const override { return handle != nullptr ? 1u : 0u; }
 	bool hasOpenStream = false;
 	bool HasOpenStream(Handle handle) const override { return handle != nullptr && hasOpenStream; }
+	bool OpenLocalBidiStream(Handle handle) override
+	{
+		if (handle == nullptr || hasOpenStream) {
+			return false;
+		}
+		hasOpenStream = true;
+		return true;
+	}
 	CQuicSocketTransport *attachedTransport = nullptr;
 	void AttachTransport(Handle handle, CQuicSocketTransport *transport) override
 	{
@@ -291,6 +315,244 @@ TEST(QuicNgtcp2Adapter, MissingDependenciesFailClosed)
 	ASSERT_TRUE(!CQuicNgtcp2Factory(policy, sink, nullptr, kTestIdentity)
 			     .CreateInbound(p.data(), p.size(), kPeer, 2, kDcid, 0));
 	ASSERT_EQUALS(0u, engine->created);
+}
+
+TEST(QuicNgtcp2Adapter, OutboundFactoryCreatesAnAuthenticatedClient)
+{
+	Session s;
+	Credentials c;
+	Verifier v;
+	auto sink = std::make_shared<Sink>();
+	auto engine = std::make_shared<Engine>();
+	CQuicNgtcp2Factory factory(Policy(s, c, v), sink, engine, kTestIdentity);
+
+	auto connection = factory.CreateOutbound(kPeer, 4672, kTestPeerIdentity, 0);
+	ASSERT_TRUE(connection != nullptr);
+	ASSERT_EQUALS(1u, engine->clientCreated);
+	ASSERT_TRUE(engine->lastAddress == kPeer);
+	ASSERT_EQUALS(4672u, engine->lastPort);
+	for (size_t i = 0; i < kTestPeerIdentity.size(); ++i) {
+		ASSERT_EQUALS((int)kTestPeerIdentity[i], (int)engine->lastExpectedIdentity[i]);
+	}
+}
+
+TEST(QuicNgtcp2Adapter, OutboundOwnerHandoffAttachesTransport)
+{
+	Session s;
+	Credentials c;
+	Verifier v;
+	auto sink = std::make_shared<Sink>();
+	auto engine = std::make_shared<Engine>();
+	std::unique_ptr<IStreamTransport> handedOff;
+	CQuicSocketTransport *handedOffRaw = nullptr;
+	unsigned handoffCount = 0;
+	CQuicNgtcp2Factory factory(Policy(s, c, v),
+		sink,
+		engine,
+		kTestIdentity,
+		nullptr,
+		[&](CUpDownClient *, std::unique_ptr<IStreamTransport> transport) {
+			++handoffCount;
+			handedOffRaw = static_cast<CQuicSocketTransport *>(transport.get());
+			handedOff = std::move(transport);
+			return handedOffRaw;
+		});
+	// The adapter uses an injected handoff seam; this test does not link the TCP socket hierarchy.
+	auto *owner = reinterpret_cast<CUpDownClient *>(static_cast<uintptr_t>(1));
+	auto connection = factory.CreateOutboundForClient(kPeer, 4672, kTestPeerIdentity, 0, owner);
+	ASSERT_TRUE(connection != nullptr);
+	engine->hasOpenStream = true;
+	const auto matchingProof = QuicNatt::BuildEaqn1Proof(kTestPeerIdentity, &kTestIdentity);
+	engine->streamData.assign(matchingProof.begin(), matchingProof.end());
+
+	ASSERT_TRUE(connection->ProcessDatagram(Initial().data(), Initial().size(), 0));
+	ASSERT_TRUE(engine->attachedTransport != nullptr);
+	ASSERT_TRUE(engine->attachedTransport == handedOffRaw);
+	ASSERT_EQUALS(1u, handoffCount);
+}
+
+TEST(QuicNgtcp2Adapter, LateReadFailureAfterOwnerDeletionDoesNotInvokeDialFailure)
+{
+	Session s;
+	Credentials c;
+	Verifier v;
+	auto sink = std::make_shared<Sink>();
+	auto engine = std::make_shared<Engine>();
+	unsigned failures = 0;
+	CQuicNgtcp2Factory factory(Policy(s, c, v),
+		sink,
+		engine,
+		kTestIdentity,
+		nullptr,
+		nullptr,
+		[&](CUpDownClient *, const std::array<uint8_t, 16> &) { ++failures; });
+	auto *owner = reinterpret_cast<CUpDownClient *>(static_cast<uintptr_t>(1));
+	auto connection = factory.CreateOutboundForClient(kPeer, 4672, kTestPeerIdentity, 0, owner);
+	ASSERT_TRUE(connection != nullptr);
+	QuicClientRefTestForget(owner);
+	engine->read = false;
+	ASSERT_TRUE(!connection->ProcessDatagram(Initial().data(), Initial().size(), 0));
+	ASSERT_EQUALS(0u, failures);
+}
+
+// A late failure with the owner still alive is QuicDialFailed()'s (BaseClient.cpp) entire
+// trigger to resume uTP; that resumption itself needs the full CUpDownClient/CClientUDPSocket/
+// IUtpContext graph this isolated adapter target does not link. Proves what this adapter is
+// responsible for instead: exactly one dial-failure callback, naming the right owner and peer
+// identity.
+TEST(QuicNgtcp2Adapter, LateReadFailureBeforeHandoffInvokesDialFailureExactlyOnce)
+{
+	Session s;
+	Credentials c;
+	Verifier v;
+	auto sink = std::make_shared<Sink>();
+	auto engine = std::make_shared<Engine>();
+	unsigned failures = 0;
+	CUpDownClient *failedOwner = nullptr;
+	std::array<uint8_t, 16> failedPeerIdentity{};
+	CQuicNgtcp2Factory factory(Policy(s, c, v),
+		sink,
+		engine,
+		kTestIdentity,
+		nullptr,
+		nullptr,
+		[&](CUpDownClient *owner, const std::array<uint8_t, 16> &peer) {
+			++failures;
+			failedOwner = owner;
+			failedPeerIdentity = peer;
+		});
+	auto *owner = reinterpret_cast<CUpDownClient *>(static_cast<uintptr_t>(1));
+	auto connection = factory.CreateOutboundForClient(kPeer, 4672, kTestPeerIdentity, 0, owner);
+	ASSERT_TRUE(connection != nullptr);
+	engine->read = false;
+	ASSERT_TRUE(!connection->ProcessDatagram(Initial().data(), Initial().size(), 0));
+	ASSERT_EQUALS(1u, failures);
+	ASSERT_TRUE(failedOwner == owner);
+	for (size_t i = 0; i < kTestPeerIdentity.size(); ++i) {
+		ASSERT_EQUALS((int)kTestPeerIdentity[i], (int)failedPeerIdentity[i]);
+	}
+	QuicClientRefTestForget(owner);
+}
+
+// MarkConnected() must reach the handed-off transport's events listener exactly once, even
+// across more datagrams/ticks after the handoff has already happened.
+TEST(QuicNgtcp2Adapter, OutboundHandoffSignalsConnectedExactlyOnce)
+{
+	Session s;
+	Credentials c;
+	Verifier v;
+	auto sink = std::make_shared<Sink>();
+	auto engine = std::make_shared<Engine>();
+	struct CountingEvents : IStreamTransportEvents
+	{
+		unsigned connectedCount = 0;
+		void OnStreamConnected() override { ++connectedCount; }
+		void OnStreamReadable() override {}
+		void OnStreamWritable() override {}
+		void OnStreamLost() override {}
+		void OnFlushRequested() override {}
+	} events;
+	std::unique_ptr<IStreamTransport> handedOff;
+	CQuicSocketTransport *handedOffRaw = nullptr;
+	CQuicNgtcp2Factory factory(Policy(s, c, v),
+		sink,
+		engine,
+		kTestIdentity,
+		nullptr,
+		[&](CUpDownClient *, std::unique_ptr<IStreamTransport> transport) {
+			handedOffRaw = static_cast<CQuicSocketTransport *>(transport.get());
+			handedOffRaw->SetEvents(&events);
+			handedOff = std::move(transport);
+			return handedOffRaw;
+		});
+	auto *owner = reinterpret_cast<CUpDownClient *>(static_cast<uintptr_t>(1));
+	auto connection = factory.CreateOutboundForClient(kPeer, 4672, kTestPeerIdentity, 0, owner);
+	ASSERT_TRUE(connection != nullptr);
+	engine->hasOpenStream = true;
+	const auto matchingProof = QuicNatt::BuildEaqn1Proof(kTestPeerIdentity, &kTestIdentity);
+	engine->streamData.assign(matchingProof.begin(), matchingProof.end());
+
+	ASSERT_TRUE(connection->ProcessDatagram(Initial().data(), Initial().size(), 0));
+	ASSERT_TRUE(handedOffRaw != nullptr);
+	ASSERT_EQUALS(1u, events.connectedCount);
+
+	// Further datagrams/ticks after the handoff must not signal a second connect: m_streamOffered
+	// guards OfferStreamIfJustOpened() itself, so this never reaches MarkConnected() again.
+	ASSERT_TRUE(connection->ProcessDatagram(Initial().data(), Initial().size(), 0));
+	connection->Tick(0);
+	ASSERT_EQUALS(1u, events.connectedCount);
+	QuicClientRefTestForget(owner);
+}
+
+TEST(QuicNgtcp2Adapter, OutboundProofIsNotResentWhilePeerProofIsPending)
+{
+	Session s;
+	Credentials c;
+	Verifier v;
+	auto sink = std::make_shared<Sink>();
+	auto engine = std::make_shared<Engine>();
+	CQuicNgtcp2Factory factory(Policy(s, c, v), sink, engine, kTestIdentity);
+	StubAcceptor acceptor;
+	factory.SetAcceptor(&acceptor);
+	auto connection = factory.CreateOutbound(kPeer, 4672, kTestPeerIdentity, 0);
+	ASSERT_TRUE(connection != nullptr);
+	engine->hasOpenStream = true;
+
+	ASSERT_TRUE(connection->ProcessDatagram(Initial().data(), Initial().size(), 0));
+	ASSERT_EQUALS(1u, engine->writeStreamDataCalls);
+	connection->Tick(1);
+	connection->Tick(2);
+	ASSERT_EQUALS(1u, engine->writeStreamDataCalls);
+	ASSERT_TRUE(acceptor.accepted == nullptr);
+
+	const auto matchingProof = QuicNatt::BuildEaqn1Proof(kTestPeerIdentity, &kTestIdentity);
+	engine->streamData.assign(matchingProof.begin(), matchingProof.end());
+	connection->Tick(3);
+	ASSERT_TRUE(!connection->IsClosed());
+	ASSERT_TRUE(acceptor.accepted != nullptr);
+	ASSERT_EQUALS(1u, engine->writeStreamDataCalls);
+	acceptor.accepted.reset();
+}
+
+TEST(QuicNgtcp2Adapter, OutboundMatchingProofIsAccepted)
+{
+	Session s;
+	Credentials c;
+	Verifier v;
+	auto sink = std::make_shared<Sink>();
+	auto engine = std::make_shared<Engine>();
+	CQuicNgtcp2Factory factory(Policy(s, c, v), sink, engine, kTestIdentity);
+	StubAcceptor acceptor;
+	factory.SetAcceptor(&acceptor);
+	auto connection = factory.CreateOutbound(kPeer, 4672, kTestPeerIdentity, 0);
+	ASSERT_TRUE(connection != nullptr);
+	const auto matchingProof = QuicNatt::BuildEaqn1Proof(kTestPeerIdentity, &kTestIdentity);
+	engine->streamData.assign(matchingProof.begin(), matchingProof.end());
+	engine->hasOpenStream = true;
+	ASSERT_TRUE(connection->ProcessDatagram(Initial().data(), Initial().size(), 0));
+	ASSERT_TRUE(!connection->IsClosed());
+	ASSERT_TRUE(acceptor.accepted != nullptr);
+	acceptor.accepted.reset();
+}
+
+TEST(QuicNgtcp2Adapter, OutboundMismatchingProofIsRejectedBeforeAcceptance)
+{
+	Session s;
+	Credentials c;
+	Verifier v;
+	auto sink = std::make_shared<Sink>();
+	auto engine = std::make_shared<Engine>();
+	CQuicNgtcp2Factory factory(Policy(s, c, v), sink, engine, kTestIdentity);
+	StubAcceptor acceptor;
+	factory.SetAcceptor(&acceptor);
+	auto connection = factory.CreateOutbound(kPeer, 4672, kTestPeerIdentity, 0);
+	ASSERT_TRUE(connection != nullptr);
+	const auto mismatchingProof = QuicNatt::BuildEaqn1Proof(kTestIdentity, &kTestIdentity);
+	engine->streamData.assign(mismatchingProof.begin(), mismatchingProof.end());
+	engine->hasOpenStream = true;
+	ASSERT_TRUE(connection->ProcessDatagram(Initial().data(), Initial().size(), 0));
+	ASSERT_TRUE(connection->IsClosed());
+	ASSERT_TRUE(acceptor.accepted == nullptr);
 }
 
 TEST(QuicNgtcp2Adapter, InitialMetadataIsCaptured)
@@ -500,10 +762,9 @@ TEST(QuicNgtcp2Adapter, ProductionEngineTickServicesRealExpiryTimersWithoutCrash
 	ASSERT_TRUE(!connection->IsClosed());
 }
 
-// got3nks' review on #1710 (finding #3, High): without a handshake timeout, handle_expiry()
-// never ends a connection stuck at Initial, so spoofed Initials could occupy admission slots
-// permanently. Proves CreateServer() actually configures one (QuicNgtcp2Adapter.cpp's
-// kHandshakeTimeoutMs), not just that Tick() can be called safely.
+// Without a handshake timeout, handle_expiry() never ends a connection stuck at Initial, so
+// spoofed Initials could occupy admission slots permanently. Proves CreateServer() actually
+// configures one.
 TEST(QuicNgtcp2Adapter, ProductionEngineTimesOutAHandshakeThatNeverCompletes)
 {
 	Session s;

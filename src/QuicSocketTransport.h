@@ -73,7 +73,8 @@ public:
 	CQuicSocketTransport &operator=(const CQuicSocketTransport &) = delete;
 	bool IsConnected() const override;
 	bool IsInbound() const override { return m_inbound; }
-	bool ObfuscatesStream() const override { return false; }
+	// TLS protects the stream, and eMuleAI skips the RC4 handshake on NAT-T transports.
+	bool ObfuscatesStream() const override { return true; }
 	void SetEvents(IStreamTransportEvents *) override;
 	bool IsOk() const override;
 	uint32_t Read(void *, uint32_t) override;
@@ -113,8 +114,7 @@ private:
 	//! now, discarding whatever is left queued, since nothing will call OnWritable() on this
 	//! object again once it is gone. Whatever is discarded here was never acknowledged by the
 	//! peer, so the stream is reset (AbortStream()), not closed gracefully -- a clean FIN would
-	//! tell the peer this was a complete, truncated-nothing eD2k exchange (got3nks' review on
-	//! #1710, finding D).
+	//! tell the peer this was a complete, truncated-nothing eD2k exchange.
 	void FinishDrainingForDestruction();
 	const std::function<uint64_t()> m_clock;
 	IQuicStreamOperations &m_operations;
@@ -141,6 +141,9 @@ private:
 	//! queue empties on its own or ~CQuicSocketTransport() cuts it short.
 	bool m_draining = false;
 	bool m_blocksWrite = false;
+	// Set only by a Read() that found nothing: CEMSocket::OnReceive() discards a read that
+	// reports blocking.
+	bool m_blocksRead = false;
 	int m_error = 0;
 };
 

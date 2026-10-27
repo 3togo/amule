@@ -675,10 +675,9 @@ TEST(QuicNgtcp2Handshake, LostFirstAttemptIsRetransmittedWithoutCorruptingTheRep
 	ASSERT_TRUE(client.Received() == reply2);
 }
 
-// got3nks' review on #1710 (finding #4, High): with exactly one stream per connection by design,
-// nothing previously noticed when that stream ended -- the connection just sat there, occupying
-// one of CQuicContext::kMaxConnectionsPerScope's slots, until the idle timeout eventually caught
-// up with it. Proves the real engine's FIN handling actually ends the connection promptly.
+// With exactly one stream per connection by design, the connection must end promptly when that
+// stream ends, rather than occupying one of CQuicContext::kMaxConnectionsPerScope's slots until
+// the idle timeout catches up with it.
 TEST(QuicNgtcp2Handshake, TheStreamEndingClosesTheWholeConnection)
 {
 	CQuicEphemeralCredentials credentials;
@@ -712,11 +711,10 @@ TEST(QuicNgtcp2Handshake, TheStreamEndingClosesTheWholeConnection)
 	ASSERT_TRUE(connection->IsClosed());
 }
 
-// got3nks' review on #1710 (finding #5, High): NGTCP2_ERR_STREAM_DATA_BLOCKED is documented as
-// non-fatal (the stream is flow-control blocked, not the connection), but previously mapped to
-// -1 like any other error, tearing the stream down over something a peer extending its window a
-// moment later would otherwise have resolved on its own. This also proves CQuicSocketTransport's
-// write path does not busy-loop while blocked, and that IQuicNgtcp2Engine::NotifyWritable() is
+// NGTCP2_ERR_STREAM_DATA_BLOCKED is non-fatal: the stream is flow-control blocked, not the
+// connection, and a peer extending its window must still resolve it. Also proves
+// CQuicSocketTransport's write path does not busy-loop while blocked, and that
+// IQuicNgtcp2Engine::NotifyWritable() is
 // what resumes it once the peer's extended window makes room again.
 TEST(QuicNgtcp2Handshake, FlowControlBlockDoesNotLoseTheStreamAndRecoversOnceUnblocked)
 {
@@ -792,10 +790,8 @@ TEST(QuicNgtcp2Handshake, FlowControlBlockDoesNotLoseTheStreamAndRecoversOnceUnb
 	ASSERT_TRUE(progressed);
 }
 
-// got3nks' review on #1710 (finding #6, Medium): Close() used to ask the engine to reset the
-// stream outright (ngtcp2_conn_shutdown_stream()), discarding whatever was still queued in the
-// transport's own buffer and never handed to WriteStream() at all -- a clean eD2k close could
-// silently drop its last packet. Proves Close() gives that data one last chance to go out first.
+// A clean eD2k close must not silently drop data still queued in the transport's own buffer:
+// Close() must give it one last chance to go out first.
 TEST(QuicNgtcp2Handshake, CloseFlushesQueuedDataBeforeEndingTheStreamCleanly)
 {
 	CQuicEphemeralCredentials credentials;
@@ -835,11 +831,9 @@ TEST(QuicNgtcp2Handshake, CloseFlushesQueuedDataBeforeEndingTheStreamCleanly)
 	ASSERT_TRUE(client.Received() == payload);
 }
 
-// Post-merge review audit (independent of got3nks' 9 findings, same PR #1710): the
-// unackedSendBytes + length > kReadWindow check in WriteStreamData() compared the caller's
-// whole offered chunk against the remaining budget, not what ngtcp2 could actually accept (one
-// packet's worth) -- a single prior write still unacknowledged could abort the stream over a
-// second write ngtcp2 would have happily split across many packets instead. Proves a large
+// A single prior write still unacknowledged must not abort the stream over a second write
+// ngtcp2 can split across many packets: only the current packet's worth of room matters, not
+// the whole offered chunk against the remaining budget. Proves a large
 // write survives when something small is already unacknowledged, rather than ending the stream.
 TEST(QuicNgtcp2Handshake, LargeWriteWithUnackedDataPendingIsOfferedPartiallyInsteadOfAbortingTheStream)
 {
@@ -978,4 +972,132 @@ TEST(QuicNgtcp2Handshake, FlushesAtOneTimestampSendABurstNotOnePacket)
 	}
 	// The initial congestion window alone admits about ten full packets.
 	ASSERT_TRUE(sink->sent.size() >= 5);
+}
+
+void QuicClientRefTestForget(CUpDownClient *client);
+
+// The real client engine (CQuicNgtcp2Factory::CreateOutboundForClient(), not a fake, and not
+// the hand-rolled CTestQuicClient above, which only opens its stream after DriveHandshake()
+// completes) must not open its local stream before the peer's transport parameters, which
+// raise the local stream limit from 0, have arrived -- ngtcp2_conn_open_bidi_stream() fails
+// with NGTCP2_ERR_STREAM_ID_BLOCKED otherwise. Both sides here are the real production engine:
+// this drives the real client all the way to a real server and back, proving the EAQN1 handoff
+// actually completes.
+TEST(QuicNgtcp2Handshake, RealClientDialsARealServerAndCompletesTheHandoff)
+{
+	// Shared with both transports this test writes through after the handoff: their Flush()
+	// otherwise defaults to the real wall clock, which ngtcp2 refuses to accept once this same
+	// connection has already been driven with this test's own small, synthetic nowMs values
+	// (conn_update_timestamp() asserts its clock is monotonic).
+	uint64_t nowMs = 0;
+	CQuicEphemeralCredentials serverCredentials;
+	ASSERT_TRUE(serverCredentials.NativeGnuTlsCredentials() != nullptr);
+	CQuicTlsPolicy serverPolicy{ &serverCredentials };
+	auto serverSink = std::make_shared<CollectingSink>();
+	auto serverEngine = CreateProductionQuicNgtcp2Engine();
+	CQuicNgtcp2Factory serverFactory(
+		serverPolicy, serverSink, serverEngine, kTestServerIdentity, [&nowMs] { return nowMs; });
+	// The server's own OfferStreamIfJustOpened() needs an acceptor (or owner) to proceed past its
+	// own early-return guard at all -- without one, it would never call TryExchangeEaqn1Proof()
+	// and the client's proof would never get a reply.
+	AcceptingAcceptor serverAcceptor;
+	serverFactory.SetAcceptor(&serverAcceptor);
+
+	// CreateClient() never reads policy.credentials (see its own comment in QuicNgtcp2Adapter.cpp);
+	// only the server side needs a real certificate.
+	CQuicTlsPolicy clientPolicy{ nullptr };
+	auto clientSink = std::make_shared<CollectingSink>();
+	auto clientEngine = CreateProductionQuicNgtcp2Engine();
+	std::unique_ptr<IStreamTransport> handedOff;
+	CQuicSocketTransport *handedOffRaw = nullptr;
+	CQuicNgtcp2Factory clientFactory(
+		clientPolicy,
+		clientSink,
+		clientEngine,
+		kTestClientIdentity,
+		[&nowMs] { return nowMs; },
+		[&](CUpDownClient *, std::unique_ptr<IStreamTransport> transport) {
+			handedOffRaw = static_cast<CQuicSocketTransport *>(transport.get());
+			handedOff = std::move(transport);
+			return handedOffRaw;
+		});
+
+	auto *owner = reinterpret_cast<CUpDownClient *>(static_cast<uintptr_t>(1));
+	std::unique_ptr<IQuicConnection> clientConnection =
+		clientFactory.CreateOutboundForClient(kPeer, 4672, kTestServerIdentity, nowMs, owner);
+	ASSERT_TRUE(clientConnection != nullptr);
+
+	// Drives both real engines the same way CQuicContext::Tick() and CQuicContext::ProcessDatagram()
+	// do in production: the client's periodic Tick() is what sends its first Initial and, later,
+	// opens its local stream once OnExtendMaxLocalStreamsBidi() lets it -- nothing here forces that
+	// open the way the old, now-removed eager call did.
+	std::unique_ptr<IQuicConnection> serverConnection;
+	constexpr int kMaxRounds = 40;
+	for (int round = 0; round < kMaxRounds && !handedOff; ++round, nowMs += 10) {
+		clientConnection->Tick(nowMs);
+		for (const auto &datagram : clientSink->sent) {
+			if (!serverConnection) {
+				const std::string dcid = ExtractInitialDcid(datagram);
+				ASSERT_TRUE(!dcid.empty());
+				serverConnection = serverFactory.CreateInbound(
+					datagram.data(), datagram.size(), kPeer, 4672, dcid, nowMs);
+				ASSERT_TRUE(serverConnection != nullptr);
+			}
+			ASSERT_TRUE(
+				serverConnection->ProcessDatagram(datagram.data(), datagram.size(), nowMs));
+		}
+		clientSink->sent.clear();
+		if (serverConnection) {
+			for (const auto &datagram : serverSink->sent) {
+				ASSERT_TRUE(clientConnection->ProcessDatagram(
+					datagram.data(), datagram.size(), nowMs));
+			}
+			serverSink->sent.clear();
+		}
+	}
+
+	ASSERT_TRUE(serverConnection != nullptr);
+	ASSERT_TRUE(!clientConnection->IsClosed());
+	ASSERT_TRUE(!serverConnection->IsClosed());
+	// The handoff itself is the proof the local stream actually opened: OfferStreamIfJustOpened()
+	// only reaches it once HasOpenStream() is true and the EAQN1 proof exchange has completed in
+	// both directions.
+	ASSERT_TRUE(handedOff != nullptr);
+	ASSERT_TRUE(serverAcceptor.accepted != nullptr);
+
+	// Real application bytes, through the real engines on both sides: a write on one side must
+	// arrive intact on the other's accepted transport, and BlocksRead() must track "did the last
+	// Read() find anything", not "is the buffer currently empty".
+	IStreamTransport *serverTransport = serverAcceptor.accepted.get();
+	const std::vector<uint8_t> clientToServer{ 'h', 'i' };
+	ASSERT_EQUALS(static_cast<uint32_t>(clientToServer.size()),
+		handedOffRaw->Write(clientToServer.data(), static_cast<uint32_t>(clientToServer.size())));
+	handedOffRaw->Flush();
+	for (const auto &datagram : clientSink->sent) {
+		ASSERT_TRUE(serverConnection->ProcessDatagram(datagram.data(), datagram.size(), nowMs));
+	}
+	clientSink->sent.clear();
+	uint8_t buf[64] = {};
+	const uint32_t readBytes = serverTransport->Read(buf, sizeof(buf));
+	ASSERT_EQUALS(static_cast<uint32_t>(clientToServer.size()), readBytes);
+	ASSERT_TRUE(std::vector<uint8_t>(buf, buf + readBytes) == clientToServer);
+	ASSERT_TRUE(!serverTransport->BlocksRead());
+	// Nothing left to read: the fixed socket semantics now correctly report blocking here.
+	ASSERT_EQUALS(0u, serverTransport->Read(buf, sizeof(buf)));
+	ASSERT_TRUE(serverTransport->BlocksRead());
+
+	const std::vector<uint8_t> serverToClient{ 'o', 'k' };
+	ASSERT_EQUALS(static_cast<uint32_t>(serverToClient.size()),
+		serverTransport->Write(serverToClient.data(), static_cast<uint32_t>(serverToClient.size())));
+	serverTransport->Flush();
+	for (const auto &datagram : serverSink->sent) {
+		ASSERT_TRUE(clientConnection->ProcessDatagram(datagram.data(), datagram.size(), nowMs));
+	}
+	serverSink->sent.clear();
+	uint8_t buf2[64] = {};
+	const uint32_t readBytes2 = handedOffRaw->Read(buf2, sizeof(buf2));
+	ASSERT_EQUALS(static_cast<uint32_t>(serverToClient.size()), readBytes2);
+	ASSERT_TRUE(std::vector<uint8_t>(buf2, buf2 + readBytes2) == serverToClient);
+
+	QuicClientRefTestForget(owner);
 }

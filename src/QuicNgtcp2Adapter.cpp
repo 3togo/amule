@@ -24,6 +24,8 @@
 #include "QuicGnuTlsSession.h"
 #include "QuicNattProtocol.h"
 #include "QuicNgtcp2Adapter.h"
+#include "updownclient.h"
+#include "ClientRef.h"
 #include "QuicSocketTransport.h"
 #include "QuicStreamAcceptor.h"
 
@@ -63,8 +65,8 @@ bool ParseInitialMetadata(const uint8_t *data, size_t length, CQuicInitialMetada
 
 constexpr size_t kMaxUdpPayload = 1452;
 constexpr int kMaxFlushPacketsPerCall = 16;
-// got3nks' review on #1710 (finding #3, High): without these, handle_expiry() never ends a
-// connection on its own, and spoofed Initials could fill every admission slot permanently.
+// Without these, handle_expiry() never ends a connection on its own, and spoofed Initials
+// could fill every admission slot permanently.
 constexpr uint64_t kHandshakeTimeoutMs = 10000; // 10s: generous even over a slow real path.
 constexpr uint64_t kIdleTimeoutMs = 60000;      // 60s of silence after that is a dead peer.
 
@@ -107,6 +109,15 @@ void Ngtcp2Random(uint8_t *dest, size_t destlen, const ngtcp2_rand_ctx *)
 	}
 }
 
+// Peer identity on a dialed connection, same as on an accepted one, comes from the EAQN1 proof
+// exchanged over the stream once the handshake completes (CQuicGnuTlsSession's own comment on
+// the server side of this same contract) -- never from the TLS certificate either side presents.
+// This engine therefore requests no server certificate verification of its own.
+int AcceptAnyCertificate(gnutls_session_t)
+{
+	return 0;
+}
+
 int Ngtcp2NewConnectionId(ngtcp2_conn *, ngtcp2_cid *cid, uint8_t *token, size_t cidlen, void *)
 {
 	if (cidlen > NGTCP2_MAX_CIDLEN) {
@@ -136,6 +147,60 @@ ngtcp2_conn *GetConnFromRef(ngtcp2_crypto_conn_ref *ref)
 	return static_cast<ngtcp2_conn *>(ref->user_data);
 }
 
+//! A bare client-side GnuTLS session for CProductionNgtcp2Engine::CreateClient(): no certificate
+//! of its own, and no verification of the peer's (AcceptAnyCertificate above) -- see that
+//! function's comment for why. CQuicGnuTlsSession cannot serve this role: it is hard-wired to
+//! GNUTLS_SERVER.
+class CQuicGnuTlsClientSession final : public IQuicNgtcp2TlsSession
+{
+public:
+	~CQuicGnuTlsClientSession() override
+	{
+		if (m_session != nullptr) {
+			gnutls_deinit(m_session);
+		}
+		if (m_credentials != nullptr) {
+			gnutls_certificate_free_credentials(m_credentials);
+		}
+	}
+
+	bool ConfigureTls13Alpn(const IQuicTlsCredentials &,
+		const IQuicTlsVerifier *,
+		const uint8_t *alpn,
+		size_t alpnLength,
+		bool) override
+	{
+		if (gnutls_certificate_allocate_credentials(&m_credentials) != GNUTLS_E_SUCCESS) {
+			return false;
+		}
+		gnutls_certificate_set_verify_function(m_credentials, AcceptAnyCertificate);
+		if (gnutls_init(&m_session, GNUTLS_CLIENT) != GNUTLS_E_SUCCESS) {
+			return false;
+		}
+		if (gnutls_priority_set_direct(m_session, "NORMAL:-VERS-ALL:+VERS-TLS1.3", nullptr) !=
+			GNUTLS_E_SUCCESS) {
+			return false;
+		}
+		if (gnutls_credentials_set(m_session, GNUTLS_CRD_CERTIFICATE, m_credentials) !=
+			GNUTLS_E_SUCCESS) {
+			return false;
+		}
+		const gnutls_datum_t protocol{ const_cast<unsigned char *>(
+						       reinterpret_cast<const unsigned char *>(alpn)),
+			static_cast<unsigned>(alpnLength) };
+		if (gnutls_alpn_set_protocols(m_session, &protocol, 1, GNUTLS_ALPN_MANDATORY) !=
+			GNUTLS_E_SUCCESS) {
+			return false;
+		}
+		return ngtcp2_crypto_gnutls_configure_client_session(m_session) == 0;
+	}
+	gnutls_session_t NativeGnuTlsSession() const override { return m_session; }
+
+private:
+	gnutls_certificate_credentials_t m_credentials = nullptr;
+	gnutls_session_t m_session = nullptr;
+};
+
 class CQuicNgtcp2Connection final : public IQuicConnection, public IQuicStreamOperations
 {
 public:
@@ -147,7 +212,11 @@ public:
 		const std::string &issuedCid,
 		IQuicStreamAcceptor *acceptor,
 		const std::array<uint8_t, 16> &localIdentity,
-		std::function<uint64_t()> transportClock)
+		std::function<uint64_t()> transportClock,
+		const std::array<uint8_t, 16> *expectedPeerIdentity = nullptr,
+		CUpDownClient *owner = nullptr,
+		CQuicNgtcp2Factory::OutboundHandoff outboundHandoff = nullptr,
+		CQuicDialFailure dialFailure = nullptr)
 	: m_engine(std::move(engine))
 	, m_sink(std::move(sink))
 	, m_handle(handle)
@@ -157,10 +226,22 @@ public:
 	, m_acceptor(acceptor)
 	, m_localIdentity(localIdentity)
 	, m_transportClock(std::move(transportClock))
+	, m_hasExpectedPeerIdentity(expectedPeerIdentity != nullptr)
+	, m_expectedPeerIdentity(
+		  expectedPeerIdentity != nullptr ? *expectedPeerIdentity : std::array<uint8_t, 16>{})
+	, m_ownerRef(CCLIENTREF(owner, "CQuicNgtcp2Connection"))
+	, m_outboundHandoff(std::move(outboundHandoff))
+	, m_dialFailure(std::move(dialFailure))
 	{
 	}
 
 	~CQuicNgtcp2Connection() override { Close(); }
+
+	void CloseForShutdown() override
+	{
+		m_suppressDialFailure = true;
+		Close();
+	}
 
 	bool ProcessDatagram(const uint8_t *data, size_t length, uint64_t nowMs) override
 	{
@@ -248,6 +329,7 @@ public:
 			// down, so a byte that arrives in the gap is buffered (DrainStreamData()) rather than
 			// delivered to a transport that just asked to stop hearing from this connection.
 			m_engine->AttachTransport(m_handle, nullptr);
+			m_attachedTransport = nullptr;
 			// Graceful, not ShutdownStream()'s reset: a transport-initiated close is always a
 			// voluntary one (CQuicSocketTransport::Close(), itself already having had its own
 			// chance to flush anything queued) -- there is nothing here that justifies discarding
@@ -263,6 +345,7 @@ public:
 			// can be trusted enough to try preserving, so this resets it instead of asking for a
 			// graceful FIN.
 			m_engine->AttachTransport(m_handle, nullptr);
+			m_attachedTransport = nullptr;
 			m_engine->ShutdownStream(m_handle);
 		}
 	}
@@ -277,32 +360,64 @@ public:
 		if (m_closed)
 			return;
 		m_closed = true;
+		// The handed-off transport is owned by the caller and may outlive this connection.  Detach
+		// it before destroying the engine handle so its destructor cannot call back through a
+		// dangling IQuicStreamOperations reference.
+		if (m_attachedTransport != nullptr) {
+			// Invalidate the transport's copy of the handle before destroying the engine
+			// handle.  Detaching only the engine callback leaves a handed-off transport
+			// holding this connection as its IQuicStreamOperations reference; its destructor
+			// would otherwise call CloseStream() through this object after it has gone away.
+			m_attachedTransport->OnEnded();
+			m_engine->AttachTransport(m_handle, nullptr);
+			m_attachedTransport = nullptr;
+		}
 		m_engine->Destroy(m_handle);
 		m_handle = nullptr;
+		CUpDownClient *owner = m_ownerRef.GetClientChecked();
+		if (!m_suppressDialFailure && owner != nullptr && !m_streamOffered &&
+			m_dialFailure != nullptr)
+			m_dialFailure(owner, m_expectedPeerIdentity);
 	}
 
 private:
-	// The point a connection has something worth handing to the rest of aMule: the peer has
-	// opened its one stream (QuicSocketTransport.h). Checked after every successful
-	// ProcessDatagram(), since that is the only place a stream can newly open.
+	// The point a connection has something worth handing to the rest of aMule: either side's
+	// one stream has opened (QuicSocketTransport.h) -- the peer's, for an inbound connection, or
+	// this side's own, for an outbound dial, once OnExtendMaxLocalStreamsBidi() lets it open.
+	// Checked after every successful ProcessDatagram() and from Tick(), since either is a place
+	// a stream can newly open.
 	void OfferStreamIfJustOpened()
 	{
-		if (m_streamOffered || m_acceptor == nullptr || !m_engine->HasOpenStream(m_handle)) {
+		CUpDownClient *owner = m_ownerRef.GetClientChecked();
+		if (m_streamOffered || (m_acceptor == nullptr && owner == nullptr) ||
+			!m_engine->HasOpenStream(m_handle)) {
 			return;
 		}
 		if (!m_proofExchanged && !TryExchangeEaqn1Proof()) {
 			return;
 		}
-		m_streamOffered = true;
 		auto owned = std::make_unique<CQuicSocketTransport>(
-			*this, m_handle, m_address, m_port, nullptr, true, m_transportClock);
+			*this, m_handle, m_address, m_port, nullptr, false, m_transportClock);
 		CQuicSocketTransport *raw = owned.get();
 		std::unique_ptr<IStreamTransport> transport(std::move(owned));
-		if (!m_acceptor->AcceptStream(transport, m_address, m_port)) {
+		if (owner != nullptr) {
+			if (m_outboundHandoff == nullptr || (m_outboundTransport = m_outboundHandoff(owner,
+								     std::move(transport))) == nullptr) {
+				// Refused (e.g. the owner already has a live connected socket): nothing will
+				// ever make this handoff succeed later, so there is no reason to keep this
+				// connection open until the idle timeout. Close() is safe to call from here:
+				// it does not delete this connection object, and its own dial-failure
+				// callback is itself harmless against an owner that is already connected
+				// (TryToContact()'s live- socket guard makes that a no-op).
+				Close();
+				return;
+			}
+		} else if (!m_acceptor->AcceptStream(transport, m_address, m_port)) {
 			// Refused: the transport the acceptor declined is still ours to destroy, exactly as
 			// CUtpLibraryAdapter does for a refused uTP stream.
 			return;
 		}
+		m_streamOffered = true;
 		// Deliver whatever arrived after the proof (held back from the stream buffer while this
 		// connection was still waiting on TryExchangeEaqn1Proof()), then everything from here on
 		// goes straight to it (see AttachTransport()'s contract).
@@ -315,6 +430,10 @@ private:
 			raw->OnPayload(buffered.data(), buffered.size());
 		}
 		m_engine->AttachTransport(m_handle, raw);
+		m_attachedTransport = raw;
+		// Outbound QUIC belongs to the dialing client, so use its ordinary socket owner and
+		// send the normal eD2k hello through that socket. The peer identity remains established
+		// only by the validated QUIC proof followed by the hello exchange.
 		// The handshake that had to complete before a stream could even open already proved
 		// connectivity; this is the equivalent of CUtpSocketTransport::MarkConnected() for a
 		// transport libutp's own state machine would otherwise have marked itself.
@@ -336,25 +455,56 @@ private:
 	//! closes the connection.
 	bool TryExchangeEaqn1Proof()
 	{
+		// A dialer must lead on the locally opened stream. Keep this write ahead of reading
+		// the peer proof; otherwise both sides wait forever for the other to speak first.
+		if (m_hasExpectedPeerIdentity && !m_outboundProofInitiated && !m_peerProofValidated) {
+			const auto proof =
+				QuicNatt::BuildEaqn1Proof(m_localIdentity, &m_expectedPeerIdentity);
+			m_ourProof.assign(proof.begin(), proof.end());
+			m_outboundProofInitiated = true;
+		}
+		if (m_hasExpectedPeerIdentity && !m_ourProof.empty()) {
+			const std::ptrdiff_t written = m_engine->WriteStreamData(m_handle,
+				m_ourProof.data(),
+				m_ourProof.size(),
+				*m_sink,
+				m_address,
+				m_port,
+				m_lastNowMs);
+			if (written < 0) {
+				Close();
+				return false;
+			}
+			if (written > 0) {
+				m_ourProof.erase(m_ourProof.begin(), m_ourProof.begin() + written);
+			}
+			if (!m_ourProof.empty()) {
+				return false;
+			}
+		}
 		if (!m_peerProofValidated) {
 			const std::vector<uint8_t> drained = m_engine->DrainStreamData(m_handle);
 			m_proofBuffer.insert(m_proofBuffer.end(), drained.begin(), drained.end());
 			if (m_proofBuffer.size() < QuicNatt::EAQN1_PROOF_SIZE) {
 				return false;
 			}
-			// nullptr: this connection is always the inbound (server) side, and there is no
-			// prior rendezvous context here that already told us who ought to be calling -- any
-			// peer whose target hash matches ours (or is still zero, a first contact) is
-			// admitted.
-			if (!QuicNatt::ValidateEaqn1Proof(
-				    m_proofBuffer.data(), m_proofBuffer.size(), m_localIdentity, nullptr)) {
+			// Inbound connections have no prior rendezvous identity and retain the historical
+			// nullptr behavior; outbound connections bind this proof to their expected peer.
+			const std::array<uint8_t, 16> *expectedPeerHash =
+				m_hasExpectedPeerIdentity ? &m_expectedPeerIdentity : nullptr;
+			if (!QuicNatt::ValidateEaqn1Proof(m_proofBuffer.data(),
+				    m_proofBuffer.size(),
+				    m_localIdentity,
+				    expectedPeerHash)) {
 				Close();
 				return false;
 			}
 			std::array<uint8_t, 16> peerHash{};
 			std::copy(m_proofBuffer.begin() + 5, m_proofBuffer.begin() + 21, peerHash.begin());
-			const auto proof = QuicNatt::BuildEaqn1Proof(m_localIdentity, &peerHash);
-			m_ourProof.assign(proof.begin(), proof.end());
+			if (!m_hasExpectedPeerIdentity) {
+				const auto proof = QuicNatt::BuildEaqn1Proof(m_localIdentity, &peerHash);
+				m_ourProof.assign(proof.begin(), proof.end());
+			}
 			m_proofBuffer.erase(
 				m_proofBuffer.begin(), m_proofBuffer.begin() + QuicNatt::EAQN1_PROOF_SIZE);
 			m_peerProofValidated = true;
@@ -413,19 +563,30 @@ private:
 	IQuicStreamAcceptor *m_acceptor;
 	const std::array<uint8_t, 16> m_localIdentity;
 	std::function<uint64_t()> m_transportClock;
+	const bool m_hasExpectedPeerIdentity;
+	const std::array<uint8_t, 16> m_expectedPeerIdentity;
+	CClientRef m_ownerRef;
+	CQuicSocketTransport *m_outboundTransport = nullptr;
+	CQuicSocketTransport *m_attachedTransport = nullptr;
+	CQuicNgtcp2Factory::OutboundHandoff m_outboundHandoff;
+	CQuicDialFailure m_dialFailure;
 	//! Accumulated until it reaches EAQN1_PROOF_SIZE: a peer's proof can in principle arrive
 	//! split across more than one recv_stream_data() delivery, and nothing shorter than the
 	//! full proof is safe to validate.
 	std::vector<uint8_t> m_proofBuffer;
 	bool m_peerProofValidated = false;
 	//! The remainder of our own proof still waiting to go out, trimmed from the front as
-	//! WriteStreamData() accepts bytes of it -- empty both before the peer's proof validates and
-	//! once ours has fully gone out (m_proofExchanged distinguishes the two).
+	//! WriteStreamData() accepts bytes of it -- empty after a full write, with
+	//! m_outboundProofInitiated distinguishing that state from not yet being queued.
 	std::vector<uint8_t> m_ourProof;
+	// Distinguishes an already-drained outbound proof from one that has not been queued yet;
+	// the former must not be rebuilt while waiting for the peer proof.
+	bool m_outboundProofInitiated = false;
 	bool m_proofExchanged = false;
 	uint64_t m_lastNowMs = 0;
 	bool m_streamOffered = false;
 	bool m_closed = false;
+	bool m_suppressDialFailure = false;
 };
 
 class CProductionNgtcp2Engine final : public IQuicNgtcp2Engine
@@ -512,6 +673,31 @@ public:
 		auto it = engine->m_connections.find(conn);
 		if (it != engine->m_connections.end() && it->second.streamId == streamId) {
 			it->second.streamEnded = true;
+		}
+		return 0;
+	}
+
+	// The client's own CreateClient() opens no stream eagerly: right after ngtcp2_conn_client_new()
+	// the peer's transport parameters have not arrived, so the local bidi stream limit is still 0
+	// and ngtcp2_conn_open_bidi_stream() would fail with NGTCP2_ERR_STREAM_ID_BLOCKED. This
+	// callback fires once the handshake raises that limit (max_streams > 0), which is the first
+	// point opening a stream can succeed; CQuicNgtcp2Connection::OfferStreamIfJustOpened(), called
+	// right after Read()/Flush() in ProcessDatagram() and again from Tick(), notices the open
+	// stream and sends the EAQN1 proof. Only this connection's own one stream is ever opened, so
+	// the existing streamId guard below also protects against ngtcp2 calling back again.
+	static int OnExtendMaxLocalStreamsBidi(ngtcp2_conn *conn, uint64_t maxStreams, void *userData)
+	{
+		if (maxStreams == 0) {
+			return 0;
+		}
+		auto *engine = static_cast<CProductionNgtcp2Engine *>(userData);
+		auto it = engine->m_connections.find(conn);
+		if (it == engine->m_connections.end() || it->second.streamId >= 0) {
+			return 0;
+		}
+		int64_t streamId = -1;
+		if (ngtcp2_conn_open_bidi_stream(conn, &streamId, nullptr) == 0) {
+			it->second.streamId = streamId;
 		}
 		return 0;
 	}
@@ -677,6 +863,100 @@ public:
 		return handle;
 	}
 
+	// This endpoint dials out and opens its one local application stream first. It sends the
+	// EAQN1 proof on that stream, while the peer's proof arrives on the same stream; the generic
+	// OnStreamOpen()/OnRecvStreamData() callbacks above handle both directions by connection.
+	Handle CreateClient(const CQuicTlsPolicy &,
+		const CNetworkAddress &,
+		uint16_t,
+		const std::array<uint8_t, 16> &expectedPeerIdentity,
+		uint64_t nowMs) override
+	{
+		auto tlsSession = std::make_unique<CQuicGnuTlsClientSession>();
+		const auto *alpn = reinterpret_cast<const uint8_t *>(QuicNatt::QUIC_NATT_ALPN);
+		const size_t alpnLength = sizeof(QuicNatt::QUIC_NATT_ALPN) - 1;
+		IQuicTlsCredentials noCredentials; // Unused: see CQuicGnuTlsClientSession's own comment.
+		if (!tlsSession->ConfigureTls13Alpn(noCredentials, nullptr, alpn, alpnLength, true)) {
+			return nullptr;
+		}
+
+		ngtcp2_cid dcid = {};
+		ngtcp2_cid scid = {};
+		dcid.datalen = 8;
+		scid.datalen = 8;
+		Ngtcp2Random(dcid.data, dcid.datalen, nullptr);
+		Ngtcp2Random(scid.data, scid.datalen, nullptr);
+
+		ngtcp2_path_storage path;
+		InitZeroPath(path);
+
+		ngtcp2_callbacks callbacks = {};
+		callbacks.client_initial = ngtcp2_crypto_client_initial_cb;
+		callbacks.recv_retry = ngtcp2_crypto_recv_retry_cb;
+		callbacks.recv_crypto_data = ngtcp2_crypto_recv_crypto_data_cb;
+		callbacks.encrypt = ngtcp2_crypto_encrypt_cb;
+		callbacks.decrypt = ngtcp2_crypto_decrypt_cb;
+		callbacks.hp_mask = ngtcp2_crypto_hp_mask_cb;
+		callbacks.rand = Ngtcp2Random;
+		callbacks.get_new_connection_id = Ngtcp2NewConnectionId;
+		callbacks.update_key = ngtcp2_crypto_update_key_cb;
+		callbacks.delete_crypto_aead_ctx = ngtcp2_crypto_delete_crypto_aead_ctx_cb;
+		callbacks.delete_crypto_cipher_ctx = ngtcp2_crypto_delete_crypto_cipher_ctx_cb;
+		callbacks.get_path_challenge_data = ngtcp2_crypto_get_path_challenge_data_cb;
+		callbacks.stream_open = OnStreamOpen;
+		callbacks.recv_stream_data = OnRecvStreamData;
+		callbacks.acked_stream_data_offset = OnAckedStreamData;
+		callbacks.stream_close = OnStreamClose;
+		callbacks.stream_reset = OnStreamReset;
+		// Only the client opens a local stream; see OnExtendMaxLocalStreamsBidi's own comment.
+		callbacks.extend_max_local_streams_bidi = OnExtendMaxLocalStreamsBidi;
+
+		ngtcp2_settings settings = {};
+		ngtcp2_settings_default(&settings);
+		settings.max_tx_udp_payload_size = kMaxUdpPayload;
+		settings.initial_ts = NanosecondsFromMs(nowMs);
+		settings.handshake_timeout = NanosecondsFromMs(kHandshakeTimeoutMs);
+
+		ngtcp2_transport_params params = {};
+		ngtcp2_transport_params_default(&params);
+		params.max_udp_payload_size = kMaxUdpPayload;
+		params.max_idle_timeout = NanosecondsFromMs(kIdleTimeoutMs);
+		// This endpoint is the one that will open the connection's one stream (see this method's
+		// own comment above): _bidi_local, not _bidi_remote, is therefore the window that governs
+		// what it can receive back on it -- the mirror image of CreateServer()'s own
+		// initial_max_stream_data_bidi_remote for that same stream.
+		params.initial_max_stream_data_bidi_local = CQuicSocketTransport::kReadWindow;
+		params.initial_max_data = CQuicSocketTransport::kReadWindow;
+
+		ngtcp2_conn *conn = nullptr;
+		if (ngtcp2_conn_client_new(&conn,
+			    &dcid,
+			    &scid,
+			    &path.path,
+			    NGTCP2_PROTO_VER_V1,
+			    &callbacks,
+			    &settings,
+			    &params,
+			    nullptr,
+			    this) != 0 ||
+			conn == nullptr) {
+			return nullptr;
+		}
+		ngtcp2_conn_set_tls_native_handle(conn, tlsSession->NativeGnuTlsSession());
+
+		Handle handle = conn;
+		ConnectionInfo info;
+		info.conn = conn;
+		info.issuedCid.assign(reinterpret_cast<const char *>(scid.data), scid.datalen);
+		info.tlsSession = std::move(tlsSession);
+		info.connRef.get_conn = GetConnFromRef;
+		info.connRef.user_data = conn;
+		auto clientInserted = m_connections.emplace(handle, std::move(info));
+		gnutls_session_set_ptr(clientInserted.first->second.tlsSession->NativeGnuTlsSession(),
+			&clientInserted.first->second.connRef);
+		return handle;
+	}
+
 	bool Read(Handle handle, const uint8_t *data, size_t length, uint64_t nowMs) override
 	{
 		auto it = m_connections.find(handle);
@@ -796,6 +1076,20 @@ public:
 	{
 		auto it = m_connections.find(handle);
 		return it != m_connections.end() && it->second.streamId >= 0;
+	}
+
+	bool OpenLocalBidiStream(Handle handle) override
+	{
+		auto it = m_connections.find(handle);
+		if (it == m_connections.end() || it->second.streamId >= 0) {
+			return false;
+		}
+		int64_t streamId = -1;
+		if (ngtcp2_conn_open_bidi_stream(it->second.conn, &streamId, nullptr) != 0) {
+			return false;
+		}
+		it->second.streamId = streamId;
+		return true;
 	}
 
 	void AttachTransport(Handle handle, CQuicSocketTransport *transport) override
@@ -938,7 +1232,10 @@ private:
 	{
 		ngtcp2_conn *conn = nullptr;
 		std::string issuedCid;
-		std::unique_ptr<CQuicGnuTlsSession> tlsSession;
+		//! CQuicGnuTlsSession for a server (CreateServer()) connection, CQuicGnuTlsClientSession
+		//! for a client (CreateClient()) one -- held by base pointer since nothing else in this
+		//! struct cares which.
+		std::unique_ptr<IQuicNgtcp2TlsSession> tlsSession;
 		ngtcp2_crypto_conn_ref connRef{};
 		int64_t streamId = -1;
 		std::vector<uint8_t> receivedData;
@@ -1187,12 +1484,16 @@ CQuicNgtcp2Factory::CQuicNgtcp2Factory(const CQuicTlsPolicy &policy,
 	std::shared_ptr<IQuicDatagramSink> sink,
 	std::shared_ptr<IQuicNgtcp2Engine> engine,
 	const std::array<uint8_t, 16> &localIdentity,
-	std::function<uint64_t()> transportClock)
+	std::function<uint64_t()> transportClock,
+	CQuicNgtcp2Factory::OutboundHandoff outboundHandoff,
+	CQuicDialFailure dialFailure)
 : m_policy(policy)
 , m_sink(std::move(sink))
 , m_localIdentity(localIdentity)
 , m_engine(std::move(engine))
 , m_transportClock(std::move(transportClock))
+, m_outboundHandoff(std::move(outboundHandoff))
+, m_dialFailure(std::move(dialFailure))
 {
 }
 
@@ -1227,6 +1528,80 @@ std::unique_ptr<IQuicConnection> CQuicNgtcp2Factory::CreateInbound(const uint8_t
 		m_acceptor,
 		m_localIdentity,
 		m_transportClock);
+}
+
+std::unique_ptr<IQuicConnection> CQuicNgtcp2Factory::CreateOutbound(const CNetworkAddress &address,
+	uint16_t port,
+	const std::array<uint8_t, 16> &expectedPeerIdentity,
+	uint64_t nowMs)
+{
+	if (m_sink == nullptr || m_engine == nullptr) {
+		return nullptr;
+	}
+	IQuicNgtcp2Engine::Handle handle =
+		m_engine->CreateClient(m_policy, address, port, expectedPeerIdentity, nowMs);
+	if (handle == nullptr)
+		return nullptr;
+	// The local stream opens later, from OnExtendMaxLocalStreamsBidi() once the handshake raises
+	// the peer-advertised limit above 0 -- not here, before the peer's transport parameters have
+	// even arrived.
+	//
+	// A fresh client connection has nothing scheduled yet (ngtcp2_conn_get_expiry() -- see its
+	// own doc comment -- returns this connection's settings.handshake_timeout deadline, not an
+	// imminent one), so CQuicContext::Tick()'s own expiry-gated send would otherwise never fire
+	// before that whole deadline elapses: this dial would just time out having sent nothing.
+	// Flush the first Initial/ClientHello flight unconditionally, exactly as ProcessDatagram()
+	// already does for every later exchange.
+	if (!m_engine->Flush(handle, *m_sink, address, port, nowMs)) {
+		m_engine->Destroy(handle);
+		return nullptr;
+	}
+	std::string issuedCid = m_engine->GetIssuedConnectionId(handle);
+	return std::make_unique<CQuicNgtcp2Connection>(m_engine,
+		m_sink,
+		handle,
+		address,
+		port,
+		issuedCid,
+		m_acceptor,
+		m_localIdentity,
+		m_transportClock,
+		&expectedPeerIdentity);
+}
+
+std::unique_ptr<IQuicConnection> CQuicNgtcp2Factory::CreateOutboundForClient(const CNetworkAddress &address,
+	uint16_t port,
+	const std::array<uint8_t, 16> &expectedPeerIdentity,
+	uint64_t nowMs,
+	CUpDownClient *owner)
+{
+	if (m_sink == nullptr || m_engine == nullptr || owner == nullptr)
+		return nullptr;
+	IQuicNgtcp2Engine::Handle handle =
+		m_engine->CreateClient(m_policy, address, port, expectedPeerIdentity, nowMs);
+	if (handle == nullptr) {
+		return nullptr;
+	}
+	// Same as CreateOutbound() above: the local stream opens later, from
+	// OnExtendMaxLocalStreamsBidi(), once the handshake actually permits it. Same reason for the
+	// unconditional first flush, too: see CreateOutbound()'s own comment.
+	if (!m_engine->Flush(handle, *m_sink, address, port, nowMs)) {
+		m_engine->Destroy(handle);
+		return nullptr;
+	}
+	return std::make_unique<CQuicNgtcp2Connection>(m_engine,
+		m_sink,
+		handle,
+		address,
+		port,
+		m_engine->GetIssuedConnectionId(handle),
+		nullptr,
+		m_localIdentity,
+		m_transportClock,
+		&expectedPeerIdentity,
+		owner,
+		m_outboundHandoff,
+		m_dialFailure);
 }
 
 std::shared_ptr<IQuicNgtcp2Engine> CreateProductionQuicNgtcp2Engine()

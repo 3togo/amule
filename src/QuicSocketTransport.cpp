@@ -66,7 +66,7 @@ bool CQuicSocketTransport::IsOk() const
 bool CQuicSocketTransport::BlocksRead() const
 {
 	std::lock_guard<std::mutex> l(m_mutex);
-	return m_read.empty() && !m_closed;
+	return m_blocksRead;
 }
 bool CQuicSocketTransport::BlocksWrite() const
 {
@@ -100,6 +100,7 @@ uint32_t CQuicSocketTransport::Read(void *buffer, uint32_t length)
 		const auto consumed = static_cast<std::deque<uint8_t>::difference_type>(n);
 		std::copy(m_read.begin(), m_read.begin() + consumed, static_cast<uint8_t *>(buffer));
 		m_read.erase(m_read.begin(), m_read.begin() + consumed);
+		m_blocksRead = n == 0 && !m_closed;
 		if (n && !m_closed)
 			handle = m_handle;
 	}
@@ -341,7 +342,7 @@ void CQuicSocketTransport::FinishDrainingForDestruction()
 	}
 	// ClearWriteLocked() just discarded bytes the peer never acknowledged: reset the stream
 	// rather than CloseStream()'s graceful FIN, which would tell the peer this eD2k exchange
-	// ended cleanly instead of being cut short (got3nks' review on #1710, finding D).
+	// ended cleanly instead of being cut short.
 	if (handle)
 		m_operations.AbortStream(handle);
 }
@@ -356,8 +357,11 @@ void CQuicSocketTransport::MarkConnected()
 			event = m_events;
 		}
 	}
-	if (event)
+	if (event) {
 		event->OnStreamConnected();
+		// CEMSocket sends only after OnSend() marks it connected.
+		event->OnStreamWritable();
+	}
 }
 size_t CQuicSocketTransport::OnPayload(const uint8_t *data, size_t length)
 {

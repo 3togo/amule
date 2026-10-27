@@ -73,6 +73,9 @@ public:
 	 */
 	virtual bool ObfuscatesStream() const = 0;
 
+	//! Datagram obfuscation settings. Only uTP uses them.
+	virtual void SetCryptParameters(bool, const uint8_t *) {}
+
 	virtual void SetEvents(IStreamTransportEvents *events) = 0;
 
 	//! Whether the stream is usable. False once it has failed or been closed.

@@ -28,6 +28,8 @@
 #include <wx/mstream.h>
 #include <wx/tokenzr.h>
 
+#include <array>
+
 #include "updownclient.h"   // Needed for CUpDownClient
 #include "SharedFileList.h" // Needed for CSharedFileList
 
@@ -1628,6 +1630,35 @@ bool CUpDownClient::Disconnected(const wxString &DEBUG_ONLY(strReason), bool bFr
 	return bDelete;
 }
 
+void CUpDownClient::QuicDialFailed()
+{
+	// Temporary clients created for server-vouched LowID rendezvous have no TCP fallback:
+	// continue through the existing uTP path, with QUIC suppressed.
+#if defined(ENABLE_NATT_SERVER_COORDINATION) && defined(AMULE_UTP_TRANSPORT)
+	if ((IsLowIdHolePunchDial() || IsLugdunumCallbackDial()) && !HasBeenDeleted()) {
+#ifdef AMULE_QUIC_TRANSPORT
+		m_skipQuicDial = true;
+#endif
+		TryServerVouchedLowIdUtpDial();
+#ifdef AMULE_QUIC_TRANSPORT
+		m_skipQuicDial = false;
+#endif
+		return;
+	}
+#endif
+
+	// QUIC is opportunistic. The failure callback is delivered by the UDP event loop, so resume
+	// the ordinary contact policy here. Consume the QUIC choice before re-entry: otherwise the
+	// fallback can immediately select the same failed transport again.
+#ifdef AMULE_QUIC_TRANSPORT
+	m_skipQuicDial = true;
+#endif
+	TryToContact(true);
+#ifdef AMULE_QUIC_TRANSPORT
+	m_skipQuicDial = false;
+#endif
+}
+
 // The returned bool is not whether TryToConnect succeeded: false means the client was
 // deleted, true means it was not.
 bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon)
@@ -2224,6 +2255,26 @@ bool CUpDownClient::TryServerVouchedLowIdUtpDial()
 	if (m_socket != nullptr && m_socket->IsOk()) {
 		return false;
 	}
+#ifdef AMULE_QUIC_TRANSPORT
+	// QUIC is selected only for an authenticated LowID NAT-T rendezvous; HighID contact
+	// remains TCP (and the uTP fallback below remains available for this route).
+	if (!m_skipQuicDial && HasValidHash() && GetConnectIP() != 0 && GetUDPPort() != 0) {
+		std::array<uint8_t, 16> peerHash{};
+		std::copy_n(GetUserHash().GetHash(), peerHash.size(), peerHash.begin());
+		std::array<uint8_t, 16> fileHash{};
+		if (m_reqfile != nullptr) {
+			std::copy_n(m_reqfile->GetFileHash().GetHash(), fileHash.size(), fileHash.begin());
+		}
+		// TryQuicDial() also returns true while a CAPS answer is pending.
+		if (theApp->clientudp->TryQuicDial(peerHash, GetConnectIP(), GetUDPPort(), fileHash, this)) {
+			return true;
+		}
+		AddDebugLogLineN(logClientUDP,
+			CFormat("QUIC dial to %s not possible (disabled, incompatible peer, cooldown, or "
+				"dial start failed); falling back to uTP") %
+				Uint32_16toStringIP_Port(GetConnectIP(), GetUDPPort()));
+	}
+#endif
 	IUtpContext *utp = theApp->clientudp->GetUtpContext();
 	const bool canSend = utp != nullptr && utp->IsAvailable() && theApp->clientudp->Ok();
 	const bool obfuscationSatisfied = !WantsStreamObfuscation() || ShouldReceiveCryptUDPPackets();
@@ -2476,6 +2527,18 @@ int CUpDownClient::GetHashType() const
 	}
 
 	return SO_UNKNOWN;
+}
+
+bool CUpDownClient::ReplaceSocket(CClientTCPSocket *socket)
+{
+	if (m_socket != nullptr && m_socket->IsConnected()) {
+		return false;
+	}
+	if (m_socket != nullptr) {
+		m_socket->Safe_Delete();
+	}
+	SetSocket(socket);
+	return true;
 }
 
 void CUpDownClient::SetSocket(CClientTCPSocket *socket)

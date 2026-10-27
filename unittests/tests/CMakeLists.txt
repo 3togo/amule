@@ -313,11 +313,29 @@ target_include_directories (SecIdentTest
 )
 target_link_libraries (SecIdentTest muleunit mulecommon)
 
+# Pure bounded EAQC request ledger, keyed by the confirmed wire fields.
+add_executable (QuicCapsRequestLedgerTest QuicCapsRequestLedgerTest.cpp)
+add_test (NAME QuicCapsRequestLedgerTest COMMAND QuicCapsRequestLedgerTest)
+target_include_directories (QuicCapsRequestLedgerTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (QuicCapsRequestLedgerTest muleunit mulecommon)
+
+# Pure QUIC capability state, keyed by authenticated peer identity.
+add_executable (QuicCapabilityCacheTest QuicCapabilityCacheTest.cpp)
+add_test (NAME QuicCapabilityCacheTest COMMAND QuicCapabilityCacheTest)
+target_include_directories (QuicCapabilityCacheTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (QuicCapabilityCacheTest muleunit mulecommon)
+
 # Pure QUIC NAT-T wire identity and peer proof helpers.
 add_executable (QuicNattProtocolTest QuicNattProtocolTest.cpp)
 add_test (NAME QuicNattProtocolTest COMMAND QuicNattProtocolTest)
 target_include_directories (QuicNattProtocolTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries (QuicNattProtocolTest muleunit mulecommon)
+
+# CAPS holdoff policy, and its tick loop driven through fakes.
+add_executable (QuicCapsHoldoffTest QuicCapsHoldoffTest.cpp)
+add_test (NAME QuicCapsHoldoffTest COMMAND QuicCapsHoldoffTest)
+target_include_directories (QuicCapsHoldoffTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (QuicCapsHoldoffTest muleunit mulecommon)
 
 # Direct outbound eligibility, without the application or libutp.
 add_executable (UtpDialPolicyTest UtpDialPolicyTest.cpp)
@@ -416,6 +434,7 @@ if (ENABLE_QUIC)
 
 	add_executable (QuicNgtcp2AdapterTest
 		QuicNgtcp2AdapterTest.cpp
+		QuicClientRefTestShim.cpp
 		${CMAKE_SOURCE_DIR}/src/QuicNgtcp2Adapter.cpp
 		${CMAKE_SOURCE_DIR}/src/QuicContext.cpp
 		${CMAKE_SOURCE_DIR}/src/QuicGnuTlsSession.cpp
@@ -436,6 +455,7 @@ if (ENABLE_QUIC)
 
 	add_executable (QuicNgtcp2HandshakeTest
 		QuicNgtcp2HandshakeTest.cpp
+		QuicClientRefTestShim.cpp
 		${CMAKE_SOURCE_DIR}/src/QuicNgtcp2Adapter.cpp
 		${CMAKE_SOURCE_DIR}/src/QuicContext.cpp
 		${CMAKE_SOURCE_DIR}/src/QuicGnuTlsSession.cpp

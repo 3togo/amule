@@ -27,6 +27,7 @@
 #include "NatRendezvousPolicy.h"
 #include "NetworkAddress.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <map>
@@ -44,6 +45,8 @@ public:
 	virtual bool ProcessDatagram(const uint8_t *, size_t, uint64_t nowMs) = 0;
 	virtual bool IsClosed() const = 0;
 	virtual void Close() = 0;
+	//! Closes during context teardown without invoking owner/fallback callbacks.
+	virtual void CloseForShutdown() { Close(); }
 	//! True for a connection ID this server issued and has not retired. After the server's
 	//! first Initial the client switches its DCID to one of these (RFC 9000 section 7.2).
 	virtual bool OwnsConnectionId(const std::string &) const = 0;
@@ -64,6 +67,8 @@ public:
 	virtual void Tick(uint64_t nowMs) { (void)nowMs; }
 };
 
+class CUpDownClient;
+
 class IQuicConnectionFactory
 {
 public:
@@ -78,6 +83,21 @@ public:
 		uint16_t,
 		const std::string &,
 		uint64_t nowMs) = 0;
+	//! Creates an initiated connection whose EAQN1 proof must authenticate the
+	//! expected peer identity learned from its ed2k hello.
+	virtual std::unique_ptr<IQuicConnection> CreateOutbound(
+		const CNetworkAddress &, uint16_t, const std::array<uint8_t, 16> &, uint64_t)
+	{
+		return nullptr;
+	}
+	virtual std::unique_ptr<IQuicConnection> CreateOutboundForClient(const CNetworkAddress &address,
+		uint16_t port,
+		const std::array<uint8_t, 16> &identity,
+		uint64_t nowMs,
+		CUpDownClient *)
+	{
+		return CreateOutbound(address, port, identity, nowMs);
+	}
 };
 
 class CQuicContext final
@@ -102,6 +122,13 @@ public:
 		const CNetworkAddress &address,
 		uint16_t port,
 		uint64_t nowMs);
+	//! Starts one authenticated outbound connection. The peer identity is only
+	//! the one learned from its ed2k hello; endpoint data never substitutes it.
+	bool Dial(const CNetworkAddress &address,
+		uint16_t port,
+		const std::array<uint8_t, 16> &expectedPeerIdentity,
+		uint64_t nowMs,
+		CUpDownClient *owner = nullptr);
 	//! Services every live connection's timers. Must be called periodically regardless of
 	//! whether any datagram has arrived -- this is what lets a connection recover from loss
 	//! instead of hanging forever once nothing more is received from the peer.

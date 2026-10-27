@@ -26,9 +26,6 @@
 
 #include <algorithm>
 
-#ifdef AMULE_UTP_TRANSPORT
-#include "UtpSocketTransport.h" // per-stream crypt parameters
-#endif                          // Interface declarations.
 #ifdef ENABLE_NATT_SERVER_COORDINATION
 #include "LugdunumNatTraversal.h" // callback failure policy
 #endif
@@ -126,13 +123,8 @@ void CClientTCPSocket::ApplyUtpCryptParameters()
 	if (!HasTransport() || m_client == nullptr) {
 		return;
 	}
-	// The same pair every other UDP send site passes together: whether this
-	// peer wants obfuscated datagrams, and the hash they are keyed on. Copied
-	// by the transport, because the client can be replaced while the stream
-	// outlives it.
-	static_cast<CUtpSocketTransport *>(GetTransport())
-		->SetCryptParameters(m_client->ShouldReceiveCryptUDPPackets(),
-			m_client->HasValidHash() ? m_client->GetUserHash().GetHash() : nullptr);
+	GetTransport()->SetCryptParameters(m_client->ShouldReceiveCryptUDPPackets(),
+		m_client->HasValidHash() ? m_client->GetUserHash().GetHash() : nullptr);
 }
 
 bool CClientTCPSocket::IsUtpInbound() const

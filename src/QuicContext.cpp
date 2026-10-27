@@ -30,7 +30,7 @@
 CQuicContext::~CQuicContext()
 {
 	for (auto &entry : m_connections) {
-		entry.second->Close();
+		entry.second->CloseForShutdown();
 	}
 }
 
@@ -159,6 +159,26 @@ bool CQuicContext::AdmitNewConnection(const CNetworkAddress &address, uint64_t n
 	}
 	// Counted before CreateInbound(): refused attempts must cost the sender as much as accepted ones.
 	return m_newConnectionLimiter.Admit(address, nowMs);
+}
+
+bool CQuicContext::Dial(const CNetworkAddress &address,
+	uint16_t port,
+	const std::array<uint8_t, 16> &expectedPeerIdentity,
+	uint64_t nowMs,
+	CUpDownClient *owner)
+{
+	if (port == 0 || m_factory == nullptr) {
+		return false;
+	}
+	std::unique_ptr<IQuicConnection> connection =
+		m_factory->CreateOutboundForClient(address, port, expectedPeerIdentity, nowMs, owner);
+	if (!connection || connection->IsClosed()) {
+		return false;
+	}
+	const std::string cid = connection->GetIssuedConnectionId();
+	const auto inserted =
+		m_connections.emplace(SConnectionKey{ address, port, cid }, std::move(connection));
+	return inserted.second;
 }
 
 bool CQuicContext::ProcessDatagram(

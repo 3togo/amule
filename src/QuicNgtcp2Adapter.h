@@ -36,7 +36,12 @@
 #include <vector>
 
 class CQuicSocketTransport;
+class CUpDownClient;
+class IStreamTransport;
 class IQuicStreamAcceptor;
+using CQuicOutboundHandoff =
+	std::function<CQuicSocketTransport *(CUpDownClient *, std::unique_ptr<IStreamTransport>)>;
+using CQuicDialFailure = std::function<void(CUpDownClient *, const std::array<uint8_t, 16> &)>;
 
 struct CQuicTlsPolicy
 {
@@ -70,6 +75,13 @@ public:
 		uint16_t,
 		const CQuicInitialMetadata &,
 		uint64_t nowMs) = 0;
+	//! Creates an outbound TLS 1.3/ngtcp2 client connection to an authenticated
+	//! peer. The identity comes from its ed2k hello, never from its endpoint.
+	virtual Handle CreateClient(const CQuicTlsPolicy &,
+		const CNetworkAddress &,
+		uint16_t,
+		const std::array<uint8_t, 16> &expectedPeerIdentity,
+		uint64_t nowMs) = 0;
 	//! @p nowMs is the same monotonic millisecond tick CQuicContext::ProcessDatagram() received.
 	virtual bool Read(Handle, const uint8_t *, size_t, uint64_t nowMs) = 0;
 	virtual bool Flush(
@@ -97,6 +109,9 @@ public:
 	//! True once the peer has opened its one stream (QuicSocketTransport.h). The point at which
 	//! a connection has something worth handing to the rest of aMule.
 	virtual bool HasOpenStream(Handle) const = 0;
+	//! Opens the single local bidirectional stream used by an outbound authenticated dial.
+	//! Inbound connections never call this operation; their peer stream remains the admission trigger.
+	virtual bool OpenLocalBidiStream(Handle) = 0;
 	//! From this call on, new stream bytes go straight to @p transport (still non-owning: the
 	//! caller keeps it alive) instead of being buffered for DrainStreamData(). Whatever
 	//! DrainStreamData() had not yet returned is not retroactively delivered -- the caller must
@@ -160,11 +175,14 @@ public:
 	//! leaves each transport on its own default, the real clock. Tests substitute a fake so a
 	//! transport's Flush()/Close() stay on the same synthetic timeline as the engine calls
 	//! driving the test.
+	using OutboundHandoff = CQuicOutboundHandoff;
 	CQuicNgtcp2Factory(const CQuicTlsPolicy &,
 		std::shared_ptr<IQuicDatagramSink>,
 		std::shared_ptr<IQuicNgtcp2Engine>,
 		const std::array<uint8_t, 16> &localIdentity,
-		std::function<uint64_t()> transportClock = nullptr);
+		std::function<uint64_t()> transportClock = nullptr,
+		OutboundHandoff outboundHandoff = nullptr,
+		CQuicDialFailure dialFailure = nullptr);
 	//! Held, not owned: the caller (CClientUDPSocket) keeps the acceptor alive for at least as
 	//! long as this factory. Null refuses every stream's hand-off, which is the state before an
 	//! acceptor exists -- the connection itself is still admitted and still works.
@@ -175,6 +193,15 @@ public:
 		uint16_t,
 		const std::string &,
 		uint64_t nowMs) override;
+	std::unique_ptr<IQuicConnection> CreateOutbound(const CNetworkAddress &,
+		uint16_t,
+		const std::array<uint8_t, 16> &expectedPeerIdentity,
+		uint64_t nowMs) override;
+	std::unique_ptr<IQuicConnection> CreateOutboundForClient(const CNetworkAddress &,
+		uint16_t,
+		const std::array<uint8_t, 16> &,
+		uint64_t,
+		CUpDownClient *) override;
 
 private:
 	CQuicTlsPolicy m_policy;
@@ -182,6 +209,8 @@ private:
 	std::array<uint8_t, 16> m_localIdentity;
 	std::shared_ptr<IQuicNgtcp2Engine> m_engine;
 	std::function<uint64_t()> m_transportClock;
+	OutboundHandoff m_outboundHandoff;
+	CQuicDialFailure m_dialFailure;
 	IQuicStreamAcceptor *m_acceptor = nullptr;
 };
 
