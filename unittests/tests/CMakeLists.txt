@@ -364,6 +364,12 @@ target_include_directories (NatRendezvousPolicyTest PRIVATE
 )
 target_link_libraries (NatRendezvousPolicyTest muleunit ${Boost_LIBRARIES})
 
+add_executable (EncryptionRequirementTest EncryptionRequirementTest.cpp)
+target_include_directories (EncryptionRequirementTest PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR})
+target_compile_features (EncryptionRequirementTest PRIVATE cxx_std_17)
+target_link_libraries (EncryptionRequirementTest muleunit mulecommon)
+add_test (NAME EncryptionRequirementTest COMMAND EncryptionRequirementTest)
+
 # Pure experimental wire codecs, exercised even when application support is OFF.
 add_executable (NatServerHolePunchTest NatServerHolePunchTest.cpp)
 target_include_directories (NatServerHolePunchTest PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR})

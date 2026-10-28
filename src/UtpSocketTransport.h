@@ -156,10 +156,17 @@ public:
 	}
 	bool IsInbound() const override { return m_inbound; }
 
+	//! An inbound stream has no crypt parameters until its hello is read, so until then the SYN's
+	//! obfuscation answers.
 	bool ObfuscatesStream() const override
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		return m_encrypt;
+		return m_encrypt || (m_inbound && m_synObfuscated);
+	}
+	void MarkSynObfuscated(bool obfuscated)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		m_synObfuscated = obfuscated;
 	}
 	bool IsOk() const override
 	{
@@ -458,6 +465,7 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		m_encrypt = encrypt && userHash != nullptr;
+		m_synObfuscated = false;
 		if (m_encrypt) {
 			std::copy(userHash, userHash + kUserHashBytes, m_userHash);
 		}
@@ -588,6 +596,7 @@ private:
 	bool m_flushInProgress = false;
 	bool m_flushAgain = false;
 	bool m_encrypt = false;
+	bool m_synObfuscated = false;
 	uint8_t m_userHash[kUserHashBytes] = { 0 };
 };
 

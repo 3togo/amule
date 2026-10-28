@@ -479,7 +479,11 @@ void CClientUDPSocket::OnPacketReceived(
 				// traffic would otherwise read as malformed. Statistics and bans are
 				// separate subsystems; only the second one must stay out of reach.
 				theStats::AddDownOverheadOther(length);
-				ProcessReservedProt2Frame(decryptedBuffer + 1, packetLen - 1, ip, port);
+				ProcessReservedProt2Frame(decryptedBuffer + 1,
+					packetLen - 1,
+					ip,
+					port,
+					decryptedBuffer != buffer);
 				break;
 
 			default:
@@ -555,7 +559,7 @@ bool CClientUDPSocket::TryProcessServerWayNatCallback(uint32 ip, uint8_t *buffer
 #endif
 
 void CClientUDPSocket::ProcessReservedProt2Frame(
-	const uint8_t *frame, size_t frameLength, uint32 ip, uint16 port)
+	const uint8_t *frame, size_t frameLength, uint32 ip, uint16 port, [[maybe_unused]] bool obfuscated)
 {
 	const SReservedProt2Frame classified = ClassifyReservedProt2Frame(frame, frameLength);
 
@@ -609,7 +613,7 @@ void CClientUDPSocket::ProcessReservedProt2Frame(
 			kind == EUtpFrameKind::Existing && m_utp.HasExpectedPortRemapPeer(ip, port, nowMs);
 		if (kind != EUtpFrameKind::Malformed &&
 			(kind == EUtpFrameKind::Syn || fromKnownPeer || fromExpectedHandshakePeer)) {
-			if (ProcessUtpFrame(m_utp, classified, ip, port, nowMs)) {
+			if (ProcessUtpFrame(m_utp, classified, ip, port, nowMs, obfuscated)) {
 				return;
 			}
 		} else if (kind == EUtpFrameKind::Existing) {
@@ -918,6 +922,7 @@ bool CClientUDPSocket::DialLugdunumNatCallbackPeer(const LugdunumNatTraversal::F
 	// false, same as before, so CAPS/QUIC stay gated on an actually-known identity.
 	if (callback.hasObfuscation) {
 		client->SetUserHash(CMD4Hash(callback.userHash.data()));
+		client->SetConnectOptions(callback.obfuscationSettings, true, false);
 	}
 	theApp->clientlist->AddClient(client);
 	CClientRef ref{ client CLIENT_DEBUGSTRING("Lugdunum callback dial") };
