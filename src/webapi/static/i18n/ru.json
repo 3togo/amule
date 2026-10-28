@@ -1056,5 +1056,6 @@
   "prefs_field_kad_strict_aich_publishers": "Игнорировать хеши восстановления от слишком старых узлов Kad",
   "prefs_field_message_filter_advanced_spam_filter": "Включить расширенный фильтр спама",
   "prefs_field_message_filter_use_captchas": "Требовать CAPTCHA для первых сообщений от пользователей, не входящих в список друзей",
-  "prefs_field_message_filter_use_captchas_help": "Сообщения остаются скрытыми, пока отправитель не пройдёт проверку. Клиенты без поддержки CAPTCHA не смогут начать чат."
+  "prefs_field_message_filter_use_captchas_help": "Сообщения остаются скрытыми, пока отправитель не пройдёт проверку. Клиенты без поддержки CAPTCHA не смогут начать чат.",
+  "about_country_data": "Данные IP-to-Country"
 }

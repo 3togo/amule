@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-25 21:07+0000\n"
+"PO-Revision-Date: 2026-10-28 08:19+0000\n"
 "Last-Translator: Marcelo Jimenez <mroberto@users.sourceforge.com>\n"
 "Language-Team: Português (Brasileiro) <pt@li.org>\n"
 "Language: pt_BR\n"
@@ -6150,19 +6150,19 @@ msgstr "adicione aqui as palavras que o amule deve filtrar e bloquear nas mensag
 
 #: src/muuli_wdr.cpp
 msgid "Enable advanced spam filter"
-msgstr ""
+msgstr "Habilitar filtro avançado de spam"
 
 #: src/muuli_wdr.cpp
 msgid "Block unsolicited links and repeated messages from non-friends."
-msgstr ""
+msgstr "Bloqueia links não solicitados e mensagens repetidas de quem não é amigo."
 
 #: src/muuli_wdr.cpp
 msgid "Require a CAPTCHA for first messages from non-friends"
-msgstr ""
+msgstr "Exigir CAPTCHA na primeira mensagem de quem não é amigo"
 
 #: src/muuli_wdr.cpp
 msgid "Withhold the message until the sender solves the challenge. Clients without CAPTCHA support cannot start a chat."
-msgstr ""
+msgstr "Retém a mensagem até que o remetente resolva o desafio. Clientes sem suporte a CAPTCHA não conseguem iniciar um chat."
 
 #: src/muuli_wdr.cpp
 msgid "Show received messages in the log"
@@ -9409,14 +9409,14 @@ msgid "Hashset requested for unknown file: %s"
 msgstr "Hashset solicitado para arquivo desconhecido: %s"
 
 #: src/UploadDiskIOThread.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not start the upload disk readers: %s"
-msgstr "Não foi possível começar uma busca Kad"
+msgstr "Não foi possível iniciar os leitores de disco de upload: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, c-format
 msgid "Upload disk reader error: %s"
-msgstr ""
+msgstr "Erro no leitor de disco de upload: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, c-format
