@@ -1296,12 +1296,21 @@ msgid "All"
 msgstr "Todos"
 
 #: src/amule-remote-gui.cpp
+#, c-format
+msgid "The daemon refused these folders because they are outside the folders it allows (configured on the daemon):%s"
+msgstr ""
+
+#: src/amule-remote-gui.cpp
 msgid "The daemon could not apply the connection port changes."
 msgstr "El demonio no pudo aplicar los cambios en los puertos de conexión."
 
 #: src/amule-remote-gui.cpp
 msgid "not readable"
 msgstr "no legible"
+
+#: src/amule-remote-gui.cpp
+msgid "outside the folders the daemon allows (configured on the daemon)"
+msgstr ""
 
 #: src/amule-remote-gui.cpp
 msgid "not found"
@@ -1329,6 +1338,16 @@ msgstr "No se pudo eliminar la categoría: %s"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "No se puede crear el directorio '%s' para la categoría '%s', se mantiene el directorio '%s'."
+
+#: src/amule-remote-gui.cpp
+#, fuzzy
+msgid "the daemon refused the request"
+msgstr "El demonio rechazó la petición."
+
+#: src/amule-remote-gui.cpp
+#, fuzzy, c-format
+msgid "The daemon refused the category: %s"
+msgstr "El demonio rechazó la petición."
 
 #: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
 msgid "Invalid URL"
@@ -2335,6 +2354,22 @@ msgstr[1] "No se pudieron añadir los enlaces %u (consulte el registro para más
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "¡Enlace eD2k inválido! ERROR: %s"
 
+#: src/ECSpecialMuleTags.cpp
+msgid "Refused a remote request to set the web-server template: the value must be a plain template name, not a path."
+msgstr ""
+
+#: src/ECSpecialMuleTags.cpp
+msgid "Refused a remote request to change the online-signature folder: it can only be set in the daemon's own configuration."
+msgstr ""
+
+#: src/ECSpecialMuleTags.cpp
+msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
+msgstr ""
+
+#: src/ECSpecialMuleTags.cpp
+msgid "Refused a remote request to change the follow-symlinks-in-shares setting: it can only be set in the daemon's own configuration."
+msgstr ""
+
 #: src/EditServerListDlg.cpp
 msgid "Edit server list sources"
 msgstr "Editar las fuentes de la lista de servidores"
@@ -2595,6 +2630,14 @@ msgstr "No se pudo reasignar el cliente a ese archivo."
 #, c-format
 msgid "Could not save the amuleapi password: %s"
 msgstr "No se pudo guardar la contraseña amuleapi: %s"
+
+#: src/ExternalConn.cpp
+msgid "One or more folders were outside the allowed remote directories and were left unchanged."
+msgstr ""
+
+#: src/ExternalConn.cpp
+msgid "The category folder is outside the allowed remote directories."
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "No such category."
@@ -3318,6 +3361,11 @@ msgstr "Descargando..."
 #: src/HTTPDownload.cpp
 msgid "HTTP download cancelled"
 msgstr "Descarga HTTP cancelada"
+
+#: src/HTTPDownload.cpp
+#, c-format
+msgid "Refusing to download %s: only http and https URLs are supported."
+msgstr ""
 
 #: src/HTTPDownload.cpp
 #, c-format
@@ -5439,6 +5487,14 @@ msgid "Show how many of the files and folders in your shared folders the current
 msgstr "Muestra cuántos de los archivos y carpetas de sus carpetas compartidas excluiría el patrón actual, según el recuento del último análisis."
 
 #: src/muuli_wdr.cpp
+msgid "Folders the daemon allows remote changes in"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "(Read-only. Configured on the daemon; if empty, the daemon refuses every remote folder change.)"
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid "When the connected core's files live on a different machine, map a path prefix it reports to where that filesystem is reachable from here (a network share, say) so \"Open\" and \"Show in folder\" work."
 msgstr "Cuando los archivos del núcleo conectado están en una máquina diferente, mapee un prefijo de ruta que informe desde donde ese sistema de archivos es accesible(p. e. una comparición de red) para que \"Abrir\" y \"Mostrar en carpeta\" funcionen."
 
@@ -5701,6 +5757,18 @@ msgstr "Contraseña"
 #: src/muuli_wdr.cpp
 msgid "Require encrypted connections (rejects clients that cannot encrypt)"
 msgstr "Requiere conexiones encriptadas (rechaza clientes que no pueden encriptar)"
+
+#: src/muuli_wdr.cpp
+msgid "Folders remote clients may use"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "(Remote clients may set the incoming, temp, shared and category folders only inside these. Empty means no remote folder change is allowed. Local changes here are never restricted.)"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Absolute path of a folder, e.g. /home/user/aMule. A remote client may then set any folder at or below it."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "aMule API server parameters"
@@ -6675,6 +6743,11 @@ msgstr[1] "Parte corrupta encontrada (%d) en %d partes del archivo %s - Resultad
 
 #: src/PartFile.cpp
 #, c-format
+msgid "'%s' does not match its file hash, and without the part hashset the corrupt part cannot be found. Waiting for the hashset."
+msgstr ""
+
+#: src/PartFile.cpp
+#, c-format
 msgid "Found completed part (%i) in %s"
 msgstr "Parte completada encontrada (%i) en %s"
 
@@ -6783,6 +6856,11 @@ msgstr "El puerto TCP no puede ser mayor que 65532 debido a que el socket del se
 #, c-format
 msgid "Default port will be used (%d)"
 msgstr "Puerto por defecto que será usado (%d)"
+
+#: src/Preferences.cpp
+#, c-format
+msgid "Ignoring a relative path in allowed-remote-dirs.dat (only absolute paths are accepted): %s"
+msgstr ""
 
 #: src/BandwidthLimitSlider.h
 msgid "Adjust the enabled limit from 1 KiB/s to line capacity."
@@ -6894,6 +6972,10 @@ msgid "The type of proxy you are connecting to"
 msgstr "El tipo de proxy al que se está conectando"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid "Set in the daemon's own configuration (amule.conf); not editable remotely."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Failed to transfer data from Widget to Cfg with the ID %d and key %s"
 msgstr "Error al transferir datos desde el programa a la configuración, con el ID %d y la clave %s"
@@ -6901,6 +6983,15 @@ msgstr "Error al transferir datos desde el programa a la configuración, con el 
 #: src/PrefsUnifiedDlg.cpp
 msgid "No password set."
 msgstr "Sin contraseña guardada."
+
+#: src/PrefsUnifiedDlg.cpp
+msgid "That file does not look like ffprobe. Choose a binary named ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" banner, leave the field empty to auto-detect, or set the path directly in amule.conf."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "Invalid ffprobe path"
+msgstr "Nombre de archivo incorrecto."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The shared-file exclusion pattern is not a valid regular expression. The filter has been left disabled."
@@ -7350,6 +7441,19 @@ msgstr "Este prefijo remoto ya está mapeado."
 #: src/PrefsUnifiedDlg.cpp
 msgid "Choose the local folder"
 msgstr "Elija la carpeta local"
+
+#: src/PrefsUnifiedDlg.cpp
+msgid "Please enter an absolute path. A relative path would be resolved against the daemon's working directory, so it is not accepted."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
+msgid "Allowed folders for remote clients"
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "Choose a folder remote clients may use"
+msgstr "Elija una carpeta para los archivos entrantes"
 
 #: src/SearchDlg.cpp
 msgid "Clear Search History"
@@ -8221,6 +8325,11 @@ msgid "Discovered %u new shared file"
 msgid_plural "Discovered %u new shared files"
 msgstr[0] "Descubierto %u nuevo archivo compartido"
 msgstr[1] "Descubiertos %u nuevos archivos compartidos"
+
+#: src/SharedFileList.cpp
+#, c-format
+msgid "Refused to rename '%s' to '%s': the new name must be a plain file name, not a path."
+msgstr ""
 
 #: src/SharedFilePeersListCtrl.cpp src/SourceListCtrl.cpp
 msgid "User Name"

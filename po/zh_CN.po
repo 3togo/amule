@@ -1292,12 +1292,21 @@ msgid "All"
 msgstr "全部"
 
 #: src/amule-remote-gui.cpp
+#, c-format
+msgid "The daemon refused these folders because they are outside the folders it allows (configured on the daemon):%s"
+msgstr ""
+
+#: src/amule-remote-gui.cpp
 msgid "The daemon could not apply the connection port changes."
 msgstr "守护进程无法应用连接端口更改。"
 
 #: src/amule-remote-gui.cpp
 msgid "not readable"
 msgstr "不可读"
+
+#: src/amule-remote-gui.cpp
+msgid "outside the folders the daemon allows (configured on the daemon)"
+msgstr ""
 
 #: src/amule-remote-gui.cpp
 msgid "not found"
@@ -1325,6 +1334,16 @@ msgstr "无法删除分类：%s"
 #, c-format
 msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "无法创建 “%s” 目录用于 “%s” 分类，保留 “%s” 目录。"
+
+#: src/amule-remote-gui.cpp
+#, fuzzy
+msgid "the daemon refused the request"
+msgstr "守护进程拒绝了请求。"
+
+#: src/amule-remote-gui.cpp
+#, fuzzy, c-format
+msgid "The daemon refused the category: %s"
+msgstr "守护进程拒绝了请求。"
 
 #: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
 msgid "Invalid URL"
@@ -2331,6 +2350,22 @@ msgstr[1] "无法添加 %u 个链接（详情请查看日志）"
 msgid "Invalid eD2k link! ERROR: %s"
 msgstr "非法 eD2k 链接！错误: %s"
 
+#: src/ECSpecialMuleTags.cpp
+msgid "Refused a remote request to set the web-server template: the value must be a plain template name, not a path."
+msgstr ""
+
+#: src/ECSpecialMuleTags.cpp
+msgid "Refused a remote request to change the online-signature folder: it can only be set in the daemon's own configuration."
+msgstr ""
+
+#: src/ECSpecialMuleTags.cpp
+msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
+msgstr ""
+
+#: src/ECSpecialMuleTags.cpp
+msgid "Refused a remote request to change the follow-symlinks-in-shares setting: it can only be set in the daemon's own configuration."
+msgstr ""
+
 #: src/EditServerListDlg.cpp
 msgid "Edit server list sources"
 msgstr "编辑服务器列表来源"
@@ -2591,6 +2626,14 @@ msgstr "无法交换客户端到那个文件。"
 #, c-format
 msgid "Could not save the amuleapi password: %s"
 msgstr "无法保存 amuleapi 密码：%s"
+
+#: src/ExternalConn.cpp
+msgid "One or more folders were outside the allowed remote directories and were left unchanged."
+msgstr ""
+
+#: src/ExternalConn.cpp
+msgid "The category folder is outside the allowed remote directories."
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "No such category."
@@ -3310,6 +3353,11 @@ msgstr "正在下载..."
 #: src/HTTPDownload.cpp
 msgid "HTTP download cancelled"
 msgstr "HTTP 下载已经取消"
+
+#: src/HTTPDownload.cpp
+#, c-format
+msgid "Refusing to download %s: only http and https URLs are supported."
+msgstr ""
 
 #: src/HTTPDownload.cpp
 #, c-format
@@ -5431,6 +5479,14 @@ msgid "Show how many of the files and folders in your shared folders the current
 msgstr "在上次扫描基础上显示当前模式会排除共享文件夹中多少个文件和文件夹。"
 
 #: src/muuli_wdr.cpp
+msgid "Folders the daemon allows remote changes in"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "(Read-only. Configured on the daemon; if empty, the daemon refuses every remote folder change.)"
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid "When the connected core's files live on a different machine, map a path prefix it reports to where that filesystem is reachable from here (a network share, say) so \"Open\" and \"Show in folder\" work."
 msgstr "当已连接核心的文件位于别的机器上时，将其报告的路径前缀映射到从此处可以访问到那个文件系统的地方（比如一个网络共享），这样“打开”和“显示在文件夹中”正常工作。"
 
@@ -5693,6 +5749,18 @@ msgstr "密码"
 #: src/muuli_wdr.cpp
 msgid "Require encrypted connections (rejects clients that cannot encrypt)"
 msgstr "要求加密的连接 （拒绝不能加密的客户端）"
+
+#: src/muuli_wdr.cpp
+msgid "Folders remote clients may use"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "(Remote clients may set the incoming, temp, shared and category folders only inside these. Empty means no remote folder change is allowed. Local changes here are never restricted.)"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Absolute path of a folder, e.g. /home/user/aMule. A remote client may then set any folder at or below it."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "aMule API server parameters"
@@ -6667,6 +6735,11 @@ msgstr[1] "发现损坏的数据块 (%d) 于%d段文件 %s - 文件结果校检�
 
 #: src/PartFile.cpp
 #, c-format
+msgid "'%s' does not match its file hash, and without the part hashset the corrupt part cannot be found. Waiting for the hashset."
+msgstr ""
+
+#: src/PartFile.cpp
+#, c-format
 msgid "Found completed part (%i) in %s"
 msgstr "发现了已完成的数据段 %i 在%s"
 
@@ -6775,6 +6848,11 @@ msgstr "TCP端口不可高于65532，因为服务器UDP端口值为TCP端口值+
 #, c-format
 msgid "Default port will be used (%d)"
 msgstr "缺省端口将被使用（%d）"
+
+#: src/Preferences.cpp
+#, c-format
+msgid "Ignoring a relative path in allowed-remote-dirs.dat (only absolute paths are accepted): %s"
+msgstr ""
 
 #: src/BandwidthLimitSlider.h
 msgid "Adjust the enabled limit from 1 KiB/s to line capacity."
@@ -6886,6 +6964,10 @@ msgid "The type of proxy you are connecting to"
 msgstr "正在连接的代理服务器类型"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid "Set in the daemon's own configuration (amule.conf); not editable remotely."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Failed to transfer data from Widget to Cfg with the ID %d and key %s"
 msgstr "通过ID %d和密匙%s把数据从小插件转移到Cfg失败"
@@ -6893,6 +6975,15 @@ msgstr "通过ID %d和密匙%s把数据从小插件转移到Cfg失败"
 #: src/PrefsUnifiedDlg.cpp
 msgid "No password set."
 msgstr "未设置密码。"
+
+#: src/PrefsUnifiedDlg.cpp
+msgid "That file does not look like ffprobe. Choose a binary named ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" banner, leave the field empty to auto-detect, or set the path directly in amule.conf."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "Invalid ffprobe path"
+msgstr "无效的文件名。"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The shared-file exclusion pattern is not a valid regular expression. The filter has been left disabled."
@@ -7342,6 +7433,19 @@ msgstr "已映射这个远程前缀。"
 #: src/PrefsUnifiedDlg.cpp
 msgid "Choose the local folder"
 msgstr "选择本地文件夹"
+
+#: src/PrefsUnifiedDlg.cpp
+msgid "Please enter an absolute path. A relative path would be resolved against the daemon's working directory, so it is not accepted."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
+msgid "Allowed folders for remote clients"
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "Choose a folder remote clients may use"
+msgstr "请选择下载文件夹"
 
 #: src/SearchDlg.cpp
 msgid "Clear Search History"
@@ -8213,6 +8317,11 @@ msgid "Discovered %u new shared file"
 msgid_plural "Discovered %u new shared files"
 msgstr[0] "发现了 %u 个新的共享文件"
 msgstr[1] "发现了 %u 个新的共享文件"
+
+#: src/SharedFileList.cpp
+#, c-format
+msgid "Refused to rename '%s' to '%s': the new name must be a plain file name, not a path."
+msgstr ""
 
 #: src/SharedFilePeersListCtrl.cpp src/SourceListCtrl.cpp
 msgid "User Name"
