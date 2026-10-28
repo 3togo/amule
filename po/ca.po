@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-24 07:47+0000\n"
+"PO-Revision-Date: 2026-10-28 08:19+0000\n"
 "Last-Translator: minterior <minterior@gmail.com>\n"
 "Language-Team: Català\n"
 "Language: ca\n"
@@ -202,9 +202,8 @@ msgid "Later"
 msgstr "Més tard"
 
 #: src/GuiEvents.cpp src/ExternalConn.cpp
-#, fuzzy
 msgid "The selected download has changed. Refresh and try again."
-msgstr "La baixada seleccionada ha canviat o s'està completant. Refresqueu i torneu-ho a provar."
+msgstr "La baixada seleccionada ha canviat. Refresqueu i torneu-ho a provar."
 
 #: src/GuiEvents.cpp src/amule-remote-gui.cpp
 msgid "The connected core does not support deleting complete files from disk."
@@ -2469,9 +2468,9 @@ msgid "FileHash not found: %s"
 msgstr "No s'ha trobat el resum del fitxer: %s"
 
 #: src/ExternalConn.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot cancel a hashing or finished download: %s"
-msgstr "No es pot cancel·lar una baixada acabada: %s"
+msgstr "No es pot cancel·lar una baixada acabada o en càlcul del hash: %s"
 
 #: src/ExternalConn.cpp
 msgid "The selected download has changed or is completing. Refresh and try again."
@@ -6148,19 +6147,19 @@ msgstr "Els missatges que continguin aquestes paraules seran filtrats i bloqueja
 
 #: src/muuli_wdr.cpp
 msgid "Enable advanced spam filter"
-msgstr ""
+msgstr "Activa el filtre avançat de missatges brossa"
 
 #: src/muuli_wdr.cpp
 msgid "Block unsolicited links and repeated messages from non-friends."
-msgstr ""
+msgstr "Bloqueja els enllaços no sol·licitats i els missatges repetits de qui no és a la llista d'amics."
 
 #: src/muuli_wdr.cpp
 msgid "Require a CAPTCHA for first messages from non-friends"
-msgstr ""
+msgstr "Demana un CAPTCHA als primers missatges de qui no és a la llista d'amics"
 
 #: src/muuli_wdr.cpp
 msgid "Withhold the message until the sender solves the challenge. Clients without CAPTCHA support cannot start a chat."
-msgstr ""
+msgstr "Reté el missatge fins que el remitent resol la prova. Els clients sense compatibilitat amb CAPTCHA no poden iniciar un xat."
 
 #: src/muuli_wdr.cpp
 msgid "Show received messages in the log"
@@ -7666,9 +7665,9 @@ msgid "ERROR: Socket invalid at timeout check"
 msgstr "ERROR: Sòcol invàlid en comprovar el temps d'espera"
 
 #: src/ServerConnect.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Connection attempt to %s (%s:%i) timed out; retrying without obfuscation."
-msgstr "L'intent de connexió a %s (%s:%i) ha excedit el temps."
+msgstr "L'intent de connexió a %s (%s:%i) ha excedit el temps; es torna a provar sense ofuscació."
 
 #: src/ServerConnect.cpp
 #, c-format
@@ -9407,14 +9406,14 @@ msgid "Hashset requested for unknown file: %s"
 msgstr "S'ha demanat un conjunt de resums d'un fitxer desconegut: %s"
 
 #: src/UploadDiskIOThread.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Could not start the upload disk readers: %s"
-msgstr "No s'ha pogut iniciar una cerca de Kad"
+msgstr "No s'han pogut iniciar els lectors de disc de pujades: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, c-format
 msgid "Upload disk reader error: %s"
-msgstr ""
+msgstr "Error del lector de disc de pujades: %s"
 
 #: src/UploadDiskIOThread.cpp
 #, c-format

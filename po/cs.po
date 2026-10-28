@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-26 13:07+0000\n"
+"PO-Revision-Date: 2026-10-28 08:19+0000\n"
 "Last-Translator: David Watzke <david@watzke.cz>\n"
 "Language-Team: cs <cs@li.org>\n"
 "Language: cs\n"
@@ -6165,15 +6165,15 @@ msgstr "Sem zadejte slova, podle kterých má aMule filtrovat a blokovat zprávy
 
 #: src/muuli_wdr.cpp
 msgid "Enable advanced spam filter"
-msgstr ""
+msgstr "Povolit pokročilý filtr spamu"
 
 #: src/muuli_wdr.cpp
 msgid "Block unsolicited links and repeated messages from non-friends."
-msgstr ""
+msgstr "Blokovat nevyžádané odkazy a opakované zprávy od těch kdo nejsou přátelé."
 
 #: src/muuli_wdr.cpp
 msgid "Require a CAPTCHA for first messages from non-friends"
-msgstr ""
+msgstr "Vyžadovat CAPTCHA u prvních zpráv od těch, kdo nejsou přátelé"
 
 #: src/muuli_wdr.cpp
 msgid "Withhold the message until the sender solves the challenge. Clients without CAPTCHA support cannot start a chat."

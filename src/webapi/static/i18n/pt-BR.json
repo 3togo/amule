@@ -1053,5 +1053,9 @@
   "prefs_sources_apply_first": "Aplique suas alterações primeiro",
   "prefs_sources_saved_help": "Baixa a partir das fontes salvas.",
   "prefs_sources_one_off": "URL de uso único",
-  "prefs_sources_download_once": "Baixar uma vez"
+  "prefs_sources_download_once": "Baixar uma vez",
+  "about_country_data": "Dados de IP para país",
+  "prefs_field_message_filter_advanced_spam_filter": "Habilitar filtro avançado de spam",
+  "prefs_field_message_filter_use_captchas": "Exigir CAPTCHA na primeira mensagem de quem não é amigo",
+  "prefs_field_message_filter_use_captchas_help": "As mensagens ficam ocultas até que o remetente resolva o desafio. Clientes sem suporte a CAPTCHA não conseguem iniciar um chat."
 }

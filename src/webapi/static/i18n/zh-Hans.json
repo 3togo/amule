@@ -22,5 +22,7 @@
   "prefs_sources_apply_first": "先应用你的更改",
   "prefs_field_servers_update_list": "更新服务器列表",
   "prefs_sources_one_off": "一次性URL",
-  "prefs_field_servers_update_urls": "服务器列表源URL（一行一个）"
+  "prefs_field_servers_update_urls": "服务器列表源URL（一行一个）",
+  "common_err_rate_limited": "请求次数过多。请稍后重试。",
+  "common_err_partfile_unsupported": "文件正在下载中，此时该操作不支持。"
 }
