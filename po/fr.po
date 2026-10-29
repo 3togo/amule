@@ -2679,6 +2679,10 @@ msgid "Media metadata extraction is disabled in preferences"
 msgstr "L'extraction des métadonnées multimédias est désactivée dans les préférences"
 
 #: src/ExternalConn.cpp
+msgid "This aMule has no media helper (amule-media-probe)"
+msgstr ""
+
+#: src/ExternalConn.cpp
 msgid "File is not eligible for media metadata extraction (not an audio/video file, or an incomplete download)"
 msgstr "Le fichier n'est pas éligible pour l'extraction des métadonnées multimédias (pas un fichier audio/vidéo, ou un téléchargement incomplet)"
 
@@ -8245,6 +8249,10 @@ msgstr "Répertoire partagé illisible, on passe : %s"
 #: src/SharedFileList.cpp
 msgid "Media metadata extraction is disabled in preferences, so there is nothing to re-extract."
 msgstr "L'extraction des métadonnées multimédias est désactivée dans les préférences, donc il n'y a rien à extraire à nouveau"
+
+#: src/SharedFileList.cpp
+msgid "This aMule has no media helper (amule-media-probe), so it cannot re-extract media metadata."
+msgstr ""
 
 #: src/SharedFileList.cpp
 #, c-format

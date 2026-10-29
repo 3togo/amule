@@ -2664,6 +2664,10 @@ msgid "Media metadata extraction is disabled in preferences"
 msgstr "首选项中禁用了媒体元数据提取"
 
 #: src/ExternalConn.cpp
+msgid "This aMule has no media helper (amule-media-probe)"
+msgstr ""
+
+#: src/ExternalConn.cpp
 msgid "File is not eligible for media metadata extraction (not an audio/video file, or an incomplete download)"
 msgstr "文件不满足媒体元数据提取要求（不是音/视频文件，或者是不完整的下载）"
 
@@ -8219,6 +8223,10 @@ msgstr "无法读取共享目录，跳过：%s"
 #: src/SharedFileList.cpp
 msgid "Media metadata extraction is disabled in preferences, so there is nothing to re-extract."
 msgstr "首选项中禁用了媒体元数据提取，因此没有要重新提取的信息。"
+
+#: src/SharedFileList.cpp
+msgid "This aMule has no media helper (amule-media-probe), so it cannot re-extract media metadata."
+msgstr ""
 
 #: src/SharedFileList.cpp
 #, c-format
