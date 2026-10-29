@@ -7013,9 +7013,9 @@ msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp
 msgid ""
-"Your Auto-update servers list is in blank.\n"
-"Please fill in at least one URL to point to a valid server.met file.\n"
-"Click on the button \"List\" by this checkbox to enter an URL."
+"Your server list sources are empty.\n"
+"Please add at least one URL of a valid server.met file.\n"
+"Click the \"Edit sources...\" button next to this checkbox to add one."
 msgstr ""
 
 #: src/PrefsUnifiedDlg.cpp

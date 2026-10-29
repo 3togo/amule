@@ -2046,9 +2046,9 @@ void PrefsUnifiedDlg::OnCheckBoxChange(wxCommandEvent &event)
 	case IDC_AUTOSERVER:
 		if (thePrefs::GetServerListURLs().empty() &&
 			CastChild(event.GetId(), wxCheckBox)->IsChecked()) {
-			wxMessageBox(_("Your Auto-update servers list is in blank.\nPlease fill in at least "
-				       "one URL to point to a valid server.met file.\nClick on the button "
-				       "\"List\" by this checkbox to enter an URL."),
+			wxMessageBox(_("Your server list sources are empty.\nPlease add at least one URL "
+				       "of a valid server.met file.\nClick the \"Edit sources...\" "
+				       "button next to this checkbox to add one."),
 				_("Message"),
 				wxOK | wxICON_INFORMATION);
 			CastChild(event.GetId(), wxCheckBox)->SetValue(false);
