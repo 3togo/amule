@@ -116,6 +116,9 @@ public:
 		//  * the dispatcher's whole-body ETag, computed by hashing `body`. There is none here, so
 		//    the handler builds one from size + mtime instead.
 		boost::optional<FileSource> file;
+		// False keeps the dispatcher from adding its whole-body ETag, for a body no client
+		// should revalidate, such as a metrics scrape.
+		bool etag = true;
 	};
 
 	using Handler = std::function<Response(const Request &)>;

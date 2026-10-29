@@ -1,6 +1,6 @@
 # amuleapi v1 — REST reference
 
-This document is the contract for every REST endpoint exposed by the `amuleapi` daemon under the `/api/v1/` prefix. For the SSE stream see [EVENTS.md](EVENTS.md). For first-run setup see [../QUICKSTART-AMULEAPI.md](../QUICKSTART-AMULEAPI.md).
+This document is the contract for every REST endpoint exposed by the `amuleapi` daemon under the `/api/v1/` prefix. For the SSE stream see [EVENTS.md](EVENTS.md). For first-run setup see [../QUICKSTART-AMULEAPI.md](../QUICKSTART-AMULEAPI.md). The optional [Prometheus metrics endpoint](#get-metrics) lives at `/metrics`.
 
 The API is versioned in the path. **`/api/v1/` is frozen**: anything that could break a conformant client is deferred to the next version rather than applied in place, and this document is its contract. See [Backward compatibility](#backward-compatibility) for what conformant means and what may still change.
 
@@ -3490,3 +3490,50 @@ A client that follows those rules keeps working across every `/api/v1/` release.
 Corrections that cannot be made additively wait for `/api/v2/`. There is no alias window and no deprecation period inside a version, which is what makes the guarantee worth having.
 
 `POST /api/v1/auth/login` returns no token in the response body unless `?include_token=true` is given. That is the frozen shape.
+
+## GET /metrics
+
+Optional Prometheus text 0.0.4 exposition, outside the `/api/v1` namespace. `BasePath` applies as for the API. `GET` and `HEAD` are supported; other methods return 405.
+
+Metrics are off by default. To turn them on, set `[Metrics]/Enabled=1` and a dedicated `[Metrics]/Token` of 32-256 characters from the RFC 6750 bearer-token alphabet. While metrics are off, `/metrics` returns 404, also when a static frontend is served. If `Enabled=1` and the token is empty or malformed, amuleapi logs a warning without the token, keeps metrics off and starts normally. This is a setting of amuleapi only, not an EC capability.
+
+Send `Authorization: Bearer <token>`. JWTs and session cookies are not accepted. A missing or wrong token returns 401 with `WWW-Authenticate: Bearer realm="metrics"`. A separate limiter, per socket peer address, locks metrics out after 30 failures in 60 seconds for 300 seconds and returns 429 with `Retry-After`. `[Metrics]/FailureThreshold`, `FailureWindowSeconds` and `LockoutSeconds` change these limits (positive integers). This limiter and the API's JWT limiter do not affect each other. Clients behind one proxy share the same metrics limit.
+
+A successful response has `Content-Type: text/plain; version=0.0.4; charset=utf-8` and `Cache-Control: no-store`, no ETag, and never returns 304.
+
+Each scrape reads a compact snapshot that amuleapi publishes after a successful refresh. A scrape makes **no EC requests**, reads no files and does not walk the file or client lists. Labels are bounded: no file names, hashes, addresses, or client or server identifiers. Samples have no explicit timestamps.
+
+| Metric | Type / labels | Meaning |
+|---|---|---|
+| `amule_build_info` | gauge, `version`, `daemon_version` | amuleapi binary version and daemon version from the EC handshake (empty before the first successful refresh); value 1 |
+| `amule_ec_connected` | gauge | Last EC refresh succeeded (0/1) |
+| `amule_snapshot_timestamp_seconds` | gauge | Unix time of last successful refresh; absent before the first |
+| `amule_network_connected` | gauge, `network="ed2k\|kad"` | Network connection state (0/1) |
+| `amule_ed2k_high_id` | gauge | HighID (0/1), only while connected |
+| `amule_kad_firewalled` | gauge, `protocol="tcp\|udp"` | Firewall verdict, only when available |
+| `amule_transfer_rate_bytes_per_second` | gauge, `direction="upload\|download"`, `kind="data\|overhead"` | Data and additional overhead rates |
+| `amule_speed_limit_bytes_per_second` | gauge, `direction` | Configured limit; zero means unlimited |
+| `amule_lifetime_transferred_bytes_total` | counter, `direction` | Persisted lifetime bytes from `statistics.dat` |
+| `amule_transferred_bytes_total` | counter, `direction` | Exact session bytes; resets on daemon restart |
+| `amule_active_uploads` | gauge | Cached clients whose upload state is uploading |
+| `amule_active_connections` | gauge | Active daemon connections; omitted on older daemons |
+| `amule_uptime_seconds` | gauge | Daemon uptime; omitted on older daemons |
+| `amule_servers` | gauge | Cached server-list size |
+| `amule_connected_server_users` | gauge | Users on the connected eD2k server; omitted while disconnected or absent from the server cache |
+| `amule_upload_queue_length` | gauge | Waiting upload clients |
+| `amule_sources_found` | gauge | Download sources found |
+| `amule_shared_files` | gauge | Daemon's shared-file count |
+| `amule_banned_clients` | gauge | Currently banned clients |
+| `amule_downloads` | gauge, `status` | Download rows per status, including completed rows awaiting removal |
+| `amule_disk_free_bytes` | gauge, `dir="temp\|incoming"` | Filesystem free space; unknown values omitted |
+| `amule_ed2k_network_users`, `amule_ed2k_network_files` | gauge | Totals across the known server list, only while connected |
+| `amule_kad_network_users`, `amule_kad_network_files` | gauge | Network estimates, only while connected |
+| `amule_kad_network_nodes` | gauge | Local routing-table size, only while connected |
+| `amule_kad_indexed` | gauge, `type="sources\|keywords\|notes"` | Locally indexed item counts |
+| `amule_kad_index_load` | gauge | Daemon-reported index load, separate from item counts |
+
+Download status labels are `downloading`, `waiting`, `hashing`, `erroneous`, `insufficient_disk`, `paused`, `allocating`, `stopped`, `completing`, `completed` and `unknown`. Every status appears, also with a zero count; a status amuleapi does not know counts as `unknown`. An older daemon that does not send a value gets no series for it, while a real zero stays zero. Lifetime counters can go down after a statistics reset or a profile change; `rate()` handles such resets.
+
+Before the first successful refresh, the output holds only `amule_build_info` and `amule_ec_connected 0`. After a failed refresh it also keeps the last snapshot timestamp, but leaves out all daemon measurements. A statistics, file-update or preferences request answered with `EC_OP_FAILED` counts as a failed refresh, even if the EC connection stays open. These responses are still HTTP 200: Prometheus `up` shows the health of the scrape, while `amule_ec_connected` and `time() - amule_snapshot_timestamp_seconds` show the health and age of the refresh. A refresh that hangs keeps the last published state, so monitor the age as well as the connection. When the EC connection drops, amuleapi exits as before, and the scrape itself fails.
+
+Per-file labels, OpenMetrics negotiation and OTLP push are not in scope. See the [quickstart](../QUICKSTART-AMULEAPI.md#prometheus-metrics) for Prometheus and OpenTelemetry Collector configuration.
