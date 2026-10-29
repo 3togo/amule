@@ -83,7 +83,7 @@ without sending an unsupported response. The receive and response path is in
 [`src/ClientUDPSocket.cpp`](../src/ClientUDPSocket.cpp), with the limiter policy
 in [`src/NatRendezvousPolicy.h`](../src/NatRendezvousPolicy.h).
 
-## Key frame (QUIC datagram obfuscation)
+## Key frame (QUIC and uTP datagram obfuscation)
 
 A key frame tells the receiver which user hash to obfuscate its datagrams to the sender with:
 
@@ -121,8 +121,33 @@ ALPN from the path. eMuleAI does not require it: its QUIC receiver drops a frame
 matches. CAPS and CAPS_ACK are obfuscated with the recipient hash when the public-IP and obfuscation
 prerequisites are met.
 
+In uTP builds, key frames shorten the plaintext start of a uTP stream. A stream used to send its SYN,
+SYN-ACK, hello and early STATEs in the clear, because its crypt parameters were set only at the hello.
+The same prerequisites apply, and aMule's own key frame never leaves in the clear:
+
+- **Dialling.** A dial that is obfuscated (the peer's hash and crypt support are known) sends aMule's key
+  frame, obfuscated with the peer's hash, immediately before the SYN, at most once per endpoint every
+  10 s. A plain dial sends no key frame.
+- **Accepting.** A key frame from any endpoint is held for 5 s (at most 256 endpoints) for the next SYN
+  from that endpoint. A live server-vouched hash for the endpoint outranks it, and conflicting vouchers
+  key nothing. With a key, the SYN-ACK (which libutp sends before the stream is accepted) and every frame
+  until the hello are obfuscated with it. A key never makes the stream count as obfuscated for
+  "require obfuscation": that still depends on how the peer's SYN arrived.
+- **Answering.** A plain SYN from an endpoint a rendezvous announced, with a key, is preceded by aMule's
+  key frame (once per endpoint every 10 s), so a dialler that did not know aMule's hash can switch.
+- **Switching.** A key frame from the peer of a plain dial still in its handshake keys that dial's later
+  frames, with the server-vouched hash when there is one, else with the announced hash. This covers the
+  ed2k-server punch, where both dials are plain but each side has the other's `0x61` hash.
+
+In every case the hello replaces the key-frame hash with the crypt parameters it establishes.
+
+A key frame is queued only while it can be obfuscated, and it is dropped rather than sent plain if
+obfuscation lapses before it leaves (the public IP lost in between).
+Ordinary client UDP keeps its existing plain fallback.
+
 The decisions are in [`src/NatKeyFrame.h`](../src/NatKeyFrame.h), driven from
-[`src/ClientUDPSocket.cpp`](../src/ClientUDPSocket.cpp). uTP does not use key frames yet.
+[`src/ClientUDPSocket.cpp`](../src/ClientUDPSocket.cpp) and
+[`src/UtpLibraryAdapter.cpp`](../src/UtpLibraryAdapter.cpp).
 
 ## Scope and interoperability status
 
