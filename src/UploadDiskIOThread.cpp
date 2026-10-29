@@ -481,7 +481,7 @@ std::unique_ptr<ReadRequest_Struct> CUploadDiskIOThread::PrepareRead(uint32 clie
 		}
 		req->pFileStruct->lastRead = GetTickCount64();
 		return req;
-	} catch (const wxString &DEBUG_ONLY(error)) {
+	} catch (const wxString &error) {
 		AddDebugLogLineN(logClient,
 			CFormat("CUploadDiskIOThread: error for client '%s': %s") % client->GetUserName() %
 				error);

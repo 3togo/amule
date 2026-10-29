@@ -309,12 +309,8 @@ PrefsPage pages[] = { { wxTRANSLATE("General"), PreferencesGeneralTab, 13, "pref
 	// Hidden when ENABLE_IP2COUNTRY is off: builds without libmaxminddb cannot use it.
 	{ wxTRANSLATE("IP2Country"), PreferencesIP2CountryTab, 13, "prefs_ip2country" },
 #endif
-	{ wxTRANSLATE("Advanced"), PreferencesaMuleTweaksTab, 12, "prefs_advanced" }
-#ifdef __DEBUG__
-	,
-	{ wxTRANSLATE("Debugging"), PreferencesDebug, 25, "prefs_debug" }
-#endif
-};
+	{ wxTRANSLATE("Advanced"), PreferencesaMuleTweaksTab, 12, "prefs_advanced" },
+	{ wxTRANSLATE("Debugging"), PreferencesDebug, 25, "prefs_debug" } };
 
 PrefsUnifiedDlg::PrefsUnifiedDlg(wxWindow *parent)
 : wxDialog(parent,
@@ -565,9 +561,7 @@ PrefsUnifiedDlg::PrefsUnifiedDlg(wxWindow *parent)
 			CastChild(IDC_PREVENT_SLEEP, wxCheckBox)->Enable(false);
 			thePrefs::SetPreventSleepWhileDownloading(false);
 #endif
-		}
-#ifdef __DEBUG__
-		else if (pages[i].m_function == PreferencesDebug) {
+		} else if (pages[i].m_function == PreferencesDebug) {
 			int count = theLogger.GetDebugCategoryCount();
 			wxCheckListBox *list = CastChild(ID_DEBUGCATS, wxCheckListBox);
 
@@ -575,7 +569,6 @@ PrefsUnifiedDlg::PrefsUnifiedDlg(wxWindow *parent)
 				list->Append(theLogger.GetDebugCategory(j).GetName());
 			}
 		}
-#endif
 
 		// Preserve the controls' natural size as the scrollable content size without
 		// imposing it on the dialog's minimum size.
@@ -1102,7 +1095,6 @@ bool PrefsUnifiedDlg::TransferToWindow()
 	UpdateAddressFamiliesControls();
 #endif
 
-#ifdef __DEBUG__
 	// Set debugging toggles
 	int count = theLogger.GetDebugCategoryCount();
 	wxCheckListBox *list = CastChild(ID_DEBUGCATS, wxCheckListBox);
@@ -1110,7 +1102,6 @@ bool PrefsUnifiedDlg::TransferToWindow()
 	for (int i = 0; i < count; i++) {
 		list->Check(i, theLogger.GetDebugCategory(i).IsEnabled());
 	}
-#endif
 
 	m_verticalToolbar = thePrefs::VerticalToolbar();
 	m_toolbarOrientationChanged = false;
@@ -1170,7 +1161,9 @@ bool PrefsUnifiedDlg::TransferFromWindow()
 	// telling once, after the loop above has updated acrStat.
 	theApp->amuledlg->m_kademliawnd->SetGraphColors();
 
-#ifdef __DEBUG__
+	thePrefs::SetVerbose(thePrefs::GetVerbose());
+	thePrefs::SetVerboseLogfile(thePrefs::GetVerboseLogfile());
+
 	// Get debugging toggles
 	int count = theLogger.GetDebugCategoryCount();
 	wxCheckListBox *list = CastChild(ID_DEBUGCATS, wxCheckListBox);
@@ -1178,7 +1171,6 @@ bool PrefsUnifiedDlg::TransferFromWindow()
 	for (int i = 0; i < count; i++) {
 		theLogger.SetEnabled(theLogger.GetDebugCategory(i).GetType(), list->IsChecked(i));
 	}
-#endif
 
 	thePrefs::SetShowRatesOnTitle(
 		CastChild(IDC_SHOWRATEONTITLE, wxCheckBox)->GetValue()

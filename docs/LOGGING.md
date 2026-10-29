@@ -17,7 +17,8 @@ including blank lines inside a message and records that are entirely blank.
 
 The severity takes five columns. The levels are TRACE, DEBUG, INFO, WARN and ERROR.
 Ordinary core messages have no subsystem tag; named debug categories and explicit
-subsystems keep their tags. There is no runtime level threshold.
+subsystems keep their tags. There is no runtime level threshold; debug categories are
+turned on as described in [Debug logging](README.md#debug-logging).
 
 Severity, category and status-bar visibility are independent. `AddLogLineC` and
 `AddDebugLogLineC` calls stay INFO until each one gets an explicit severity: their
