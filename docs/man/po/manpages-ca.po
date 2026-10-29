@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2026-10-18 15:44+0200\n"
-"PO-Revision-Date: 2026-10-22 19:17+0000\n"
+"PO-Revision-Date: 2026-10-29 00:16+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
 "Language: ca\n"
@@ -917,26 +917,25 @@ msgstr "B<[ -t> I<E<lt>numE<gt>>, B<--category>=I<E<lt>numE<gt>> B<]>"
 
 #. type: TP
 #: amuled.1.in
-#, fuzzy, no-wrap
-#| msgid "I<~/.aMule/remote.conf>"
+#, no-wrap
 msgid "I<~/.aMule/allowed-remote-dirs.dat>"
-msgstr "I<~/.aMule/remote.conf>"
+msgstr "I<~/.aMule/allowed-remote-dirs.dat>"
 
 #. type: Plain text
 #: amuled.1.in
 msgid "The folders a remote EC or amuleapi client may point the incoming, temporary, shared or category download folders at, one absolute path per line. Empty or absent (the default) means every such remote folder change is refused. On a daemon-only install, such as a container or the Android port with no monolithic aMule to edit the list in its GUI, create or edit this file and restart B<amuled> to allow remote folder changes; relative lines are ignored."
-msgstr ""
+msgstr "Les carpetes cap a les quals un client EC o amuleapi remot pot fer apuntar les carpetes de baixada d'entrada, temporal, compartides o de categoria, un camí absolut per línia. Si és buit o no existeix (el valor predeterminat), es rebutja qualsevol canvi remot d'aquestes carpetes. En una instal·lació només amb el dimoni, com ara un contenidor o el port d'Android, sense un aMule monolític on editar la llista a la seva interfície gràfica, creeu o editeu aquest fitxer i reinicieu B<amuled> per permetre els canvis remots de carpetes; les línies relatives s'ignoren."
 
 #. type: SH
 #: amuled.1.in
 #, no-wrap
 msgid "MEDIA METADATA"
-msgstr ""
+msgstr "METADADES MULTIMÈDIA"
 
 #. type: Plain text
 #: amuled.1.in
 msgid "B<amuled> runs B<ffprobe> on each received file to extract the length, bitrate and codec tags it then publishes to the network. This is on by default (B<Enabled=1> under B<[MediaMetadata]> in I<amule.conf>); set B<Enabled=0> there and restart to turn it off. The B<ffprobe> binary is chosen by B<FFProbePath> in the same section and is local daemon configuration; it cannot be set over EC or amuleapi."
-msgstr ""
+msgstr "B<amuled> executa B<ffprobe> sobre cada fitxer rebut per extreure'n la durada, la taxa de bits i les etiquetes de còdec que després publica a la xarxa. Està activat de manera predeterminada (B<Enabled=1> a la secció B<[MediaMetadata]> del fitxer I<amule.conf>); definiu-hi B<Enabled=0> i reinicieu per desactivar-ho. El binari B<ffprobe> es tria amb B<FFProbePath> a la mateixa secció i és configuració local del dimoni; no es pot definir mitjançant EC ni amuleapi."
 
 #. type: TH
 #: amulegui.1.in

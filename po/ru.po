@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-27 11:03+0000\n"
+"PO-Revision-Date: 2026-10-29 00:16+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
 "Language: ru\n"
@@ -1299,10 +1299,14 @@ msgstr "*** CAPTCHA не пройдена; попытки исчерпаны."
 msgid "All"
 msgstr "Все"
 
+#: src/amule-remote-gui.cpp src/muuli_wdr.cpp
+msgid "To allow a folder, add it to allowed-remote-dirs.dat in the daemon's configuration folder, one absolute path per line, then restart the daemon."
+msgstr ""
+
 #: src/amule-remote-gui.cpp
 #, c-format
 msgid "The daemon refused these folders because they are outside the folders it allows (configured on the daemon):%s"
-msgstr ""
+msgstr "Демон отклонил эти папки, так как они находятся вне разрешённых им папок (настраивается на стороне демона):%s"
 
 #: src/amule-remote-gui.cpp
 msgid "The daemon could not apply the connection port changes."
@@ -1314,7 +1318,7 @@ msgstr "не читается"
 
 #: src/amule-remote-gui.cpp
 msgid "outside the folders the daemon allows (configured on the daemon)"
-msgstr ""
+msgstr "вне папок, разрешённых демоном (настраивается на стороне демона)"
 
 #: src/amule-remote-gui.cpp
 msgid "not found"
@@ -1344,14 +1348,13 @@ msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "Не удаётся создать каталог «%s» для категории «%s», сохраняется каталог «%s»."
 
 #: src/amule-remote-gui.cpp
-#, fuzzy
 msgid "the daemon refused the request"
-msgstr "Демон отклонил запрос."
+msgstr "демон отклонил запрос"
 
 #: src/amule-remote-gui.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "The daemon refused the category: %s"
-msgstr "Демон отклонил запрос."
+msgstr "Демон отклонил категорию: %s"
 
 #: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
 msgid "Invalid URL"
@@ -2376,19 +2379,19 @@ msgstr "Неверная ссылка eD2k! ОШИБКА: %s"
 
 #: src/ECSpecialMuleTags.cpp
 msgid "Refused a remote request to set the web-server template: the value must be a plain template name, not a path."
-msgstr ""
+msgstr "Отклонён удалённый запрос на установку шаблона веб-сервера: значение должно быть простым именем шаблона, а не путём."
 
 #: src/ECSpecialMuleTags.cpp
 msgid "Refused a remote request to change the online-signature folder: it can only be set in the daemon's own configuration."
-msgstr ""
+msgstr "Отклонён удалённый запрос на изменение папки сетевой подписи: её можно задать только в собственной конфигурации демона."
 
 #: src/ECSpecialMuleTags.cpp
 msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
-msgstr ""
+msgstr "Отклонён удалённый запрос на изменение пути к ffprobe: его можно задать только в собственной конфигурации демона."
 
 #: src/ECSpecialMuleTags.cpp
 msgid "Refused a remote request to change the follow-symlinks-in-shares setting: it can only be set in the daemon's own configuration."
-msgstr ""
+msgstr "Отклонён удалённый запрос на изменение параметра перехода по символическим ссылкам в общих папках: его можно задать только в собственной конфигурации демона."
 
 #: src/EditServerListDlg.cpp
 msgid "Edit server list sources"
@@ -2422,6 +2425,11 @@ msgstr "Внешнее соединение закрыто."
 #: src/ExternalConn.cpp
 msgid "External connections disabled due to empty password!"
 msgstr "Внешние подключения отключены из-за отсутствия пароля!"
+
+#: src/ExternalConn.cpp
+#, c-format
+msgid "Remote clients cannot change folders: no folder is listed in %s"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "External connections disabled in config file"
@@ -2654,11 +2662,11 @@ msgstr "Не удалось сохранить пароль amuleapi: %s"
 
 #: src/ExternalConn.cpp
 msgid "One or more folders were outside the allowed remote directories and were left unchanged."
-msgstr ""
+msgstr "Одна или несколько папок находились вне разрешённых удалённых каталогов и остались без изменений."
 
 #: src/ExternalConn.cpp
 msgid "The category folder is outside the allowed remote directories."
-msgstr ""
+msgstr "Папка категории находится вне разрешённых удалённых каталогов."
 
 #: src/ExternalConn.cpp
 msgid "No such category."
@@ -3382,7 +3390,7 @@ msgstr "Загрузка по HTTP отменена"
 #: src/HTTPDownload.cpp
 #, c-format
 msgid "Refusing to download %s: only http and https URLs are supported."
-msgstr ""
+msgstr "Отказ от скачивания %s: поддерживаются только URL-адреса http и https."
 
 #: src/HTTPDownload.cpp
 #, c-format
@@ -5522,11 +5530,11 @@ msgstr "Показать, сколько файлов и папок в ваши�
 
 #: src/muuli_wdr.cpp
 msgid "Folders the daemon allows remote changes in"
-msgstr ""
+msgstr "Папки, в которых демон разрешает удалённые изменения"
 
 #: src/muuli_wdr.cpp
 msgid "(Read-only. Configured on the daemon; if empty, the daemon refuses every remote folder change.)"
-msgstr ""
+msgstr "(Только для чтения. Настраивается на стороне демона; если пусто, демон отклоняет любые удалённые изменения папок.)"
 
 #: src/muuli_wdr.cpp
 msgid "When the connected core's files live on a different machine, map a path prefix it reports to where that filesystem is reachable from here (a network share, say) so \"Open\" and \"Show in folder\" work."
@@ -5797,15 +5805,15 @@ msgstr "Требовать шифрованные соединения (откл
 
 #: src/muuli_wdr.cpp
 msgid "Folders remote clients may use"
-msgstr ""
+msgstr "Папки, доступные удалённым клиентам"
 
 #: src/muuli_wdr.cpp
 msgid "(Remote clients may set the incoming, temp, shared and category folders only inside these. Empty means no remote folder change is allowed. Local changes here are never restricted.)"
-msgstr ""
+msgstr "(Удалённые клиенты могут задавать папки входящих файлов, временных файлов, общих файлов и категорий только внутри этих папок. Пустое значение означает, что удалённые изменения папок запрещены. Локальные изменения здесь никогда не ограничиваются.)"
 
 #: src/muuli_wdr.cpp
 msgid "Absolute path of a folder, e.g. /home/user/aMule. A remote client may then set any folder at or below it."
-msgstr ""
+msgstr "Абсолютный путь к папке, например /home/user/aMule. После этого удалённый клиент может задавать любую папку на этом уровне или ниже."
 
 #: src/muuli_wdr.cpp
 msgid "aMule API server parameters"
@@ -6790,7 +6798,7 @@ msgstr[2] "Найдена повреждённая часть (%d) в %d час�
 #: src/PartFile.cpp
 #, c-format
 msgid "'%s' does not match its file hash, and without the part hashset the corrupt part cannot be found. Waiting for the hashset."
-msgstr ""
+msgstr "«%s» не соответствует своему хешу файла, а без хеш-набора частей невозможно найти повреждённую часть. Ожидание хеш-набора."
 
 #: src/PartFile.cpp
 #, c-format
@@ -6906,7 +6914,7 @@ msgstr "Используется порт по умолчанию (%d)"
 #: src/Preferences.cpp
 #, c-format
 msgid "Ignoring a relative path in allowed-remote-dirs.dat (only absolute paths are accepted): %s"
-msgstr ""
+msgstr "Относительный путь в allowed-remote-dirs.dat игнорируется (принимаются только абсолютные пути): %s"
 
 #: src/BandwidthLimitSlider.h
 msgid "Adjust the enabled limit from 1 KiB/s to line capacity."
@@ -7019,7 +7027,7 @@ msgstr "Тип прокси-сервера, который вы использу
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Set in the daemon's own configuration (amule.conf); not editable remotely."
-msgstr ""
+msgstr "Задаётся в собственной конфигурации демона (amule.conf); недоступно для удалённого изменения."
 
 #: src/PrefsUnifiedDlg.cpp
 #, c-format
@@ -7032,12 +7040,11 @@ msgstr "Пароль не задан."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "That file does not look like ffprobe. Choose a binary named ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" banner, leave the field empty to auto-detect, or set the path directly in amule.conf."
-msgstr ""
+msgstr "Этот файл не похож на ffprobe. Выберите исполняемый файл с именем ffprobe (или ffprobe.exe), который выводит строку «ffprobe version», оставьте поле пустым для автоопределения либо задайте путь напрямую в amule.conf."
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Invalid ffprobe path"
-msgstr "Неверное имя файла."
+msgstr "Неверный путь к ffprobe"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The shared-file exclusion pattern is not a valid regular expression. The filter has been left disabled."
@@ -7498,16 +7505,15 @@ msgstr "Выберите локальную папку"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Please enter an absolute path. A relative path would be resolved against the daemon's working directory, so it is not accepted."
-msgstr ""
+msgstr "Введите абсолютный путь. Относительный путь разрешался бы относительно рабочего каталога демона, поэтому не принимается."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Allowed folders for remote clients"
-msgstr ""
+msgstr "Разрешённые папки для удалённых клиентов"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Choose a folder remote clients may use"
-msgstr "Выберите каталог для входящих файлов"
+msgstr "Выберите папку, доступную удалённым клиентам"
 
 #: src/SearchDlg.cpp
 msgid "Clear Search History"
@@ -8398,7 +8404,7 @@ msgstr[2] "Обнаружено %u новых публикуемых файло�
 #: src/SharedFileList.cpp
 #, c-format
 msgid "Refused to rename '%s' to '%s': the new name must be a plain file name, not a path."
-msgstr ""
+msgstr "Отказано в переименовании «%s» в «%s»: новое имя должно быть простым именем файла, а не путём."
 
 #: src/SharedFilePeersListCtrl.cpp src/SourceListCtrl.cpp
 msgid "User Name"

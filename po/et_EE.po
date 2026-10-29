@@ -1284,6 +1284,10 @@ msgstr ""
 msgid "All"
 msgstr "Kõik"
 
+#: src/amule-remote-gui.cpp src/muuli_wdr.cpp
+msgid "To allow a folder, add it to allowed-remote-dirs.dat in the daemon's configuration folder, one absolute path per line, then restart the daemon."
+msgstr ""
+
 #: src/amule-remote-gui.cpp
 #, c-format
 msgid "The daemon refused these folders because they are outside the folders it allows (configured on the daemon):%s"
@@ -2399,6 +2403,11 @@ msgstr "Välisühendus suleti"
 #: src/ExternalConn.cpp
 msgid "External connections disabled due to empty password!"
 msgstr "Välisühendused on tühja parooli tõttu mitteaktiivsed"
+
+#: src/ExternalConn.cpp
+#, c-format
+msgid "Remote clients cannot change folders: no folder is listed in %s"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "External connections disabled in config file"
