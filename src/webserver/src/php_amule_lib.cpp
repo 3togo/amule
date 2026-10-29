@@ -30,6 +30,7 @@
 #include "config.h"
 
 #include "WebServer.h"
+#include "LogText.h"
 #include <ec/cpp/ECSpecialTags.h>
 
 #include "php_syntree.h"
@@ -716,7 +717,8 @@ void php_get_log(PHP_VALUE_NODE *result)
 	const CECPacket *response =
 		CPhPLibContext::g_curr_context->WebServer()->webInterface->SendRecvMsg_v2(&req);
 	if (response) {
-		wxString serverInfoString(_SpecialChars(response->GetFirstTagSafe()->GetStringData()));
+		wxString serverInfoString(
+			_SpecialChars(ECLogToText(response->GetFirstTagSafe()->GetStringData())));
 		delete response;
 		result->type = PHP_VAL_STRING;
 		result->str_val = strdup((const char *)unicode2UTF8(serverInfoString));

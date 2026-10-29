@@ -27,6 +27,7 @@
 // transformations in isolation.
 
 #include "Refresher.h"
+#include "../LogText.h"
 
 #include "ClientTagNames.h" // Needed for the shared client-tag token decoders
 
@@ -1585,7 +1586,7 @@ void ParseAmuleLogFromPacket(const CECPacket *resp, std::vector<std::string> &ou
 		const CECTag *t = &*it;
 		if (t->GetTagName() != EC_TAG_STRING)
 			continue;
-		out_new_lines.emplace_back(t->GetStringData().utf8_str());
+		out_new_lines.emplace_back(ECLogToText(t->GetStringData()).utf8_str());
 	}
 }
 

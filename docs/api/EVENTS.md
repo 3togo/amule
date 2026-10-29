@@ -601,7 +601,7 @@ Subscribe to this channel alone for a thin "header bar" client that just wants c
 Emitted when the amuled log buffer appends new lines.
 
 ```json
-{ "lines": ["2026-06-19 11:00:00: line one", "2026-06-19 11:00:01: line two"] }
+{ "lines": ["2026-06-19T11:00:00.123+02:00 INFO  line one", "2026-06-19T11:00:01.004+02:00 INFO  line two"] }
 ```
 
 Only the amuled log has a live channel; the server_info buffer has no SSE feed and is fetched by polling [`GET /logs/serverinfo`](REFERENCE.md#get-apiv1logsserverinfo). Multiple lines may be batched into a single event when the buffer landed several lines between refresher ticks. The feed is append-only with one exception: [`DELETE /logs/amule`](REFERENCE.md#delete-apiv1logsamule) empties the buffer, and rather than a log event that would leave the cursor pointing into a buffer that no longer exists, every subscriber gets a [`resync`](#resync-frame) with `reason: "log_cleared"` and re-reads. Any client can clear the log, so this can arrive without your having asked for it. The [Bootstrap example](#bootstrap-snapshot--stream) doesn't pull `/logs/amule` — fetch it in step 2 if your UI shows historical log lines, otherwise treat `log_appended` as a live-only feed.

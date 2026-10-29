@@ -127,7 +127,17 @@ void CLogger::AddLogLine(const wxString &DEBUG_ONLY(file),
 	bool toStdout,
 	bool toGUI)
 {
+#ifdef __DEBUG__
 	wxString msg(str);
+#else
+	const wxString &msg = str;
+#endif
+	wxString category =
+#ifdef CLIENT_GUI
+		"remote-GUI";
+#else
+		"";
+#endif
 	// handle Debug messages
 	if (type != logStandard) {
 		if (!critical && !IsEnabled(type)) {
@@ -143,7 +153,7 @@ void CLogger::AddLogLine(const wxString &DEBUG_ONLY(file),
 			const CDebugCategory &cat = g_debugcats[index];
 			wxASSERT(type == cat.GetType());
 
-			msg = cat.GetName() + ": " + msg;
+			category = cat.GetName();
 		} else {
 			wxFAIL;
 		}
@@ -156,13 +166,33 @@ void CLogger::AddLogLine(const wxString &DEBUG_ONLY(file),
 	}
 #endif
 
+	// Legacy C means status-bar visibility, not severity. Preserve it as INFO
+	// until call sites are explicitly classified; ordinary debug traces are DEBUG.
+	Log(type != logStandard && !critical ? LogLevel::Debug : LogLevel::Info,
+		category,
+		msg,
+		critical,
+		toStdout,
+		toGUI);
+}
+
+void CLogger::Log(LogLevel level,
+	const wxString &category,
+	const wxString &message,
+	bool toStatusBar,
+	bool toStdout,
+	bool toGUI)
+{
+	Log(CLogRecord(level, category, message), toStatusBar, toStdout, toGUI);
+}
+
+void CLogger::Log(const CLogRecord &record, bool toStatusBar, bool toStdout, bool toGUI)
+{
 	if (toGUI && !wxThread::IsMain()) {
-		// put to background
-		CLoggingEvent Event(critical, toStdout, toGUI, msg);
-		AddPendingEvent(Event);
+		CLoggingEvent event(toStatusBar, toStdout, toGUI, record);
+		AddPendingEvent(event);
 	} else {
-		// Try to handle events immediately when possible (to save to file).
-		DoLines(msg, critical, toStdout, toGUI);
+		DoLines(record, toStatusBar, toStdout, toGUI);
 	}
 }
 
@@ -213,98 +243,55 @@ void CLogger::CloseLogfile()
 
 void CLogger::OnLoggingEvent(class CLoggingEvent &evt)
 {
-	DoLines(evt.Message(), evt.IsCritical(), evt.ToStdout(), evt.ToGUI());
+	DoLines(evt.Record(), evt.IsCritical(), evt.ToStdout(), evt.ToGUI());
 }
 
-void CLogger::DoLines(const wxString &lines, bool critical, bool toStdout, bool toGUI)
+void CLogger::DoLines(const CLogRecord &record, bool critical, bool toStdout, bool toGUI)
 {
-	// Remove newspace at end
-	wxString bufferline = lines.Strip(wxString::trailing);
-
-	wxString stamp = wxDateTime::Now().FormatISODate() + " " + wxDateTime::Now().FormatISOTime()
-#ifdef CLIENT_GUI
-			 + " (remote-GUI): ";
-#else
-			 + ": ";
-#endif
-
-	// critical lines get a ! prepended, ordinary lines a blank
-	// logfile-only lines get a . to prevent transmission on EC
-	wxString prefix = !toGUI ? "." : (critical ? "!" : " ");
-
-	if (bufferline.IsEmpty()) {
-		// If it's empty we just write a blank line with no timestamp.
-		DoLine(" \n", toStdout, toGUI);
-	} else {
-		// Split multi-line messages into individual lines
-		wxStringTokenizer tokens(bufferline, "\n");
-		while (tokens.HasMoreTokens()) {
-			wxString fullline = prefix + stamp + tokens.GetNextToken() + "\n";
-			DoLine(fullline, toStdout, toGUI);
-		}
+	const wxString lines = FormatLogLines(record);
+	wxStringTokenizer tokens(lines, "\n", wxTOKEN_RET_EMPTY);
+	while (tokens.HasMoreTokens()) {
+		DoLine(tokens.GetNextToken() + "\n", critical, toStdout, toGUI);
 	}
 }
 
-void CLogger::DoLine(const wxString &line, bool toStdout, bool GUI_ONLY(toGUI))
+void CLogger::DoLine(const wxString &line, bool toStatusBar, bool toStdout, bool toGUI)
 {
 	{
 		wxMutexLocker lock(m_lineLock);
 		++m_count;
 
-		m_ApplogBuf += line;
+		m_ApplogBuf += EncodeLogFileLine(line, toStatusBar, toGUI);
 		FlushApplog();
 
 		if (m_StdoutLog || toStdout) {
-			// `utf8_str()` instead of `unicode2char()`, so non-ASCII log content
-			// survives in stdout regardless of the process locale: `unicode2char` uses
-			// `wxConvLibc`, which collapses non-ASCII to `?` in the default `C` locale
-			// -- common in headless deployments where amuled runs without LANG or
-			// LC_ALL and never calls setlocale (#40). The on-disk log already writes
-			// UTF-8, so the two sinks now agree.
-			printf("%s", (const char *)line.utf8_str());
-			// stdout is block-buffered when it is not a TTY (pipe, file, Docker without -t).
+			// Use UTF-8 even in the C locale, as on disk.
+			printf("%s", static_cast<const char *>(line.utf8_str()));
 			fflush(stdout);
 		}
 	}
 #ifndef AMULE_DAEMON
 	if (toGUI) {
-		theApp->AddGuiLogLine(line);
+		theApp->AddGuiLogLine(
+			wxString(static_cast<wxChar>(LegacyLogMarker(toStatusBar, toGUI))) + line);
 	}
 #endif
 }
 
 void CLogger::EmergencyLog(const wxString &message, bool closeLog)
 {
-	// Same UTF-8 sink as DoLine's stdout path (#40). Written verbatim: the console has no
-	// marker convention, and this is the copy most likely to survive whatever is going wrong.
-	fprintf(stderr, "%s", (const char *)message.utf8_str());
-
-	// The logfile copy needs the same one-character severity marker DoLine puts on every line.
-	// A remote GUI reads this log back over EC and strips one leading character per line
-	// unconditionally, so appending emergency output raw meant that strip ate a real character
-	// -- "Assertion failed" reaching the GUI as "ssertion failed". Marker "!", since this only
-	// ever carries critical output, and on each line rather than only the first.
-	//
-	// Done with an explicit pass rather than wxStringTokenizer: this text is crash and assert
-	// output, where the blank lines between the banners and the backtrace are deliberate
-	// structure and the tokenizer would eat them. One reserve and one append also keeps the
-	// work close to what it was, which matters on a path where the next instruction may never
-	// run.
-	wxString prefixed;
-	prefixed.reserve(message.length() + 16);
-	bool atLineStart = true;
-	for (const wxUniChar ch : message) {
-		if (atLineStart) {
-			prefixed += '!';
-		}
-		prefixed += ch;
-		atLineStart = (ch == '\n');
+	const wxString lines = FormatLogLines(CLogRecord(LogLevel::Error, "crash", message));
+	fprintf(stderr, "%s", static_cast<const char *>(lines.utf8_str()));
+	// Do not queue or reacquire the logging mutex on this emergency path.
+	wxStringTokenizer tokens(lines, "\n", wxTOKEN_RET_EMPTY);
+	while (tokens.HasMoreTokens()) {
+		m_ApplogBuf += EncodeLogFileLine(tokens.GetNextToken() + "\n", true, true);
 	}
-	m_ApplogBuf += prefixed;
 	FlushApplog();
 	if (closeLog && applog) {
 		applog->Close();
-		applog = NULL;
+		delete applog;
+		applog = nullptr;
 	}
 }
 
@@ -326,22 +313,16 @@ wxEND_EVENT_TABLE()
 
 CLoggerTarget::CLoggerTarget() {}
 
-void CLoggerTarget::DoLogText(const wxString &msg)
+void CLoggerTarget::DoLogRecord(wxLogLevel level, const wxString &msg, const wxLogRecordInfo &info)
 {
-	// prevent infinite recursion
-	static bool recursion = false;
+	// A thread-local guard does not suppress unrelated messages on other threads.
+	static thread_local bool recursion = false;
 	if (recursion) {
 		return;
 	}
 	recursion = true;
-
-	// This is much simpler than manually handling all wx log-types.
-	if (msg.StartsWith(_("ERROR: ")) || msg.StartsWith(_("WARNING: "))) {
-		AddLogLineC(msg);
-	} else {
-		AddLogLineN(msg);
-	}
-
+	theLogger.Log(RecordFromWx(level, "wx", msg, info),
+		level == wxLOG_Error || level == wxLOG_FatalError || level == wxLOG_Warning);
 	recursion = false;
 }
 
@@ -359,6 +340,7 @@ void CLoggerAccess::Reset()
 	m_logfile = new wxFFileInputStream(theLogger.GetLogfileName());
 	m_pos = 0;
 	m_ready = false;
+	m_replayLine.clear();
 }
 
 CLoggerAccess::~CLoggerAccess()
@@ -396,12 +378,9 @@ bool CLoggerAccess::HasString()
 		}
 		m_buffer->data()[m_pos++] = c;
 		if (c == '\n') {
-			if (m_buffer->data()[0] == '.') {
-				// Log-only line, skip
-				m_pos = 0;
-			} else {
-				m_ready = true;
-			}
+			m_ready = DecodeLogFileLine(
+				wxString(m_buffer->data(), wxConvUTF8, m_pos), m_replayLine);
+			m_pos = 0;
 		}
 	}
 	return m_ready;
@@ -412,8 +391,8 @@ bool CLoggerAccess::GetString(wxString &s)
 	if (!HasString()) {
 		return false;
 	}
-	s = wxString(m_buffer->data(), wxConvUTF8, m_pos);
-	m_pos = 0;
+	s = m_replayLine;
+	m_replayLine.clear();
 	m_ready = false;
 	return true;
 }

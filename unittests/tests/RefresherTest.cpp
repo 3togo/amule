@@ -4022,3 +4022,22 @@ TEST(Refresher, OptionalSessionMetricsAreByteAccurateAndDoNotLatchMissingTags)
 	ASSERT_FALSE(missing.active_connections.present);
 	ASSERT_FALSE(missing.uptime_seconds.present);
 }
+
+TEST(Refresher, AmuleLogExportsStripTransportMarkers)
+{
+	CECPacket packet(EC_OP_STATS);
+	CECEmptyTag logger(EC_TAG_STATS_LOGGER_MESSAGE);
+	const wxString line = "2026-10-24T17:42:31.123+08:00 INFO  !message . text\n";
+	for (const wxString &wire : { " " + line, "!" + line, "." + line, line }) {
+		logger.AddTag(CECTag(EC_TAG_STRING, wire));
+	}
+	logger.AddTag(CECTag(EC_TAG_STRING, "ERROR: cannot open logfile"));
+	packet.AddTag(logger);
+	std::vector<std::string> lines;
+	ParseAmuleLogFromPacket(&packet, lines);
+	ASSERT_EQUALS(static_cast<size_t>(5), lines.size());
+	for (size_t i = 0; i < 4; ++i) {
+		ASSERT_EQUALS(std::string(line.utf8_str()), lines[i]);
+	}
+	ASSERT_EQUALS(std::string("ERROR: cannot open logfile"), lines.back());
+}

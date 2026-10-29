@@ -55,11 +55,11 @@ def run(daemon_binary, api_binary, checks):
                     if any(proc.poll() is not None for proc in processes):
                         log.flush()
                         failure = (root / 'fixture.log').read_text(errors='replace')
-                        if 'amuleapi: HTTP server failed to start:' in failure:
+                        if 'HTTP server failed to start:' in failure:
                             raise PortCollision(f'API could not bind HTTP port {http}')
                         raise RuntimeError('fixture process exited during startup')
                     log.flush()
-                    api_listening = (f'amuleapi: listening on http://127.0.0.1:{http}/'
+                    api_listening = (f'listening on http://127.0.0.1:{http}/'
                                      in (root / 'fixture.log').read_text(errors='replace'))
                     if api_listening and subprocess.run(
                             ['curl', '-sf', '--max-time', '2', url + '/health'],

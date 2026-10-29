@@ -55,12 +55,12 @@ def run(api, cmd):
                     while time.monotonic()<deadline:
                         if proc.poll() is not None:
                             failure = (cfg/'api.log').read_text(errors='replace')
-                            if 'amuleapi: HTTP server failed to start:' in failure:
+                            if 'HTTP server failed to start:' in failure:
                                 raise PortCollision(f'API could not bind HTTP port {hp}')
                             raise AssertionError(failure)
                         log.flush()
                         startup = (cfg/'api.log').read_text(errors='replace')
-                        if f'amuleapi: listening on http://127.0.0.1:{hp}/' not in startup:
+                        if f'listening on http://127.0.0.1:{hp}/' not in startup:
                             time.sleep(.1)
                             continue
                         try:

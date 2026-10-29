@@ -69,6 +69,10 @@ For `amulegui`, the setting is in `remote.conf` and controls its local log, whos
 default filename is `remotelogfile`.
 
 
+See [Logging format](LOGGING.md) for the timestamp and severity of each record, and
+for the flags the logfile keeps for remote GUIs.
+
+
 ## First-run checklist
 
 aMule ships with reasonable defaults and is usable as-is. Three

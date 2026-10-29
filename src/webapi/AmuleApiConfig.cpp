@@ -23,6 +23,7 @@
 //
 
 #include "AmuleApiConfig.h"
+#include "LogDiagnostic.h"
 
 #include <AtomicFile.h>
 #include <PathPatterns.h>
@@ -315,16 +316,15 @@ bool CAmuleApiConfig::LoadAmuleapiConf(const wxString &path)
 				std::string::npos ||
 			(end != std::string::npos &&
 				token.find_first_not_of('=', end) != std::string::npos)) {
-			std::fputs("amuleapi: WARN invalid [Metrics]/Token (expected 32-256 bearer-token "
-				   "characters); metrics disabled\n",
-				stderr);
+			webapi::CLogDiagnostic(LogLevel::Warning, "Metrics")
+				<< "invalid [Metrics]/Token (expected 32-256 bearer-token characters); "
+				   "metrics disabled";
 			m_metrics.enabled = false;
 			m_metrics.token.clear();
 		}
 	} else if (m_metrics.enabled) {
-		std::fputs("amuleapi: WARN [Metrics]/Enabled=1 but [Metrics]/Token is empty; "
-			   "metrics disabled\n",
-			stderr);
+		webapi::CLogDiagnostic(LogLevel::Warning, "Metrics")
+			<< "[Metrics]/Enabled=1 but [Metrics]/Token is empty; metrics disabled";
 	}
 
 	// `[Streaming]/EventBusRingCapacity`. Anything below the CEventBus floor is

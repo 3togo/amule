@@ -25,6 +25,7 @@
 
 #include "config.h" // Needed for VERSION
 #include "TextClient.h"
+#include "LogText.h"
 
 #include "SearchProgressReport.h"
 
@@ -1036,9 +1037,10 @@ void CamulecmdApp::Process_Answer_v2(const CECPacket *response)
 	case EC_OP_LOG:
 		for (CECPacket::const_iterator it = response->begin(); it != response->end(); ++it) {
 			const CECTag &tag = *it;
-			s << tag.GetStringData() << "\n";
+			Show(ECLogToText(tag.GetStringData()));
 		}
-		break;
+		// Log records must start with the timestamp, without the command reply decoration.
+		return;
 	case EC_OP_SERVER_LIST:
 		for (CECPacket::const_iterator it = response->begin(); it != response->end(); ++it) {
 			const CECTag &tag = *it;

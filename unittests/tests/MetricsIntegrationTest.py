@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import socketserver
 import struct
@@ -24,6 +25,8 @@ from AllSearchIntegrationTest import (C, connect_daemon, exact, free_ports,
 from DaemonConfig import write_amule_conf
 
 TOKEN = '0123456789abcdef' * 4
+# A shared-format warning record in the Metrics category.
+WARN_METRICS = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{2}:\d{2} WARN  \[Metrics\] '
 
 
 def request(base, path='/metrics', token=None, method='GET', body=None, headers=None):
@@ -273,7 +276,7 @@ def fake_core_checks(binary, root):
                 assert request(base, '/metrics')[0] == 404
                 assert request(base, '/api/v1/health')[0] == 200
                 diagnostic = (root / 'invalid-token' / 'api.log').read_text()
-                assert 'amuleapi: WARN invalid [Metrics]/Token' in diagnostic
+                assert re.search(WARN_METRICS + r'invalid \[Metrics\]/Token', diagnostic, re.M), diagnostic
                 assert 'bad token' not in diagnostic
                 print('PASS: malformed optional credential disables metrics without stopping API')
             with api_fixture(binary, root / 'reverse', core.server_address[1]) as (base, _):
@@ -293,7 +296,7 @@ def fake_core_checks(binary, root):
                 assert request(base, '/amule/metrics', TOKEN)[0] == 404
                 assert request(base, '/api/v1/health')[0] == 200
                 diagnostic = (root / 'unconfigured' / 'api.log').read_text()
-                assert 'amuleapi: WARN [Metrics]/Enabled=1 but [Metrics]/Token is empty' in diagnostic
+                assert re.search(WARN_METRICS + r'\[Metrics\]/Enabled=1 but \[Metrics\]/Token is empty', diagnostic, re.M), diagnostic
                 print('PASS: enabled without a token starts normally, warns and exposes no metrics')
         finally:
             core.release.set()
