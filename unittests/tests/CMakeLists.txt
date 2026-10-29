@@ -1745,22 +1745,6 @@ target_link_libraries (PathTest
 	muleunit
 )
 
-add_executable (MediaProbeFFProbeNameTest
-	MediaProbeFFProbeNameTest.cpp
-	${CMAKE_SOURCE_DIR}/src/MediaProbe.cpp
-	${CMAKE_SOURCE_DIR}/src/AppImageEnv.cpp
-)
-add_test (NAME MediaProbeFFProbeNameTest COMMAND MediaProbeFFProbeNameTest)
-target_include_directories (MediaProbeFFProbeNameTest
-	PRIVATE ${CMAKE_BINARY_DIR}
-	PRIVATE ${CMAKE_SOURCE_DIR}/src
-	PRIVATE ${CMAKE_SOURCE_DIR}/src/include
-)
-target_link_libraries (MediaProbeFFProbeNameTest
-	muleunit
-	mulecommon
-)
-
 add_executable (FileFunctionsTest
 	FileFunctionsTest.cpp
 )
@@ -2186,6 +2170,13 @@ add_executable (MediaProbeEnvTest
 	${CMAKE_SOURCE_DIR}/src/AppImageEnv.cpp
 )
 add_test (NAME MediaProbeEnvTest COMMAND MediaProbeEnvTest)
+add_executable (MediaProbeExitFixture MediaProbeExitFixture.cpp)
+add_dependencies (MediaProbeEnvTest MediaProbeExitFixture)
+target_compile_definitions (MediaProbeEnvTest PRIVATE AMULE_MEDIA_EXIT_FIXTURE="$<TARGET_FILE:MediaProbeExitFixture>")
+if(TARGET amule-media-probe)
+    add_dependencies(MediaProbeEnvTest amule-media-probe)
+    target_compile_definitions(MediaProbeEnvTest PRIVATE AMULE_MEDIA_HELPER_TEST="$<TARGET_FILE:amule-media-probe>")
+endif()
 target_include_directories (MediaProbeEnvTest
 	PRIVATE ${CMAKE_BINARY_DIR}
 	PRIVATE ${CMAKE_SOURCE_DIR}/src

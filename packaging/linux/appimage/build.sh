@@ -32,9 +32,16 @@ VERSION=$(cd "${REPO}" && git describe --tags --always --dirty)
 
 mkdir -p "${ARTIFACT_DIR}"
 
-# 1. Configure + build aMule.
+# 1. Build the pinned media libraries without network readers.
+MEDIA_PREFIX="${BUILD_DIR}/media-prefix"
+"${REPO}/packaging/media/build-static.sh" "${MEDIA_PREFIX}" "${BUILD_DIR}/media-sources"
+
+# Configure + build aMule.
 cmake -B "${BUILD_DIR}" -S "${REPO}" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
+    -DMEDIAINFO_LIBRARY="${MEDIA_PREFIX}/lib/libmediainfo.a" \
+    -DMEDIA_ZEN_LIBRARY="${MEDIA_PREFIX}/lib/libzen.a" \
+    -DMEDIA_PROBE_STATIC=ON \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DBUILD_MONOLITHIC=YES \
     -DBUILD_REMOTEGUI=YES \
@@ -74,6 +81,11 @@ for bin in "${EXTRA_BINS[@]}"; do
         EXEC_ARGS+=(--executable "${APPDIR}/usr/bin/${bin}")
     fi
 done
+# The media helper is internal, so it installs to libexec, not bin.
+MEDIA_PROBE="${APPDIR}/usr/libexec/amule/amule-media-probe"
+if [ -x "${MEDIA_PROBE}" ]; then
+    EXEC_ARGS+=(--executable "${MEDIA_PROBE}")
+fi
 
 # Force-include libraries that linuxdeploy's AppImage standard
 # excludelist drops but that aren't actually present on every distro.

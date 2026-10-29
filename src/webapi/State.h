@@ -1100,9 +1100,11 @@ struct PreferencesSnapshot
 		bool create_sparse_files = true;
 		bool on_finished_start_next_alphabetically = false;
 		bool endgame_mode_enabled = false;
-		// Media metadata (issue #140): probe shared files with ffprobe to
-		// advertise length/bitrate/codec. Empty path = daemon auto-detect.
+		// Media metadata: the bundled helper probes shared files for length/bitrate/codec.
+		// ffprobe_path is reserved and always empty.
 		bool media_metadata_enabled = false;
+		// Read-only: the daemon found its media helper. False for a daemon that does not say.
+		bool media_metadata_available = false;
 		std::string ffprobe_path;
 	} files;
 

@@ -709,7 +709,6 @@
   "stats_tree_upload_crypt_overhead": "Excedent per xifrat (UDP): %s",
   "messages_field_username": "Usuari",
   "prefs_servers": "Servidors",
-  "prefs_field_files_ffprobe_path": "Camí a ffprobe (buit = detecció automàtica)",
   "downloads_detail_tip_last_changed": "Quan es van rebre dades d'aquest fitxer per última vegada.",
   "downloads_detail_last_changed": "Última recepció",
   "messages_add": "Afegeix",

@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2026-10-18 15:44+0200\n"
+"POT-Creation-Date: 2026-10-29 11:58+0100\n"
 "PO-Revision-Date: 2026-10-29 00:16+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
@@ -934,7 +934,9 @@ msgstr "METADADES MULTIMÈDIA"
 
 #. type: Plain text
 #: amuled.1.in
-msgid "B<amuled> runs B<ffprobe> on each received file to extract the length, bitrate and codec tags it then publishes to the network. This is on by default (B<Enabled=1> under B<[MediaMetadata]> in I<amule.conf>); set B<Enabled=0> there and restart to turn it off. The B<ffprobe> binary is chosen by B<FFProbePath> in the same section and is local daemon configuration; it cannot be set over EC or amuleapi."
+#, fuzzy
+#| msgid "B<amuled> runs B<ffprobe> on each received file to extract the length, bitrate and codec tags it then publishes to the network. This is on by default (B<Enabled=1> under B<[MediaMetadata]> in I<amule.conf>); set B<Enabled=0> there and restart to turn it off. The B<ffprobe> binary is chosen by B<FFProbePath> in the same section and is local daemon configuration; it cannot be set over EC or amuleapi."
+msgid "B<amuled> runs its bundled B<amule-media-probe> helper on each received file to extract the length, bitrate and codec tags it then publishes to the network. The helper must sit next to the B<amuled> executable. This is on by default (B<Enabled=1> under B<[MediaMetadata]> in I<amule.conf>); set B<Enabled=0> there and restart to turn it off."
 msgstr "B<amuled> executa B<ffprobe> sobre cada fitxer rebut per extreure'n la durada, la taxa de bits i les etiquetes de còdec que després publica a la xarxa. Està activat de manera predeterminada (B<Enabled=1> a la secció B<[MediaMetadata]> del fitxer I<amule.conf>); definiu-hi B<Enabled=0> i reinicieu per desactivar-ho. El binari B<ffprobe> es tria amb B<FFProbePath> a la mateixa secció i és configuració local del dimoni; no es pot definir mitjançant EC ni amuleapi."
 
 #. type: TH

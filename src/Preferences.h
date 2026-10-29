@@ -783,13 +783,19 @@ public:
 	static bool GetVersionCheckAvailable() { return s_versionCheckAvailable; }
 	static void SetVersionCheckAvailable(bool val) { s_versionCheckAvailable = val; }
 
-	// Media metadata (issue #140): probe local shared files with ffprobe so we advertise Length /
-	// Bitrate / Codec to peers. An empty path means auto-detect, not off --
-	// MediaProbe::DetectedPath() resolves it per process.
+	// Media metadata: the bundled helper probes local files for Length / Bitrate / Codec.
+	// The legacy ffprobe path accessors remain for EC/API compatibility.
 	static bool GetMediaMetadataEnabled() { return s_MediaMetadataEnabled; }
 	static void SetMediaMetadataEnabled(bool val) { s_MediaMetadataEnabled = val; }
-	static const wxString &GetMediaMetadataFFProbePath() { return s_MediaMetadataFFProbePath; }
-	static void SetMediaMetadataFFProbePath(const wxString &val) { s_MediaMetadataFFProbePath = val; }
+	// The core found its helper. A remote GUI keeps what the core reported.
+	static bool IsMediaMetadataAvailable();
+	static void SetMediaMetadataAvailable(bool val) { s_MediaMetadataAvailable = val; }
+	static const wxString &GetMediaMetadataFFProbePath()
+	{
+		static const wxString empty;
+		return empty;
+	}
+	static void SetMediaMetadataFFProbePath(const wxString &) {} // Reserved compatibility field; ignored.
 
 	// Networks
 	static bool GetNetworkKademlia() { return s_ConnectToKad; }
@@ -1213,7 +1219,7 @@ protected:
 
 	// Media metadata (issue #140)
 	static bool s_MediaMetadataEnabled;
-	static wxString s_MediaMetadataFFProbePath;
+	static bool s_MediaMetadataAvailable;
 
 	// Kad
 	static bool s_ConnectToKad;

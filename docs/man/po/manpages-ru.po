@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: manpages-ru\n"
-"POT-Creation-Date: 2026-10-18 15:44+0200\n"
+"POT-Creation-Date: 2026-10-29 11:58+0100\n"
 "PO-Revision-Date: 2026-10-29 00:16+0000\n"
 "Last-Translator: Sebastiano Pistore <SebastianoPistore.info@protonmail.ch>\n"
 "Language-Team: Russian <LL@li.org>\n"
@@ -936,7 +936,9 @@ msgstr "МЕТАДАННЫЕ МЕДИАФАЙЛОВ"
 
 #. type: Plain text
 #: amuled.1.in
-msgid "B<amuled> runs B<ffprobe> on each received file to extract the length, bitrate and codec tags it then publishes to the network. This is on by default (B<Enabled=1> under B<[MediaMetadata]> in I<amule.conf>); set B<Enabled=0> there and restart to turn it off. The B<ffprobe> binary is chosen by B<FFProbePath> in the same section and is local daemon configuration; it cannot be set over EC or amuleapi."
+#, fuzzy
+#| msgid "B<amuled> runs B<ffprobe> on each received file to extract the length, bitrate and codec tags it then publishes to the network. This is on by default (B<Enabled=1> under B<[MediaMetadata]> in I<amule.conf>); set B<Enabled=0> there and restart to turn it off. The B<ffprobe> binary is chosen by B<FFProbePath> in the same section and is local daemon configuration; it cannot be set over EC or amuleapi."
+msgid "B<amuled> runs its bundled B<amule-media-probe> helper on each received file to extract the length, bitrate and codec tags it then publishes to the network. The helper must sit next to the B<amuled> executable. This is on by default (B<Enabled=1> under B<[MediaMetadata]> in I<amule.conf>); set B<Enabled=0> there and restart to turn it off."
 msgstr "B<amuled> запускает B<ffprobe> для каждого полученного файла, чтобы извлечь теги длительности, битрейта и кодека, которые затем публикует в сети. Эта функция включена по умолчанию (B<Enabled=1> в разделе B<[MediaMetadata]> файла I<amule.conf>); чтобы отключить её, задайте B<Enabled=0> и перезапустите демон. Исполняемый файл B<ffprobe> задаётся параметром B<FFProbePath> в том же разделе и является локальной конфигурацией демона; его нельзя задать через EC или amuleapi."
 
 #. type: TH

@@ -378,3 +378,15 @@ foreach (experimental_option IN LISTS AMULE_EXPERIMENTAL_OPTIONS)
 		add_compile_definitions (${experimental_option})
 	endif()
 endforeach()
+
+option(ENABLE_MEDIA_PROBE "Build bundled MediaInfo media metadata helper" ON)
+# The helper is internal, not a command: installs keep it out of PATH in libexec, and the core
+# finds it there relative to its own folder. Bundles put it next to the core instead.
+if (ENABLE_MEDIA_PROBE AND (BUILD_DAEMON OR BUILD_MONOLITHIC))
+	set (AMULE_MEDIA_PROBE ON)
+	if (NOT WIN32)
+		set (AMULE_MEDIA_PROBE_INSTALL_DIR "${CMAKE_INSTALL_LIBEXECDIR}/amule")
+		file (RELATIVE_PATH AMULE_MEDIA_PROBE_RELPATH "${CMAKE_INSTALL_FULL_BINDIR}"
+			"${CMAKE_INSTALL_FULL_LIBEXECDIR}/amule/amule-media-probe")
+	endif()
+endif()

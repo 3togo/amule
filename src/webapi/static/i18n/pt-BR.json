@@ -871,7 +871,6 @@
   "shared_prio_low": "Baixa",
   "stats_tree_upload_crypt_overhead": "Overhead de criptografia (UDP): %s",
   "prefs_servers": "Servidores",
-  "prefs_field_files_ffprobe_path": "Caminho do ffprobe (vazio = detectar automaticamente)",
   "prefs_field_servers_manual_servers_high_priority": "Definir prioridade alta para servidores adicionados manualmente",
   "prefs_group_geoip_db": "Banco de dados",
   "prefs_field_security_shared_files_visibility": "Quem pode ver meus arquivos compartilhados",

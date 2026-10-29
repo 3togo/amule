@@ -8467,7 +8467,7 @@ CHttpServer::Response CApiDispatcher::HandlePreferencesPatch(const CHttpServer::
 	// gates ApplyBoolean on it -- which is also why every bool below is a value tag.
 	std::unique_ptr<CECPacket> ec_req(new CECPacket(EC_OP_SET_PREFERENCES, EC_DETAIL_FULL));
 	bool any_change = false;
-	// A daemon-local field (e.g. the ffprobe path) sent back unchanged: a valid no-op, so the
+	// A daemon-local field (e.g. the online-signature folder) sent back unchanged: a valid no-op, so the
 	// request is not "no writable fields" even when it names nothing else.
 	bool daemon_local_noop = false;
 	// Names of read-only fields the body carried, so a request naming only
@@ -8543,9 +8543,9 @@ CHttpServer::Response CApiDispatcher::HandlePreferencesPatch(const CHttpServer::
 		}
 
 		if (f.access == webapi::PrefAccess::DaemonLocal) {
-			// Emitted on GET but set only in the daemon's own configuration: the ffprobe path
-			// (the core executes it), the online-signature folder (it writes there) and
-			// follow_symlinks (it widens what a share exposes on the host). A read-modify-write
+			// Emitted on GET but set only in the daemon's own configuration: the online-signature
+			// folder (it writes there), follow_symlinks (it widens what a share exposes on the
+			// host) and the reserved ffprobe path. A read-modify-write
 			// client sends the value back unchanged -- accept that as a no-op; refuse a request
 			// that would actually change it, naming the field. String and bool rows only.
 			const auto it = src->find(f.key);

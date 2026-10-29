@@ -698,6 +698,7 @@ EC_TAG_SELECT_PREFS                       0x1000
 		EC_TAG_FILES_MMAP_SUPPORTED               0x1814
 		EC_TAG_FILES_MMAP_ENABLED                 0x1815
 		EC_TAG_FILES_SHARED_REVERIFY_DAYS          0x1816
+		EC_TAG_FILES_MEDIA_METADATA_AVAILABLE     0x1817
 
 #	EC_TAG_UNUSED                             0x1900
 #		EC_TAG_UNUSED                             0x1901

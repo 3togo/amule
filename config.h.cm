@@ -204,6 +204,12 @@
    amuleapi falls back to this when [Server]/StaticRoot is empty. */
 #cmakedefine AMULEAPI_STATIC_DIR "${AMULEAPI_STATIC_DIR}"
 
+/* Define if the media metadata helper is built. */
+#cmakedefine AMULE_MEDIA_PROBE
+
+/* Installed helper, relative to the folder of the core's own executable. */
+#cmakedefine AMULE_MEDIA_PROBE_RELPATH "${AMULE_MEDIA_PROBE_RELPATH}"
+
 /* Define if libpng is present is set. */
 #cmakedefine WITH_LIBPNG
 

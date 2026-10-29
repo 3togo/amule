@@ -2385,6 +2385,7 @@ TEST(Refresher, PreferencesExtendedCategoriesDecode)
 	files.AddTag(CECEmptyTag(EC_TAG_FILES_ICH_ENABLED)); // presence == true
 	files.AddTag(CECEmptyTag(EC_TAG_FILES_ENDGAME));     // presence == true (#596)
 	files.AddTag(CECTag(EC_TAG_FILES_MIN_FREE_SPACE, static_cast<std::uint32_t>(512)));
+	files.AddTag(CECTag(EC_TAG_FILES_MEDIA_METADATA_AVAILABLE, true)); // by value
 	resp.AddTag(files);
 
 	CECEmptyTag srv(EC_TAG_PREFS_SERVERS);
@@ -2448,6 +2449,7 @@ TEST(Refresher, PreferencesExtendedCategoriesDecode)
 	ASSERT_TRUE(!p.files.trust_unverified_aich_hashes); // absent presence tag -> false
 	ASSERT_TRUE(p.files.endgame_mode_enabled);          // presence tag -> true (#596)
 	ASSERT_EQUALS(static_cast<std::uint32_t>(512), p.files.min_free_space_mebibytes);
+	ASSERT_TRUE(p.files.media_metadata_available);
 
 	ASSERT_EQUALS(static_cast<std::uint32_t>(5), p.servers.dead_server_retry_count);
 	ASSERT_TRUE(p.servers.accelerated_publication_enabled);
@@ -2755,9 +2757,9 @@ TEST(Refresher, PrefsSchemaIsWellFormed)
 			++emitted;
 	}
 
-	// The documented payload is 136 fields. A row added or dropped without
+	// The documented payload is 137 fields. A row added or dropped without
 	// updating docs/api/REFERENCE.md should trip this.
-	ASSERT_EQUALS(static_cast<std::size_t>(136), emitted);
+	ASSERT_EQUALS(static_cast<std::size_t>(137), emitted);
 }
 
 // The schema's irregularities are enumerated rather than merely counted: each is deliberate and

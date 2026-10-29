@@ -382,15 +382,17 @@ _curl -X PATCH -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: applica
 	"$API/preferences"
 _assert_status 200 "PATCH media-probe + security + onlinesig + iface → 200"
 _assert_json_eq '.files.media_metadata_enabled' "$MM_TOGGLE" 'files.media_metadata_enabled toggled in response'
+_assert_json_eq '.files.ffprobe_path' '' 'reserved files.ffprobe_path is a no-op in response'
 _assert_json_eq '.security.reject_spoofed_source_ips' "$PARANOID_TOGGLE" 'security.reject_spoofed_source_ips toggled in response'
 _assert_json_eq '.online_signature.update_frequency_seconds' 123 'online_signature.update_frequency_seconds=123 in response'
 _assert_json_eq '.connection.bind_interface' tun0 'connection.bind_interface set in response'
 _curl -H "Authorization: Bearer $ADMIN_TOKEN" "$API/preferences"
+_assert_json_eq '.files.ffprobe_path' '' 'reserved files.ffprobe_path remains empty on GET'
 _assert_json_eq '.online_signature.update_frequency_seconds' 123 'online_signature.update_frequency_seconds persisted'
 _assert_json_eq '.connection.bind_interface' tun0 'connection.bind_interface persisted'
 
-# files.ffprobe_path is daemon-local: the daemon executes it, so it is set
-# only in amule.conf and cannot be changed through the API. A PATCH that would change it is a
+# files.ffprobe_path is reserved and always empty. Like a daemon-local field, it cannot be
+# changed through the API. A PATCH that would change it is a
 # 400 read_only_field and nothing is applied; echoing the current value back (as a read-modify-
 # write of the whole object does) is an accepted no-op → 200.
 CHANGED_FFPROBE="${SAVED_FFPROBE}-changed"
@@ -1032,6 +1034,18 @@ _assert_json_eq '.servers.accelerated_publication_enabled' "$ACCEL_TOGGLE" 'unre
 _curl -X PATCH -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
 	-d "{\"servers\":{\"accelerated_publication_enabled\":$SAVED_ACCEL,\"dead_server_retry_count\":$SAVED_RETRIES}}" \
 	"$API/preferences" >/dev/null 2>&1
+
+# --- files.media_metadata_available: a read-only daemon capability. ---
+_curl -H "Authorization: Bearer $ADMIN_TOKEN" "$API/preferences"
+_assert_json_eq '(.files.media_metadata_available|type)' boolean 'files.media_metadata_available is boolean'
+SAVED_AVAILABLE=$(printf '%s' "$CURL_BODY" | jq -r '.files.media_metadata_available')
+SAVED_MM2=$(printf '%s' "$CURL_BODY" | jq -r '.files.media_metadata_enabled')
+FLIPPED_AVAILABLE=$([ "$SAVED_AVAILABLE" = "true" ] && echo false || echo true)
+_curl -X PATCH -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
+	-d "{\"files\":{\"media_metadata_enabled\":$SAVED_MM2,\"media_metadata_available\":$FLIPPED_AVAILABLE}}" \
+	"$API/preferences"
+_assert_status 200 'PATCH with read-only files.media_metadata_available -> 200'
+_assert_json_eq '.files.media_metadata_available' "$SAVED_AVAILABLE" 'files.media_metadata_available ignored on PATCH'
 
 # --- Summary. -----------------------------------------------------
 echo

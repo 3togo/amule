@@ -86,7 +86,6 @@
 #include "SharedDirsApplyTask.h" // Recursive-share expansion worker
 #include "muuli_wdr.h"
 #include "Logger.h"
-#include "MediaProbe.h"    // Needed for the FFProbePath Detect button handler
 #include <common/Format.h> // Needed for CFormat
 #include "TransferWnd.h"   // Needed for CTransferWnd::UpdateCatTabTitles()
 #include "KadDlg.h"        // Needed for CKadDlg
@@ -173,7 +172,6 @@ wxBEGIN_EVENT_TABLE(PrefsUnifiedDlg, wxDialog)
 	EVT_CHECKBOX(IDC_NETWORKKAD, PrefsUnifiedDlg::OnCheckBoxChange)
 	EVT_CHECKBOX(IDC_UPNP_ENABLED, PrefsUnifiedDlg::OnCheckBoxChange)
 	EVT_CHECKBOX(IDC_UPNP_WEBSERVER_ENABLED, PrefsUnifiedDlg::OnCheckBoxChange)
-	EVT_CHECKBOX(IDC_MEDIAMETA_ENABLED, PrefsUnifiedDlg::OnCheckBoxChange)
 	EVT_CHECKBOX(IDC_EXT_CONN_ACCEPT, PrefsUnifiedDlg::OnCheckBoxChange)
 	EVT_CHECKBOX(IDC_ENABLE_WEB, PrefsUnifiedDlg::OnCheckBoxChange)
 	EVT_CHECKBOX(IDC_ENABLE_AMULEAPI, PrefsUnifiedDlg::OnCheckBoxChange)
@@ -213,8 +211,6 @@ wxBEGIN_EVENT_TABLE(PrefsUnifiedDlg, wxDialog)
 	EVT_BUTTON(IDC_ALLOWED_ROOT_BROWSE, PrefsUnifiedDlg::OnAllowedRootBrowse)
 #endif
 	EVT_BUTTON(IDC_SELBROWSER, PrefsUnifiedDlg::OnButtonBrowseApplication)
-	EVT_BUTTON(IDC_MEDIAMETA_FFPROBEBROWSE, PrefsUnifiedDlg::OnButtonBrowseApplication)
-	EVT_BUTTON(IDC_MEDIAMETA_FFPROBEDETECT, PrefsUnifiedDlg::OnButtonMediaMetaDetect)
 	EVT_BUTTON(IDC_TWEAKS_RESET, PrefsUnifiedDlg::OnButtonTweaksReset)
 #ifndef CLIENT_GUI
 	EVT_BUTTON(IDC_EXCLUDE_SHARE_PREVIEW, PrefsUnifiedDlg::OnButtonExcludePreview)
@@ -782,6 +778,17 @@ bool PrefsUnifiedDlg::TransferToWindow()
 		mmapBox->Show(thePrefs::GetMMapSupported());
 	}
 
+	// Without its helper the core cannot extract media metadata: keep the toggle visible,
+	// but disabled, and say why.
+	if (wxWindow *media = FindWindow(IDC_MEDIAMETA_ENABLED)) {
+		const bool available = thePrefs::IsMediaMetadataAvailable();
+		media->Enable(available);
+		if (!available) {
+			media->SetToolTip(_("This aMule has no media helper (amule-media-probe), so it "
+					    "cannot extract media metadata."));
+		}
+	}
+
 	// Load the user's intent (explicit non-recursive vs marked-recursive roots) into the
 	// tree control's two maps. shareddir_list itself is the runtime expansion, which
 	// includes auto-discovered subdirs that should not render as user-selected.
@@ -925,16 +932,6 @@ bool PrefsUnifiedDlg::TransferToWindow()
 	m_amuleApiGuestWasSet = thePrefs::GetAmuleApiGuestIsEnabled();
 	SetCredentialStateLabel(IDC_AMULEAPI_GUEST_PASSWD_STATE, m_amuleApiGuestWasSet);
 
-	// Gate the ffprobe path controls on the master Media metadata toggle so a disabled
-	// feature does not show a live-looking Detect / Browse UI that silently does nothing.
-	{
-		const bool mmOn = thePrefs::GetMediaMetadataEnabled();
-		FindWindow(IDC_MEDIAMETA_FFPROBEPATHTEXT)->Enable(mmOn);
-		FindWindow(IDC_MEDIAMETA_FFPROBEPATH)->Enable(mmOn);
-		FindWindow(IDC_MEDIAMETA_FFPROBEBROWSE)->Enable(mmOn);
-		FindWindow(IDC_MEDIAMETA_FFPROBEDETECT)->Enable(mmOn);
-	}
-
 	// The tray icon is the only recovery surface for a window hidden via the close button:
 	// on Linux/Windows the option needs the tray to bring the window back, and on macOS the
 	// matching code path drops the Dock icon while hidden, so the tray is also the only way
@@ -984,25 +981,11 @@ bool PrefsUnifiedDlg::TransferToWindow()
 		IDC_EXT_CONN_PASSWD,
 		IDC_EXT_CONN_PASSWDTEXT,
 		IDC_EXT_CONN_REQUIRE_ENCRYPTION,
-		// ffprobe "Browse" (local file picker) and "Detect" (auto-detects on the GUI host, not
-		// the daemon) cannot target the daemon filesystem. The enable toggle + path field are
-		// EC-wired and stay visible.
-		IDC_MEDIAMETA_FFPROBEBROWSE,
-		IDC_MEDIAMETA_FFPROBEDETECT,
 	};
 	for (int id : amuledOnlyPrefs) {
 		if (wxWindow *w = FindWindow(id)) {
 			w->Hide();
 		}
-	}
-	// The ffprobe path is daemon-local configuration, not a remote-settable preference: show the
-	// daemon's value but make it read-only here (amulegui no longer sends this tag -- see the
-	// ECSpecialMuleTags emit side), so the field does not look editable while silently doing
-	// nothing.
-	if (wxTextCtrl *ffprobe = CastChild(IDC_MEDIAMETA_FFPROBEPATH, wxTextCtrl)) {
-		ffprobe->SetEditable(false);
-		ffprobe->SetToolTip(
-			_("Set in the daemon's own configuration (amule.conf); not editable remotely."));
 	}
 	// follow_symlinks is daemon-local too -- it widens what a share exposes on the host, so it is
 	// not remotely settable. Show the daemon's value but disable the checkbox (amulegui no longer
@@ -1013,8 +996,8 @@ bool PrefsUnifiedDlg::TransferToWindow()
 			_("Set in the daemon's own configuration (amule.conf); not editable remotely."));
 	}
 	// The online-signature folder is daemon-local as well (the daemon writes its signature files
-	// there, and amulegui no longer sends this tag): make the field read-only like the ffprobe
-	// one. Its Browse button (IDC_SELOSDIR, a local file picker) is already hidden above.
+	// there, and amulegui no longer sends this tag): make the field read-only. Its Browse button
+	// (IDC_SELOSDIR, a local file picker) is already hidden above.
 	if (wxTextCtrl *osdir = CastChild(IDC_OSDIR, wxTextCtrl)) {
 		osdir->SetEditable(false);
 		osdir->SetToolTip(
@@ -1256,40 +1239,8 @@ void PrefsUnifiedDlg::OnOk(wxCommandEvent &WXUNUSED(event))
 #ifndef CLIENT_GUI
 	const uint16 previousTcpPort = thePrefs::GetPort();
 	const uint16 previousUdpPort = thePrefs::GetUDPPort();
-	// Snapshot before TransferFromWindow() overwrites it, so a rejected ffprobe path below can be
-	// rolled back in memory (an unsaved bad value would still be read by the probe worker). A copy
-	// for that reason, never a reference to the stored string.
-	// NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
-	const wxString previousFFProbePath(thePrefs::GetMediaMetadataFFProbePath());
 #endif
 	TransferFromWindow();
-
-#ifndef CLIENT_GUI
-	// The ffprobe path names a binary the core will execute. On a local change to a non-empty
-	// value, require it to actually be ffprobe (file name ffprobe/ffprobe.exe + an "ffprobe
-	// version" banner) and reject otherwise, keeping the dialog open on the field. Empty means
-	// "auto-detect", which is valid. This is a local usability check, not a security control --
-	// anyone with a legitimately unusual build can set FFProbePath directly in amule.conf. The
-	// stored value is rolled back so a rejected path is never read by the probe worker.
-	if (CfgChanged(IDC_MEDIAMETA_FFPROBEPATH)) {
-		// Read-only reference: only used below before the rollback mutates the stored string.
-		const wxString &ffprobePath = thePrefs::GetMediaMetadataFFProbePath();
-		if (!ffprobePath.IsEmpty() && !MediaProbe::IsFFProbeBinary(ffprobePath)) {
-			thePrefs::SetMediaMetadataFFProbePath(previousFFProbePath);
-			wxMessageBox(_("That file does not look like ffprobe. Choose a binary named "
-				       "ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" "
-				       "banner, leave the field empty to auto-detect, or set the path "
-				       "directly in amule.conf."),
-				_("Invalid ffprobe path"),
-				wxOK | wxICON_WARNING,
-				this);
-			if (wxWindow *field = FindWindow(IDC_MEDIAMETA_FFPROBEPATH)) {
-				field->SetFocus();
-			}
-			return;
-		}
-	}
-#endif
 
 	// Before the share commit below, whose reload must already use the new filter.
 	const bool excludeFilterChanged =
@@ -1942,13 +1893,6 @@ void PrefsUnifiedDlg::OnCheckBoxChange(wxCommandEvent &event)
 		FindWindow(IDC_UPNPTCPPORTTEXT)->Enable(value);
 		break;
 
-	case IDC_MEDIAMETA_ENABLED:
-		FindWindow(IDC_MEDIAMETA_FFPROBEPATHTEXT)->Enable(value);
-		FindWindow(IDC_MEDIAMETA_FFPROBEPATH)->Enable(value);
-		FindWindow(IDC_MEDIAMETA_FFPROBEBROWSE)->Enable(value);
-		FindWindow(IDC_MEDIAMETA_FFPROBEDETECT)->Enable(value);
-		break;
-
 	case IDC_UPNP_WEBSERVER_ENABLED:
 		FindWindow(IDC_WEBUPNPTCPPORT)->Enable(value);
 		FindWindow(IDC_WEBUPNPTCPPORTTEXT)->Enable(value);
@@ -2254,10 +2198,6 @@ void PrefsUnifiedDlg::OnButtonBrowseApplication(wxCommandEvent &event)
 		id = IDC_BROWSERSELF;
 		title = _("Select browser");
 		break;
-	case IDC_MEDIAMETA_FFPROBEBROWSE:
-		id = IDC_MEDIAMETA_FFPROBEPATH;
-		title = _("Select ffprobe binary");
-		break;
 	default:
 		wxFAIL;
 		return;
@@ -2282,37 +2222,13 @@ void PrefsUnifiedDlg::OnButtonBrowseApplication(wxCommandEvent &event)
 #endif
 
 	if (!str.IsEmpty()) {
-		// The player and browser fields are command templates, split into words;
-		// the ffprobe field is a plain path.
-		if (id != IDC_MEDIAMETA_FFPROBEPATH && str.find_first_of(" \t") != wxString::npos) {
+		// The player and browser fields are command templates, split into words.
+		if (str.find_first_of(" \t") != wxString::npos) {
 			str = "\"" + str + "\"";
 		}
 		wxTextCtrl *widget = CastChild(id, wxTextCtrl);
 		widget->SetValue(str);
 	}
-}
-
-void PrefsUnifiedDlg::OnButtonMediaMetaDetect(wxCommandEvent &WXUNUSED(evt))
-{
-	// Kick MediaProbe's autodetect and populate the path field with whatever it finds. An
-	// empty result tells the user politely; a path in hand is the more useful common case,
-	// so the binary is not also validated here.
-	//
-	// redetect=true: the point of pressing this is to notice an ffmpeg installed since
-	// aMule started, so the cached answer will not do. Going through DetectedPath() rather
-	// than AutoDetectPath() also refreshes the cache the probe worker reads. Monolithic
-	// only -- amulegui hides the button, because detection here would search the GUI's
-	// filesystem, not the daemon's.
-	const wxString path = MediaProbe::DetectedPath(/*redetect=*/true);
-	if (path.IsEmpty()) {
-		wxMessageBox(_("ffprobe not found on PATH or in the standard install locations. Install "
-			       "ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."),
-			_("Media metadata extraction"),
-			wxOK | wxICON_INFORMATION,
-			this);
-		return;
-	}
-	CastChild(IDC_MEDIAMETA_FFPROBEPATH, wxTextCtrl)->SetValue(path);
 }
 
 void PrefsUnifiedDlg::OnButtonTweaksReset(wxCommandEvent &WXUNUSED(evt))

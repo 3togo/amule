@@ -364,10 +364,10 @@ left off after a dropped connection — see
   reports the current list as the read-only `directories.allowed_remote_roots`.
   On a daemon-only install (a container, or the Android port, with no
   monolithic aMule whose GUI edits the list for you) add the folders you want
-  to permit to that file and restart amuled. The ffprobe path and the
-  online-signature folder are daemon-local in the same spirit: a `PATCH` that
-  would change either answers `400 read_only_field` (sending the current
-  value back is accepted).
+  to permit to that file and restart amuled. The online-signature folder is
+  daemon-local in the same spirit: a `PATCH` that would change it answers
+  `400 read_only_field` (sending the current value back is accepted). The
+  reserved `files.ffprobe_path` behaves the same way.
 
 ## Prometheus metrics
 

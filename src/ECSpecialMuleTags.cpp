@@ -27,7 +27,7 @@
 #include <ec/cpp/ECSpecialTags.h> // Needed for special EC tag creator classes
 
 #include "config.h" // Needed for ENABLE_VERSION_CHECK
-#include "Logger.h" // for AddLogLineC on the ffprobe refusal path
+#include "Logger.h" // for AddLogLineC on the refusal paths
 #include "Preferences.h"
 #include "amule.h"
 #include "IP2Country.h"     // For CIP2Country status (#440 remote GeoIP config)
@@ -330,8 +330,7 @@ CEC_Prefs_Packet::CEC_Prefs_Packet(
 #ifndef CLIENT_GUI
 		// The daemon reports its online-signature folder so a remote client can display it, but
 		// the path is local daemon configuration: amulegui must not send it back (the core
-		// ignores it anyway, see Apply()), so only the core emits this tag. Same policy as the
-		// ffprobe path.
+		// ignores it anyway, see Apply()), so only the core emits this tag.
 		online_sig.AddTag(CECTag(EC_TAG_ONLINESIG_DIRECTORY, thePrefs::GetOSDir().GetRaw()));
 #endif
 		online_sig.AddTag(CECTag(EC_TAG_ONLINESIG_UPDATE, thePrefs::GetOSUpdate()));
@@ -440,11 +439,9 @@ CEC_Prefs_Packet::CEC_Prefs_Packet(
 			filePrefs.AddTag(CECEmptyTag(EC_TAG_FILES_MEDIA_METADATA_ENABLED));
 		}
 #ifndef CLIENT_GUI
-		// The daemon reports its ffprobe path so a remote client can display it, but the path is
-		// local daemon configuration: amulegui must not send it back (the core ignores it anyway,
-		// see Apply()), so only the core emits this tag.
+		// By value, so a client can tell "no helper" from an older core that does not say.
 		filePrefs.AddTag(
-			CECTag(EC_TAG_FILES_MEDIA_FFPROBE_PATH, thePrefs::GetMediaMetadataFFProbePath()));
+			CECTag(EC_TAG_FILES_MEDIA_METADATA_AVAILABLE, thePrefs::IsMediaMetadataAvailable()));
 #endif
 		if (thePrefs::StartNextFileAlpha()) {
 			filePrefs.AddTag(CECEmptyTag(EC_TAG_FILES_START_NEXT_ALPHA));
@@ -930,8 +927,7 @@ bool CEC_Prefs_Packet::Apply(wxArrayString *refusedDirs) const
 			// credentials administer the application, not the host. It is configured locally in
 			// amule.conf. A value equal to the current one is accepted silently (an older
 			// amulegui resends the whole packet on every save, and amuleapi clients may PATCH
-			// back what they read); a real change is refused and logged. Same policy as the
-			// ffprobe path.
+			// back what they read); a real change is refused and logged.
 			if (oneTag->GetStringData() != thePrefs::GetOSDir().GetRaw()) {
 				AddLogLineC(
 					_("Refused a remote request to change the online-signature folder: "
@@ -1000,25 +996,12 @@ bool CEC_Prefs_Packet::Apply(wxArrayString *refusedDirs) const
 			thisTab,
 			thePrefs::SetMediaMetadataEnabled,
 			EC_TAG_FILES_MEDIA_METADATA_ENABLED);
-		if ((oneTag = thisTab->GetTagByName(EC_TAG_FILES_MEDIA_FFPROBE_PATH)) != nullptr) {
+		// EC_TAG_FILES_MEDIA_FFPROBE_PATH is reserved and ignored.
 #ifdef CLIENT_GUI
-			// Remote GUI: this is the daemon's own value, stored only so the (read-only)
-			// Preferences field can show it. amulegui never sends this tag back (see the emit
-			// side).
-			thePrefs::SetMediaMetadataFFProbePath(oneTag->GetStringData());
-#else
-			// The ffprobe path names a binary the core executes, so it is NOT remotely settable:
-			// EC and amuleapi credentials administer the application, not the host. It is
-			// configured locally in amule.conf. A value equal to the current one is accepted
-			// silently (an older amulegui resends the whole packet on every save, and amuleapi
-			// clients may PATCH back what they read); a real change is refused and logged.
-			if (oneTag->GetStringData() != thePrefs::GetMediaMetadataFFProbePath()) {
-				AddLogLineC(_(
-					"Refused a remote request to change the media-probe (ffprobe) path: "
-					"it can only be set in the daemon's own configuration."));
-			}
+		// An older core sends no capability; it may still extract with ffprobe.
+		oneTag = thisTab->GetTagByName(EC_TAG_FILES_MEDIA_METADATA_AVAILABLE);
+		thePrefs::SetMediaMetadataAvailable(oneTag == nullptr || oneTag->GetInt() != 0);
 #endif
-		}
 		ApplyBoolean(
 			use_tag, thisTab, thePrefs::SetStartNextFileAlpha, EC_TAG_FILES_START_NEXT_ALPHA);
 #ifdef CLIENT_GUI
@@ -1109,7 +1092,7 @@ bool CEC_Prefs_Packet::Apply(wxArrayString *refusedDirs) const
 			EC_TAG_DIRECTORIES_FOLLOW_SYMLINKS);
 #else
 		// follow_symlinks decides whether the share walk crosses symlinks out of the shared tree,
-		// so it widens what an allowed share exposes on the host. Like the ffprobe path it is NOT
+		// so it widens what an allowed share exposes on the host. It is NOT
 		// remotely settable: it is configured locally in amule.conf. A change is refused and
 		// logged; an unchanged value is accepted silently. Only a present tag is considered -- a
 		// presence-encoded packet that omits it (as amulegui now does) means "no request", not

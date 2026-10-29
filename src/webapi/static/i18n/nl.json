@@ -660,7 +660,6 @@
   "prefs_field_files_trust_unverified_aich_hashes": "Geavanceerde I.C.H. vertrouwt elke hash (niet aanbevolen)",
   "prefs_field_connection_bind_interface": "Koppel aan netwerkinterface (leeg voor alle)",
   "prefs_field_servers_update_list_at_startup": "Auto-update serverlijst bij het opstarten",
-  "prefs_field_files_ffprobe_path": "Pad naar ffprobe (leeg = auto-detectie)",
   "prefs_field_servers_manual_servers_high_priority": "Zet handmatig toegevoegde servers op hoge prioriteit",
   "prefs_field_security_shared_files_visibility": "Wie kan mijn gedeelde bestanden zien",
   "prefs_field_servers_autoconnect_static_servers_only": "Autoverbind alleen met servers in statische lijst",

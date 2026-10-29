@@ -285,7 +285,6 @@
   "shared_prio_low": "Низкий",
   "prefs_field_files_save_sources_for_rare_files": "Сохранять до 10 источников с Высоким ИД для редких файлов (≤20 источников) при выходе; используются при повторном запуске aMule в течение 2 часов",
   "prefs_servers": "Серверы",
-  "prefs_field_files_ffprobe_path": "Путь к ffprobe (пусто = автоопределение)",
   "prefs_field_servers_manual_servers_high_priority": "Высокий приоритет серверов, добавленных вручную",
   "prefs_group_geoip_db": "База данных",
   "prefs_field_security_shared_files_visibility": "Кто может видеть мои опубликованные файлы",
