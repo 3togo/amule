@@ -1057,5 +1057,10 @@
   "prefs_field_message_filter_advanced_spam_filter": "Activa el filtre avançat de missatges brossa",
   "prefs_field_message_filter_use_captchas": "Demana un CAPTCHA als primers missatges de qui no és a la llista d'amics",
   "prefs_field_message_filter_use_captchas_help": "Els missatges es mantenen amagats fins que el remitent resol la prova. Els clients sense compatibilitat amb CAPTCHA no poden iniciar un xat.",
-  "about_country_data": "Dades d'IP a país"
+  "about_country_data": "Dades d'IP a país",
+  "common_err_path_not_allowed": "Carpeta no permesa — {message}. Les carpetes que permet el dimoni es mostren a Preferències ▸ Directoris.",
+  "prefs_group_remote_roots": "Carpetes remotes permeses",
+  "prefs_allowed_roots_hint": "Els canvis remots de carpetes (carpetes d'entrada, temporal, compartides i de categoria) es limiten a aquestes arrels. Una llista buida vol dir que el dimoni rebutja qualsevol canvi remot de carpetes. Es configuren al dimoni a allowed-remote-dirs.dat i no es poden canviar mitjançant l'API.",
+  "prefs_daemon_local_hint": "Només es defineix al fitxer amule.conf del mateix dimoni; no es pot canviar mitjançant l'API.",
+  "prefs_field_directories_allowed_remote_roots": "Arrels configurades"
 }

@@ -1057,5 +1057,10 @@
   "prefs_field_message_filter_advanced_spam_filter": "Включить расширенный фильтр спама",
   "prefs_field_message_filter_use_captchas": "Требовать CAPTCHA для первых сообщений от пользователей, не входящих в список друзей",
   "prefs_field_message_filter_use_captchas_help": "Сообщения остаются скрытыми, пока отправитель не пройдёт проверку. Клиенты без поддержки CAPTCHA не смогут начать чат.",
-  "about_country_data": "Данные IP-to-Country"
+  "about_country_data": "Данные IP-to-Country",
+  "common_err_path_not_allowed": "Папка не разрешена — {message}. Папки, разрешённые демоном, перечислены в разделе «Настройки ▸ Каталоги».",
+  "prefs_group_remote_roots": "Разрешённые удалённые папки",
+  "prefs_allowed_roots_hint": "Удалённые изменения папок (папок входящих файлов, временных файлов, общих файлов и категорий) ограничены этими корневыми папками. Пустой список означает, что демон отклоняет любые удалённые изменения папок. Они настраиваются на стороне демона в allowed-remote-dirs.dat и не могут быть изменены через API.",
+  "prefs_daemon_local_hint": "Задаётся только в собственном amule.conf демона; его нельзя изменить через API.",
+  "prefs_field_directories_allowed_remote_roots": "Настроенные корневые папки"
 }
