@@ -921,7 +921,7 @@ Same envelope as the list item, plus the detail-only fields below (all omitted f
 | `lost_to_corruption_bytes` | int | Bytes discarded to corruption. |
 | `gained_by_compression_bytes` | int | Bytes saved by on-the-wire compression. |
 | `ich_recovered_packet_count` | int | Packets recovered by **I.C.H.** (Intelligent Corruption Handling), the recovery pass aMule's own UI names. Packets, not bytes -- unlike its two byte-valued neighbours above. |
-| `aich_hash` | string\|null | AICH master hash (hex), or `null` until the hashset exists. |
+| `aich_hash` | string\|null | AICH master hash (base32), or `null` until the hashset exists. |
 | `part_file_name` | string | The partfile's `.part` control-file basename (e.g. `001.part`). **Omitted entirely** once the download has completed (status `completed`, before `clear_completed`): a completed file structurally has no partfile, so the key is absent rather than `null`. Branch on key existence, or read `status`. |
 | `directory` | string | Directory the file lives in on disk — the Temp directory while downloading, the destination directory once completed. |
 | `upload_queue_count` | int | Clients waiting on this file's upload queue. |
@@ -1625,7 +1625,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 | `upload_ratio` | number | `xfer.total / size`; `0` when `size == 0`. |
 | `directory` | string | Directory path of the on-disk file — the temp directory while the file is still an incomplete partfile, the destination directory once it has completed. Identical to `directory` on `/downloads/{hash}` for the same file. |
 | `sources.complete_min` / `sources.complete_max` | int | The low and high ends of the estimated full-copy source range behind `sources.complete`. Two scalars, not a nested object. |
-| `aich_hash` | string\|null | AICH master hash (hex), or `null` until the hashset exists. |
+| `aich_hash` | string\|null | AICH master hash (base32), or `null` until the hashset exists. |
 | `total_part_count` | int | Total parts, `ceil(size / 9.28 MiB)`. |
 | `parts` | array | Per-part source availability, `[{ "sources": int }, ...]`, exactly `total_part_count` entries in file order. **`null`** until the first decode has landed, so "no data yet" and "no sources for any part" stay distinguishable. The key is always present. See below. |
 | `upload_queue_count` | int | Clients waiting on this file's upload queue. |

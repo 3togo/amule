@@ -7,6 +7,7 @@ import { formatPercent } from "./format.js";
 import { t, tn, terr, getLang } from "./i18n.js";
 import { api, apiUrl } from "./api.js";
 import { Icon } from "./icons.js";
+import { magnetLink } from "./links.js";
 
 // --- presentational components -----------------------------------------
 
@@ -382,23 +383,6 @@ export function confirmDialog(message, { okLabel = t("common_yes"), cancelLabel 
 
 // --- ed2k link + clipboard helpers -------------------------------------
 // Shared by the detail panels' Copy ED2K / Copy magnet buttons.
-
-// Build the ed2k-compatible magnet URI exactly like the desktop GUI's
-// CamuleAppCommon::CreateMagnetLink (src/amuleAppCommon.cpp): field order
-// dn, xt:urn:ed2k, xt:urn:ed2khash, xl; hash lower-cased; the name only has
-// spaces -> %20 and '/' stripped (CPath::Cleanup(false)), not full URL-encode.
-export function magnetLink(d) {
-  let dn = "";
-  for (const ch of d.name || "") {
-    if (ch === "/") continue;
-    if (ch === " ") dn += "%20";
-    else if (ch.codePointAt(0) >= 32) dn += ch;
-  }
-  const h = (d.hash || "").toLowerCase();
-  return "magnet:?dn=" + dn +
-    "&xt=urn:ed2k:" + h + "&xt=urn:ed2khash:" + h +
-    "&xl=" + (d.size_bytes || 0);
-}
 
 // Copy to clipboard with a plain fallback for non-secure contexts (the web UI
 // may be reached over http on a LAN IP, where navigator.clipboard is absent).
