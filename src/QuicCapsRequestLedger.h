@@ -9,6 +9,25 @@
 #include <cstdint>
 #include <vector>
 
+struct QuicCapsSendPlan
+{
+	bool obfuscate = false;
+	std::array<uint8_t, 16> targetHash{};
+};
+
+//! Plaintext, with no target hash, without a public IP or with obfuscation off.
+inline QuicCapsSendPlan MakeQuicCapsSendPlan(
+	bool clientCryptLayerSupported, uint32_t publicIP, const std::array<uint8_t, 16> &targetHash) noexcept
+{
+	QuicCapsSendPlan plan;
+	plan.obfuscate =
+		clientCryptLayerSupported && publicIP != 0 && targetHash != std::array<uint8_t, 16>{};
+	if (plan.obfuscate) {
+		plan.targetHash = targetHash;
+	}
+	return plan;
+}
+
 struct QuicCapsRequestRecord
 {
 	std::array<uint8_t, 16> peer;

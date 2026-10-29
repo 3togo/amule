@@ -245,7 +245,19 @@ void CMuleUDPSocket::SendPacket(CPacket *packet,
 	bool bKad,
 	uint32 nReceiverVerifyKey)
 {
-	wxCHECK_RET(packet, "Invalid packet.");
+	(void)TrySendPacket(
+		packet, IP, port, bEncrypt, pachTargetClientHashORKadID, bKad, nReceiverVerifyKey);
+}
+
+bool CMuleUDPSocket::TrySendPacket(CPacket *packet,
+	uint32 IP,
+	uint16 port,
+	bool bEncrypt,
+	const uint8 *pachTargetClientHashORKadID,
+	bool bKad,
+	uint32 nReceiverVerifyKey)
+{
+	wxCHECK_MSG(packet, false, "Invalid packet.");
 	/*wxCHECK_RET(port, "Invalid port.");
 	wxCHECK_RET(IP, "Invalid IP.");
 	*/
@@ -257,7 +269,7 @@ void CMuleUDPSocket::SendPacket(CPacket *packet,
 				<< "b");
 		delete packet;
 
-		return;
+		return false;
 	}
 
 	if (!Ok()) {
@@ -267,7 +279,7 @@ void CMuleUDPSocket::SendPacket(CPacket *packet,
 				<< "b");
 		delete packet;
 
-		return;
+		return false;
 	}
 
 	AddDebugLogLineN(logMuleUDP,
@@ -296,6 +308,7 @@ void CMuleUDPSocket::SendPacket(CPacket *packet,
 	}
 
 	theApp->uploadBandwidthThrottler->QueueForSendingControlPacket(this);
+	return true;
 }
 
 bool CMuleUDPSocket::Ok()
