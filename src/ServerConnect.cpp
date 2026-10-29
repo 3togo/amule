@@ -291,6 +291,11 @@ void CServerConnect::ConnectionEstablished(CServerSocket *sender)
 			tagcount++;
 		}
 #endif
+		const bool requestOfferFilesV1 = thePrefs::GetED2KAcceleratedPublication();
+		sender->m_offerFilesPolicy.BeginLogin(requestOfferFilesV1);
+		if (requestOfferFilesV1) {
+			tagcount++;
+		}
 		data.WriteUInt32(tagcount);
 
 		// Kry - Server doesn't support VBT tags afaik.
@@ -359,6 +364,10 @@ void CServerConnect::ConnectionEstablished(CServerSocket *sender)
 		}
 #endif
 
+		if (requestOfferFilesV1) {
+			CTagInt32("offerfiles_v", 1).WriteTagToFile(&data);
+		}
+
 		CPacket *packet = new CPacket(data, OP_EDONKEYPROT, OP_LOGINREQUEST);
 #ifdef DEBUG_CLIENT_PROTOCOL
 		AddLogLineC("Client: OP_LOGINREQUEST");
@@ -419,8 +428,7 @@ bool CServerConnect::SendPacket(CPacket *packet, bool delpacket, CServerSocket *
 {
 	if (!to) {
 		if (connected) {
-			connectedsocket->SendPacket(packet, delpacket, true);
-			return true;
+			return connectedsocket->TrySendPacket(packet, delpacket, true);
 		} else {
 			if (delpacket) {
 				delete packet;
@@ -429,8 +437,7 @@ bool CServerConnect::SendPacket(CPacket *packet, bool delpacket, CServerSocket *
 			return false;
 		}
 	} else {
-		to->SendPacket(packet, delpacket, true);
-		return true;
+		return to->TrySendPacket(packet, delpacket, true);
 	}
 }
 

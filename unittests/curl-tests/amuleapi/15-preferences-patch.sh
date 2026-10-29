@@ -1014,6 +1014,25 @@ _curl -X PATCH -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: applica
 	-d "{\"geoip\":{\"maxmind_license\":$SAVED_LICENSE,\"custom_update_url\":$SAVED_CUSTOM_URL},\"connection\":{\"proxy_user\":$SAVED_PXUSER}}" \
 	"$API/preferences" >/dev/null 2>&1
 
+# --- Accelerated eD2k publication: a by-value bool, on by default. ---
+_curl -H "Authorization: Bearer $ADMIN_TOKEN" "$API/preferences"
+_assert_json_eq '(.servers.accelerated_publication_enabled|type)' boolean 'servers.accelerated_publication_enabled is boolean'
+SAVED_ACCEL=$(printf '%s' "$CURL_BODY" | jq -r '.servers.accelerated_publication_enabled')
+ACCEL_TOGGLE=$([ "$SAVED_ACCEL" = "true" ] && echo false || echo true)
+_curl -X PATCH -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
+	-d "{\"servers\":{\"accelerated_publication_enabled\":$ACCEL_TOGGLE}}" "$API/preferences"
+_assert_status 200 'PATCH servers.accelerated_publication_enabled -> 200'
+_curl -H "Authorization: Bearer $ADMIN_TOKEN" "$API/preferences"
+_assert_json_eq '.servers.accelerated_publication_enabled' "$ACCEL_TOGGLE" 'servers.accelerated_publication_enabled persisted'
+# A PATCH without the key leaves it alone.
+_curl -X PATCH -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
+	-d '{"servers":{"dead_server_retry_count":4}}' "$API/preferences"
+_curl -H "Authorization: Bearer $ADMIN_TOKEN" "$API/preferences"
+_assert_json_eq '.servers.accelerated_publication_enabled' "$ACCEL_TOGGLE" 'unrelated servers PATCH keeps accelerated_publication_enabled'
+_curl -X PATCH -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
+	-d "{\"servers\":{\"accelerated_publication_enabled\":$SAVED_ACCEL,\"dead_server_retry_count\":$SAVED_RETRIES}}" \
+	"$API/preferences" >/dev/null 2>&1
+
 # --- Summary. -----------------------------------------------------
 echo
 if [ "$FAIL_COUNT" -eq 0 ]; then

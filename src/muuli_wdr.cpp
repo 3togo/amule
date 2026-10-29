@@ -1735,6 +1735,11 @@ wxSizer *PreferencesServerTab( wxWindow *parent, bool call_fit, bool set_sizer )
     item14->SetValue( TRUE );
     item0->Add( item14, wxSizerFlags().CenterVertical() );
 
+    wxCheckBox *item15 = new wxCheckBox( parent, IDC_ED2K_ACCELERATED_PUBLICATION, _("Publish shared files faster on servers that allow it"), wxDefaultPosition, wxDefaultSize, 0 );
+    item15->SetValue( TRUE );
+    item15->SetToolTip( _("Follow the publication pace that the server advertises. Other servers get the standard pace.") );
+    item0->Add( item15, wxSizerFlags().CenterVertical() );
+
     if (set_sizer)
     {
         parent->SetSizer( item0 );

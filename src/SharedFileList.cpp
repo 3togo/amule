@@ -46,10 +46,12 @@
 #include "ThreadScheduler.h"  // Needed for CThreadScheduler::GetPendingCount (bulk probe logging)
 #include "Preferences.h"      // Needed for thePrefs
 #include "UploadQueue.h"
+#include "ServerSocket.h"
 #include "DownloadQueue.h" // Needed for CDownloadQueue
 #include "amule.h"         // Needed for theApp
 #include "PartFile.h"      // Needed for PartFile
 #include "Server.h"        // Needed for CServer
+#include "ServerList.h"    // Needed for live UDP publication limits
 #include "Statistics.h"    // Needed for theStats
 #include "Logger.h"
 #include <common/Format.h>
@@ -711,6 +713,9 @@ bool CSharedFileList::AddFile(CKnownFile *pFile)
 
 	CKnownFileMap::value_type entry(pFile->GetFileHash(), pFile);
 	if (m_Files_map.insert(entry).second) {
+		// Known files added by a reload or watcher bypass SafeAddKFile.
+		// Every new shared entry must wake an idle ED2K publisher.
+		m_lastPublishED2KFlag = true;
 		m_listGeneration.fetch_add(1, std::memory_order_relaxed);
 		/* Keywords to publish on Kad */
 		m_keywords->AddKeywords(pFile);
@@ -1534,6 +1539,19 @@ void CSharedFileList::ClearED2KPublishInfo()
 	Notify_SharedFilesEndBulkUpdate();
 }
 
+void CSharedFileList::RepublishOffered(const COfferFilesPublication &publication)
+{
+	m_lastPublishED2KFlag = true;
+	wxMutexLocker lock(list_mut);
+	Notify_SharedFilesBeginBulkUpdate();
+	for (const auto &entry : m_Files_map) {
+		if (publication.Contains(entry.first)) {
+			entry.second->SetPublishedED2K(false);
+		}
+	}
+	Notify_SharedFilesEndBulkUpdate();
+}
+
 void CSharedFileList::ClearKadSourcePublishInfo()
 {
 	wxMutexLocker lock(list_mut);
@@ -1547,7 +1565,13 @@ void CSharedFileList::ClearKadSourcePublishInfo()
 void CSharedFileList::RepublishFile(CKnownFile *pFile)
 {
 	CServer *server = theApp->serverconnect->GetCurrentServer();
-	if (server && (server->GetTCPFlags() & SRV_TCPFLG_COMPRESSION)) {
+	if (!server) {
+		return;
+	}
+	bool canRepublish = server->GetTCPFlags() & SRV_TCPFLG_COMPRESSION;
+	const CServerSocket *socket = theApp->serverconnect->GetConnectedSocket();
+	canRepublish = canRepublish || (socket && socket->GetOfferFilesAdvertisement());
+	if (canRepublish) {
 		m_lastPublishED2KFlag = true;
 		pFile->SetPublishedED2K(false); // FIXME: this creates a wrong 'No' for the ed2k shared info
 						// in the listview until the file is shared again.
@@ -1576,15 +1600,56 @@ static bool SortFunc(const CKnownFile *fileA, const CKnownFile *fileB)
 	return GetRealPrio(fileA->GetUpPriority()) < GetRealPrio(fileB->GetUpPriority());
 }
 
-void CSharedFileList::SendListToServer()
+bool CSharedFileList::SendListToServer()
 {
+	CServer *server = theApp->serverconnect->GetCurrentServer();
+	if (!server || !theApp->IsConnectedED2K()) {
+		return false;
+	}
+	CServerSocket *socket = theApp->serverconnect->GetConnectedSocket();
+	if (!socket || !socket->CanPublishOfferFiles(GetTickCount64())) {
+		return false;
+	}
+	auto &publication = socket->GetOfferFilesPublication();
+	const auto *policy = socket->GetOfferFilesAdvertisement();
+	if (policy && !publication.Due(GetTickCount64(),
+			      policy->PublicationIntervalMs(
+				      thePrefs::GetED2KAcceleratedPublication(), ED2KREPUBLISHTIME))) {
+		return false;
+	}
+	// Packet capacity applies to every record; the distinct-candidate budget
+	// applies only to hashes not previously offered on this connection.
+	uint32 limit =
+		COfferFilesAdvertisement::LegacyPacketLimit(server->GetSoftFiles(), server->GetHardFiles());
+	uint32 newCandidateLimit = limit;
+	if (policy) {
+		limit = policy->PacketLimit(server->GetHardFiles());
+		newCandidateLimit = policy->BatchLimit(
+			publication.Count(), server->GetSoftFiles(), server->GetHardFiles());
+		// UDP status updates change the list entry, while the socket owns a copy.
+		// Either source may tighten the connection snapshot, never enlarge it.
+		if (const CServer *listed = theApp->serverlist->GetServerByAddress(
+			    server->GetAddress(), server->GetPort())) {
+			limit = std::min(limit, policy->PacketLimit(listed->GetHardFiles()));
+			newCandidateLimit = std::min(newCandidateLimit,
+				policy->BatchLimit(
+					publication.Count(), listed->GetSoftFiles(), listed->GetHardFiles()));
+		}
+	} else if (const CServer *listed =
+			   theApp->serverlist->GetServerByAddress(server->GetAddress(), server->GetPort())) {
+		limit = std::min(
+			limit, COfferFilesAdvertisement::LegacyPacketLimit(0, listed->GetHardFiles()));
+	}
+	if (!limit) {
+		return false;
+	}
 	std::vector<CKnownFile *> SortedList;
 
 	{
 		wxMutexLocker lock(list_mut);
 
 		if (m_Files_map.empty() || !theApp->IsConnectedED2K()) {
-			return;
+			return false;
 		}
 
 		// Getting a sorted list of the non-published files.
@@ -1592,7 +1657,10 @@ void CSharedFileList::SendListToServer()
 
 		CKnownFileMap::iterator it = m_Files_map.begin();
 		for (; it != m_Files_map.end(); ++it) {
-			if (!it->second->GetPublishedED2K()) {
+			if ((!policy || newCandidateLimit ||
+				    publication.Contains(it->second->GetFileHash())) &&
+				!it->second->GetPublishedED2K() &&
+				(!it->second->IsLargeFile() || server->SupportsLargeFilesTCP())) {
 				SortedList.push_back(it->second);
 			}
 		}
@@ -1600,23 +1668,13 @@ void CSharedFileList::SendListToServer()
 
 	std::sort(SortedList.begin(), SortedList.end(), SortFunc);
 
-	// Limits for the server.
-
-	CServer *server = theApp->serverconnect->GetCurrentServer();
-	if (!server) {
-		return;
-	}
-
-	uint32 limit = server->GetSoftFiles();
-	if (limit == 0 || limit > 200) {
-		limit = 200;
-	}
-
 	if ((uint32)SortedList.size() < limit) {
 		limit = SortedList.size();
 		if (limit == 0) {
+			// Idle ticks remain constant-time, even with an exhausted soft budget.
+			// RepublishFile/AddFile and live limit changes reactivate this walk.
 			m_lastPublishED2KFlag = false;
-			return;
+			return false;
 		}
 	}
 
@@ -1629,23 +1687,30 @@ void CSharedFileList::SendListToServer()
 	// and a legacy non-LF server sees a short read against the count.
 	files.WriteUInt32(0);
 
+	std::vector<CKnownFile *> offered;
+	offered.reserve(limit);
 	uint32 count = 0;
+	uint32 newCandidates = 0;
 	// Add to packet
 	std::vector<CKnownFile *>::iterator sorted_it = SortedList.begin();
 	for (; (sorted_it != SortedList.end()) && (count < limit); ++sorted_it) {
 		CKnownFile *file = *sorted_it;
+		const bool newCandidate = !publication.Contains(file->GetFileHash());
+		if (policy && newCandidate && newCandidates >= newCandidateLimit) {
+			continue;
+		}
 		if (!file->IsLargeFile() || server->SupportsLargeFilesTCP()) {
 			file->CreateOfferedFilePacket(&files, server, NULL);
+			offered.push_back(file);
+			newCandidates += newCandidate;
 			++count;
 		}
-		file->SetPublishedED2K(true);
 	}
 
-	// Nothing to publish to this server -- e.g. every unpublished file in our prefix is >4GB
-	// and the server does not advertise SRV_TCPFLG_LARGEFILES. Sending an OP_OFFERFILES with
+	// Nothing eligible to publish to this server. Sending an OP_OFFERFILES with
 	// count=0 would just be ~28 bytes of TCP overhead per republish tick.
 	if (count == 0) {
-		return;
+		return false;
 	}
 
 	// Patch the count to match what we actually wrote.
@@ -1663,7 +1728,22 @@ void CSharedFileList::SendListToServer()
 	}
 
 	theStats::AddUpOverheadServer(packet->GetPacketSize());
-	theApp->serverconnect->SendPacket(packet, true);
+	// Published means offered to the connection, not acknowledged as indexed.
+	// Only mark records when ServerConnect accepts the packet for this connection.
+	if (theApp->serverconnect->SendPacket(packet, true, socket)) {
+		publication.Sent(GetTickCount64());
+		if (socket->AwaitingOfferFilesAdvertisement()) {
+			publication.SentBeforeAdvertisement(count);
+		}
+		for (CKnownFile *file : offered) {
+			if (socket->RequestedOfferFilesV1()) {
+				publication.Record(file->GetFileHash());
+			}
+			file->SetPublishedED2K(true);
+		}
+		return true;
+	}
+	return false;
 }
 
 void CSharedFileList::Process()
@@ -1697,11 +1777,57 @@ void CSharedFileList::Process()
 	}
 
 	Publish();
-	if (!m_lastPublishED2KFlag || (::GetTickCount64() - m_lastPublishED2K < ED2KREPUBLISHTIME)) {
+	ProcessED2K();
+}
+
+void CSharedFileList::ProcessED2K(bool acceleratedOnly)
+{
+	// An offline attempt must not advance the publication timer and postpone the
+	// first real offer after login. Disconnected sockets cannot accept a packet.
+	if (!theApp->IsConnectedED2K()) {
 		return;
 	}
-	SendListToServer();
-	m_lastPublishED2K = ::GetTickCount64();
+	CServerSocket *socket = theApp->serverconnect->GetConnectedSocket();
+	const auto *policy = socket ? socket->GetOfferFilesAdvertisement() : nullptr;
+	// The fast core-tick path must not change legacy maintenance scheduling.
+	if (acceleratedOnly && (!policy || !thePrefs::GetED2KAcceleratedPublication())) {
+		return;
+	}
+	const uint64 now = ::GetTickCount64();
+	if (socket && !socket->CanPublishOfferFiles(now)) {
+		return;
+	}
+	if (policy) {
+		const CServer *server = theApp->serverconnect->GetCurrentServer();
+		const CServer *listed = server ? theApp->serverlist->GetServerByAddress(
+							 server->GetAddress(), server->GetPort())
+					       : nullptr;
+		if (server && socket->GetOfferFilesPublication().UpdateLimits(server->GetSoftFiles(),
+				      server->GetHardFiles(),
+				      listed ? listed->GetSoftFiles() : 0,
+				      listed ? listed->GetHardFiles() : 0)) {
+			m_lastPublishED2KFlag = true;
+		}
+	}
+	// Once a second, from Process(); the core tick runs ten times as often.
+	if (policy && !acceleratedOnly && theLogger.IsEnabled(logServer)) {
+		AddDebugLogLineN(logServer,
+			CFormat("OFFERFILES queue: tick_ms=%llu pending_control_packets=%llu") % now %
+				static_cast<unsigned long long>(socket->GetPendingControlPacketCount()));
+	}
+	// A fresh negotiated connection may publish immediately. Measure subsequent
+	// intervals from queue acceptance, without catch-up batches after a late tick.
+	const bool due =
+		policy ? socket->GetOfferFilesPublication().Due(now,
+				 policy->PublicationIntervalMs(
+					 thePrefs::GetED2KAcceleratedPublication(), ED2KREPUBLISHTIME))
+		       : now - m_lastPublishED2K >= ED2KREPUBLISHTIME;
+	if (!m_lastPublishED2KFlag || !due) {
+		return;
+	}
+	if (SendListToServer()) {
+		m_lastPublishED2K = ::GetTickCount64();
+	}
 }
 
 SKadPublishFacts CSharedFileList::CurrentKadPublishFacts()

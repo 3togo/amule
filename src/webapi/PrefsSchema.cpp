@@ -198,6 +198,7 @@ const PrefField kSchema[] = {
 	PREF_BOOL("servers", "autoconnect_static_servers_only", EC_TAG_SERVERS_AUTOCONN_STATIC_ONLY, PrefEnc::Presence, false, PrefAccess::ReadWrite, servers.autoconnect_static_servers_only),
 	PREF_U32("servers", "dead_server_retry_count", EC_TAG_SERVERS_DEAD_SERVER_RETRIES, 65535u, PrefAccess::ReadWrite, servers.dead_server_retry_count),
 	PREF_BOOL("servers", "manual_servers_high_priority", EC_TAG_SERVERS_MANUAL_HIGH_PRIO, PrefEnc::Presence, false, PrefAccess::ReadWrite, servers.manual_servers_high_priority),
+	PREF_BOOL("servers", "accelerated_publication_enabled", EC_TAG_SERVERS_ED2K_ACCELERATED_PUBLICATION, PrefEnc::Value, false, PrefAccess::ReadWrite, servers.accelerated_publication_enabled),
 	PREF_BOOL("servers", "remove_dead_servers", EC_TAG_SERVERS_REMOVE_DEAD, PrefEnc::Presence, false, PrefAccess::ReadWrite, servers.remove_dead_servers),
 	PREF_BOOL("servers", "safe_server_connect_enabled", EC_TAG_SERVERS_SAFE_SERVER_CONNECT, PrefEnc::Presence, false, PrefAccess::ReadWrite, servers.safe_server_connect_enabled),
 	PREF_BOOL("servers", "smart_lowid_check_enabled", EC_TAG_SERVERS_SMART_ID_CHECK, PrefEnc::Presence, false, PrefAccess::ReadWrite, servers.smart_lowid_check_enabled),

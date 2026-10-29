@@ -120,6 +120,23 @@ TEST(ECPrefsDiff, FlagSwitchedOffCarriesFalse)
 	ASSERT_EQUALS(0u, flag->GetInt());
 }
 
+// A by-value flag, such as accelerated publication, keeps its value in the diff.
+TEST(ECPrefsDiff, ValueFlagSwitchedOffCarriesFalse)
+{
+	auto prefs = [](bool accelerated) {
+		CECPacket packet(EC_OP_SET_PREFERENCES, EC_DETAIL_UPDATE);
+		CECEmptyTag servers(EC_TAG_PREFS_SERVERS);
+		servers.AddTag(CECTag(EC_TAG_SERVERS_ED2K_ACCELERATED_PUBLICATION, accelerated));
+		packet.AddTag(servers);
+		return packet;
+	};
+	const std::unique_ptr<CECPacket> diff = MakePrefsDiffPacket(prefs(true), prefs(false));
+	const CECTag *flag = Find(*diff, EC_TAG_PREFS_SERVERS, EC_TAG_SERVERS_ED2K_ACCELERATED_PUBLICATION);
+	ASSERT_TRUE(flag != nullptr);
+	ASSERT_EQUALS(0u, flag->GetInt());
+	ASSERT_EQUALS(0u, MakePrefsDiffPacket(prefs(true), prefs(true))->GetTagCount());
+}
+
 TEST(ECPrefsDiff, GuestSwitchedOnKeepsItsPassword)
 {
 	const std::unique_ptr<CECPacket> diff =

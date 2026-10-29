@@ -146,6 +146,7 @@ const TABS = [
       { key: "safe_server_connect_enabled", type: "bool" },
       { key: "autoconnect_static_servers_only", type: "bool" },
       { key: "manual_servers_high_priority", type: "bool" },
+      { key: "accelerated_publication_enabled", type: "bool", titleKey: "prefs_field_servers_accelerated_publication_enabled_help" },
     ] },
     { legendKey: "prefs_group_kad", fields: [
       { key: "update_url", type: "text", cat: "kad",

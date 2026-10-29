@@ -324,6 +324,7 @@ wxSizer *PreferencesConnectionTab(wxWindow *parent, bool call_fit = TRUE, bool s
 #define IDC_SAFESERVERCONNECT 10155
 #define IDC_AUTOCONNECTSTATICONLY 10156
 #define IDC_MANUALSERVERHIGHPRIO 10157
+#define IDC_ED2K_ACCELERATED_PUBLICATION 10528
 wxSizer *PreferencesServerTab(wxWindow *parent, bool call_fit = TRUE, bool set_sizer = TRUE);
 
 #define IDC_ICH 10158

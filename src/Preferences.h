@@ -797,6 +797,10 @@ public:
 	static bool GetNetworkED2K() { return s_ConnectToED2K; }
 	static void SetNetworkED2K(bool val) { s_ConnectToED2K = val; }
 
+	// Request OFFERFILES v1 at login and follow the pacing a server advertises.
+	static bool GetED2KAcceleratedPublication() { return s_ED2KAcceleratedPublication; }
+	static void SetED2KAcceleratedPublication(bool val) { s_ED2KAcceleratedPublication = val; }
+
 	// Kad protocol version 0x0a (AICH keyword storage). When enabled, aMule advertises
 	// Kad version 0x0a and processes AICH hashes in keyword publish/search. When disabled,
 	// aMule stays at 0x08 for maximum backward compatibility with older Kad peers.
@@ -1214,6 +1218,7 @@ protected:
 	// Kad
 	static bool s_ConnectToKad;
 	static bool s_ConnectToED2K;
+	static bool s_ED2KAcceleratedPublication;
 	static bool s_KadProtocol10;
 	static bool s_KadStrictAichPublishers;
 	static bool s_KadProtocol10Supported;

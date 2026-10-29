@@ -952,6 +952,8 @@
   "prefs_field_servers_safe_server_connect_enabled": "Safe connect",
   "prefs_field_servers_autoconnect_static_servers_only": "Autoconnect to servers in static list only",
   "prefs_field_servers_manual_servers_high_priority": "Set manually added servers to High Priority",
+  "prefs_field_servers_accelerated_publication_enabled": "Publish shared files faster on servers that allow it",
+  "prefs_field_servers_accelerated_publication_enabled_help": "Follow the publication pace that the server advertises. Other servers get the standard pace. Applies from the next server connection.",
   "prefs_field_kad_update_url": "Kad nodes update URL",
   "prefs_field_kad_protocol10_enabled": "Share and use file repair hashes (AICH) over Kad",
   "prefs_field_kad_strict_aich_publishers": "Ignore repair hashes from Kad nodes too old to support them",

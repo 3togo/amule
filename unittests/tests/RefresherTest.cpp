@@ -2390,6 +2390,7 @@ TEST(Refresher, PreferencesExtendedCategoriesDecode)
 	CECEmptyTag srv(EC_TAG_PREFS_SERVERS);
 	srv.AddTag(CECTag(EC_TAG_SERVERS_DEAD_SERVER_RETRIES, static_cast<std::uint16_t>(5)));
 	srv.AddTag(CECTag(EC_TAG_SERVERS_UPDATE_URL, wxString::FromUTF8("http://srv")));
+	srv.AddTag(CECTag(EC_TAG_SERVERS_ED2K_ACCELERATED_PUBLICATION, true)); // by value
 	CECEmptyTag sources(EC_TAG_SERVERS_URL_LIST);
 	sources.AddTag(CECTag(EC_TAG_STRING, "http://srv"));
 	sources.AddTag(CECTag(EC_TAG_STRING, "https://backup"));
@@ -2449,6 +2450,7 @@ TEST(Refresher, PreferencesExtendedCategoriesDecode)
 	ASSERT_EQUALS(static_cast<std::uint32_t>(512), p.files.min_free_space_mebibytes);
 
 	ASSERT_EQUALS(static_cast<std::uint32_t>(5), p.servers.dead_server_retry_count);
+	ASSERT_TRUE(p.servers.accelerated_publication_enabled);
 	ASSERT_EQUALS(std::string("http://srv"), p.servers.update_url);
 	ASSERT_EQUALS(size_t(2), p.servers.update_urls.size());
 	ASSERT_EQUALS(std::string("http://srv"), p.servers.update_urls[0]);
@@ -2753,9 +2755,9 @@ TEST(Refresher, PrefsSchemaIsWellFormed)
 			++emitted;
 	}
 
-	// The documented payload is 135 fields. A row added or dropped without
+	// The documented payload is 136 fields. A row added or dropped without
 	// updating docs/api/REFERENCE.md should trip this.
-	ASSERT_EQUALS(static_cast<std::size_t>(135), emitted);
+	ASSERT_EQUALS(static_cast<std::size_t>(136), emitted);
 }
 
 // The schema's irregularities are enumerated rather than merely counted: each is deliberate and

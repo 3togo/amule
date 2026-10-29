@@ -376,6 +376,9 @@ CEC_Prefs_Packet::CEC_Prefs_Packet(
 			srv_prefs.AddTag(CECEmptyTag(EC_TAG_SERVERS_MANUAL_HIGH_PRIO));
 		}
 		srv_prefs.AddTag(CECTag(EC_TAG_SERVERS_UPDATE_URL, urls.empty() ? wxString() : urls[0]));
+		// By value: a client that predates the tag leaves the setting unchanged.
+		srv_prefs.AddTag(CECTag(EC_TAG_SERVERS_ED2K_ACCELERATED_PUBLICATION,
+			thePrefs::GetED2KAcceleratedPublication()));
 		AddTag(srv_prefs);
 	}
 
@@ -963,6 +966,10 @@ bool CEC_Prefs_Packet::Apply(wxArrayString *refusedDirs) const
 			thePrefs::SetAutoConnectStaticOnly,
 			EC_TAG_SERVERS_AUTOCONN_STATIC_ONLY);
 		ApplyBoolean(use_tag, thisTab, thePrefs::SetManualHighPrio, EC_TAG_SERVERS_MANUAL_HIGH_PRIO);
+		ApplyBoolean(true,
+			thisTab,
+			thePrefs::SetED2KAcceleratedPublication,
+			EC_TAG_SERVERS_ED2K_ACCELERATED_PUBLICATION);
 	}
 
 	if ((thisTab = GetTagByName(EC_TAG_PREFS_FILES)) != NULL) {

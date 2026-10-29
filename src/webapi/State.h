@@ -1119,6 +1119,7 @@ struct PreferencesSnapshot
 		bool safe_server_connect_enabled = false;
 		bool autoconnect_static_servers_only = false;
 		bool manual_servers_high_priority = false;
+		bool accelerated_publication_enabled = false;
 		std::string update_url;
 		std::vector<std::string> update_urls;
 	} servers;

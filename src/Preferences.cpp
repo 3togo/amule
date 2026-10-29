@@ -268,6 +268,7 @@ bool CPreferences::s_MediaMetadataEnabled;
 wxString CPreferences::s_MediaMetadataFFProbePath;
 bool CPreferences::s_ConnectToKad;
 bool CPreferences::s_ConnectToED2K;
+bool CPreferences::s_ED2KAcceleratedPublication;
 bool CPreferences::s_KadProtocol10;
 bool CPreferences::s_KadStrictAichPublishers;
 bool CPreferences::s_KadProtocol10Supported = true;
@@ -1502,6 +1503,9 @@ void CPreferences::BuildItemList(const wxString &appdir)
 	// the Lugdunum setting -- a server speaks one protocol or the other, never both.
 	s_MiscList.push_back(new Cfg_Bool("/eMule/LowIdHolePunch", s_LowIdHolePunchEnabled, false));
 #endif
+
+	NewCfgItem(IDC_ED2K_ACCELERATED_PUBLICATION,
+		(new Cfg_Bool("/eMule/ED2KAcceleratedPublication", s_ED2KAcceleratedPublication, true)));
 
 	/** Power management */
 	NewCfgItem(IDC_PREVENT_SLEEP,

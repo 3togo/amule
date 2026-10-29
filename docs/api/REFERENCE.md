@@ -2402,6 +2402,7 @@ Returns every preference category amuled carries over EC. The `general` and `con
     "server_priority_system_enabled": true,
     "smart_lowid_check_enabled": true, "safe_server_connect_enabled": false,
     "autoconnect_static_servers_only": false, "manual_servers_high_priority": false,
+    "accelerated_publication_enabled": true,
     "update_url": "https://upd.emule-security.org/server.met",
     "update_urls": ["https://upd.emule-security.org/server.met"]
   },
@@ -2476,6 +2477,8 @@ Booleans are plain JSON `true`/`false` regardless of how amuled encodes them on 
 `connection.upnp_enabled` toggles UPnP router forwarding of the daemon's P2P ports — the ports themselves are `connection.tcp_port` (ed2k TCP) and `connection.udp_port` (ed2k/Kad UDP). `connection.upnp_control_point_port` is a separate optional knob: the fixed local port the UPnP control point (libupnp) binds to for the router's callbacks, `0` meaning auto-assign — **not** a forwarded port. `connection.upnp_supported` is **read-only** — the daemon advertises whether it was built with UPnP (`false` on a core built `-DENABLE_UPNP=OFF`, where `upnp_enabled` has no effect); it is ignored if sent on PATCH. (Web-server UPnP is not exposed, since amuleweb is deprecated. EC-port UPnP is reported read-only, as `remote_controls.external_connections.upnp_enabled`.)
 
 The `connection.proxy_*` fields configure the proxy the **daemon** routes its P2P and HTTP traffic through. `proxy_type` is one of `"socks5"` / `"socks4"` / `"http"` / `"socks4a"` — any other value is a `400`. It is the empty string when the daemon has no proxy type configured at all (the core's `PROXY_NONE`), a state that cannot be set back through this API; use `proxy_enabled: false` to turn the proxy off. `proxy_auth_enabled` toggles username/password authentication. `proxy_password` is **write-only** — accepted on PATCH but never returned on GET (same as the `remote_controls` passwords); PATCH the other proxy fields without it to leave the stored password unchanged.
+
+`servers.accelerated_publication_enabled` lets the daemon publish its shared files at the pace an eD2k server advertises (OFFERFILES v1); servers that advertise none get the standard pace. It defaults to `true` and takes effect from the next server connection. A daemon that predates the setting does not report it: the key then reads `false`, and a PATCH has no effect.
 
 **Errors:** `503 ec_unavailable`.
 
