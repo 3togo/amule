@@ -40,6 +40,9 @@ public:
 	virtual ~CCommentDialog();
 	virtual bool OnInitDialog();
 
+	static wxString MenuLabel(const CKnownFile &file);
+	static bool CanEdit(const CKnownFile &file);
+
 protected:
 	wxDECLARE_EVENT_TABLE();
 

@@ -32,6 +32,7 @@
 
 #include "amule.h"            // Needed for theApp
 #include "amuleDlg.h"         // Needed for CamuleDlg
+#include "CommentDialog.h"    // Needed for CCommentDialog
 #include "CommentDialogLst.h" // Needed for CCommentDialogLst
 #include "DataToText.h"       // Needed for PriorityToStr
 #include "DownloadQueue.h"
@@ -186,6 +187,7 @@ wxBEGIN_EVENT_TABLE(CDownloadListCtrl, CMuleVirtualDataViewCtrl)
 	EVT_MENU(MP_VIEW, CDownloadListCtrl::OnPreviewFile)
 	EVT_MENU(MP_SHOWINFOLDER, CDownloadListCtrl::OnShowInFolder)
 	EVT_MENU(MP_VIEWFILECOMMENTS, CDownloadListCtrl::OnViewFileComments)
+	EVT_MENU(MP_CMT, CDownloadListCtrl::OnEditComment)
 
 	EVT_MENU(MP_WS, CDownloadListCtrl::OnGetFeedback)
 wxEND_EVENT_TABLE()
@@ -505,6 +507,8 @@ void CDownloadListCtrl::OnItemRightClicked(wxDataViewEvent &event)
 	AppendMenuIcon(m_menu, MP_SHOWINFOLDER, _("Show in file manager"), MenuIcon::Folder);
 	AppendMenuIcon(m_menu, MP_METINFO, _("Show file &details"), MenuIcon::Info);
 	AppendMenuIcon(m_menu, MP_VIEWFILECOMMENTS, _("Show all comments"), MenuIcon::Comments);
+	AppendMenuIcon(m_menu, MP_CMT, CCommentDialog::MenuLabel(*file), MenuIcon::Comments);
+	m_menu->Enable(MP_CMT, selected.size() == 1 && CCommentDialog::CanEdit(*file));
 	m_menu->AppendSeparator();
 	AppendMenuIcon(m_menu, MP_GETMAGNETLINK, _("Copy magnet URI to clipboard"), MenuIcon::Link);
 	AppendMenuIcon(m_menu, MP_GETED2KLINK, _("Copy eD2k &link to clipboard"), MenuIcon::Link);
@@ -774,6 +778,18 @@ void CDownloadListCtrl::OnViewFileComments(wxCommandEvent &WXUNUSED(event))
 	if (selected.size() == 1) {
 		CCommentDialogLst dialog(this, reinterpret_cast<CPartFile *>(selected.front()));
 		dialog.ShowModal();
+	}
+}
+
+void CDownloadListCtrl::OnEditComment(wxCommandEvent &WXUNUSED(event))
+{
+	// PopupMenu runs a nested event loop: the clicked file may have been removed.
+	if (m_menuItem != 0 && HasItemData(m_menuItem)) {
+		CPartFile *file = reinterpret_cast<CPartFile *>(m_menuItem);
+		if (CCommentDialog::CanEdit(*file)) {
+			CCommentDialog dialog(this, file);
+			dialog.ShowModal();
+		}
 	}
 }
 

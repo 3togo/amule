@@ -25,8 +25,10 @@
 
 #include "CommentDialog.h" // Interface declarations
 #include "GuiEvents.h"
-#include "KnownFile.h" // Needed for CKnownFile
-#include "muuli_wdr.h" // Needed for commentDlg
+#include "KnownFile.h"      // Needed for CKnownFile
+#include "SharedFileList.h" // Needed for CSharedFileList
+#include "amule.h"          // Needed for theApp
+#include "muuli_wdr.h"      // Needed for commentDlg
 
 #include <set>
 
@@ -62,6 +64,22 @@ CCommentDialog::CCommentDialog(wxWindow *parent, CKnownFile *file)
 CCommentDialog::~CCommentDialog()
 {
 	OpenInstances().erase(this);
+}
+
+wxString CCommentDialog::MenuLabel(const CKnownFile &file)
+{
+	return file.GetFileComment().IsEmpty() && !file.GetFileRating() ? _("Add Comment/Rating")
+									: _("Edit Comment/Rating");
+}
+
+bool CCommentDialog::CanEdit(const CKnownFile &file)
+{
+#ifdef CLIENT_GUI
+	// amulegui keeps this map in step with the daemon's shared list.
+	return theApp->sharedfiles->count(file.ECID()) != 0;
+#else
+	return theApp->sharedfiles->GetFileByID(file.GetFileHash()) != nullptr;
+#endif
 }
 
 void CCommentDialog::DropReferencesTo(const CKnownFile *file)

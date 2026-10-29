@@ -200,6 +200,7 @@ private:
 	void OnGetFeedback(wxCommandEvent &event);
 	void OnViewFileInfo(wxCommandEvent &event);
 	void OnViewFileComments(wxCommandEvent &event);
+	void OnEditComment(wxCommandEvent &event);
 	void OnPreviewFile(wxCommandEvent &event);
 	void OnShowInFolder(wxCommandEvent &event);
 	void OnRazorStatsCheck(wxCommandEvent &event);

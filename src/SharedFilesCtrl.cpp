@@ -252,11 +252,8 @@ void CSharedFilesCtrl::OnItemRightClicked(wxDataViewEvent &event)
 		m_menu->AppendSeparator();
 
 		CKnownFile *file = reinterpret_cast<CKnownFile *>(m_menuItem);
-		if (file->GetFileComment().IsEmpty() && !file->GetFileRating()) {
-			AppendMenuIcon(m_menu, MP_CMT, _("Add Comment/Rating"), MenuIcon::Comments);
-		} else {
-			AppendMenuIcon(m_menu, MP_CMT, _("Edit Comment/Rating"), MenuIcon::Comments);
-		}
+		AppendMenuIcon(m_menu, MP_CMT, CCommentDialog::MenuLabel(*file), MenuIcon::Comments);
+		m_menu->Enable(MP_CMT, CCommentDialog::CanEdit(*file));
 
 		m_menu->AppendSeparator();
 		m_menu->Append(MP_RENAME, _("Rename"));
@@ -1238,8 +1235,10 @@ void CSharedFilesCtrl::OnEditComment(wxCommandEvent &WXUNUSED(event))
 	const std::vector<wxUIntPtr> selected = GetSelectedItemData();
 	if (!selected.empty()) {
 		CKnownFile *file = reinterpret_cast<CKnownFile *>(selected.front());
-		CCommentDialog dialog(this, file);
-		dialog.ShowModal();
+		if (CCommentDialog::CanEdit(*file)) {
+			CCommentDialog dialog(this, file);
+			dialog.ShowModal();
+		}
 	}
 }
 
