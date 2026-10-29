@@ -2362,10 +2362,6 @@ msgid "Refused a remote request to change the online-signature folder: it can on
 msgstr "拒绝了更改在线签名文件夹的远程请求：它只能在 daemon 程序自己的配置中设置。"
 
 #: src/ECSpecialMuleTags.cpp
-msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
-msgstr "拒绝了更改 media-probe（ffprobe) 路径的远程请求：它只能在 daemon 自己的配置中设置。"
-
-#: src/ECSpecialMuleTags.cpp
 msgid "Refused a remote request to change the follow-symlinks-in-shares setting: it can only be set in the daemon's own configuration."
 msgstr "拒绝了更改 follow-symlinks-in-shares 设置的远程请求：它只能在 daemon 自己的配置中设置。"
 
@@ -4092,22 +4088,9 @@ msgstr "ListenSocket: Ok."
 msgid "ERROR: Could not listen to TCP port."
 msgstr "错误: 无法监听 TCP 端口。"
 
-#: src/Logger.cpp
-msgid "ERROR: "
-msgstr "错误: "
-
-#: src/Logger.cpp
-msgid "WARNING: "
-msgstr "警告: "
-
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: not using %s, because another user owns it or a folder above it."
-msgstr "媒体元数据：没在使用 %s，因为别的用户拥有它或和它上一级的文件夹。"
-
-#: src/MediaProbe.cpp
-msgid "Media metadata: no ffprobe binary found. Install ffmpeg, or set the ffprobe path in preferences; length, bitrate and codec will not be extracted."
-msgstr "媒体元数据：未找到 ffprobe 二进制文件。安装 ffmpeg，或在首选项中设置 ffprobe 路径；不会提取长度、比特率和编解码器信息。"
+msgid "Media metadata: bundled amule-media-probe helper is unavailable."
+msgstr ""
 
 #: src/MediaProbe.cpp
 #, c-format
@@ -4115,34 +4098,14 @@ msgid "Media metadata: %s is gone, nothing to extract"
 msgstr "媒体元数据：缺少 %s，没有可提取的信息"
 
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Extracting media metadata with ffprobe: %s"
+#, fuzzy, c-format
+msgid "Extracting media metadata: %s"
 msgstr "正用 ffprobe 提取媒体元数据：%s"
 
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe timed out or was cancelled for %s"
-msgstr "媒体元数据：ffprobe 超时或取消了 %s 的 ffprobe"
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ignoring implausibly large ffprobe output for %s"
-msgstr "媒体元数据：忽略 %s 的难以置信的大 ffprobe 输出"
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: could not run ffprobe (%s) -- check the media metadata settings"
-msgstr "媒体元数据：无法运行 ffprobe (%s) —— 检查媒体元数据设置"
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe failed (code %d) for %s"
+#, fuzzy, c-format
+msgid "Media metadata: parser failed for %s"
 msgstr "媒体元数据：%2$s 的 ffprobe 失败（代码 %1$d）"
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe found nothing usable in %s"
-msgstr "媒体元数据：ffprobe 没有在 %s 找到可用信息"
 
 #: src/MediaProbeThread.cpp
 #, c-format
@@ -5247,6 +5210,14 @@ msgid "Set manually added servers to High Priority"
 msgstr "设置手动添加的服务器为高优先级"
 
 #: src/muuli_wdr.cpp
+msgid "Publish shared files faster on servers that allow it"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Follow the publication pace that the server advertises. Other servers get the standard pace."
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid "Add files to download in pause mode"
 msgstr "添加新下载文件时设为暂停状态"
 
@@ -5386,7 +5357,7 @@ msgstr ""
 "\n"
 "技术细节：拒绝来自通告的 Kad 协议版本低于 0x09 的节点的 AICH 发布哈希。"
 
-#: src/muuli_wdr.cpp src/PrefsUnifiedDlg.cpp
+#: src/muuli_wdr.cpp
 msgid "Media metadata extraction"
 msgstr "媒体元数据提取"
 
@@ -5395,24 +5366,8 @@ msgid "Extract length / bitrate / codec from shared audio and video files"
 msgstr "从共享的音视频文件提取长度/比特率/编解码器信息"
 
 #: src/muuli_wdr.cpp
-msgid "When enabled, aMule runs ffprobe on each shared media file to fill in the Length / Bitrate / Codec columns other clients see when they find the file in a search. Requires ffmpeg (the ffprobe binary) to be installed."
-msgstr "启用此功能后，aMule 会对每个共享媒体文件运行 ffprobe 填充其他客户端在搜索到该文件时看到的“长度”、“比特率”和“编解码器”列。需要安装 ffmpeg（ffprobe 二进制文件）。"
-
-#: src/muuli_wdr.cpp
-msgid "Path to ffprobe:"
-msgstr "ffprobe 路径："
-
-#: src/muuli_wdr.cpp
-msgid "Full path to the ffprobe binary. Leave empty to have aMule auto-detect it on startup."
-msgstr "ffprobe 二进制文件的完整路径。留空让 amule 在启动时自动检测。"
-
-#: src/muuli_wdr.cpp
-msgid "Detect"
-msgstr "检测"
-
-#: src/muuli_wdr.cpp
-msgid "Search the standard install locations for an ffprobe binary and fill the path field."
-msgstr "搜索标准的 ffprobe 二进制文件安装路径，并填写路径字段。"
+msgid "When enabled, aMule uses its bundled MediaInfo parser to extract metadata from shared media files."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6841,6 +6796,10 @@ msgid "no options available"
 msgstr "选项不可用"
 
 #: src/Preferences.cpp
+msgid "Media metadata: FFProbePath is obsolete; aMule now uses its bundled MediaInfo parser. Removing the old setting."
+msgstr ""
+
+#: src/Preferences.cpp
 msgid "Invalid path mapping found, skipping"
 msgstr "发现无效的路径映射，跳过"
 
@@ -6968,6 +6927,10 @@ msgid "Failed to transfer data from Cfg to Widget with the ID %d and key %s"
 msgstr "通过ID %d和密匙%s把数据从Cfg转移到小插件失败"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid "This aMule has no media helper (amule-media-probe), so it cannot extract media metadata."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The type of proxy you are connecting to"
 msgstr "正在连接的代理服务器类型"
 
@@ -6983,14 +6946,6 @@ msgstr "通过ID %d和密匙%s把数据从小插件转移到Cfg失败"
 #: src/PrefsUnifiedDlg.cpp
 msgid "No password set."
 msgstr "未设置密码。"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "That file does not look like ffprobe. Choose a binary named ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" banner, leave the field empty to auto-detect, or set the path directly in amule.conf."
-msgstr "那个文件看起来不像 ffprobe。选择一个报告 “ffprobe version” 横幅的名为 ffprobe 的二进制文件（或 ffprobe.exe），留空该字段进行自动检测，或者在 amule.conf 中直接设置该路径。"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "Invalid ffprobe path"
-msgstr "无效的 ffprobe 路径"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The shared-file exclusion pattern is not a valid regular expression. The filter has been left disabled."
@@ -7179,10 +7134,11 @@ msgid "The aMule web server is deprecated. Consider running the aMule API instea
 msgstr "aMule Web 服务器已弃用。请考虑运行 aMule API。"
 
 #: src/PrefsUnifiedDlg.cpp
+#, fuzzy
 msgid ""
-"Your Auto-update servers list is in blank.\n"
-"Please fill in at least one URL to point to a valid server.met file.\n"
-"Click on the button \"List\" by this checkbox to enter an URL."
+"Your server list sources are empty.\n"
+"Please add at least one URL of a valid server.met file.\n"
+"Click the \"Edit sources...\" button next to this checkbox to add one."
 msgstr ""
 "您的自动更新服务器列表是的空的，\n"
 "请输入至少一个指向有效 server.met 的网址，\n"
@@ -7238,17 +7194,9 @@ msgid "Select browser"
 msgstr "选择浏览器"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Select ffprobe binary"
-msgstr "选择 ffprobe 文件"
-
-#: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Executable%s"
 msgstr "可执行%s"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "ffprobe not found on PATH or in the standard install locations. Install ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."
-msgstr "未在 PATH 或标准安装位置找到 ffprobe。安装 ffmpeg（ffmpeg 自带 ffprobe），或使用“浏览”手动选择一个二进制文件。"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Reset the settings on this page to their default values?"
@@ -10333,6 +10281,65 @@ msgstr "Kad 无法加载其已保存的索引。现有的索引文件被保留�
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr "Kad 无法保存索引。该文件之前的副本被保留。"
+
+#~ msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
+#~ msgstr "拒绝了更改 media-probe（ffprobe) 路径的远程请求：它只能在 daemon 自己的配置中设置。"
+
+#~ msgid "ERROR: "
+#~ msgstr "错误: "
+
+#~ msgid "WARNING: "
+#~ msgstr "警告: "
+
+#, c-format
+#~ msgid "Media metadata: not using %s, because another user owns it or a folder above it."
+#~ msgstr "媒体元数据：没在使用 %s，因为别的用户拥有它或和它上一级的文件夹。"
+
+#~ msgid "Media metadata: no ffprobe binary found. Install ffmpeg, or set the ffprobe path in preferences; length, bitrate and codec will not be extracted."
+#~ msgstr "媒体元数据：未找到 ffprobe 二进制文件。安装 ffmpeg，或在首选项中设置 ffprobe 路径；不会提取长度、比特率和编解码器信息。"
+
+#, c-format
+#~ msgid "Media metadata: ffprobe timed out or was cancelled for %s"
+#~ msgstr "媒体元数据：ffprobe 超时或取消了 %s 的 ffprobe"
+
+#, c-format
+#~ msgid "Media metadata: ignoring implausibly large ffprobe output for %s"
+#~ msgstr "媒体元数据：忽略 %s 的难以置信的大 ffprobe 输出"
+
+#, c-format
+#~ msgid "Media metadata: could not run ffprobe (%s) -- check the media metadata settings"
+#~ msgstr "媒体元数据：无法运行 ffprobe (%s) —— 检查媒体元数据设置"
+
+#, c-format
+#~ msgid "Media metadata: ffprobe found nothing usable in %s"
+#~ msgstr "媒体元数据：ffprobe 没有在 %s 找到可用信息"
+
+#~ msgid "When enabled, aMule runs ffprobe on each shared media file to fill in the Length / Bitrate / Codec columns other clients see when they find the file in a search. Requires ffmpeg (the ffprobe binary) to be installed."
+#~ msgstr "启用此功能后，aMule 会对每个共享媒体文件运行 ffprobe 填充其他客户端在搜索到该文件时看到的“长度”、“比特率”和“编解码器”列。需要安装 ffmpeg（ffprobe 二进制文件）。"
+
+#~ msgid "Path to ffprobe:"
+#~ msgstr "ffprobe 路径："
+
+#~ msgid "Full path to the ffprobe binary. Leave empty to have aMule auto-detect it on startup."
+#~ msgstr "ffprobe 二进制文件的完整路径。留空让 amule 在启动时自动检测。"
+
+#~ msgid "Detect"
+#~ msgstr "检测"
+
+#~ msgid "Search the standard install locations for an ffprobe binary and fill the path field."
+#~ msgstr "搜索标准的 ffprobe 二进制文件安装路径，并填写路径字段。"
+
+#~ msgid "That file does not look like ffprobe. Choose a binary named ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" banner, leave the field empty to auto-detect, or set the path directly in amule.conf."
+#~ msgstr "那个文件看起来不像 ffprobe。选择一个报告 “ffprobe version” 横幅的名为 ffprobe 的二进制文件（或 ffprobe.exe），留空该字段进行自动检测，或者在 amule.conf 中直接设置该路径。"
+
+#~ msgid "Invalid ffprobe path"
+#~ msgstr "无效的 ffprobe 路径"
+
+#~ msgid "Select ffprobe binary"
+#~ msgstr "选择 ffprobe 文件"
+
+#~ msgid "ffprobe not found on PATH or in the standard install locations. Install ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."
+#~ msgstr "未在 PATH 或标准安装位置找到 ffprobe。安装 ffmpeg（ffmpeg 自带 ffprobe），或使用“浏览”手动选择一个二进制文件。"
 
 #~ msgid "Tray icon support requires libayatana-appindicator3 at compile time."
 #~ msgstr "系统托盘图标支持在编译时需要 libayatana-appindicator3。"

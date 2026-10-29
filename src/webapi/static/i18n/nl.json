@@ -1046,5 +1046,12 @@
   "prefs_field_message_filter_advanced_spam_filter": "Schakel geavanceerd spamfilter in",
   "prefs_field_message_filter_use_captchas": "Vereis een CAPTCHA voor eerste berichten van niet-vrienden",
   "prefs_field_message_filter_use_captchas_help": "Berichten blijven verborgen totdat de stuurder de uitdaging oplost. Clients zonder CAPTCHA-ondersteuning kunnen geen chatbericht sturen.",
-  "about_country_data": "IP-naar-land gegevens"
+  "about_country_data": "IP-naar-land gegevens",
+  "prefs_daemon_local_hint": "Alleen instellen in de eigen amule.conf van de daemon. Het kan niet via de API veranderd worden.",
+  "prefs_allowed_roots_hint": "Veranderingen in externe mappen (binnenkomend, tijdelijk, gedeeld en categorie mappen) zijn beperkt tot deze wortelmappen. Een lege lijst betekent dat de daemon elke verandering van externe mappen weigert. Ze zijn ingesteld op de daemon in allowed-remote-dirs.dat en kunnen niet via de API veranderd worden.",
+  "prefs_group_remote_roots": "Toegestane externe mappen",
+  "prefs_field_servers_accelerated_publication_enabled_help": "Volg de publicatiesnelheid waarmee de server adverteert. Andere servers gebruiken de standaardsnelheid. Wordt toegepast vanaf de volgende serververbinding.",
+  "common_err_path_not_allowed": "Map niet toegestaan — {message}. De mappen die de daemon toestaat zijn genoemd onder Voorkeuren ▸ Mappen.",
+  "prefs_field_directories_allowed_remote_roots": "Ingestelde wortelmappen",
+  "prefs_field_servers_accelerated_publication_enabled": "Publiceer gedeelde bestanden sneller op servers die het toestaan"
 }

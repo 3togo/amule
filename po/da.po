@@ -2364,10 +2364,6 @@ msgid "Refused a remote request to change the online-signature folder: it can on
 msgstr ""
 
 #: src/ECSpecialMuleTags.cpp
-msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
-msgstr ""
-
-#: src/ECSpecialMuleTags.cpp
 msgid "Refused a remote request to change the follow-symlinks-in-shares setting: it can only be set in the daemon's own configuration."
 msgstr ""
 
@@ -4106,21 +4102,8 @@ msgstr "ListenSocket: OK."
 msgid "ERROR: Could not listen to TCP port."
 msgstr "FEJL: Kunne ikke lytte på TCP-port."
 
-#: src/Logger.cpp
-msgid "ERROR: "
-msgstr "FEJL: "
-
-#: src/Logger.cpp
-msgid "WARNING: "
-msgstr "ADVARSEL: "
-
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: not using %s, because another user owns it or a folder above it."
-msgstr ""
-
-#: src/MediaProbe.cpp
-msgid "Media metadata: no ffprobe binary found. Install ffmpeg, or set the ffprobe path in preferences; length, bitrate and codec will not be extracted."
+msgid "Media metadata: bundled amule-media-probe helper is unavailable."
 msgstr ""
 
 #: src/MediaProbe.cpp
@@ -4130,33 +4113,13 @@ msgstr ""
 
 #: src/MediaProbe.cpp
 #, c-format
-msgid "Extracting media metadata with ffprobe: %s"
+msgid "Extracting media metadata: %s"
 msgstr ""
 
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe timed out or was cancelled for %s"
-msgstr ""
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ignoring implausibly large ffprobe output for %s"
-msgstr ""
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: could not run ffprobe (%s) -- check the media metadata settings"
-msgstr ""
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe failed (code %d) for %s"
-msgstr ""
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe found nothing usable in %s"
-msgstr ""
+#, fuzzy, c-format
+msgid "Media metadata: parser failed for %s"
+msgstr "Udtrækning af mediemetadata"
 
 #: src/MediaProbeThread.cpp
 #, c-format
@@ -5288,6 +5251,14 @@ msgid "Set manually added servers to High Priority"
 msgstr "Sæt manuelt tilføjede servere til Høj Priotet"
 
 #: src/muuli_wdr.cpp
+msgid "Publish shared files faster on servers that allow it"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Follow the publication pace that the server advertises. Other servers get the standard pace."
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid "Add files to download in pause mode"
 msgstr "Tilføj filer til download i pause tilstand"
 
@@ -5416,7 +5387,7 @@ msgid ""
 "Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
 
-#: src/muuli_wdr.cpp src/PrefsUnifiedDlg.cpp
+#: src/muuli_wdr.cpp
 msgid "Media metadata extraction"
 msgstr "Udtrækning af mediemetadata"
 
@@ -5425,24 +5396,8 @@ msgid "Extract length / bitrate / codec from shared audio and video files"
 msgstr "Udtræk længde/bitrate/codec fra delte lyd- og videofiler"
 
 #: src/muuli_wdr.cpp
-msgid "When enabled, aMule runs ffprobe on each shared media file to fill in the Length / Bitrate / Codec columns other clients see when they find the file in a search. Requires ffmpeg (the ffprobe binary) to be installed."
-msgstr "Når dette er aktiveret, kører aMule ffprobe på hver delt mediefil for at udfylde kolonnerne Længde/Bitrate/Codec, som andre klienter ser, når de finder filen i en søgning. Kræver at ffmpeg (ffprobe-binærfilen) er installeret."
-
-#: src/muuli_wdr.cpp
-msgid "Path to ffprobe:"
-msgstr "Sti til ffprobe:"
-
-#: src/muuli_wdr.cpp
-msgid "Full path to the ffprobe binary. Leave empty to have aMule auto-detect it on startup."
-msgstr "Fuld sti til ffprobe-binærfilen. Lad feltet være tomt, hvis aMule selv skal finde den ved opstart."
-
-#: src/muuli_wdr.cpp
-msgid "Detect"
-msgstr "Find"
-
-#: src/muuli_wdr.cpp
-msgid "Search the standard install locations for an ffprobe binary and fill the path field."
-msgstr "Søg de typiske installationssteder efter en ffprobe-binærfil, og udfyld stifeltet."
+msgid "When enabled, aMule uses its bundled MediaInfo parser to extract metadata from shared media files."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6876,6 +6831,10 @@ msgid "no options available"
 msgstr "ingen indstillinger tilgængelige"
 
 #: src/Preferences.cpp
+msgid "Media metadata: FFProbePath is obsolete; aMule now uses its bundled MediaInfo parser. Removing the old setting."
+msgstr ""
+
+#: src/Preferences.cpp
 msgid "Invalid path mapping found, skipping"
 msgstr ""
 
@@ -7003,6 +6962,10 @@ msgid "Failed to transfer data from Cfg to Widget with the ID %d and key %s"
 msgstr "Kunne ikke overføre data fra Cfg til Widget med ID'et %d og nøglen %s"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid "This aMule has no media helper (amule-media-probe), so it cannot extract media metadata."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The type of proxy you are connecting to"
 msgstr "Typen af proxy, du opretter forbindelse til"
 
@@ -7018,15 +6981,6 @@ msgstr "Kunne ikke overføre data fra Widget til Cfg med ID'et %d og nøglen %s"
 #: src/PrefsUnifiedDlg.cpp
 msgid "No password set."
 msgstr "Intet kodeord angivet."
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "That file does not look like ffprobe. Choose a binary named ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" banner, leave the field empty to auto-detect, or set the path directly in amule.conf."
-msgstr ""
-
-#: src/PrefsUnifiedDlg.cpp
-#, fuzzy
-msgid "Invalid ffprobe path"
-msgstr "Ugyldigt filnavn."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The shared-file exclusion pattern is not a valid regular expression. The filter has been left disabled."
@@ -7217,10 +7171,11 @@ msgid "The aMule web server is deprecated. Consider running the aMule API instea
 msgstr "aMules webserver er forældet. Overvej i stedet at køre aMule API."
 
 #: src/PrefsUnifiedDlg.cpp
+#, fuzzy
 msgid ""
-"Your Auto-update servers list is in blank.\n"
-"Please fill in at least one URL to point to a valid server.met file.\n"
-"Click on the button \"List\" by this checkbox to enter an URL."
+"Your server list sources are empty.\n"
+"Please add at least one URL of a valid server.met file.\n"
+"Click the \"Edit sources...\" button next to this checkbox to add one."
 msgstr ""
 "Din liste til automatisk opdatering af servere er tom.\n"
 "Udfyld mindst én URL, der peger på en gyldig server.met-fil.\n"
@@ -7276,17 +7231,9 @@ msgid "Select browser"
 msgstr "Vælg browser"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Select ffprobe binary"
-msgstr "Vælg ffprobe-binærfil"
-
-#: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Executable%s"
 msgstr "Eksekverbar%s"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "ffprobe not found on PATH or in the standard install locations. Install ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."
-msgstr "ffprobe blev ikke fundet i PATH eller på de typiske installationssteder. Installer ffmpeg (som indeholder ffprobe), eller brug Gennemse for at vælge en binærfil manuelt."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Reset the settings on this page to their default values?"
@@ -10381,6 +10328,37 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "ERROR: "
+#~ msgstr "FEJL: "
+
+#~ msgid "WARNING: "
+#~ msgstr "ADVARSEL: "
+
+#~ msgid "When enabled, aMule runs ffprobe on each shared media file to fill in the Length / Bitrate / Codec columns other clients see when they find the file in a search. Requires ffmpeg (the ffprobe binary) to be installed."
+#~ msgstr "Når dette er aktiveret, kører aMule ffprobe på hver delt mediefil for at udfylde kolonnerne Længde/Bitrate/Codec, som andre klienter ser, når de finder filen i en søgning. Kræver at ffmpeg (ffprobe-binærfilen) er installeret."
+
+#~ msgid "Path to ffprobe:"
+#~ msgstr "Sti til ffprobe:"
+
+#~ msgid "Full path to the ffprobe binary. Leave empty to have aMule auto-detect it on startup."
+#~ msgstr "Fuld sti til ffprobe-binærfilen. Lad feltet være tomt, hvis aMule selv skal finde den ved opstart."
+
+#~ msgid "Detect"
+#~ msgstr "Find"
+
+#~ msgid "Search the standard install locations for an ffprobe binary and fill the path field."
+#~ msgstr "Søg de typiske installationssteder efter en ffprobe-binærfil, og udfyld stifeltet."
+
+#, fuzzy
+#~ msgid "Invalid ffprobe path"
+#~ msgstr "Ugyldigt filnavn."
+
+#~ msgid "Select ffprobe binary"
+#~ msgstr "Vælg ffprobe-binærfil"
+
+#~ msgid "ffprobe not found on PATH or in the standard install locations. Install ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."
+#~ msgstr "ffprobe blev ikke fundet i PATH eller på de typiske installationssteder. Installer ffmpeg (som indeholder ffprobe), eller brug Gennemse for at vælge en binærfil manuelt."
 
 #~ msgid "Tray icon support requires libayatana-appindicator3 at compile time."
 #~ msgstr "Understøttelse af statusikon kræver libayatana-appindicator3 ved kompilering."

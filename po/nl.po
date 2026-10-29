@@ -13,7 +13,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-27 11:03+0000\n"
+"PO-Revision-Date: 2026-10-29 17:24+0000\n"
 "Last-Translator: Marcel Pol <marcel@timelord.nl>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "Language: nl\n"
@@ -1292,12 +1292,12 @@ msgstr "Alle"
 
 #: src/amule-remote-gui.cpp src/muuli_wdr.cpp
 msgid "To allow a folder, add it to allowed-remote-dirs.dat in the daemon's configuration folder, one absolute path per line, then restart the daemon."
-msgstr ""
+msgstr "Om een map toe te staan voegt u deze toe aan allowed-remote-dirs.dat in de configuratiemap van de daemon, één absoluut pad per regel, en herstart u daarna de daemon."
 
 #: src/amule-remote-gui.cpp
 #, c-format
 msgid "The daemon refused these folders because they are outside the folders it allows (configured on the daemon):%s"
-msgstr ""
+msgstr "De daemon weigerde deze mappen omdat ze buiden de mappen liggen die het toestaat (ingesteld op de daemon):%s"
 
 #: src/amule-remote-gui.cpp
 msgid "The daemon could not apply the connection port changes."
@@ -1309,7 +1309,7 @@ msgstr "niet leesbaar"
 
 #: src/amule-remote-gui.cpp
 msgid "outside the folders the daemon allows (configured on the daemon)"
-msgstr ""
+msgstr "buiten de mappen staat de daemon toe (ingesteld op de daemon)"
 
 #: src/amule-remote-gui.cpp
 msgid "not found"
@@ -1339,14 +1339,13 @@ msgid "Can't create directory '%s' for category '%s', keeping directory '%s'."
 msgstr "Kan map '%s' niet aanmaken voor categorie '%s', map '%s' wordt behouden."
 
 #: src/amule-remote-gui.cpp
-#, fuzzy
 msgid "the daemon refused the request"
-msgstr "De daemon heeft het verzoek geweigerd."
+msgstr "de daemon heeft het verzoek geweigerd"
 
 #: src/amule-remote-gui.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "The daemon refused the category: %s"
-msgstr "De daemon heeft het verzoek geweigerd."
+msgstr "De daemon heeft de categorie %s geweigerd"
 
 #: src/amule-remote-gui.cpp src/ExternalConn.cpp src/ServerList.cpp
 msgid "Invalid URL"
@@ -2356,19 +2355,15 @@ msgstr "Ongeldige eD2k-link! FOUT: %s"
 
 #: src/ECSpecialMuleTags.cpp
 msgid "Refused a remote request to set the web-server template: the value must be a plain template name, not a path."
-msgstr ""
+msgstr "Een extern verzoek om het web-server sjabloon in te stellen is geweigerd. De waarde moet een eenvoudige sjabloonnaam zijn, geen pad."
 
 #: src/ECSpecialMuleTags.cpp
 msgid "Refused a remote request to change the online-signature folder: it can only be set in the daemon's own configuration."
-msgstr ""
-
-#: src/ECSpecialMuleTags.cpp
-msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
-msgstr ""
+msgstr "Een extern verzoek om de online handtekeningenmap te veranderen is geweigerd. Het kan alleen ingesteld worden in de eigen instellingen van de daemon."
 
 #: src/ECSpecialMuleTags.cpp
 msgid "Refused a remote request to change the follow-symlinks-in-shares setting: it can only be set in the daemon's own configuration."
-msgstr ""
+msgstr "Een extern verzoek om de instelling voor het volgen van symbolische links in gedeelde locaties te volgen is geweigerd. Het kan alleen ingesteld worden in de eigen instellingen van de daemon."
 
 #: src/EditServerListDlg.cpp
 msgid "Edit server list sources"
@@ -2406,7 +2401,7 @@ msgstr "Externe verbindingen uitgeschakeld vanwege leeg wachtwoord!"
 #: src/ExternalConn.cpp
 #, c-format
 msgid "Remote clients cannot change folders: no folder is listed in %s"
-msgstr ""
+msgstr "Externe clients kunnen mappen niet veranderen: geen map is genoemd in %s"
 
 #: src/ExternalConn.cpp
 msgid "External connections disabled in config file"
@@ -2638,11 +2633,11 @@ msgstr "Kon het amuleapi-wachtwoord niet opslaan: %s"
 
 #: src/ExternalConn.cpp
 msgid "One or more folders were outside the allowed remote directories and were left unchanged."
-msgstr ""
+msgstr "Één of meerdere mappen zijn buiten de toegestane externe mappen en zijn niet veranderd."
 
 #: src/ExternalConn.cpp
 msgid "The category folder is outside the allowed remote directories."
-msgstr ""
+msgstr "De categoriemap is buiten de toegestane externe mappen."
 
 #: src/ExternalConn.cpp
 msgid "No such category."
@@ -3366,7 +3361,7 @@ msgstr "HTTP-download geannuleerd"
 #: src/HTTPDownload.cpp
 #, c-format
 msgid "Refusing to download %s: only http and https URLs are supported."
-msgstr ""
+msgstr "Downloaden van %s wordt geweigerd: alleen http- en https-URLs worden ondersteund."
 
 #: src/HTTPDownload.cpp
 #, c-format
@@ -4093,22 +4088,9 @@ msgstr "ListenSocket: Ok."
 msgid "ERROR: Could not listen to TCP port."
 msgstr "FOUT: Luisteren op TCP-poort mislukt."
 
-#: src/Logger.cpp
-msgid "ERROR: "
-msgstr "FOUT: "
-
-#: src/Logger.cpp
-msgid "WARNING: "
-msgstr "WAARSCHUWING: "
-
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: not using %s, because another user owns it or a folder above it."
-msgstr "Media-metadata: gebruikt %s niet omdat een andere gebruiker dat bezit of een map daarboven bezit."
-
-#: src/MediaProbe.cpp
-msgid "Media metadata: no ffprobe binary found. Install ffmpeg, or set the ffprobe path in preferences; length, bitrate and codec will not be extracted."
-msgstr "Media-metadata: geen ffprobe-programma gevonden. Installeer ffmpeg of stel het pad naar ffprobe in Voorkeuren in; Lengte, bitrate en codec worden niet uitgelezen."
+msgid "Media metadata: bundled amule-media-probe helper is unavailable."
+msgstr ""
 
 #: src/MediaProbe.cpp
 #, c-format
@@ -4116,34 +4098,14 @@ msgid "Media metadata: %s is gone, nothing to extract"
 msgstr "Media-metadata: %s is verdwenen, niets om uit te lezen"
 
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Extracting media metadata with ffprobe: %s"
+#, fuzzy, c-format
+msgid "Extracting media metadata: %s"
 msgstr "Media-metadata wordt uitgelezen met ffprobe: %s"
 
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe timed out or was cancelled for %s"
-msgstr "Media-metadata: time-out van ffprobe of geannuleerd voor %s"
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ignoring implausibly large ffprobe output for %s"
-msgstr "Media-metadata: ongelofelijk lange ffprobe-uitvoer wordt genegeerd voor %s"
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: could not run ffprobe (%s) -- check the media metadata settings"
-msgstr "Media-metadata: kon ffprobe niet uitvoeren (%s) -- controleer de media-metadata instellingen"
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe failed (code %d) for %s"
+#, fuzzy, c-format
+msgid "Media metadata: parser failed for %s"
 msgstr "Media-metadata: ffprobe mislukt (code %d) voor %s"
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe found nothing usable in %s"
-msgstr "Media-metadata: ffprobe vond niets bruikbaars in %s"
 
 #: src/MediaProbeThread.cpp
 #, c-format
@@ -5249,6 +5211,14 @@ msgid "Set manually added servers to High Priority"
 msgstr "Zet handmatig toegevoegde servers op hoge prioriteit"
 
 #: src/muuli_wdr.cpp
+msgid "Publish shared files faster on servers that allow it"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Follow the publication pace that the server advertises. Other servers get the standard pace."
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid "Add files to download in pause mode"
 msgstr "Voeg bestanden aan downloads toe in pauze-modus"
 
@@ -5388,7 +5358,7 @@ msgstr ""
 "\n"
 "Technisch detail: verwerpt AICH-publicatielabels van nodes die adverteren met Kad-protocolversies voor 0x09."
 
-#: src/muuli_wdr.cpp src/PrefsUnifiedDlg.cpp
+#: src/muuli_wdr.cpp
 msgid "Media metadata extraction"
 msgstr "Uitlezen van media-metadata"
 
@@ -5397,24 +5367,8 @@ msgid "Extract length / bitrate / codec from shared audio and video files"
 msgstr "Precieze lengte/bitrate/codec uitlezen uit gedeelde audio- en videobestanden"
 
 #: src/muuli_wdr.cpp
-msgid "When enabled, aMule runs ffprobe on each shared media file to fill in the Length / Bitrate / Codec columns other clients see when they find the file in a search. Requires ffmpeg (the ffprobe binary) to be installed."
-msgstr "Indien ingeschakeld voert aMule ffprobe uit op elk gedeeld mediabestand om de kolommen Lengte/Bitrate/Codec in te vullen die andere clients zien wanneer ze het bestand vinden in een zoekopdracht. Vereist dat ffmpeg (het programma ffprobe) is geïnstalleerd."
-
-#: src/muuli_wdr.cpp
-msgid "Path to ffprobe:"
-msgstr "Pad naar ffprobe:"
-
-#: src/muuli_wdr.cpp
-msgid "Full path to the ffprobe binary. Leave empty to have aMule auto-detect it on startup."
-msgstr "Volledig pad naar het ffprobe-programma. Laat leeg om aMule dit automatisch te laten detecteren bij het opstarten."
-
-#: src/muuli_wdr.cpp
-msgid "Detect"
-msgstr "Detecteren"
-
-#: src/muuli_wdr.cpp
-msgid "Search the standard install locations for an ffprobe binary and fill the path field."
-msgstr "Zoek naar een ffprobe-programma op de standaard installatielocaties en vul het padveld in."
+msgid "When enabled, aMule uses its bundled MediaInfo parser to extract metadata from shared media files."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -5490,11 +5444,11 @@ msgstr "Toon hoeveel van de bestanden en mappen in uw gedeelde mappen door het h
 
 #: src/muuli_wdr.cpp
 msgid "Folders the daemon allows remote changes in"
-msgstr ""
+msgstr "Mappen waarin de daemon externe veranderingen toestaat"
 
 #: src/muuli_wdr.cpp
 msgid "(Read-only. Configured on the daemon; if empty, the daemon refuses every remote folder change.)"
-msgstr ""
+msgstr "(Alleen-lezen. Ingesteld in de daemon. Als dit leeg is weigert de daemon elke externe verandering van de map.)"
 
 #: src/muuli_wdr.cpp
 msgid "When the connected core's files live on a different machine, map a path prefix it reports to where that filesystem is reachable from here (a network share, say) so \"Open\" and \"Show in folder\" work."
@@ -5762,15 +5716,15 @@ msgstr "Vereis versleutelde verbindingen (weigert clients die niet kunnen versle
 
 #: src/muuli_wdr.cpp
 msgid "Folders remote clients may use"
-msgstr ""
+msgstr "Mappen die externe clients mogen gebruiken"
 
 #: src/muuli_wdr.cpp
 msgid "(Remote clients may set the incoming, temp, shared and category folders only inside these. Empty means no remote folder change is allowed. Local changes here are never restricted.)"
-msgstr ""
+msgstr "(Externe clients mogen de binnenkomend, tijdelijk, gedeeld en categorie mappen alleen instellen binnen deze instelling. Leeg betekent dat geen externe verandering van mappen is toegestaan. Lokale veranderingen hieruit worden nooit beperkt.)"
 
 #: src/muuli_wdr.cpp
 msgid "Absolute path of a folder, e.g. /home/user/aMule. A remote client may then set any folder at or below it."
-msgstr ""
+msgstr "Absoluut pad van een map, bvb. /home/user/aMule. Een externe client mag elke map in of onder deze map instellen."
 
 #: src/muuli_wdr.cpp
 msgid "aMule API server parameters"
@@ -6746,7 +6700,7 @@ msgstr[1] "Beschadigd deel (%d) gevonden in %d delen bestand %s - FileResultHash
 #: src/PartFile.cpp
 #, c-format
 msgid "'%s' does not match its file hash, and without the part hashset the corrupt part cannot be found. Waiting for the hashset."
-msgstr ""
+msgstr "'%s' komt niet overeen met de bestandshash en zonder de deel-hashset kan het beschadigde deel niet worden gevonden. Wachten op de hashset."
 
 #: src/PartFile.cpp
 #, c-format
@@ -6843,6 +6797,10 @@ msgid "no options available"
 msgstr "geen opties beschikbaar"
 
 #: src/Preferences.cpp
+msgid "Media metadata: FFProbePath is obsolete; aMule now uses its bundled MediaInfo parser. Removing the old setting."
+msgstr ""
+
+#: src/Preferences.cpp
 msgid "Invalid path mapping found, skipping"
 msgstr "Ongeldige padenkaart gevonden, wordt overgeslagen"
 
@@ -6862,7 +6820,7 @@ msgstr "Standaard poort zal worden gebruikt (%d)"
 #: src/Preferences.cpp
 #, c-format
 msgid "Ignoring a relative path in allowed-remote-dirs.dat (only absolute paths are accepted): %s"
-msgstr ""
+msgstr "Een relatief pad in allowed-remote-dirs.dat wordt genegeerd (alleen absolute paden worden geaccepteerd): %s"
 
 #: src/BandwidthLimitSlider.h
 msgid "Adjust the enabled limit from 1 KiB/s to line capacity."
@@ -6970,12 +6928,16 @@ msgid "Failed to transfer data from Cfg to Widget with the ID %d and key %s"
 msgstr "Overdragen van gegevens van Cfg naar widget met ID %d en sleutel %s mislukt"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid "This aMule has no media helper (amule-media-probe), so it cannot extract media metadata."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The type of proxy you are connecting to"
 msgstr "Het type proxy waarmee u verbinding maakt"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Set in the daemon's own configuration (amule.conf); not editable remotely."
-msgstr ""
+msgstr "Stel in via de eigen instellingen van de daemon (amule.conf). Niet extern aanpasbaar."
 
 #: src/PrefsUnifiedDlg.cpp
 #, c-format
@@ -6985,15 +6947,6 @@ msgstr "Overdragen van gegevens van Widget naar Cfg met ID %d en sleutel %s misl
 #: src/PrefsUnifiedDlg.cpp
 msgid "No password set."
 msgstr "Geen wachtwoord ingesteld."
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "That file does not look like ffprobe. Choose a binary named ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" banner, leave the field empty to auto-detect, or set the path directly in amule.conf."
-msgstr ""
-
-#: src/PrefsUnifiedDlg.cpp
-#, fuzzy
-msgid "Invalid ffprobe path"
-msgstr "Ongeldige bestandsnaam."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The shared-file exclusion pattern is not a valid regular expression. The filter has been left disabled."
@@ -7182,10 +7135,11 @@ msgid "The aMule web server is deprecated. Consider running the aMule API instea
 msgstr "De aMule-webserver is verouderd. Overweeg in plaats daarvan de aMule API uit te voeren."
 
 #: src/PrefsUnifiedDlg.cpp
+#, fuzzy
 msgid ""
-"Your Auto-update servers list is in blank.\n"
-"Please fill in at least one URL to point to a valid server.met file.\n"
-"Click on the button \"List\" by this checkbox to enter an URL."
+"Your server list sources are empty.\n"
+"Please add at least one URL of a valid server.met file.\n"
+"Click the \"Edit sources...\" button next to this checkbox to add one."
 msgstr ""
 "Uw Auto-update servers lijst is leeg.\n"
 "Vul minimaal een URL naar een geldig server.met bestand in.\n"
@@ -7241,17 +7195,9 @@ msgid "Select browser"
 msgstr "Selecteer browser"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Select ffprobe binary"
-msgstr "Selecteer ffprobe-programma"
-
-#: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Executable%s"
 msgstr "Uitvoerbare%s"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "ffprobe not found on PATH or in the standard install locations. Install ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."
-msgstr "ffprobe niet gevonden in PATH of op de standaard installatielocaties. Installeer ffmpeg (dat ffprobe bevat) of gebruik Bladeren om handmatig een programma te selecteren."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Reset the settings on this page to their default values?"
@@ -7446,16 +7392,15 @@ msgstr "Kies de lokale map"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Please enter an absolute path. A relative path would be resolved against the daemon's working directory, so it is not accepted."
-msgstr ""
+msgstr "Voer alstublieft een absoluut pad in. Een relatief pad zou worden opgelost tegen de werkmap van de daemon, dus dat is niet toegestaan."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Allowed folders for remote clients"
-msgstr ""
+msgstr "Toegestane mappen voor externe clients"
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid "Choose a folder remote clients may use"
-msgstr "Kies een map voor binnenkomende bestanden"
+msgstr "Kies een map die externe clients mogen gebruiken"
 
 #: src/SearchDlg.cpp
 msgid "Clear Search History"
@@ -8331,7 +8276,7 @@ msgstr[1] "%u nieuwe gedeelde bestanden ontdekt"
 #: src/SharedFileList.cpp
 #, c-format
 msgid "Refused to rename '%s' to '%s': the new name must be a plain file name, not a path."
-msgstr ""
+msgstr "Hernoemen van '%s' naar '%s' geweigerd: de nieuwe naam moet een eenvoudige bestandsnaam zijn, geen pad."
 
 #: src/SharedFilePeersListCtrl.cpp src/SourceListCtrl.cpp
 msgid "User Name"
@@ -10344,6 +10289,65 @@ msgstr "Kad kon de opgeslagen index niet laden. Bestaande indexbestanden zijn be
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr "Kad kon een index niet opslaan. De vorige kopie van dat bestand is bewaard."
+
+#~ msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
+#~ msgstr "Een extern verzoek om het media-peilings- (ffprobe-)pad te veranderen is geweigerd. Het kan alleen ingesteld worden in de eigen instellingen van de daemon."
+
+#~ msgid "ERROR: "
+#~ msgstr "FOUT: "
+
+#~ msgid "WARNING: "
+#~ msgstr "WAARSCHUWING: "
+
+#, c-format
+#~ msgid "Media metadata: not using %s, because another user owns it or a folder above it."
+#~ msgstr "Media-metadata: gebruikt %s niet omdat een andere gebruiker dat bezit of een map daarboven bezit."
+
+#~ msgid "Media metadata: no ffprobe binary found. Install ffmpeg, or set the ffprobe path in preferences; length, bitrate and codec will not be extracted."
+#~ msgstr "Media-metadata: geen ffprobe-programma gevonden. Installeer ffmpeg of stel het pad naar ffprobe in Voorkeuren in; Lengte, bitrate en codec worden niet uitgelezen."
+
+#, c-format
+#~ msgid "Media metadata: ffprobe timed out or was cancelled for %s"
+#~ msgstr "Media-metadata: time-out van ffprobe of geannuleerd voor %s"
+
+#, c-format
+#~ msgid "Media metadata: ignoring implausibly large ffprobe output for %s"
+#~ msgstr "Media-metadata: ongelofelijk lange ffprobe-uitvoer wordt genegeerd voor %s"
+
+#, c-format
+#~ msgid "Media metadata: could not run ffprobe (%s) -- check the media metadata settings"
+#~ msgstr "Media-metadata: kon ffprobe niet uitvoeren (%s) -- controleer de media-metadata instellingen"
+
+#, c-format
+#~ msgid "Media metadata: ffprobe found nothing usable in %s"
+#~ msgstr "Media-metadata: ffprobe vond niets bruikbaars in %s"
+
+#~ msgid "When enabled, aMule runs ffprobe on each shared media file to fill in the Length / Bitrate / Codec columns other clients see when they find the file in a search. Requires ffmpeg (the ffprobe binary) to be installed."
+#~ msgstr "Indien ingeschakeld voert aMule ffprobe uit op elk gedeeld mediabestand om de kolommen Lengte/Bitrate/Codec in te vullen die andere clients zien wanneer ze het bestand vinden in een zoekopdracht. Vereist dat ffmpeg (het programma ffprobe) is geïnstalleerd."
+
+#~ msgid "Path to ffprobe:"
+#~ msgstr "Pad naar ffprobe:"
+
+#~ msgid "Full path to the ffprobe binary. Leave empty to have aMule auto-detect it on startup."
+#~ msgstr "Volledig pad naar het ffprobe-programma. Laat leeg om aMule dit automatisch te laten detecteren bij het opstarten."
+
+#~ msgid "Detect"
+#~ msgstr "Detecteren"
+
+#~ msgid "Search the standard install locations for an ffprobe binary and fill the path field."
+#~ msgstr "Zoek naar een ffprobe-programma op de standaard installatielocaties en vul het padveld in."
+
+#~ msgid "That file does not look like ffprobe. Choose a binary named ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" banner, leave the field empty to auto-detect, or set the path directly in amule.conf."
+#~ msgstr "Dat bestnad lijkt niet op ffprobe. Kies een binair bestand genaamd ffprobe (of ffprobe.exe) dat een \"ffprobe version\" banner rapporteert, laat het veld leeg om deze automatisch te detecteren of stel het pad direct in amule.conf in."
+
+#~ msgid "Invalid ffprobe path"
+#~ msgstr "Ongeldig ffprobe-pad"
+
+#~ msgid "Select ffprobe binary"
+#~ msgstr "Selecteer ffprobe-programma"
+
+#~ msgid "ffprobe not found on PATH or in the standard install locations. Install ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."
+#~ msgstr "ffprobe niet gevonden in PATH of op de standaard installatielocaties. Installeer ffmpeg (dat ffprobe bevat) of gebruik Bladeren om handmatig een programma te selecteren."
 
 #~ msgid "Tray icon support requires libayatana-appindicator3 at compile time."
 #~ msgstr "Ondersteuning voor systeemvakpictogram vereist libayatana-appindicator3 tijdens het compileren."
