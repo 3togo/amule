@@ -1855,6 +1855,14 @@ msgstr "رفض المستخدم %s (%u) الوصول إلى قائمة المج�
 msgid "File Comments"
 msgstr "ملف تعليقات"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "إضافة تعليق/تقييم"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "تعديل التعليق/التقييم"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "اسم مستخدم"
@@ -8333,14 +8341,6 @@ msgstr "مسار المجلد"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "ملفات مشاركة"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "إضافة تعليق/تقييم"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "تعديل التعليق/التقييم"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

@@ -1835,6 +1835,14 @@ msgstr "User %s (%u) denied access to shared directories/files list"
 msgid "File Comments"
 msgstr "File Comments"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Add Comment/Rating"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Edit Comment/Rating"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Username"
@@ -8312,14 +8320,6 @@ msgstr "Directory Path"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Shared Files"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Add Comment/Rating"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Edit Comment/Rating"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

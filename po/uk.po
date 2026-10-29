@@ -1869,6 +1869,14 @@ msgstr "Користувач %s (%u) заборонив доступ до пер
 msgid "File Comments"
 msgstr "Коментарі файлу"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Додати коментар/рейтинг"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Редагувати коментар/рейтинг"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Ім'я користувача"
@@ -8435,14 +8443,6 @@ msgstr "Шлях до теки"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Спільні файли"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Додати коментар/рейтинг"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Редагувати коментар/рейтинг"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

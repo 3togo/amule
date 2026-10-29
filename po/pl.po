@@ -1870,6 +1870,14 @@ msgstr "Użytkownik %s (%u) odmówił dostępu do listy udostępnionych plików/
 msgid "File Comments"
 msgstr "Komentarze pliku"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Dodaj komentarz/ocenę"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Edytuj komentarz/ocenę"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Nazwa użytkownika"
@@ -8428,14 +8436,6 @@ msgstr "Ścieżka katalogu"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Udostępnione pliki"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Dodaj komentarz/ocenę"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Edytuj komentarz/ocenę"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

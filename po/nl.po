@@ -1855,6 +1855,14 @@ msgstr "Gebruiker %s (%u) weigerde toegang tot gedeelde mappen/bestanden-lijst"
 msgid "File Comments"
 msgstr "Bestand commentaren"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Voeg commentaar/waardering toe"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Bewerk commentaar/waardering"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Gebruikersnaam"
@@ -8321,14 +8329,6 @@ msgstr "Pad naar map"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Gedeelde Bestanden"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Voeg commentaar/waardering toe"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Bewerk commentaar/waardering"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

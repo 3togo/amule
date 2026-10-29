@@ -1859,6 +1859,14 @@ msgstr "%s (%u) erabiltzaileak fitxategi/direktorio partekatuen zerrenda ikustea
 msgid "File Comments"
 msgstr "Fitxategi Iruzkinak"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Iruzkina/Kalifikazioa gehitu"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Iruzkina/Kalifikazioa editatu"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Erabiltzaile izena"
@@ -8381,14 +8389,6 @@ msgstr "Karpeta bidea"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Partekatutako fitxategiak"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Iruzkina/Kalifikazioa gehitu"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Iruzkina/Kalifikazioa editatu"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

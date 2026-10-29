@@ -1859,6 +1859,14 @@ msgstr "Brukar %s·(%u) nekta tilgang til delte kataloger/filer"
 msgid "File Comments"
 msgstr "Filkommentarar"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Legg til kommentar/Rangering"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Endre kommentar/Rangering"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Brukarnamn"
@@ -8385,14 +8393,6 @@ msgstr "Katalogsti"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Delte filer"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Legg til kommentar/Rangering"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Endre kommentar/Rangering"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

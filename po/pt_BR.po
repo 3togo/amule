@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-29 17:26+0000\n"
+"PO-Revision-Date: 2026-10-29 21:57+0000\n"
 "Last-Translator: Marcelo Jimenez <mroberto@users.sourceforge.com>\n"
 "Language-Team: Português (Brasileiro) <pt@li.org>\n"
 "Language: pt_BR\n"
@@ -1860,6 +1860,14 @@ msgstr "Usuário %s (%u) negou o acesso a lista de arquivos compartilhados"
 msgid "File Comments"
 msgstr "Comentários do arquivo"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Adicionar Comentário/Avaliação"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Editar Comentário/Avaliação"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Nome do usuário"
@@ -2669,7 +2677,7 @@ msgstr "A extração de metadados de mídia está desativada nas preferências"
 
 #: src/ExternalConn.cpp
 msgid "This aMule has no media helper (amule-media-probe)"
-msgstr ""
+msgstr "Este aMule não tem o auxiliar de mídia (amule-media-probe)"
 
 #: src/ExternalConn.cpp
 msgid "File is not eligible for media metadata extraction (not an audio/video file, or an incomplete download)"
@@ -4098,7 +4106,7 @@ msgstr "ERRO: Não foi possível escutar na porta TCP."
 
 #: src/MediaProbe.cpp
 msgid "Media metadata: bundled amule-media-probe helper is unavailable."
-msgstr ""
+msgstr "Metadados de mídia: o auxiliar embutido amule-media-probe não está disponível."
 
 #: src/MediaProbe.cpp
 #, c-format
@@ -4106,14 +4114,14 @@ msgid "Media metadata: %s is gone, nothing to extract"
 msgstr "Metadados de mídia: %s sumiu, nada a extrair"
 
 #: src/MediaProbe.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Extracting media metadata: %s"
-msgstr "Extraindo os metadados da mídia com ffprobe: %s"
+msgstr "Extraindo os metadados da mídia: %s"
 
 #: src/MediaProbe.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Media metadata: parser failed for %s"
-msgstr "Metadados de mídia: o ffprobe falhou (código %d) para %s"
+msgstr "Metadados de mídia: o analisador falhou para %s"
 
 #: src/MediaProbeThread.cpp
 #, c-format
@@ -5219,11 +5227,11 @@ msgstr "Definir servidores adicionados manualmente com prioridade Alta"
 
 #: src/muuli_wdr.cpp
 msgid "Publish shared files faster on servers that allow it"
-msgstr ""
+msgstr "Publicar arquivos compartilhados mais rápido nos servidores que permitem"
 
 #: src/muuli_wdr.cpp
 msgid "Follow the publication pace that the server advertises. Other servers get the standard pace."
-msgstr ""
+msgstr "Seguir o ritmo de publicação anunciado pelo servidor. Os demais servidores recebem o ritmo padrão."
 
 #: src/muuli_wdr.cpp
 msgid "Add files to download in pause mode"
@@ -5375,7 +5383,7 @@ msgstr "Extrair duração / taxa de bits / codec dos arquivos de áudio e vídeo
 
 #: src/muuli_wdr.cpp
 msgid "When enabled, aMule uses its bundled MediaInfo parser to extract metadata from shared media files."
-msgstr ""
+msgstr "Quando habilitado, o aMule usa seu analisador MediaInfo embutido para extrair metadados dos arquivos de mídia compartilhados."
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6805,7 +6813,7 @@ msgstr "nenhuma opção disponível"
 
 #: src/Preferences.cpp
 msgid "Media metadata: FFProbePath is obsolete; aMule now uses its bundled MediaInfo parser. Removing the old setting."
-msgstr ""
+msgstr "Metadados de mídia: FFProbePath está obsoleto; o aMule agora usa seu analisador MediaInfo embutido. Removendo a configuração antiga."
 
 #: src/Preferences.cpp
 msgid "Invalid path mapping found, skipping"
@@ -6936,7 +6944,7 @@ msgstr "Falha ao transferir dados de Cfg para o widget com o ID %d e a chave %s"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "This aMule has no media helper (amule-media-probe), so it cannot extract media metadata."
-msgstr ""
+msgstr "Este aMule não tem o auxiliar de mídia (amule-media-probe), portanto não pode extrair metadados de mídia."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The type of proxy you are connecting to"
@@ -7142,15 +7150,14 @@ msgid "The aMule web server is deprecated. Consider running the aMule API instea
 msgstr "O servidor web do aMule está obsoleto. Considere usar a API do aMule em seu lugar."
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid ""
 "Your server list sources are empty.\n"
 "Please add at least one URL of a valid server.met file.\n"
 "Click the \"Edit sources...\" button next to this checkbox to add one."
 msgstr ""
-"Sua lista de servidores para atualização automática está vazia.\n"
-"Preencha pelo menos uma URL que aponte para um arquivo server.met válido.\n"
-"Clique no botão \"Lista\" ao lado desta caixa de seleção para informar uma URL."
+"Suas fontes da lista de servidores estão vazias.\n"
+"Adicione pelo menos uma URL de um arquivo server.met válido.\n"
+"Clique no botão \"Editar fontes…\" ao lado desta caixa de seleção para adicionar uma."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Temporary files"
@@ -8230,7 +8237,7 @@ msgstr "Extração de metadados da mídia está desabilitada nas preferências, 
 
 #: src/SharedFileList.cpp
 msgid "This aMule has no media helper (amule-media-probe), so it cannot re-extract media metadata."
-msgstr ""
+msgstr "Este aMule não tem o auxiliar de mídia (amule-media-probe), portanto não pode extrair novamente os metadados de mídia."
 
 #: src/SharedFileList.cpp
 #, c-format
@@ -8324,14 +8331,6 @@ msgstr "Caminho do diretório"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Arquivos Compartilhados"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Adicionar Comentário/Avaliação"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Editar Comentário/Avaliação"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

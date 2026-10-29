@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: aMule man pages\n"
 "POT-Creation-Date: 2026-10-29 11:58+0100\n"
-"PO-Revision-Date: 2026-10-29 00:16+0000\n"
+"PO-Revision-Date: 2026-10-29 21:57+0000\n"
 "Last-Translator: \n"
 "Language-Team: Marcelo Roberto Jimenez <mroberto@users.sourceforge.net>\n"
 "Language: pt_BR\n"
@@ -935,10 +935,8 @@ msgstr "METADADOS DE MÍDIA"
 
 #. type: Plain text
 #: amuled.1.in
-#, fuzzy
-#| msgid "B<amuled> runs B<ffprobe> on each received file to extract the length, bitrate and codec tags it then publishes to the network. This is on by default (B<Enabled=1> under B<[MediaMetadata]> in I<amule.conf>); set B<Enabled=0> there and restart to turn it off. The B<ffprobe> binary is chosen by B<FFProbePath> in the same section and is local daemon configuration; it cannot be set over EC or amuleapi."
 msgid "B<amuled> runs its bundled B<amule-media-probe> helper on each received file to extract the length, bitrate and codec tags it then publishes to the network. The helper must sit next to the B<amuled> executable. This is on by default (B<Enabled=1> under B<[MediaMetadata]> in I<amule.conf>); set B<Enabled=0> there and restart to turn it off."
-msgstr "O B<amuled> executa o B<ffprobe> em cada arquivo recebido para extrair a duração, a taxa de bits e as tags de codec que depois publica na rede. Isso vem ativado por padrão (B<Enabled=1> em B<[MediaMetadata]> no I<amule.conf>); defina B<Enabled=0> lá e reinicie para desativar. O binário do B<ffprobe> é escolhido por B<FFProbePath> na mesma seção e é configuração local do daemon; não pode ser definido via EC ou amuleapi."
+msgstr "O B<amuled> executa seu auxiliar embutido B<amule-media-probe> em cada arquivo recebido para extrair a duração, a taxa de bits e as tags de codec que depois publica na rede. O auxiliar deve ficar ao lado do executável do B<amuled>. Isso vem ativado por padrão (B<Enabled=1> em B<[MediaMetadata]> no I<amule.conf>); defina B<Enabled=0> lá e reinicie para desativar."
 
 #. type: TH
 #: amulegui.1.in

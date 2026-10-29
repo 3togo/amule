@@ -1834,6 +1834,14 @@ msgstr "ব্যবহারকারী %s (%u) শেয়ার করা �
 msgid "File Comments"
 msgstr "ফাইল মন্তব্য"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "মন্তব্য/রেটিং যোগ করুন"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "মন্তব্য/রেটিং সম্পাদনা করুন"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "ব্যবহারকারীর নাম"
@@ -8311,14 +8319,6 @@ msgstr "ডিরেক্টরি পথ"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "শেয়ার করা ফাইল"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "মন্তব্য/রেটিং যোগ করুন"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "মন্তব্য/রেটিং সম্পাদনা করুন"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

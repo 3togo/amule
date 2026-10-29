@@ -1859,6 +1859,14 @@ msgstr "Usuariu %s (%u) refugó l'accesu a la llista de direutorios/ficheros com
 msgid "File Comments"
 msgstr "Comentarios de ficheru"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Amestar Comentariu/Valoración"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Editar Comentariu/Valoración"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Nome d'usuariu"
@@ -8384,14 +8392,6 @@ msgstr "Direutoriu"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Fich compartíos"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Amestar Comentariu/Valoración"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Editar Comentariu/Valoración"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

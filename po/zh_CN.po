@@ -1856,6 +1856,14 @@ msgstr "用户 %s (%u) 拒绝了目录/文件列表的访问"
 msgid "File Comments"
 msgstr "文件评论"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "添加评论/评价"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "编辑评论/评价"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "用户名"
@@ -8320,14 +8328,6 @@ msgstr "所在目录"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "共享文件"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "添加评论/评价"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "编辑评论/评价"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

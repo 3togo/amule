@@ -1854,6 +1854,14 @@ msgstr "Dalībnieks %s (%u) liedza piekļuvi kopīgoto mapju/datņu sarakstam"
 msgid "File Comments"
 msgstr "Datnes komentāri"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Pievienot komentāru/vērtējumu"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Rediģēt komentāru/vērtējumu"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Dalībniekvārds"
@@ -8381,14 +8389,6 @@ msgstr "Mapes ceļš"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Kopīgotās datnes"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Pievienot komentāru/vērtējumu"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Rediģēt komentāru/vērtējumu"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

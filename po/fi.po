@@ -1868,6 +1868,14 @@ msgstr "Käyttäjä %s (%u) on estänyt jaettujen kansioiden/tiedostojen listaam
 msgid "File Comments"
 msgstr "Tiedoston kommentit"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Lisää kommentti/luokitus"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Muuta kommenttia/luokitusta"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Käyttäjänimi"
@@ -8383,14 +8391,6 @@ msgstr "Kansiopolku"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Jaetut tiedostot"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Lisää kommentti/luokitus"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Muuta kommenttia/luokitusta"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

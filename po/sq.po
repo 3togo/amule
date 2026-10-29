@@ -1856,6 +1856,14 @@ msgstr "Perdoruesi %s (%u) nuk lejoi hyrjen ne listen e kartelave/faileve te nda
 msgid "File Comments"
 msgstr "Komentet e faileve"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Shti Komento/Klasifiko"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Redakto Koment/Klasifiko"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Emri i perdorimit"
@@ -8378,14 +8386,6 @@ msgstr "Direktoria Path"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "File te ndara"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Shti Komento/Klasifiko"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Redakto Koment/Klasifiko"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

@@ -475,7 +475,7 @@
   "downloads_cat_priority": "Prioridade",
   "identity_tip_hash": "Identificador eD2k único (MD4) do arquivo.",
   "messages_field_userhash": "Hash do usuário",
-  "shared_media_refresh_tip": "Reanalisa este arquivo com o ffprobe e substitui sua duração, taxa de bits, codec e tags. O resultado é registrado no log do aMule.",
+  "shared_media_refresh_tip": "Reanalisa este arquivo com o analisador de mídia embutido e substitui sua duração, taxa de bits, codec e tags. O resultado é registrado no log do aMule.",
   "shared_detail_tip_parts": "Número de partes de aproximadamente 9,28 MB em que o arquivo é dividido.",
   "messages_field_username": "Nome do usuário",
   "downloads_detail_tip_last_changed": "Quando foram recebidos dados pela última vez para este arquivo.",
@@ -1063,5 +1063,7 @@
   "prefs_field_directories_allowed_remote_roots": "Raízes configuradas",
   "prefs_allowed_roots_hint": "As alterações remotas de pastas (entrada, temporária, compartilhadas e de categorias) ficam restritas a estas raízes. Uma lista vazia significa que o daemon recusa qualquer alteração remota de pasta. Elas são configuradas no daemon em allowed-remote-dirs.dat e não podem ser alteradas pela API.",
   "prefs_field_servers_accelerated_publication_enabled_help": "Seguir o ritmo de publicação anunciado pelo servidor. Os demais servidores recebem o ritmo padrão. Vale a partir da próxima conexão ao servidor.",
-  "prefs_field_servers_accelerated_publication_enabled": "Publicar arquivos compartilhados mais rápido nos servidores que permitem"
+  "prefs_field_servers_accelerated_publication_enabled": "Publicar arquivos compartilhados mais rápido nos servidores que permitem",
+  "shared_media_refresh_tip_disabled": "A extração de metadados de mídia está desativada nas Preferências.",
+  "shared_media_refresh_tip_unavailable": "Este aMule não tem o auxiliar de mídia (amule-media-probe), portanto não pode extrair metadados de mídia."
 }

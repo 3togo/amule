@@ -1787,6 +1787,14 @@ msgstr "பயனர் %s (%u பகிரப்பட்ட கோப்பக
 msgid "File Comments"
 msgstr ""
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr ""
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr ""
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr ""
@@ -8137,14 +8145,6 @@ msgstr ""
 
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
-msgstr ""
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr ""
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
 msgstr ""
 
 #: src/SharedFilesCtrl.cpp

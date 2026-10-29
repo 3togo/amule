@@ -1857,6 +1857,14 @@ msgstr "L'usuari %s (%u) ha denegat l'accés a la llista de fitxers/directoris c
 msgid "File Comments"
 msgstr "Comentaris del Fitxer"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Afegeix comentari / valoració"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Edita comentari / valoració"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Usuari"
@@ -8321,14 +8329,6 @@ msgstr "Ubicació"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Compartits"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Afegeix comentari / valoració"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Edita comentari / valoració"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

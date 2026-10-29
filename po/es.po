@@ -1861,6 +1861,14 @@ msgstr "El usuario %s (%u) ha denegado el acceso a su lista de directorios/archi
 msgid "File Comments"
 msgstr "Comentarios del archivo"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Añadir comentario/valoración"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Editar comentario/valoración"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Nombre de usuario"
@@ -8330,14 +8338,6 @@ msgstr "Ruta del directorio"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Compartidos"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Añadir comentario/valoración"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Editar comentario/valoración"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"
