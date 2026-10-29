@@ -2364,10 +2364,6 @@ msgid "Refused a remote request to change the online-signature folder: it can on
 msgstr ""
 
 #: src/ECSpecialMuleTags.cpp
-msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
-msgstr ""
-
-#: src/ECSpecialMuleTags.cpp
 msgid "Refused a remote request to change the follow-symlinks-in-shares setting: it can only be set in the daemon's own configuration."
 msgstr ""
 
@@ -4106,21 +4102,8 @@ msgstr "Klausīšanās ligzda: Viss kārtībā."
 msgid "ERROR: Could not listen to TCP port."
 msgstr "KĻŪDA: neizdevās klausīties TCP portu."
 
-#: src/Logger.cpp
-msgid "ERROR: "
-msgstr "KĻŪDA: "
-
-#: src/Logger.cpp
-msgid "WARNING: "
-msgstr "BRĪDINĀJUMS: "
-
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: not using %s, because another user owns it or a folder above it."
-msgstr ""
-
-#: src/MediaProbe.cpp
-msgid "Media metadata: no ffprobe binary found. Install ffmpeg, or set the ffprobe path in preferences; length, bitrate and codec will not be extracted."
+msgid "Media metadata: bundled amule-media-probe helper is unavailable."
 msgstr ""
 
 #: src/MediaProbe.cpp
@@ -4130,33 +4113,13 @@ msgstr ""
 
 #: src/MediaProbe.cpp
 #, c-format
-msgid "Extracting media metadata with ffprobe: %s"
+msgid "Extracting media metadata: %s"
 msgstr ""
 
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe timed out or was cancelled for %s"
-msgstr ""
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ignoring implausibly large ffprobe output for %s"
-msgstr ""
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: could not run ffprobe (%s) -- check the media metadata settings"
-msgstr ""
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe failed (code %d) for %s"
-msgstr ""
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe found nothing usable in %s"
-msgstr ""
+#, fuzzy, c-format
+msgid "Media metadata: parser failed for %s"
+msgstr "Multivides metadatu iegūšana"
 
 #: src/MediaProbeThread.cpp
 #, c-format
@@ -5287,6 +5250,14 @@ msgid "Set manually added servers to High Priority"
 msgstr "Iestatīt pašrocīgi pievienotos serverus kā augstas prioritātes"
 
 #: src/muuli_wdr.cpp
+msgid "Publish shared files faster on servers that allow it"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Follow the publication pace that the server advertises. Other servers get the standard pace."
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid "Add files to download in pause mode"
 msgstr "Pievienot datnes lejupielādei apturētā režīmā"
 
@@ -5415,7 +5386,7 @@ msgid ""
 "Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
 
-#: src/muuli_wdr.cpp src/PrefsUnifiedDlg.cpp
+#: src/muuli_wdr.cpp
 msgid "Media metadata extraction"
 msgstr "Multivides metadatu iegūšana"
 
@@ -5424,24 +5395,8 @@ msgid "Extract length / bitrate / codec from shared audio and video files"
 msgstr "Iegūt garuma / bitu pārraides ātruma / kodeka infomāciju no kopīgotajām audio un video datnēm"
 
 #: src/muuli_wdr.cpp
-msgid "When enabled, aMule runs ffprobe on each shared media file to fill in the Length / Bitrate / Codec columns other clients see when they find the file in a search. Requires ffmpeg (the ffprobe binary) to be installed."
-msgstr "Kad iespējots, aMule katrai kopīgotajai multivides datnei palaiž ffprobe, lai aizpildītu kolonnas Ilgums / Bitu pārraides ātrums / Kodeks, ko citi klienti redz, atrodot datni meklēšanā. Nepieciešams uzstādīts ffmpeg (ffprobe binārā datne)."
-
-#: src/muuli_wdr.cpp
-msgid "Path to ffprobe:"
-msgstr "Ceļš uz ffprobe:"
-
-#: src/muuli_wdr.cpp
-msgid "Full path to the ffprobe binary. Leave empty to have aMule auto-detect it on startup."
-msgstr "Pilns ceļš uz ffprobe bināro datni. Atstājiet tukšu, lai aMule to automātiski noteiktu palaišanas laikā."
-
-#: src/muuli_wdr.cpp
-msgid "Detect"
-msgstr "Noteikt"
-
-#: src/muuli_wdr.cpp
-msgid "Search the standard install locations for an ffprobe binary and fill the path field."
-msgstr "Meklēt ffprobe bināro datni standarta uzstādīšanas vietās un aizpildīt ceļa lauku."
+msgid "When enabled, aMule uses its bundled MediaInfo parser to extract metadata from shared media files."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6879,6 +6834,10 @@ msgid "no options available"
 msgstr "nav pieejamu opciju"
 
 #: src/Preferences.cpp
+msgid "Media metadata: FFProbePath is obsolete; aMule now uses its bundled MediaInfo parser. Removing the old setting."
+msgstr ""
+
+#: src/Preferences.cpp
 msgid "Invalid path mapping found, skipping"
 msgstr ""
 
@@ -7006,6 +6965,10 @@ msgid "Failed to transfer data from Cfg to Widget with the ID %d and key %s"
 msgstr "Neizdevās nodot datus no konfigurācijas uz logrīku ar ID %d un atslēgu %s"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid "This aMule has no media helper (amule-media-probe), so it cannot extract media metadata."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The type of proxy you are connecting to"
 msgstr "Starpniekservera veids, kuram pieslēdzaties"
 
@@ -7021,15 +6984,6 @@ msgstr "Neizdevās nodot datus no logrīka uz konfigurāciju ar ID %d un atslēg
 #: src/PrefsUnifiedDlg.cpp
 msgid "No password set."
 msgstr "Parole nav norādīta."
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "That file does not look like ffprobe. Choose a binary named ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" banner, leave the field empty to auto-detect, or set the path directly in amule.conf."
-msgstr ""
-
-#: src/PrefsUnifiedDlg.cpp
-#, fuzzy
-msgid "Invalid ffprobe path"
-msgstr "Nederīgs datnes nosaukums."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The shared-file exclusion pattern is not a valid regular expression. The filter has been left disabled."
@@ -7220,10 +7174,11 @@ msgid "The aMule web server is deprecated. Consider running the aMule API instea
 msgstr "aMule tīmekļa serveris ir novecojis. Apsveriet iespēju tā vietā izmantot aMule API."
 
 #: src/PrefsUnifiedDlg.cpp
+#, fuzzy
 msgid ""
-"Your Auto-update servers list is in blank.\n"
-"Please fill in at least one URL to point to a valid server.met file.\n"
-"Click on the button \"List\" by this checkbox to enter an URL."
+"Your server list sources are empty.\n"
+"Please add at least one URL of a valid server.met file.\n"
+"Click the \"Edit sources...\" button next to this checkbox to add one."
 msgstr ""
 "Jūsu automātiskās atjaunināšanas serveru saraksts ir tukšs.\n"
 "Lūdzu, ievadiet vismaz vienu URL, kas norāda uz derīgu server.met datni.\n"
@@ -7281,17 +7236,9 @@ msgid "Select browser"
 msgstr "Izvēlēties pārlūkprogrammu"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Select ffprobe binary"
-msgstr "Atlasīt ffprobe izpilddatni"
-
-#: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Executable%s"
 msgstr "Izpildāmā datne%s"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "ffprobe not found on PATH or in the standard install locations. Install ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."
-msgstr "ffprobe nav atrasts PATH mainīgajā vai standarta uzstādīšanas vietās. Uzstādiet ffmpeg (kas iekļauj ffprobe) vai izmantojiet Pārlūkot, lai izvēlētos bināro datni manuāli."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Reset the settings on this page to their default values?"
@@ -10406,6 +10353,37 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "ERROR: "
+#~ msgstr "KĻŪDA: "
+
+#~ msgid "WARNING: "
+#~ msgstr "BRĪDINĀJUMS: "
+
+#~ msgid "When enabled, aMule runs ffprobe on each shared media file to fill in the Length / Bitrate / Codec columns other clients see when they find the file in a search. Requires ffmpeg (the ffprobe binary) to be installed."
+#~ msgstr "Kad iespējots, aMule katrai kopīgotajai multivides datnei palaiž ffprobe, lai aizpildītu kolonnas Ilgums / Bitu pārraides ātrums / Kodeks, ko citi klienti redz, atrodot datni meklēšanā. Nepieciešams uzstādīts ffmpeg (ffprobe binārā datne)."
+
+#~ msgid "Path to ffprobe:"
+#~ msgstr "Ceļš uz ffprobe:"
+
+#~ msgid "Full path to the ffprobe binary. Leave empty to have aMule auto-detect it on startup."
+#~ msgstr "Pilns ceļš uz ffprobe bināro datni. Atstājiet tukšu, lai aMule to automātiski noteiktu palaišanas laikā."
+
+#~ msgid "Detect"
+#~ msgstr "Noteikt"
+
+#~ msgid "Search the standard install locations for an ffprobe binary and fill the path field."
+#~ msgstr "Meklēt ffprobe bināro datni standarta uzstādīšanas vietās un aizpildīt ceļa lauku."
+
+#, fuzzy
+#~ msgid "Invalid ffprobe path"
+#~ msgstr "Nederīgs datnes nosaukums."
+
+#~ msgid "Select ffprobe binary"
+#~ msgstr "Atlasīt ffprobe izpilddatni"
+
+#~ msgid "ffprobe not found on PATH or in the standard install locations. Install ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."
+#~ msgstr "ffprobe nav atrasts PATH mainīgajā vai standarta uzstādīšanas vietās. Uzstādiet ffmpeg (kas iekļauj ffprobe) vai izmantojiet Pārlūkot, lai izvēlētos bināro datni manuāli."
 
 #~ msgid "Tray icon support requires libayatana-appindicator3 at compile time."
 #~ msgstr "Paziņojumu joslas ikonas atbalstam kompilēšanas laikā nepieciešams libayatana-appindicator3."

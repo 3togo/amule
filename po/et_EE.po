@@ -2365,10 +2365,6 @@ msgid "Refused a remote request to change the online-signature folder: it can on
 msgstr ""
 
 #: src/ECSpecialMuleTags.cpp
-msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
-msgstr ""
-
-#: src/ECSpecialMuleTags.cpp
 msgid "Refused a remote request to change the follow-symlinks-in-shares setting: it can only be set in the daemon's own configuration."
 msgstr ""
 
@@ -4113,21 +4109,8 @@ msgstr "ListenSocket: Ok."
 msgid "ERROR: Could not listen to TCP port."
 msgstr "VIGA: Ei suuda kuulata TCP porti."
 
-#: src/Logger.cpp
-msgid "ERROR: "
-msgstr "VIGA: "
-
-#: src/Logger.cpp
-msgid "WARNING: "
-msgstr "HOIATUS: "
-
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: not using %s, because another user owns it or a folder above it."
-msgstr ""
-
-#: src/MediaProbe.cpp
-msgid "Media metadata: no ffprobe binary found. Install ffmpeg, or set the ffprobe path in preferences; length, bitrate and codec will not be extracted."
+msgid "Media metadata: bundled amule-media-probe helper is unavailable."
 msgstr ""
 
 #: src/MediaProbe.cpp
@@ -4137,33 +4120,13 @@ msgstr ""
 
 #: src/MediaProbe.cpp
 #, c-format
-msgid "Extracting media metadata with ffprobe: %s"
+msgid "Extracting media metadata: %s"
 msgstr ""
 
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe timed out or was cancelled for %s"
-msgstr ""
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ignoring implausibly large ffprobe output for %s"
-msgstr ""
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: could not run ffprobe (%s) -- check the media metadata settings"
-msgstr ""
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe failed (code %d) for %s"
-msgstr ""
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe found nothing usable in %s"
-msgstr ""
+#, fuzzy, c-format
+msgid "Media metadata: parser failed for %s"
+msgstr "Meedia metaandmete eraldamine"
 
 #: src/MediaProbeThread.cpp
 #, c-format
@@ -5279,6 +5242,14 @@ msgid "Set manually added servers to High Priority"
 msgstr "Määra käsitsi lisatud serveritel Kõrge Prioriteet"
 
 #: src/muuli_wdr.cpp
+msgid "Publish shared files faster on servers that allow it"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Follow the publication pace that the server advertises. Other servers get the standard pace."
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid "Add files to download in pause mode"
 msgstr "Lisa failid tõmbamiseks peatatud olekus"
 
@@ -5407,7 +5378,7 @@ msgid ""
 "Technical detail: rejects AICH publish tags from nodes advertising Kad protocol versions below 0x09."
 msgstr ""
 
-#: src/muuli_wdr.cpp src/PrefsUnifiedDlg.cpp
+#: src/muuli_wdr.cpp
 msgid "Media metadata extraction"
 msgstr "Meedia metaandmete eraldamine"
 
@@ -5416,24 +5387,8 @@ msgid "Extract length / bitrate / codec from shared audio and video files"
 msgstr "Eralda pikkus / bitikiirus / koodek jagatud audio- ja videofailidest"
 
 #: src/muuli_wdr.cpp
-msgid "When enabled, aMule runs ffprobe on each shared media file to fill in the Length / Bitrate / Codec columns other clients see when they find the file in a search. Requires ffmpeg (the ffprobe binary) to be installed."
-msgstr "Kui see on lubatud, käivitab aMule iga jagatud meediafaili peal ffprobe, et täita Pikkuse / Bitikiiruse / Koodeki veerud, mida teised kliendid otsingus faili leides näevad. Nõuab ffmpeg (ffprobe binaarfaili) paigaldamist."
-
-#: src/muuli_wdr.cpp
-msgid "Path to ffprobe:"
-msgstr "ffprobe asukoht:"
-
-#: src/muuli_wdr.cpp
-msgid "Full path to the ffprobe binary. Leave empty to have aMule auto-detect it on startup."
-msgstr "ffprobe binaarfaili täielik asukoht. Jäta tühjaks, et aMule tuvastaks selle käivitumisel automaatselt."
-
-#: src/muuli_wdr.cpp
-msgid "Detect"
-msgstr "Tuvasta"
-
-#: src/muuli_wdr.cpp
-msgid "Search the standard install locations for an ffprobe binary and fill the path field."
-msgstr "Otsi ffprobe binaarfaili standardsetest paigalduskohtadest ja täida asukoha väli."
+msgid "When enabled, aMule uses its bundled MediaInfo parser to extract metadata from shared media files."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6876,6 +6831,10 @@ msgid "no options available"
 msgstr "valikud puuduvad"
 
 #: src/Preferences.cpp
+msgid "Media metadata: FFProbePath is obsolete; aMule now uses its bundled MediaInfo parser. Removing the old setting."
+msgstr ""
+
+#: src/Preferences.cpp
 #, fuzzy
 msgid "Invalid path mapping found, skipping"
 msgstr "Leidsin vigase kategooria, ignoreerin"
@@ -7004,6 +6963,10 @@ msgid "Failed to transfer data from Cfg to Widget with the ID %d and key %s"
 msgstr "Andmete ülekandmine Cfg'st Widget'isse, kasutades ID %d ja võtit %s, ebaõnnestus"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid "This aMule has no media helper (amule-media-probe), so it cannot extract media metadata."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The type of proxy you are connecting to"
 msgstr "Selle puhverserveri tüüp kuhu sa ühendud"
 
@@ -7019,15 +6982,6 @@ msgstr "Andmete ülekandmine Widgetist Cfg'sse, kasutades ID %d ja võtit %s, eb
 #: src/PrefsUnifiedDlg.cpp
 msgid "No password set."
 msgstr "Parooli pole määratud."
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "That file does not look like ffprobe. Choose a binary named ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" banner, leave the field empty to auto-detect, or set the path directly in amule.conf."
-msgstr ""
-
-#: src/PrefsUnifiedDlg.cpp
-#, fuzzy
-msgid "Invalid ffprobe path"
-msgstr "Vigane failinimi."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The shared-file exclusion pattern is not a valid regular expression. The filter has been left disabled."
@@ -7218,10 +7172,11 @@ msgid "The aMule web server is deprecated. Consider running the aMule API instea
 msgstr "aMule veebiserver on aegunud. Kaalu selle asemel aMule API kasutamist."
 
 #: src/PrefsUnifiedDlg.cpp
+#, fuzzy
 msgid ""
-"Your Auto-update servers list is in blank.\n"
-"Please fill in at least one URL to point to a valid server.met file.\n"
-"Click on the button \"List\" by this checkbox to enter an URL."
+"Your server list sources are empty.\n"
+"Please add at least one URL of a valid server.met file.\n"
+"Click the \"Edit sources...\" button next to this checkbox to add one."
 msgstr ""
 "Serverite automaatse värskendamise loetelu on tühi.\n"
 "Palun sisesta vähemalt üks server.met faili asukoha kehtiv URL.\n"
@@ -7277,17 +7232,9 @@ msgid "Select browser"
 msgstr "Vali lehitseja (browser)"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Select ffprobe binary"
-msgstr "Vali ffprobe binaarfail"
-
-#: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Executable%s"
 msgstr "Käivitusprogramm%s"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "ffprobe not found on PATH or in the standard install locations. Install ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."
-msgstr "ffprobe't ei leitud PATH-ilt ega standardsetest paigalduskohtadest. Paigalda ffmpeg (mis sisaldab ffprobe't) või kasuta 'Lehitse', et valida binaarfail käsitsi."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Reset the settings on this page to their default values?"
@@ -10384,6 +10331,37 @@ msgstr ""
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr ""
+
+#~ msgid "ERROR: "
+#~ msgstr "VIGA: "
+
+#~ msgid "WARNING: "
+#~ msgstr "HOIATUS: "
+
+#~ msgid "When enabled, aMule runs ffprobe on each shared media file to fill in the Length / Bitrate / Codec columns other clients see when they find the file in a search. Requires ffmpeg (the ffprobe binary) to be installed."
+#~ msgstr "Kui see on lubatud, käivitab aMule iga jagatud meediafaili peal ffprobe, et täita Pikkuse / Bitikiiruse / Koodeki veerud, mida teised kliendid otsingus faili leides näevad. Nõuab ffmpeg (ffprobe binaarfaili) paigaldamist."
+
+#~ msgid "Path to ffprobe:"
+#~ msgstr "ffprobe asukoht:"
+
+#~ msgid "Full path to the ffprobe binary. Leave empty to have aMule auto-detect it on startup."
+#~ msgstr "ffprobe binaarfaili täielik asukoht. Jäta tühjaks, et aMule tuvastaks selle käivitumisel automaatselt."
+
+#~ msgid "Detect"
+#~ msgstr "Tuvasta"
+
+#~ msgid "Search the standard install locations for an ffprobe binary and fill the path field."
+#~ msgstr "Otsi ffprobe binaarfaili standardsetest paigalduskohtadest ja täida asukoha väli."
+
+#, fuzzy
+#~ msgid "Invalid ffprobe path"
+#~ msgstr "Vigane failinimi."
+
+#~ msgid "Select ffprobe binary"
+#~ msgstr "Vali ffprobe binaarfail"
+
+#~ msgid "ffprobe not found on PATH or in the standard install locations. Install ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."
+#~ msgstr "ffprobe't ei leitud PATH-ilt ega standardsetest paigalduskohtadest. Paigalda ffmpeg (mis sisaldab ffprobe't) või kasuta 'Lehitse', et valida binaarfail käsitsi."
 
 #~ msgid "Tray icon support requires libayatana-appindicator3 at compile time."
 #~ msgstr "Salveikooni tugi nõuab kompileerimisel libayatana-appindicator3 olemasolu."

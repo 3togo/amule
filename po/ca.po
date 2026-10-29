@@ -2363,10 +2363,6 @@ msgid "Refused a remote request to change the online-signature folder: it can on
 msgstr "S'ha rebutjat una sol·licitud remota per canviar la carpeta de la signatura en línia: només es pot definir a la configuració pròpia del dimoni."
 
 #: src/ECSpecialMuleTags.cpp
-msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
-msgstr "S'ha rebutjat una sol·licitud remota per canviar el camí de l'analitzador multimèdia (ffprobe): només es pot definir a la configuració pròpia del dimoni."
-
-#: src/ECSpecialMuleTags.cpp
 msgid "Refused a remote request to change the follow-symlinks-in-shares setting: it can only be set in the daemon's own configuration."
 msgstr "S'ha rebutjat una sol·licitud remota per canviar el paràmetre de seguir els enllaços simbòlics de les carpetes compartides: només es pot definir a la configuració pròpia del dimoni."
 
@@ -4093,22 +4089,9 @@ msgstr "Sòcol escoltant: correcte."
 msgid "ERROR: Could not listen to TCP port."
 msgstr "ERROR: No s'ha pogut escoltar el port TCP."
 
-#: src/Logger.cpp
-msgid "ERROR: "
-msgstr "ERROR: "
-
-#: src/Logger.cpp
-msgid "WARNING: "
-msgstr "AVÍS: "
-
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: not using %s, because another user owns it or a folder above it."
-msgstr "Metadades multimèdia: no s'utilitza %s perquè és propietat d'un altre usuari, o ho és una carpeta superior."
-
-#: src/MediaProbe.cpp
-msgid "Media metadata: no ffprobe binary found. Install ffmpeg, or set the ffprobe path in preferences; length, bitrate and codec will not be extracted."
-msgstr "Metadades multimèdia: no s'ha trobat cap binari ffprobe. Instal·leu ffmpeg o definiu el camí a ffprobe a les preferències; no s'extrauran la durada, la taxa de bits ni el còdec."
+msgid "Media metadata: bundled amule-media-probe helper is unavailable."
+msgstr ""
 
 #: src/MediaProbe.cpp
 #, c-format
@@ -4116,34 +4099,14 @@ msgid "Media metadata: %s is gone, nothing to extract"
 msgstr "Metadades multimèdia: %s ha desaparegut, no hi ha res per extreure"
 
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Extracting media metadata with ffprobe: %s"
+#, fuzzy, c-format
+msgid "Extracting media metadata: %s"
 msgstr "S'estan extraient les metadades multimèdia amb ffprobe: %s"
 
 #: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe timed out or was cancelled for %s"
-msgstr "Metadades multimèdia: ffprobe ha esgotat el temps o s'ha cancel·lat per a %s"
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ignoring implausibly large ffprobe output for %s"
-msgstr "Metadades multimèdia: s'ignora una sortida de ffprobe implausiblement gran per a %s"
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: could not run ffprobe (%s) -- check the media metadata settings"
-msgstr "Metadades multimèdia: no s'ha pogut executar ffprobe (%s); reviseu la configuració de metadades multimèdia"
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe failed (code %d) for %s"
+#, fuzzy, c-format
+msgid "Media metadata: parser failed for %s"
 msgstr "Metadades multimèdia: ffprobe ha fallat (codi %d) per a %s"
-
-#: src/MediaProbe.cpp
-#, c-format
-msgid "Media metadata: ffprobe found nothing usable in %s"
-msgstr "Metadades multimèdia: ffprobe no ha trobat res d'útil a %s"
 
 #: src/MediaProbeThread.cpp
 #, c-format
@@ -5248,6 +5211,14 @@ msgid "Set manually added servers to High Priority"
 msgstr "Estableix prioritat Alta per als servidors afegits manualment"
 
 #: src/muuli_wdr.cpp
+msgid "Publish shared files faster on servers that allow it"
+msgstr ""
+
+#: src/muuli_wdr.cpp
+msgid "Follow the publication pace that the server advertises. Other servers get the standard pace."
+msgstr ""
+
+#: src/muuli_wdr.cpp
 msgid "Add files to download in pause mode"
 msgstr "Afegeix les noves baixades en mode pausat"
 
@@ -5387,7 +5358,7 @@ msgstr ""
 "\n"
 "Detall tècnic: rebutja les etiquetes de publicació AICH dels nodes que anuncien versions del protocol Kad inferiors a 0x09."
 
-#: src/muuli_wdr.cpp src/PrefsUnifiedDlg.cpp
+#: src/muuli_wdr.cpp
 msgid "Media metadata extraction"
 msgstr "Extracció de metadades multimèdia"
 
@@ -5396,24 +5367,8 @@ msgid "Extract length / bitrate / codec from shared audio and video files"
 msgstr "Extreu la durada, la taxa de bits i el còdec dels fitxers d'àudio i vídeo compartits"
 
 #: src/muuli_wdr.cpp
-msgid "When enabled, aMule runs ffprobe on each shared media file to fill in the Length / Bitrate / Codec columns other clients see when they find the file in a search. Requires ffmpeg (the ffprobe binary) to be installed."
-msgstr "Quan s'activa, l'aMule executa ffprobe a cada fitxer multimèdia compartit per omplir les columnes de durada, taxa de bits i còdec que veuen els altres clients quan troben el fitxer en una cerca. Requereix tenir instal·lat ffmpeg (el binari ffprobe)."
-
-#: src/muuli_wdr.cpp
-msgid "Path to ffprobe:"
-msgstr "Camí a ffprobe:"
-
-#: src/muuli_wdr.cpp
-msgid "Full path to the ffprobe binary. Leave empty to have aMule auto-detect it on startup."
-msgstr "Camí complet al binari ffprobe. Deixeu-ho buit perquè l'aMule el detecti automàticament en iniciar-se."
-
-#: src/muuli_wdr.cpp
-msgid "Detect"
-msgstr "Detecta"
-
-#: src/muuli_wdr.cpp
-msgid "Search the standard install locations for an ffprobe binary and fill the path field."
-msgstr "Cerca un binari ffprobe a les ubicacions d'instal·lació estàndard i omple el camp del camí."
+msgid "When enabled, aMule uses its bundled MediaInfo parser to extract metadata from shared media files."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6842,6 +6797,10 @@ msgid "no options available"
 msgstr "No hi ha opcions disponibles"
 
 #: src/Preferences.cpp
+msgid "Media metadata: FFProbePath is obsolete; aMule now uses its bundled MediaInfo parser. Removing the old setting."
+msgstr ""
+
+#: src/Preferences.cpp
 msgid "Invalid path mapping found, skipping"
 msgstr "S'ha trobat una correspondència de camins no vàlida; s'omet"
 
@@ -6969,6 +6928,10 @@ msgid "Failed to transfer data from Cfg to Widget with the ID %d and key %s"
 msgstr "Fallida en l'enviament de dades de Cfg al giny amb ID %d i clau %s"
 
 #: src/PrefsUnifiedDlg.cpp
+msgid "This aMule has no media helper (amule-media-probe), so it cannot extract media metadata."
+msgstr ""
+
+#: src/PrefsUnifiedDlg.cpp
 msgid "The type of proxy you are connecting to"
 msgstr "El tipus de servidor intermediari al que connecteu"
 
@@ -6984,14 +6947,6 @@ msgstr "Fallida en l'enviament de dades del giny al Cfg amb ID %d i clau %s"
 #: src/PrefsUnifiedDlg.cpp
 msgid "No password set."
 msgstr "No hi ha cap contrasenya definida."
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "That file does not look like ffprobe. Choose a binary named ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" banner, leave the field empty to auto-detect, or set the path directly in amule.conf."
-msgstr "Aquest fitxer no sembla ffprobe. Trieu un binari anomenat ffprobe (o ffprobe.exe) que mostri el missatge «ffprobe version», deixeu el camp buit perquè es detecti automàticament o definiu el camí directament a amule.conf."
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "Invalid ffprobe path"
-msgstr "Camí a ffprobe no vàlid"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The shared-file exclusion pattern is not a valid regular expression. The filter has been left disabled."
@@ -7180,10 +7135,11 @@ msgid "The aMule web server is deprecated. Consider running the aMule API instea
 msgstr "El servidor web de l'aMule està obsolet. Considereu executar l'API de l'aMule en lloc seu."
 
 #: src/PrefsUnifiedDlg.cpp
+#, fuzzy
 msgid ""
-"Your Auto-update servers list is in blank.\n"
-"Please fill in at least one URL to point to a valid server.met file.\n"
-"Click on the button \"List\" by this checkbox to enter an URL."
+"Your server list sources are empty.\n"
+"Please add at least one URL of a valid server.met file.\n"
+"Click the \"Edit sources...\" button next to this checkbox to add one."
 msgstr ""
 "La llista d'actualització automàtica de servidors és buida.\n"
 "Si us plau, ompliu-la amb una URL que apunti a un fitxer server.met vàlid.\n"
@@ -7239,17 +7195,9 @@ msgid "Select browser"
 msgstr "Selecciona navegador"
 
 #: src/PrefsUnifiedDlg.cpp
-msgid "Select ffprobe binary"
-msgstr "Seleccioneu el binari ffprobe"
-
-#: src/PrefsUnifiedDlg.cpp
 #, c-format
 msgid "Executable%s"
 msgstr "Executable%s"
-
-#: src/PrefsUnifiedDlg.cpp
-msgid "ffprobe not found on PATH or in the standard install locations. Install ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."
-msgstr "No s'ha trobat ffprobe al PATH ni a les ubicacions d'instal·lació estàndard. Instal·leu ffmpeg (que inclou ffprobe) o feu servir Navega per triar un binari manualment."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Reset the settings on this page to their default values?"
@@ -10337,6 +10285,65 @@ msgstr "Kad no ha pogut carregar l'índex desat. S'han conservat els fitxers d'�
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr "Kad no ha pogut desar un índex. S'ha conservat la còpia anterior d'aquest fitxer."
+
+#~ msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
+#~ msgstr "S'ha rebutjat una sol·licitud remota per canviar el camí de l'analitzador multimèdia (ffprobe): només es pot definir a la configuració pròpia del dimoni."
+
+#~ msgid "ERROR: "
+#~ msgstr "ERROR: "
+
+#~ msgid "WARNING: "
+#~ msgstr "AVÍS: "
+
+#, c-format
+#~ msgid "Media metadata: not using %s, because another user owns it or a folder above it."
+#~ msgstr "Metadades multimèdia: no s'utilitza %s perquè és propietat d'un altre usuari, o ho és una carpeta superior."
+
+#~ msgid "Media metadata: no ffprobe binary found. Install ffmpeg, or set the ffprobe path in preferences; length, bitrate and codec will not be extracted."
+#~ msgstr "Metadades multimèdia: no s'ha trobat cap binari ffprobe. Instal·leu ffmpeg o definiu el camí a ffprobe a les preferències; no s'extrauran la durada, la taxa de bits ni el còdec."
+
+#, c-format
+#~ msgid "Media metadata: ffprobe timed out or was cancelled for %s"
+#~ msgstr "Metadades multimèdia: ffprobe ha esgotat el temps o s'ha cancel·lat per a %s"
+
+#, c-format
+#~ msgid "Media metadata: ignoring implausibly large ffprobe output for %s"
+#~ msgstr "Metadades multimèdia: s'ignora una sortida de ffprobe implausiblement gran per a %s"
+
+#, c-format
+#~ msgid "Media metadata: could not run ffprobe (%s) -- check the media metadata settings"
+#~ msgstr "Metadades multimèdia: no s'ha pogut executar ffprobe (%s); reviseu la configuració de metadades multimèdia"
+
+#, c-format
+#~ msgid "Media metadata: ffprobe found nothing usable in %s"
+#~ msgstr "Metadades multimèdia: ffprobe no ha trobat res d'útil a %s"
+
+#~ msgid "When enabled, aMule runs ffprobe on each shared media file to fill in the Length / Bitrate / Codec columns other clients see when they find the file in a search. Requires ffmpeg (the ffprobe binary) to be installed."
+#~ msgstr "Quan s'activa, l'aMule executa ffprobe a cada fitxer multimèdia compartit per omplir les columnes de durada, taxa de bits i còdec que veuen els altres clients quan troben el fitxer en una cerca. Requereix tenir instal·lat ffmpeg (el binari ffprobe)."
+
+#~ msgid "Path to ffprobe:"
+#~ msgstr "Camí a ffprobe:"
+
+#~ msgid "Full path to the ffprobe binary. Leave empty to have aMule auto-detect it on startup."
+#~ msgstr "Camí complet al binari ffprobe. Deixeu-ho buit perquè l'aMule el detecti automàticament en iniciar-se."
+
+#~ msgid "Detect"
+#~ msgstr "Detecta"
+
+#~ msgid "Search the standard install locations for an ffprobe binary and fill the path field."
+#~ msgstr "Cerca un binari ffprobe a les ubicacions d'instal·lació estàndard i omple el camp del camí."
+
+#~ msgid "That file does not look like ffprobe. Choose a binary named ffprobe (or ffprobe.exe) that reports an \"ffprobe version\" banner, leave the field empty to auto-detect, or set the path directly in amule.conf."
+#~ msgstr "Aquest fitxer no sembla ffprobe. Trieu un binari anomenat ffprobe (o ffprobe.exe) que mostri el missatge «ffprobe version», deixeu el camp buit perquè es detecti automàticament o definiu el camí directament a amule.conf."
+
+#~ msgid "Invalid ffprobe path"
+#~ msgstr "Camí a ffprobe no vàlid"
+
+#~ msgid "Select ffprobe binary"
+#~ msgstr "Seleccioneu el binari ffprobe"
+
+#~ msgid "ffprobe not found on PATH or in the standard install locations. Install ffmpeg (which ships ffprobe) or use Browse to pick a binary manually."
+#~ msgstr "No s'ha trobat ffprobe al PATH ni a les ubicacions d'instal·lació estàndard. Instal·leu ffmpeg (que inclou ffprobe) o feu servir Navega per triar un binari manualment."
 
 #~ msgid "Tray icon support requires libayatana-appindicator3 at compile time."
 #~ msgstr "La compatibilitat amb la icona de la safata requereix libayatana-appindicator3 en temps de compilació."
