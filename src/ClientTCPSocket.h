@@ -38,6 +38,7 @@
 #ifdef AMULE_UTP_TRANSPORT
 #include "UtpDialPolicy.h" // Needed for the incoming SYN winner token
 #endif
+#include "SessionTrafficStats.h" // Needed for AMULE_SESSION_TRAFFIC_STATS
 
 #include <atomic>
 
@@ -121,6 +122,10 @@ protected:
 
 private:
 	CUpDownClient *m_client;
+#ifdef AMULE_SESSION_TRAFFIC_STATS
+	//! A hello was processed: classify the session's traffic and complete a rendezvous with it.
+	void NoteHelloForStatistics();
+#endif
 #ifdef AMULE_UTP_TRANSPORT
 	bool TryUtpTcpFallback();
 	bool m_utpFallbackAttempted = false;

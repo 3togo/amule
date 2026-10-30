@@ -98,6 +98,16 @@ public:
 	void ClearLugdunumNatCallbackFailure(const LugdunumNatTraversal::CallbackFailureKey &key);
 	bool IsLugdunumCallbackRendezvousActive(const LugdunumNatTraversal::CallbackFailureKey &key) const;
 	void CompleteLugdunumCallbackRendezvous(const LugdunumNatTraversal::CallbackFailureKey &key);
+	//! Statistics: a server-coordinated rendezvous we act on, counted once per peer.
+	void NoteRendezvousAttempt(NatServerHolePunch::RendezvousPath path,
+		uint32 ip,
+		const std::array<std::uint8_t, 16> *peerHash,
+		bool countAttempt = true);
+	//! Statistics: we sent a Lugdunum callback request for this target, which counted the attempt.
+	void NoteLugdunumCallbackRequested(uint32 targetId);
+	//! Statistics: a verified hello on a stream to or from a rendezvous peer, on either side.
+	//! Returns whether it completed a rendezvous, which was then counted.
+	bool NoteRendezvousHello(uint32 ip, const std::array<std::uint8_t, 16> &peerHash);
 #endif
 #endif
 #if defined(AMULE_UTP_TRANSPORT) || defined(AMULE_QUIC_TRANSPORT)
@@ -159,6 +169,8 @@ private:
 	LugdunumNatTraversal::CallbackFailureMemory m_lugdunumCallbackFailures;
 	LugdunumNatTraversal::ForwardedCallbackActionGuard m_lugdunumCallbackActions;
 	LugdunumNatTraversal::CCallbackRendezvous m_lugdunumCallbackRendezvous;
+	NatServerHolePunch::RendezvousOutcomes m_rendezvousOutcomes;
+	NatServerHolePunch::RequestedCallbackTargets m_requestedCallbackTargets;
 #endif
 #endif
 #ifdef AMULE_QUIC_TRANSPORT

@@ -1016,6 +1016,45 @@ void CClientUDPSocket::CompleteLugdunumCallbackRendezvous(const LugdunumNatTrave
 	m_lugdunumCallbackRendezvous.Complete(key);
 }
 
+void CClientUDPSocket::NoteRendezvousAttempt(NatServerHolePunch::RendezvousPath path,
+	uint32 ip,
+	const std::array<std::uint8_t, 16> *peerHash,
+	bool countAttempt)
+{
+	std::optional<NatServerHolePunch::Hash> hash;
+	if (peerHash != nullptr) {
+		hash = *peerHash;
+	}
+	if (!m_rendezvousOutcomes.NoteAttempt(path, ip, hash, ::GetTickCount64()) || !countAttempt) {
+		return;
+	}
+	if (path == NatServerHolePunch::RendezvousPath::ServerPunch) {
+		theStats::AddServerHolePunchAttempt();
+	} else {
+		theStats::AddLugdunumCallbackAttempt();
+	}
+}
+
+void CClientUDPSocket::NoteLugdunumCallbackRequested(uint32 targetId)
+{
+	m_requestedCallbackTargets.Note(targetId, ::GetTickCount64());
+}
+
+bool CClientUDPSocket::NoteRendezvousHello(uint32 ip, const std::array<std::uint8_t, 16> &peerHash)
+{
+	const std::optional<NatServerHolePunch::RendezvousPath> path =
+		m_rendezvousOutcomes.TakeSuccess(ip, peerHash, ::GetTickCount64());
+	if (!path) {
+		return false;
+	}
+	if (*path == NatServerHolePunch::RendezvousPath::ServerPunch) {
+		theStats::AddServerHolePunchSuccess();
+	} else {
+		theStats::AddLugdunumCallbackSuccess();
+	}
+	return true;
+}
+
 void CClientUDPSocket::SendLugdunumNatCallbackRequest(const LugdunumNatTraversal::CallbackFailureKey &key)
 {
 	if (theApp->serverconnect == nullptr || !Ok()) {
@@ -1154,6 +1193,12 @@ bool CClientUDPSocket::DialLugdunumNatCallbackPeer(const LugdunumNatTraversal::F
 	client->SetUDPPort(target.udpPort);
 	client->MarkLowIdHolePunchDial();
 	client->MarkLugdunumCallbackDial(failureKey);
+	// A reverse callback for our own request still records the rendezvous, for its success, but
+	// the request already counted the attempt.
+	NoteRendezvousAttempt(NatServerHolePunch::RendezvousPath::LugdunumCallback,
+		target.ip,
+		callback.hasObfuscation ? &callback.userHash : nullptr,
+		!m_requestedCallbackTargets.Take(callback.requesterId, ::GetTickCount64()));
 	const bool started = LugdunumNatTraversal::RunCallbackDialApplication(
 		failureKey,
 		[client]() { return client->TryServerVouchedLowIdUtpDial(); },

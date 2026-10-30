@@ -36,6 +36,7 @@
 #include <cstdint>
 #include <deque>
 #include <optional>
+#include <utility>
 #include <vector>
 
 namespace NatServerHolePunch
@@ -641,6 +642,150 @@ private:
 		std::uint64_t wokenAt;
 	};
 	std::deque<Entry> m_pending;
+};
+// Statistics: which server-coordinated path a rendezvous took. The extension counts as the
+// ed2k-server punch, and its Lugdunum fallback dial as Lugdunum's callback.
+enum class RendezvousPath
+{
+	ServerPunch,
+	LugdunumCallback
+};
+
+// Covers the 30 s punch window, the 3 s dial back and the stream's handshake.
+constexpr std::uint64_t kRendezvousOutcomeTtlMs = 60'000;
+constexpr std::size_t kMaxPendingRendezvous = 64;
+
+// Rendezvous we acted on, each waiting for a verified hello from its peer, on either side: the
+// target of a punch usually waits for the requester's stream rather than dialling.
+class RendezvousOutcomes
+{
+public:
+	// True for a new rendezvous, the attempt to count; a resend or a second notice is the same one.
+	bool NoteAttempt(
+		RendezvousPath path, std::uint32_t ip, std::optional<Hash> peerHash, std::uint64_t now)
+	{
+		Evict(now);
+		// Peers behind one address are told apart by the hash the rendezvous named.
+		const auto same = std::find_if(m_pending.begin(), m_pending.end(), [&](const Entry &entry) {
+			return entry.path == path && entry.ip == ip && entry.peerHash == peerHash;
+		});
+		if (same != m_pending.end()) {
+			return false;
+		}
+		if (m_pending.size() >= kMaxPendingRendezvous) {
+			m_pending.erase(m_pending.begin());
+		}
+		m_pending.push_back({ path, ip, peerHash, now });
+		return true;
+	}
+	// The path of the rendezvous a verified hello completes, taken once. A rendezvous that named the
+	// peer's hash matches only that hash; one that did not matches by address.
+	std::optional<RendezvousPath> TakeSuccess(std::uint32_t ip, const Hash &peerHash, std::uint64_t now)
+	{
+		Evict(now);
+		auto match =
+			std::find_if(m_pending.begin(), m_pending.end(), [ip, &peerHash](const Entry &entry) {
+				return entry.ip == ip && entry.peerHash == peerHash;
+			});
+		if (match == m_pending.end()) {
+			match = std::find_if(m_pending.begin(), m_pending.end(), [ip](const Entry &entry) {
+				return entry.ip == ip && !entry.peerHash;
+			});
+		}
+		if (match == m_pending.end()) {
+			return std::nullopt;
+		}
+		const RendezvousPath path = match->path;
+		m_pending.erase(match);
+		return path;
+	}
+	std::size_t Size() const { return m_pending.size(); }
+
+private:
+	struct Entry
+	{
+		RendezvousPath path;
+		std::uint32_t ip;
+		std::optional<Hash> peerHash;
+		std::uint64_t notedAt;
+	};
+	void Evict(std::uint64_t now)
+	{
+		const auto firstLive =
+			std::remove_if(m_pending.begin(), m_pending.end(), [now](const Entry &entry) {
+				return now >= entry.notedAt && now - entry.notedAt >= kRendezvousOutcomeTtlMs;
+			});
+		m_pending.erase(firstLive, m_pending.end());
+	}
+	std::vector<Entry> m_pending;
+};
+// Targets we sent a Lugdunum callback request for. A callback naming one as its requester is the
+// reverse of our own request, whose attempt is already counted.
+class RequestedCallbackTargets
+{
+public:
+	void Note(std::uint32_t targetId, std::uint64_t now)
+	{
+		Evict(now);
+		const auto same = Find(targetId);
+		if (same != m_entries.end()) {
+			same->notedAt = now;
+			return;
+		}
+		if (m_entries.size() >= kMaxPendingRendezvous) {
+			m_entries.erase(m_entries.begin());
+		}
+		m_entries.push_back({ targetId, now });
+	}
+	bool Take(std::uint32_t targetId, std::uint64_t now)
+	{
+		Evict(now);
+		const auto match = Find(targetId);
+		if (match == m_entries.end()) {
+			return false;
+		}
+		m_entries.erase(match);
+		return true;
+	}
+	std::size_t Size() const { return m_entries.size(); }
+
+private:
+	struct Entry
+	{
+		std::uint32_t targetId;
+		std::uint64_t notedAt;
+	};
+	std::vector<Entry>::iterator Find(std::uint32_t targetId)
+	{
+		return std::find_if(m_entries.begin(), m_entries.end(), [targetId](const Entry &entry) {
+			return entry.targetId == targetId;
+		});
+	}
+	void Evict(std::uint64_t now)
+	{
+		const auto firstLive =
+			std::remove_if(m_entries.begin(), m_entries.end(), [now](const Entry &entry) {
+				return now >= entry.notedAt && now - entry.notedAt >= kRendezvousOutcomeTtlMs;
+			});
+		m_entries.erase(firstLive, m_entries.end());
+	}
+	std::vector<Entry> m_entries;
+};
+// A Lugdunum callback we requested for one source: the target dials us, so the requester sees the
+// success only as that source's hello. Kept on the source, which the hello attaches to.
+class PendingCallbackRequest
+{
+public:
+	void NoteSent(std::uint64_t now) { m_sentAt = now; }
+	// True once for a hello within the window of the last request.
+	bool TakeAnswered(std::uint64_t now)
+	{
+		const std::optional<std::uint64_t> sentAt = std::exchange(m_sentAt, std::nullopt);
+		return sentAt && now >= *sentAt && now - *sentAt < kRendezvousOutcomeTtlMs;
+	}
+
+private:
+	std::optional<std::uint64_t> m_sentAt;
 };
 } // namespace NatServerHolePunch
 #endif // ENABLE_NATT_SERVER_COORDINATION
