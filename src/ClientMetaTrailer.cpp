@@ -50,11 +50,9 @@ namespace
  * by an older build.
  */
 const char kMetaMagic[8] = { 'A', 'M', 'U', 'L', 'E', 'M', 'D', '1' };
-const uint8 kMetaVersion = 1;
-//! Names are attacker-supplied; cap what we store rather than what we read. Counted in characters,
-//! because that is what wxString::Left() takes -- a multi-byte name can occupy more bytes on disk,
-//! which the uint16 length field has ample room for. Storage sanity, not a bound the format depends
-//! on.
+const uint8 kMetaVersion = 2;
+//! Nicknames and mod identities are attacker-supplied. Cap them on write in characters:
+//! wxString::Left() preserves UTF-8, and the uint16 byte length has ample room.
 const size_t kMetaMaxNameChars = 64;
 } // namespace
 
@@ -88,6 +86,7 @@ void Write(CFileDataIO &file, const std::vector<Entry> &entries)
 		// leaving a trailer truncated mid-entry. The cap is enforced here, not by
 		// the field width.
 		file.WriteString(meta.name.Left(kMetaMaxNameChars), utf8strRaw, sizeof(uint16));
+		file.WriteString(meta.modVersion.Left(kMetaMaxNameChars), utf8strRaw, sizeof(uint16));
 	}
 }
 
@@ -111,7 +110,7 @@ ReadResult Read(CFileDataIO &file, std::vector<Entry> &entries)
 			return READ_FOREIGN;
 		}
 		const uint8 version = file.ReadUInt8();
-		if (version != kMetaVersion) {
+		if (version != 1 && version != kMetaVersion) {
 			// A newer aMule wrote it. Same reasoning as the file version: do not guess
 			// at a layout we do not know, just leave the metadata behind. The credits
 			// are unaffected either way.
@@ -136,6 +135,9 @@ ReadResult Read(CFileDataIO &file, std::vector<Entry> &entries)
 			meta.sourceFrom = file.ReadUInt8();
 			meta.obfuscation = file.ReadUInt8();
 			meta.name = file.ReadString(true, sizeof(uint16));
+			if (version >= 2) {
+				meta.modVersion = file.ReadString(true, sizeof(uint16));
+			}
 			entries.push_back(entry);
 		}
 		return READ_OK;

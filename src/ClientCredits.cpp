@@ -170,6 +170,7 @@ void CClientCredits::UpdateMeta(const wxString &name,
 	uint16 kadPort,
 	uint32 version,
 	uint8 clientSoft,
+	const wxString &modVersion,
 	uint8 sourceFrom,
 	uint8 obfuscation,
 	bool countSession)
@@ -197,6 +198,7 @@ void CClientCredits::UpdateMeta(const wxString &name,
 	m_meta.kadPort = kadPort;
 	m_meta.version = version;
 	m_meta.clientSoft = clientSoft;
+	m_meta.modVersion = modVersion;
 	m_meta.sourceFrom = sourceFrom;
 	m_meta.obfuscation = obfuscation;
 }

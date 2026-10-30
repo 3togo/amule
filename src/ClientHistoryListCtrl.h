@@ -65,6 +65,7 @@ struct ClientHistoryRow
 	CMD4Hash hash;
 	wxString name;
 	wxString version;
+	wxString modVersion;
 	uint64 uploaded = 0;
 	uint64 downloaded = 0;
 	//! Credit modifier from the core, never re-derived here. A daemon too old to send it
@@ -134,6 +135,7 @@ public:
 		ClientNameCell nameCell;
 		wxString name;
 		wxString version;
+		wxString modVersion;
 		uint32 ip = 0;
 		uint16 port = 0;
 		uint8 clientSoft = 0;

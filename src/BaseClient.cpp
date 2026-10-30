@@ -515,6 +515,7 @@ bool CUpDownClient::ProcessHelloAnswer(const uint8_t *pachPacket, uint32 nSize)
 
 bool CUpDownClient::ProcessHelloTypePacket(const CMemFile &data)
 {
+	m_strModVersion.Clear();
 	uint32 dwEmuleTags = 0;
 
 	CMD4Hash hash = data.ReadHash();
@@ -871,18 +872,7 @@ bool CUpDownClient::ProcessHelloTypePacket(const CMemFile &data)
 	// The session count is taken once per client object rather than once per call: an outgoing
 	// connection processes a hello answer as well as a hello, and a count that rose per packet
 	// would measure traffic instead of visits.
-	if (credits != nullptr) {
-		credits->UpdateMeta(m_Username,
-			GetIP(),
-			m_nUserPort,
-			m_nKadPort,
-			m_nClientVersion,
-			m_clientSoft,
-			static_cast<uint8>(m_nSourceFrom),
-			GetObfuscationStatus(),
-			!m_metaSessionCounted);
-		m_metaSessionCounted = true;
-	}
+	UpdateClientMeta(!m_metaSessionCounted);
 
 	m_byInfopacketsReceived |= IP_EDONKEYPROTPACK;
 
@@ -902,6 +892,25 @@ bool CUpDownClient::ProcessHelloTypePacket(const CMemFile &data)
 	}
 
 	return bIsMule;
+}
+
+void CUpDownClient::UpdateClientMeta(bool countSession)
+{
+	if (credits != nullptr) {
+		credits->UpdateMeta(m_Username,
+			GetIP(),
+			m_nUserPort,
+			m_nKadPort,
+			m_nClientVersion,
+			m_clientSoft,
+			m_strModVersion,
+			static_cast<uint8>(m_nSourceFrom),
+			GetObfuscationStatus(),
+			countSession);
+		if (countSession) {
+			m_metaSessionCounted = true;
+		}
+	}
 }
 
 bool CUpDownClient::SendHelloPacket()
@@ -1180,6 +1189,9 @@ bool CUpDownClient::ProcessMuleInfoPacket(const uint8_t *pachPacket, uint32 nSiz
 		}
 
 		ReGetClientSoft();
+		if (m_metaSessionCounted) {
+			UpdateClientMeta(false);
+		}
 
 		m_byInfopacketsReceived |= IP_EMULEPROTPACK;
 	}
@@ -2556,15 +2568,11 @@ void CUpDownClient::ReGetClientSoft()
 	}
 
 	int iHashType = GetHashType();
-	wxString clientModString;
 	if (iHashType == SO_EMULE) {
 
 		m_clientSoft = m_byCompatibleClient;
-		m_clientSoftString = GetSoftName(m_clientSoft);
+		m_clientSoftString = GetSoftName(m_clientSoft, m_strModVersion);
 		// Special issues:
-		if (!GetClientModString().IsEmpty() && (m_clientSoft != SO_EMULE)) {
-			m_clientSoftString = GetClientModString();
-		}
 		// Isn't xMule annoying?
 		if ((m_clientSoft == SO_LXMULE) && (GetMuleVersion() > 0x26) && (GetMuleVersion() != 0x99)) {
 			m_clientSoftString += CFormat(_(" (Fake eMule version %#x)")) % GetMuleVersion();
@@ -2628,7 +2636,6 @@ void CUpDownClient::ReGetClientSoft()
 				m_clientVerString = "< v0.05";
 				break;
 			default:
-				clientModString = GetClientModString();
 				m_clientVerString = CFormat("v0.%u") % nClientMinVersion;
 				break;
 			}
@@ -2640,12 +2647,6 @@ void CUpDownClient::ReGetClientSoft()
 			m_nClientVersion =
 				MAKE_CLIENT_VERSION(nClientMajVersion, nClientMinVersion, nClientUpVersion);
 
-			if (m_clientSoft != SO_AMULE && m_clientSoft != SO_LXMULE &&
-				m_clientSoft != SO_HYDRANODE && m_clientSoft != SO_MLDONKEY &&
-				m_clientSoft != SO_NEW_MLDONKEY && m_clientSoft != SO_NEW2_MLDONKEY &&
-				m_clientSoft != SO_LPHANT && m_clientSoft != SO_EMULEPLUS) {
-				clientModString = GetClientModString();
-			}
 			// One renderer for every consumer: the history rows derive the same
 			// string from the stored numeric, and used to disagree with this one.
 			m_clientVerString = FormatClientVersion(
@@ -2718,10 +2719,7 @@ void CUpDownClient::ReGetClientSoft()
 	}
 
 	m_clientVersionString = m_clientVerString;
-	if (!clientModString.IsEmpty()) {
-		m_clientVerString += " - " + clientModString;
-	}
-	m_fullClientVerString = m_clientSoftString + " " + m_clientVerString;
+	m_fullClientVerString = FormatClientSoftware(m_clientSoftString, m_strModVersion, m_clientVerString);
 
 	UpdateStats();
 }

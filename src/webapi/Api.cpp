@@ -2930,6 +2930,8 @@ webapi::KnownClientSnapshot DecodeKnownClient(const CECTag &entry)
 		c.software = webapi::ClientSoftwareName(static_cast<std::uint32_t>(t->GetInt()));
 	if (const CECTag *t = entry.GetTagByName(EC_TAG_CLIENT_SOFT_VER_STR))
 		c.software_version = std::string(t->GetStringData().utf8_str());
+	if (const CECTag *t = entry.GetTagByName(EC_TAG_CLIENT_MOD_VERSION))
+		c.client_mod_name = std::string(t->GetStringData().utf8_str());
 	if (const CECTag *t = entry.GetTagByName(EC_TAG_CLIENT_FROM))
 		c.source_origin = webapi::SourceOriginName(static_cast<std::uint32_t>(t->GetInt()));
 	if (const CECTag *t = entry.GetTagByName(EC_TAG_CLIENT_OBFUSCATION_STATUS))
@@ -2960,6 +2962,7 @@ void WriteKnownClientObject(CJsonWriter &w, const webapi::KnownClientSnapshot &c
 	const bool has_software = !c.software.empty();
 	WriteStringOrNull(w, "software", has_software, c.software);
 	WriteStringOrNull(w, "software_version", has_software, c.software_version);
+	WriteStringOrNull(w, "client_mod_name", !c.client_mod_name.empty(), c.client_mod_name);
 	WriteStringOrNull(w, "source_origin", !c.source_origin.empty(), c.source_origin);
 	WriteStringOrNull(w, "obfuscation_state", !c.obfuscation_state.empty(), c.obfuscation_state);
 	// Same quantity as the live /clients row, so the same key (R6).

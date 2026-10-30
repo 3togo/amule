@@ -187,4 +187,13 @@ void CEC_PartFile_Tag::UpdateDownloadRates(
 		smoothedRate = static_cast<float>(displayRate) / 1024.0f;
 	}
 }
+
+wxString CEC_UpDownClient_Tag::StripModSuffix(const wxString &version, const wxString &modVersion)
+{
+	wxString bare;
+	if (!modVersion.IsEmpty() && version.EndsWith(" - " + modVersion, &bare)) {
+		return bare;
+	}
+	return version;
+}
 // File_checked_for_headers

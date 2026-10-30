@@ -670,6 +670,9 @@ public:
 	}
 	bool Version(uint32 &target) const { return AssignIfExist(EC_TAG_CLIENT_VERSION, target); }
 	bool ModVersion(wxString &target) const { return AssignIfExist(EC_TAG_CLIENT_MOD_VERSION, target); }
+
+	//! Remove only the exact legacy version suffix sent by older daemons.
+	static wxString StripModSuffix(const wxString &version, const wxString &modVersion);
 	bool OSInfo(wxString &target) const { return AssignIfExist(EC_TAG_CLIENT_OS_INFO, target); }
 	bool AvailableParts(uint16 &target) const
 	{

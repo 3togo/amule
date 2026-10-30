@@ -3327,17 +3327,21 @@ void CUpDownClientListRem::ProcessItemUpdate(const CEC_UpDownClient_Tag *tag, CC
 	}
 #endif
 	// Client Software
-	bool sw_updated = false;
-	if (tag->ClientSoftware(client->m_clientSoft)) {
-		client->m_clientSoftString = GetSoftName(client->m_clientSoft);
-		sw_updated = true;
+	const bool sw_updated = tag->ClientSoftware(client->m_clientSoft);
+	const bool version_updated = tag->SoftVerStr(client->m_clientVerString);
+	const bool mod_updated = tag->ModVersion(client->m_strModVersion);
+	if (sw_updated || mod_updated) {
+		client->m_clientSoftString = GetSoftName(client->m_clientSoft, client->m_strModVersion);
 	}
-	if (tag->SoftVerStr(client->m_clientVerString) || sw_updated) {
+	if (version_updated || mod_updated || sw_updated) {
+		client->m_clientVerString = CEC_UpDownClient_Tag::StripModSuffix(
+			client->m_clientVerString, client->m_strModVersion);
 		if (client->m_clientSoftString == _("Unknown")) {
 			client->m_fullClientVerString = client->m_clientSoftString;
 		} else {
-			client->m_fullClientVerString =
-				client->m_clientSoftString + " " + client->m_clientVerString;
+			client->m_fullClientVerString = FormatClientSoftware(client->m_clientSoftString,
+				client->m_strModVersion,
+				client->m_clientVerString);
 		}
 	}
 	// User hash
@@ -3413,7 +3417,6 @@ void CUpDownClientListRem::ProcessItemUpdate(const CEC_UpDownClient_Tag *tag, CC
 	tag->RemoteFilename(client->m_clientFilename);
 	tag->DisableViewShared(client->m_fNoViewSharedFiles);
 	tag->Version(client->m_nClientVersion);
-	tag->ModVersion(client->m_strModVersion);
 	tag->OSInfo(client->m_sClientOSInfo);
 	tag->AvailableParts(client->m_AvailPartCount);
 

@@ -25,7 +25,7 @@
 #ifndef DATATOTEXT_H
 #define DATATOTEXT_H
 
-class wxString;
+#include <wx/string.h>
 
 // Returns the textual representation of a priority value
 wxString PriorityToStr(int priority, bool isAuto);
@@ -35,6 +35,17 @@ wxString DownloadStateToStr(int state, bool queueFull);
 
 /// @return Human-readable client software name.
 const wxString GetSoftName(unsigned int software_ident);
+
+//! Software name with the existing non-eMule mod-name substitution.
+wxString GetSoftName(unsigned int software_ident, const wxString &modVersion);
+
+//! Display software and mod identity, optionally followed by the bare version.
+//! The name overload preserves core-specific annotations; the numeric overload
+//! applies the same software-name selection to stored peers.
+wxString FormatClientSoftware(
+	const wxString &name, const wxString &modVersion, const wxString &version = wxEmptyString);
+wxString FormatClientSoftware(
+	unsigned int software_ident, const wxString &modVersion, const wxString &version = wxEmptyString);
 
 /**
  * Get "Source From" text, i.e. where we got the source from.

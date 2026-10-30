@@ -2049,6 +2049,9 @@ static CECPacket *Get_EC_Response_ClientHistory()
 			entry.AddTag(CECTag(EC_TAG_CLIENT_USER_PORT, meta.lastPort));
 			entry.AddTag(CECTag(EC_TAG_CLIENT_KAD_PORT, meta.kadPort));
 			entry.AddTag(CECTag(EC_TAG_CLIENT_SOFTWARE, meta.clientSoft));
+			if (!meta.modVersion.IsEmpty()) {
+				entry.AddTag(CECTag(EC_TAG_CLIENT_MOD_VERSION, meta.modVersion));
+			}
 			// The same per-software rendering the live path uses. This used to be a generic
 			// major.minor.update built here, on the reasoning that only lPhant and eMule+
 			// have a bespoke format -- which overlooked plain eMule, whose update component

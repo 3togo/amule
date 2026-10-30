@@ -937,6 +937,7 @@ private:
 	void SendHelloTypePacket(CMemFile *data);
 	void SendFirewallCheckUDPRequest();
 	void ClearHelloProperties(); // eMule 0.42
+	void UpdateClientMeta(bool countSession);
 
 	CNetworkAddress m_userAddress;
 	CNetworkAddress m_connectAddress;

@@ -163,3 +163,15 @@ TEST(ClientCredits, CreditRatioClampsAtBothEnds)
 	seeder.AddUploaded(100000000, peer, false);
 	ASSERT_EQUALS(1.0f, seeder.GetCreditRatio());
 }
+
+TEST(ClientCredits, ModIdentityRefreshesAndClearsWithThePeer)
+{
+	CClientCredits credits(SecureRecord());
+	credits.UpdateMeta("peer", 0, 4662, 4672, 0, 0, "AI v1.6", 0, 0, true);
+	ASSERT_EQUALS(wxString("AI v1.6"), credits.GetMeta().modVersion);
+	credits.UpdateMeta("peer", 0, 4662, 4672, 0, 0, "eMule Qt 1.0", 0, 0, false);
+	ASSERT_EQUALS(wxString("eMule Qt 1.0"), credits.GetMeta().modVersion);
+	credits.UpdateMeta("peer", 0, 4662, 4672, 0, 0, "", 0, 0, false);
+	ASSERT_TRUE(credits.GetMeta().modVersion.IsEmpty());
+	ASSERT_EQUALS(1u, credits.GetMeta().sessions);
+}

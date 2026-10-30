@@ -64,10 +64,11 @@ public:
 class ClientMetaStruct
 {
 public:
-	wxString name;    //!< last nickname seen, capped on write
-	uint32 firstSeen; //!< first time we ever saw this peer
-	uint32 sessions;  //!< how many times we have seen it since
-	uint32 lastIP;    //!< last known address, also feeds GeoIP at display time
+	wxString name;       //!< last nickname seen, capped on write
+	wxString modVersion; //!< self-declared mod identity, capped on write
+	uint32 firstSeen;    //!< first time we ever saw this peer
+	uint32 sessions;     //!< how many times we have seen it since
+	uint32 lastIP;       //!< last known address, also feeds GeoIP at display time
 	uint16 lastPort;
 	uint16 kadPort;
 	uint32 version;    //!< numeric client version, rendered as a string
@@ -152,6 +153,7 @@ public:
 		uint16 kadPort,
 		uint32 version,
 		uint8 clientSoft,
+		const wxString &modVersion,
 		uint8 sourceFrom,
 		uint8 obfuscation,
 		bool countSession);

@@ -141,6 +141,7 @@ size_t CClientHistoryListCtrl::AppendLiveRow(const CMD4Hash &hash, const LiveCli
 	row.downSpeed = live.downSpeed;
 	row.name = live.name;
 	row.version = live.version;
+	row.modVersion = live.modVersion;
 	row.ip = live.ip;
 	row.port = live.port;
 	row.clientSoft = live.clientSoft;
@@ -218,12 +219,13 @@ void CClientHistoryListCtrl::ReconcileLive(const std::unordered_map<CMD4Hash, Li
 		// stay put, so a narrower test would freeze them.
 		if (!entry.second.name.IsEmpty() &&
 			(row.name != entry.second.name || row.version != entry.second.version ||
-				row.ip != entry.second.ip || row.port != entry.second.port ||
-				row.clientSoft != entry.second.clientSoft ||
+				row.modVersion != entry.second.modVersion || row.ip != entry.second.ip ||
+				row.port != entry.second.port || row.clientSoft != entry.second.clientSoft ||
 				row.sourceFrom != entry.second.sourceFrom ||
 				row.nameCell != entry.second.nameCell)) {
 			row.name = entry.second.name;
 			row.version = entry.second.version;
+			row.modVersion = entry.second.modVersion;
 			row.ip = entry.second.ip;
 			row.port = entry.second.port;
 			row.clientSoft = entry.second.clientSoft;
@@ -337,7 +339,8 @@ bool CClientHistoryListCtrl::PeerForItem(wxUIntPtr data, PeerIdentity &out) cons
 	// half stays absent, which is what hasSession says.
 	out.detail.userName = row->name;
 	out.detail.userHash = row->hash;
-	out.detail.softStr = row->identityKnown ? GetSoftName(row->clientSoft) : wxString();
+	out.detail.softStr =
+		row->identityKnown ? FormatClientSoftware(row->clientSoft, row->modVersion) : wxString();
 	out.detail.softVerStr = row->version;
 	// Left empty when unknown, so the dialog says so rather than rendering a
 	// literal 0.0.0.0.
@@ -382,7 +385,8 @@ wxString CClientHistoryListCtrl::GetItemColumnText(wxUIntPtr item, unsigned colu
 		return DisplayNameFor(*row);
 
 	case COLUMN_HISTORY_SOFTWARE:
-		return row->identityKnown ? GetSoftName(row->clientSoft) : wxString();
+		return row->identityKnown ? FormatClientSoftware(row->clientSoft, row->modVersion)
+					  : wxString();
 
 	case COLUMN_HISTORY_VERSION:
 		return row->version;

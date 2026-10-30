@@ -23,6 +23,7 @@ static Entry MakeEntry(uint8 seed, const wxString &name)
 	}
 	entry.key = CMD4Hash(key);
 	entry.meta.name = name;
+	entry.meta.modVersion = seed == 1 ? wxString("AI v1.6") : wxString();
 	entry.meta.firstSeen = 0x11111111u * seed;
 	entry.meta.sessions = seed + 1;
 	entry.meta.lastIP = 0x0100007fu + seed;
@@ -39,6 +40,7 @@ static void AssertSameEntry(const Entry &expected, const Entry &actual)
 {
 	ASSERT_EQUALS(expected.key.Encode(), actual.key.Encode());
 	ASSERT_EQUALS(expected.meta.name, actual.meta.name);
+	ASSERT_EQUALS(expected.meta.modVersion, actual.meta.modVersion);
 	ASSERT_EQUALS(expected.meta.firstSeen, actual.meta.firstSeen);
 	ASSERT_EQUALS(expected.meta.sessions, actual.meta.sessions);
 	ASSERT_EQUALS(expected.meta.lastIP, actual.meta.lastIP);
@@ -89,14 +91,14 @@ TEST(ClientMetaTrailer, EntriesSurviveARoundTrip)
 	}
 }
 
-// Pins the on-disk layout: a change here breaks files written by released builds.
-TEST(ClientMetaTrailer, LayoutMatchesTheReleasedFormat)
+// Pins the v2 layout, including the mod string appended after the nickname.
+TEST(ClientMetaTrailer, LayoutMatchesVersionTwo)
 {
 	std::vector<Entry> saved;
 	saved.push_back(MakeEntry(1, "ab"));
 
 	const wxString expected = "414d554c454d4431"                 // magic
-				  "01"                               // version
+				  "02"                               // trailer version
 				  "01000000"                         // entry count
 				  "0102030405060708090a0b0c0d0e0f10" // key
 				  "11111111"                         // firstSeen
@@ -108,7 +110,8 @@ TEST(ClientMetaTrailer, LayoutMatchesTheReleasedFormat)
 				  "01"                               // clientSoft
 				  "03"                               // sourceFrom
 				  "04"                               // obfuscation
-				  "02006162";                        // name "ab", uint16 length
+				  "02006162"                         // name "ab", uint16 length
+				  "070041492076312e36";              // mod "AI v1.6", uint16 length
 
 	wxString written;
 	for (uint8 byte : Written(saved)) {
@@ -169,7 +172,7 @@ TEST(ClientMetaTrailer, OtherTrailingDataIsNotABlock)
 TEST(ClientMetaTrailer, ABlockFromANewerVersionIsLeftAlone)
 {
 	std::vector<uint8> tail = Written(std::vector<Entry>(1, MakeEntry(1, "peer")));
-	tail[8] = 2;
+	tail[8] = 3;
 
 	CMemFile *file = FileWithTail(tail);
 	std::vector<Entry> loaded;
@@ -193,4 +196,45 @@ TEST(ClientMetaTrailer, ATruncatedBlockKeepsTheCompleteEntries)
 
 	ASSERT_EQUALS(1u, loaded.size());
 	AssertSameEntry(saved[0], loaded[0]);
+}
+
+// A fixed v1 record, independent of the v2 writer. Multiple records catch field misalignment.
+TEST(ClientMetaTrailer, ReadsVersionOneWithoutAMod)
+{
+	const uint8 header[] = { 'A', 'M', 'U', 'L', 'E', 'M', 'D', '1', 1, 2, 0, 0, 0 };
+	std::vector<uint8> tail(header, header + sizeof(header));
+	for (int i = 0; i < 2; ++i) {
+		// key (16), fixed fields (23), nickname length (2), nickname (2).
+		std::vector<uint8> record(43, 0);
+		record[0] = static_cast<uint8>(i + 1);
+		record[39] = 2;
+		record[41] = 'a';
+		record[42] = 'b';
+		tail.insert(tail.end(), record.begin(), record.end());
+	}
+	CMemFile *file = FileWithTail(tail);
+	std::vector<Entry> loaded;
+	ASSERT_EQUALS(ClientMetaTrailer::READ_OK, ClientMetaTrailer::Read(*file, loaded));
+	delete file;
+	ASSERT_EQUALS(2u, loaded.size());
+	ASSERT_EQUALS(wxString("ab"), loaded[0].meta.name);
+	ASSERT_EQUALS(wxString("ab"), loaded[1].meta.name);
+	ASSERT_TRUE(loaded[0].meta.modVersion.IsEmpty());
+	ASSERT_TRUE(loaded[1].meta.modVersion.IsEmpty());
+}
+
+TEST(ClientMetaTrailer, LongModIdentitiesAreCappedInCharacters)
+{
+	Entry entry = MakeEntry(1, "peer");
+	wxString mod;
+	for (int i = 0; i < 100; ++i) {
+		mod += wxString::FromUTF8("\xC3\xA9");
+	}
+	entry.meta.modVersion = mod;
+	CMemFile *file = FileWithTail(Written({ entry }));
+	std::vector<Entry> loaded;
+	ASSERT_EQUALS(ClientMetaTrailer::READ_OK, ClientMetaTrailer::Read(*file, loaded));
+	delete file;
+	ASSERT_EQUALS(1u, loaded.size());
+	ASSERT_EQUALS(mod.Left(64), loaded[0].meta.modVersion);
 }

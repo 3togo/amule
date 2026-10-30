@@ -1843,3 +1843,36 @@ TEST(State, MarkTickSuccessDoesNotAdvanceTheRevision)
 	state.MarkTickSuccess();
 	ASSERT_EQUALS(before, state.SnapshotRevision());
 }
+
+TEST(State, KnownClientModFollowsLiveIdentityAndSurvivesDisconnect)
+{
+	CState state;
+	state.SetKnownClients({ StoredKnownClient() });
+	PutPreHelloClient(state, true);
+	state.MutateClients([](std::map<std::uint32_t, ClientSnapshot> &clients) {
+		auto &client = clients[30];
+		client.client_name = "mod peer";
+		client.software = "emule";
+		client.software_version = "v0.70b";
+		client.client_mod_name = "AI v1.6";
+	});
+	state.ReconcileKnownClients();
+	state.WithKnownClients([](const std::vector<KnownClientSnapshot> &known) {
+		ASSERT_EQUALS(std::string("AI v1.6"), known[0].client_mod_name);
+		ASSERT_EQUALS(std::string("v0.70b"), known[0].software_version);
+	});
+	state.MutateClients([](std::map<std::uint32_t, ClientSnapshot> &clients) { clients.clear(); });
+	state.ReconcileKnownClients();
+	state.WithKnownClients([](const std::vector<KnownClientSnapshot> &known) {
+		ASSERT_EQUALS(std::string("AI v1.6"), known[0].client_mod_name);
+		ASSERT_FALSE(known[0].connected);
+	});
+	PutPreHelloClient(state, true);
+	state.MutateClients([](std::map<std::uint32_t, ClientSnapshot> &clients) {
+		clients[30].client_name = "stock peer";
+	});
+	state.ReconcileKnownClients();
+	state.WithKnownClients([](const std::vector<KnownClientSnapshot> &known) {
+		ASSERT_TRUE(known[0].client_mod_name.empty());
+	});
+}

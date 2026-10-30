@@ -810,6 +810,7 @@ void CState::ReconcileKnownClientsLocked()
 		k.country_code = c.country_code;
 		k.software = c.software;
 		k.software_version = c.software_version;
+		k.client_mod_name = c.client_mod_name;
 		k.source_origin = c.source_origin;
 		k.obfuscation_state = c.obfuscation_state;
 	}

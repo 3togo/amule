@@ -23,6 +23,7 @@
 //
 
 #include <muleunit/test.h>
+#include <ec/cpp/ECSpecialTags.h>
 
 #include <set>
 
@@ -4042,4 +4043,53 @@ TEST(Refresher, AmuleLogExportsStripTransportMarkers)
 		ASSERT_EQUALS(std::string(line.utf8_str()), lines[i]);
 	}
 	ASSERT_EQUALS(std::string("ERROR: cannot open logfile"), lines.back());
+}
+
+TEST(Refresher, ClientSoftwareIdentitySurvivesIncrementalUpdates)
+{
+	std::map<std::uint32_t, ClientSnapshot> cache;
+	const FileMap no_files;
+	auto apply = [&](const std::vector<CECTag> &fields) {
+		CECPacket response(EC_OP_SHARED_FILES);
+		CECTag container(EC_TAG_CLIENT, static_cast<uint32>(0));
+		CECTag client(EC_TAG_CLIENT, static_cast<uint32>(7));
+		for (const auto &field : fields) {
+			client.AddTag(field);
+		}
+		container.AddTag(client);
+		response.AddTag(container);
+		ApplyGetUpdateToClients(&response, cache, no_files);
+	};
+	apply({ CECTag(EC_TAG_CLIENT_SOFTWARE, static_cast<uint32>(SO_EMULE)),
+		CECTag(EC_TAG_CLIENT_SOFT_VER_STR, wxString("v0.70b - AI v1.6")),
+		CECTag(EC_TAG_CLIENT_MOD_VERSION, wxString("AI v1.6")) });
+	ASSERT_EQUALS(std::string("v0.70b"), cache[7].software_version);
+	ASSERT_EQUALS(std::string("AI v1.6"), cache[7].client_mod_name);
+	// Family did not change, so the incremental daemon omits its tag.
+	apply({ CECTag(EC_TAG_CLIENT_SOFT_VER_STR, wxString("v0.70c - AI v1.6")) });
+	ASSERT_EQUALS(std::string("v0.70c"), cache[7].software_version);
+	apply({ CECTag(EC_TAG_CLIENT_MOD_VERSION, wxString("eMule Qt 1.0")) });
+	ASSERT_EQUALS(std::string("v0.70c"), cache[7].software_version);
+	ASSERT_EQUALS(std::string("eMule Qt 1.0"), cache[7].client_mod_name);
+	apply({ CECTag(EC_TAG_CLIENT_SOFT_VER_STR, wxString("v0.70d")),
+		CECTag(EC_TAG_CLIENT_MOD_VERSION, wxString()) });
+	ASSERT_EQUALS(std::string("v0.70d"), cache[7].software_version);
+	ASSERT_TRUE(cache[7].client_mod_name.empty());
+	// An explicit unknown transition clears the cached, previously known version.
+	apply({ CECTag(EC_TAG_CLIENT_SOFTWARE, static_cast<uint32>(SO_UNKNOWN)),
+		CECTag(EC_TAG_CLIENT_SOFT_VER_STR, wxString("Desconocido")) });
+	ASSERT_TRUE(cache[7].software_version.empty());
+	apply({ CECTag(EC_TAG_CLIENT_SOFT_VER_STR, wxString("Desconocido")) });
+	ASSERT_TRUE(cache[7].software_version.empty());
+}
+
+TEST(Refresher, LegacyClientVersionStripsOnlyTheExactModSuffix)
+{
+	ASSERT_EQUALS(
+		wxString("v0.70b"), CEC_UpDownClient_Tag::StripModSuffix("v0.70b - AI v1.6", "AI v1.6"));
+	ASSERT_EQUALS(wxString("v0.70b - other"),
+		CEC_UpDownClient_Tag::StripModSuffix("v0.70b - other", "AI v1.6"));
+	ASSERT_EQUALS(
+		wxString("v0.70b - AI v1.6"), CEC_UpDownClient_Tag::StripModSuffix("v0.70b - AI v1.6", ""));
+	ASSERT_EQUALS(wxString("v0.70b"), CEC_UpDownClient_Tag::StripModSuffix("v0.70b", "AI v1.6"));
 }

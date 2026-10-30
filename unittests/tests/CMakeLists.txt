@@ -812,6 +812,7 @@ target_link_libraries (ServerMetTest
 # it was online. Needs no app and no daemon.
 add_executable (ClientVersionStringTest
 	ClientVersionStringTest.cpp
+	${CMAKE_SOURCE_DIR}/src/DataToText.cpp
 	${CMAKE_SOURCE_DIR}/src/ClientVersionString.cpp
 )
 
@@ -3165,6 +3166,12 @@ if (ENABLE_INTEGRATION_TESTS AND BUILD_DAEMON AND UNIX AND NOT APPLE)
 					--amuled $<TARGET_FILE:amuled> --amuleapi $<TARGET_FILE:amuleapi>
 			)
 			set_tests_properties (ChatCaptchaIntegrationTest PROPERTIES LABELS "integration")
+			add_test (NAME ClientModHistoryIntegrationTest
+				COMMAND ${Python3_EXECUTABLE}
+					${CMAKE_CURRENT_SOURCE_DIR}/ClientModHistoryIntegrationTest.py
+					--amuled $<TARGET_FILE:amuled> --amuleapi $<TARGET_FILE:amuleapi>
+			)
+			set_tests_properties (ClientModHistoryIntegrationTest PROPERTIES LABELS "integration")
 		endif ()
 		if (BUILD_MONOLITHIC AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
 			find_program (AMULE_XVFB_RUN xvfb-run)
@@ -3607,6 +3614,8 @@ endif ()
 
 find_program (AMULE_TEST_NODE_EXECUTABLE NAMES node nodejs)
 if (AMULE_TEST_NODE_EXECUTABLE)
+	add_test (NAME ClientSoftwareTest
+		COMMAND ${AMULE_TEST_NODE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ClientSoftwareTest.mjs)
 	add_test (NAME DownloadDeleteTest
 		COMMAND ${AMULE_TEST_NODE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/DownloadDeleteTest.mjs)
 	add_test (NAME MagnetLinkTest

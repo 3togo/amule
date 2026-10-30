@@ -141,6 +141,37 @@ const wxString GetSoftName(unsigned int software_ident)
 	}
 }
 
+wxString GetSoftName(unsigned int software_ident, const wxString &modVersion)
+{
+	if (software_ident != SO_EMULE && software_ident != SO_OLDEMULE && !modVersion.IsEmpty()) {
+		return modVersion;
+	}
+	return GetSoftName(software_ident);
+}
+
+wxString FormatClientSoftware(const wxString &name, const wxString &modVersion, const wxString &version)
+{
+	wxString label = name;
+	// ReGetClientSoft() already includes the mod in its decorated "Fake eMule" labels.
+	if (!modVersion.IsEmpty() && name != modVersion &&
+		!(name.StartsWith(modVersion + " (") && name.EndsWith(")"))) {
+		label += " (" + modVersion + ")";
+	}
+	if (!version.IsEmpty()) {
+		if (!label.IsEmpty()) {
+			label += " ";
+		}
+		label += version;
+	}
+	return label;
+}
+
+wxString FormatClientSoftware(
+	unsigned int software_ident, const wxString &modVersion, const wxString &version)
+{
+	return FormatClientSoftware(GetSoftName(software_ident, modVersion), modVersion, version);
+}
+
 wxString OriginToText(unsigned int source_from)
 {
 	switch ((ESourceFrom)source_from) {

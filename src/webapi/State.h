@@ -282,7 +282,8 @@ struct KnownClientSnapshot
 	std::uint16_t kad_port = 0;
 	std::string country_code;     // ISO 3166-1 alpha-2, resolved daemon-side
 	std::string software;         // resolved name, e.g. "eMule"
-	std::string software_version; // "v0.50.0"
+	std::string software_version; // bare version, e.g. "v0.70b"
+	std::string client_mod_name;  // self-declared mod identity, same as live clients
 	std::string source_origin;
 	std::string obfuscation_state;
 	std::uint64_t uploaded_bytes_total = 0;

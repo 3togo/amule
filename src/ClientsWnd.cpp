@@ -23,6 +23,7 @@
 //
 
 #include "ClientsWnd.h"
+#include "DataToText.h" // Needed for FormatClientSoftware
 
 #include "ClientVersionString.h" // Interface declarations
 
@@ -214,6 +215,7 @@ void CClientsWnd::LoadHistory()
 			row.ip = meta.lastIP;
 			row.port = meta.lastPort;
 			row.clientSoft = meta.clientSoft;
+			row.modVersion = meta.modVersion;
 			row.sourceFrom = meta.sourceFrom;
 			row.obfuscation = meta.obfuscation;
 			// Rendered the way the live list renders it, so one peer is not listed
@@ -301,6 +303,9 @@ void CClientsWnd::CHistoryHandler::HandlePacket(const CECPacket *packet)
 		if (const CECTag *t = tag->GetTagByName(EC_TAG_CLIENT_SOFTWARE)) {
 			row.clientSoft = t->GetInt();
 		}
+		if (const CECTag *t = tag->GetTagByName(EC_TAG_CLIENT_MOD_VERSION)) {
+			row.modVersion = t->GetStringData();
+		}
 		if (const CECTag *t = tag->GetTagByName(EC_TAG_CLIENT_SOFT_VER_STR)) {
 			row.version = t->GetStringData();
 		}
@@ -375,6 +380,7 @@ void CClientsWnd::UpdateAll()
 			entry.downSpeed = c->GetDisplayKBpsDown();
 			entry.name = c->GetUserName();
 			entry.version = c->GetSoftVerStr();
+			entry.modVersion = c->GetClientModString();
 			entry.ip = c->GetIP();
 			entry.port = c->GetUserPort();
 			entry.clientSoft = static_cast<uint8>(c->GetClientSoft());
@@ -399,7 +405,7 @@ void CClientsWnd::UpdateAll()
 		row.ecid = c->ECID();
 		row.nameCell = nameCell();
 		row.name = c->GetUserName();
-		row.software = c->GetSoftStr();
+		row.software = FormatClientSoftware(c->GetSoftStr(), c->GetClientModString());
 		row.version = c->GetSoftVerStr();
 		row.ip = c->GetIP();
 		row.port = c->GetUserPort();

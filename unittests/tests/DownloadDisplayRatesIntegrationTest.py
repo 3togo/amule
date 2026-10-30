@@ -39,11 +39,16 @@ def local_ipv4():
     raise AssertionError('the download fixture requires a local non-loopback IPv4 address')
 
 
-def hello(name, address, port):
-    """OP_HELLO payload of a client called `name` that listens on address:port."""
-    tags = b'\x02\x01\x00\x01' + struct.pack('<H', len(name)) + name
-    return (b'\x10' + hashlib.md5(name).digest() + socket.inet_aton(address)
-            + struct.pack('<HI', port, 1) + tags + bytes(6))
+def hello(name, address, port, *, user_hash=None, version=None, mod=None):
+    """OP_HELLO payload; optional version is the packed CT_EMULE_VERSION value."""
+    tags = [b'\x02\x01\x00\x01' + struct.pack('<H', len(name)) + name]
+    if version is not None:
+        tags.append(b'\x03\x01\x00\xfb' + struct.pack('<I', version))
+    if mod is not None:
+        tags.append(b'\x02\x01\x00\x55' + struct.pack('<H', len(mod)) + mod)
+    identity = hashlib.md5(name).digest() if user_hash is None else user_hash
+    return (b'\x10' + identity + socket.inet_aton(address)
+            + struct.pack('<HI', port, len(tags)) + b''.join(tags) + bytes(6))
 
 
 class Sources:

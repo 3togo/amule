@@ -1319,7 +1319,7 @@ The last five are on this row and on the `client_added` / `client_updated` SSE p
 
 `upload_file_hash` / `download_file_hash` are the 32-char MD4 hex hashes of the partfile or shared file the client is currently transferring with — directly resolvable against [`/api/v1/downloads/{hash}`](#get-apiv1downloadshash) (in-progress) or the corresponding entry in [`/api/v1/shared`](#get-apiv1shared) by `.hash`. Either field is `null` when the client is queued / idle in that direction. `download_file_name` is the filename the client advertised in `OP_REQFILENAMEANSWER` and is populated only while we're actively downloading from them. `upload_file_name` is the partfile the client is downloading **from us**, resolved locally against our own partfile list — present only while we're uploading to them.
 
-`software` and `software_version` are locale-independent, per the API's English-only contract. `software` is one of the tokens in the enumerated-fields table below; `software_version` is a free-form string. A client the daemon could not identify reports `"software": "unknown"` and `"software_version": null` — never a daemon-localized string, since the daemon's own version formatting is gettext-translated and is deliberately not surfaced here. The two differ because `software` is an enum with an `unknown` member to name that case, while `software_version` is free text with no such member, so an unrecorded version is `null` like every other unknown value. `reported_os` is the client's *own* self-reported OS string (raw external data, not normalized by amuled) and is frequently `null`, since most clients don't send it.
+`software` and `software_version` are locale-independent, per the API's English-only contract. `software` is one of the tokens in the enumerated-fields table below; `software_version` is the bare version string (for example, `v0.70b`); the peer's self-declared mod identity is returned separately in `client_mod_name` (for example, `AI v1.6`). The mod name is descriptive and does not establish protocol capabilities. A client the daemon could not identify reports `"software": "unknown"` and `"software_version": null` — never a daemon-localized string, since the daemon's own version formatting is gettext-translated and is deliberately not surfaced here. The two differ because `software` is an enum with an `unknown` member to name that case, while `software_version` is free text with no such member, so an unrecorded version is `null` like every other unknown value. `reported_os` is the client's *own* self-reported OS string (raw external data, not normalized by amuled) and is frequently `null`, since most clients don't send it.
 
 `ident_state` is the client's secure-identification (SecIdent) state, one of `"not_available"` (the client does not support SecIdent, or this build has no crypto), `"id_needed"` (its public key is known but the signature exchange has not completed), `"identified"` (verified), `"id_failed"` (signature verification failed), `"bad_guy"` (verified earlier, but currently connecting from a *different* IP than the one it was verified on) or `"unknown"` (state not yet reported for a newly seen client). `"bad_guy"` is also briefly reported for a legitimate client that reconnected after an IP change and has not re-identified yet, so treat it as a hint rather than a verdict.
 
@@ -1495,6 +1495,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
       "country_code": "de",
       "software": "amule",
       "software_version": "v2.3.1",
+      "client_mod_name": null,
       "source_origin": "kad",
       "obfuscation_state": "supported",
       "uploaded_bytes_total": 0,
@@ -1516,7 +1517,8 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 | `name` | Client-chosen name. `null` when never recorded. |
 | `ip`, `port`, `kad_port` | Last address the client was seen at. `null` together. |
 | `country_code` | ISO 3166-1 alpha-2, lowercase, resolved by the daemon's GeoIP. `null` when GeoIP is off or the address does not resolve. Artwork: [`GET /flags/{code}.png`](#get-flagscodepng). |
-| `software`, `software_version` | Same tokens `GET /clients` uses. `null` together. |
+| `software`, `software_version` | Same tokens and bare version `GET /clients` uses. `null` together. |
+| `client_mod_name` | Self-declared mod identity, as on `GET /clients`; `null` if not recorded. Older history records gain it when the peer is encountered again. |
 | `source_origin` | How the client was first found — `local_server`, `remote_server`, `kad`, `source_exchange`, … |
 | `obfuscation_state` | Protocol-obfuscation state as of the last session. |
 | `uploaded_bytes_total`, `downloaded_bytes_total` | Lifetime bytes, from the credit record. Always present. |

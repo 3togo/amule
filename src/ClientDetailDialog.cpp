@@ -24,6 +24,7 @@
 //
 
 #include "ClientDetailDialog.h" // Interface declarations
+#include "DataToText.h"         // Needed for FormatClientSoftware
 #include "DialogLayout.h"
 #include "PartFile.h"    // Needed for CPartFile
 #include "UploadQueue.h" // Needed for CUploadQueue
@@ -45,7 +46,7 @@ ClientDetailInfo ClientDetailInfoFromClient(const CClientRef &client)
 	ClientDetailInfo info;
 	info.userName = c.GetUserName();
 	info.userHash = c.GetUserHash();
-	info.softStr = c.GetSoftStr();
+	info.softStr = FormatClientSoftware(c.GetSoftStr(), c.GetClientModString());
 	info.osInfo = c.GetClientOSInfo();
 	info.softVerStr = c.GetSoftVerStr();
 	info.fullIp = c.GetFullIP();

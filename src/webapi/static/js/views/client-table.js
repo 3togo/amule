@@ -4,6 +4,7 @@
 // columns it shows by default and which rows it feeds in.
 
 import { api } from "../api.js";
+import { clientSoftwareLabel } from "../client-software.js";
 import { data } from "../events.js";
 import { html, useState, useEffect, useStore } from "../dom.js";
 import { Badge, listPlaceholder, CountryCell, toast } from "../components.js";
@@ -21,7 +22,8 @@ export const isUp = (c) => (c.upload_speed_bytes_per_second || 0) > 0 || ACTIVE(
 // Column set, declared once. Every consumer offers all of them in the column
 // picker and picks which ones start hidden (see ClientTable's defaultHidden),
 // so a column is always one click away instead of missing from a tab.
-export const softLabel = (c) => [c.software ? t("downloads_peer_soft_" + c.software) : "", c.software === "unknown" ? "" : c.software_version].filter(Boolean).join(" ") || "—";
+export const softLabel = (c) => clientSoftwareLabel(c,
+  c.software ? t("downloads_peer_soft_" + c.software) : "");
 // `remote_queue_position` is null when the peer's queue is full (the API turns
 // amuled's 0xffff sentinel into null), and 0 when it reported no position at
 // all. Both are "not a position", so they sort together as 0.

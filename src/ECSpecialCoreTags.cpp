@@ -425,6 +425,7 @@ CEC_UpDownClient_Tag::CEC_UpDownClient_Tag(
 	AddDiffTag(this, EC_TAG_CLIENT_SCORE, client->GetScore(), valuemap);
 	AddDiffTag(this, EC_TAG_CLIENT_SOFTWARE, client->GetClientSoft(), valuemap);
 	AddDiffTag(this, EC_TAG_CLIENT_SOFT_VER_STR, client->GetSoftVerStr(), valuemap);
+	AddDiffTag(this, EC_TAG_CLIENT_MOD_VERSION, client->GetClientModString(), valuemap);
 	AddDiffTag(this, EC_TAG_CLIENT_USER_IP, client->GetIP(), valuemap);
 	AddDiffTag(this, EC_TAG_CLIENT_USER_PORT, client->GetUserPort(), valuemap);
 #ifdef ENABLE_IP2COUNTRY
@@ -505,7 +506,6 @@ CEC_UpDownClient_Tag::CEC_UpDownClient_Tag(
 	AddDiffTag(this, EC_TAG_CLIENT_SCORE_RATIO, (double)client->GetCreditRatio(), valuemap);
 	AddDiffTag(this, EC_TAG_CLIENT_DISABLE_VIEW_SHARED, client->HasDisabledSharedFiles(), valuemap);
 	AddDiffTag(this, EC_TAG_CLIENT_VERSION, client->GetVersion(), valuemap);
-	AddDiffTag(this, EC_TAG_CLIENT_MOD_VERSION, client->GetClientModString(), valuemap);
 	AddDiffTag(this, EC_TAG_CLIENT_OS_INFO, client->GetClientOSInfo(), valuemap);
 	AddDiffTag(this, EC_TAG_CLIENT_AVAILABLE_PARTS, client->GetAvailablePartCount(), valuemap);
 	if (pfile) {

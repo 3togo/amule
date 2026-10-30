@@ -815,10 +815,12 @@ void MergeClientTag(const CEC_UpDownClient_Tag *c, ClientSnapshot &cs, bool is_n
 	// instead: a peer the daemon could not identify (SO_UNKNOWN, exactly the branch that sets
 	// the translated string) never has the string read at all, and is left empty -- which
 	// reaches the wire as null, since software_version is free text, not an enum.
-	if (soft_code != static_cast<std::uint32_t>(SO_UNKNOWN)) {
+	if (!cs.software.empty() && cs.software != "unknown") {
 		if (const CECTag *t = c->GetTagByName(EC_TAG_CLIENT_SOFT_VER_STR)) {
 			cs.software_version = std::string(t->GetStringData().utf8_str());
 		}
+	} else {
+		cs.software_version.clear();
 	}
 	// reported_os is the peer's own self-reported OS string (raw external data,
 	// not gettext-translated), so it carries no locale leak. Often empty.
@@ -1055,6 +1057,12 @@ void MergeClientTag(const CEC_UpDownClient_Tag *c, ClientSnapshot &cs, bool is_n
 	}
 	if (const CECTag *t = c->GetTagByName(EC_TAG_CLIENT_MOD_VERSION)) {
 		cs.client_mod_name = std::string(t->GetStringData().utf8_str());
+	}
+	if (c->GetTagByName(EC_TAG_CLIENT_SOFT_VER_STR) || c->GetTagByName(EC_TAG_CLIENT_MOD_VERSION)) {
+		cs.software_version = std::string(
+			CEC_UpDownClient_Tag::StripModSuffix(wxString::FromUTF8(cs.software_version.c_str()),
+				wxString::FromUTF8(cs.client_mod_name.c_str()))
+				.utf8_str());
 	}
 	{
 		bool v = false;
