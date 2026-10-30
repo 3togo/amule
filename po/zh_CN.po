@@ -3232,10 +3232,6 @@ msgid "Browse"
 msgstr "浏览"
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
-msgid "(All files in this folder are shared with other peers)"
-msgstr "（此文件夹中的所有文件均与其他对等方共享）"
-
-#: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Folder for temporary download files"
 msgstr "存放临时下载文件的文件夹"
 
@@ -6443,6 +6439,10 @@ msgstr "%u kbps"
 #, c-format
 msgid "%s:"
 msgstr "%s:"
+
+#: src/OtherFunctions.cpp
+msgid "(All files in this folder are shared with other peers)"
+msgstr "（此文件夹中的所有文件均与其他对等方共享）"
 
 #: src/OtherFunctions.cpp
 msgid "all"
