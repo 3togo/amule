@@ -2,6 +2,12 @@
 # 10 s, "slow" 60 s, "integration" 300 s, and "reverify" runs in a step of its own. Label a
 # test next to its add_test, so adding one never touches the workflow.
 
+# The visible filter summary must follow effective rules, including saved but disabled options.
+add_executable (FilterSelectionSummaryTest FilterSelectionSummaryTest.cpp)
+target_include_directories (FilterSelectionSummaryTest PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries (FilterSelectionSummaryTest muleunit mulecommon)
+add_test (NAME FilterSelectionSummaryTest COMMAND FilterSelectionSummaryTest)
+
 # Shared log rendering and the wx event envelope, without a running daemon.
 add_executable (LogRecordTest
 	LogRecordTest.cpp

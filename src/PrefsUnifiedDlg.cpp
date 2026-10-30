@@ -83,6 +83,7 @@
 #include "ClientList.h"
 #include "DirectoryTreeCtrl.h" // Needed for CDirectoryTreeCtrl
 #include "Preferences.h"
+#include "FilterSelectionSummary.h"
 #include "SharedDirsApplyTask.h" // Recursive-share expansion worker
 #include "muuli_wdr.h"
 #include "Logger.h"
@@ -159,6 +160,12 @@ wxBEGIN_EVENT_TABLE(PrefsUnifiedDlg, wxDialog)
 	EVT_CHECKBOX(IDC_MSGFILTER_ALL, PrefsUnifiedDlg::OnCheckBoxChange)
 	EVT_CHECKBOX(IDC_MSGFILTER_WORD, PrefsUnifiedDlg::OnCheckBoxChange)
 	EVT_CHECKBOX(IDC_FILTERCOMMENTS, PrefsUnifiedDlg::OnCheckBoxChange)
+	EVT_CHECKBOX(IDC_MSGFILTER_NONFRIENDS, PrefsUnifiedDlg::OnFilterSummaryChange)
+	EVT_CHECKBOX(IDC_MSGFILTER_NONSECURE, PrefsUnifiedDlg::OnFilterSummaryChange)
+	EVT_CHECKBOX(IDC_MSGCAPTCHA, PrefsUnifiedDlg::OnFilterSummaryChange)
+	EVT_CHECKBOX(IDC_MSGLOG, PrefsUnifiedDlg::OnFilterSummaryChange)
+	EVT_TEXT(IDC_MSGWORD, PrefsUnifiedDlg::OnFilterSummaryChange)
+	EVT_TEXT(IDC_COMMENTWORD, PrefsUnifiedDlg::OnFilterSummaryChange)
 	EVT_CHECKBOX(IDC_STARTNEXTFILE, PrefsUnifiedDlg::OnCheckBoxChange)
 	EVT_CHECKBOX(IDC_ENDGAME, PrefsUnifiedDlg::OnCheckBoxChange)
 	EVT_CHECKBOX(IDC_ENABLETRAYICON, PrefsUnifiedDlg::OnCheckBoxChange)
@@ -1213,6 +1220,35 @@ void PrefsUnifiedDlg::UpdateMessageFilterControls()
 	FindWindow(IDC_MSGFILTER_NONFRIENDS)->Enable(selective);
 	FindWindow(IDC_MSGFILTER_WORD)->Enable(selective);
 	FindWindow(IDC_MSGWORD)->Enable(selective && CastChild(IDC_MSGFILTER_WORD, wxCheckBox)->IsChecked());
+	UpdateFilterSummary();
+}
+
+void PrefsUnifiedDlg::UpdateFilterSummary()
+{
+	FilterSelectionSummary::Settings settings;
+	settings.messages = CastChild(IDC_MSGFILTER, wxCheckBox)->IsChecked();
+	settings.allMessages = CastChild(IDC_MSGFILTER_ALL, wxCheckBox)->IsChecked();
+	settings.nonFriends = CastChild(IDC_MSGFILTER_NONFRIENDS, wxCheckBox)->IsChecked();
+	settings.unknownClients = CastChild(IDC_MSGFILTER_NONSECURE, wxCheckBox)->IsChecked();
+	settings.messageWords = CastChild(IDC_MSGFILTER_WORD, wxCheckBox)->IsChecked();
+	settings.messageTerms = CastChild(IDC_MSGWORD, wxTextCtrl)->GetValue();
+	settings.advancedSpamSupported = thePrefs::GetChatSpamFilterSupported();
+	settings.advancedSpam = CastChild(IDC_MSGADVSPAM, wxCheckBox)->IsChecked();
+	settings.captcha = CastChild(IDC_MSGCAPTCHA, wxCheckBox)->IsChecked();
+	settings.logMessages = CastChild(IDC_MSGLOG, wxCheckBox)->IsChecked();
+	settings.comments = CastChild(IDC_FILTERCOMMENTS, wxCheckBox)->IsChecked();
+	settings.commentTerms = CastChild(IDC_COMMENTWORD, wxTextCtrl)->GetValue();
+	auto *summary = CastChild(IDC_FILTER_SUMMARY, wxTextCtrl);
+	const wxString text = FilterSelectionSummary::Describe(settings);
+	if (summary->GetValue() != text) {
+		summary->ChangeValue(text);
+	}
+}
+
+void PrefsUnifiedDlg::OnFilterSummaryChange(wxCommandEvent &event)
+{
+	UpdateFilterSummary();
+	event.Skip();
 }
 
 #ifdef ENABLE_IPV6
@@ -2000,6 +2036,7 @@ void PrefsUnifiedDlg::OnCheckBoxChange(wxCommandEvent &event)
 
 	case IDC_FILTERCOMMENTS:
 		FindWindow(IDC_COMMENTWORD)->Enable(value);
+		UpdateFilterSummary();
 		break;
 
 	case ID_PROXY_ENABLE_PROXY:

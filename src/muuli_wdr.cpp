@@ -3244,7 +3244,10 @@ wxSizer *PreferencesFilteringTab( wxWindow *parent, bool call_fit, bool set_size
     wxStaticBox *item2 = new wxStaticBox( parent, -1, _("Messages") );
     wxStaticBoxSizer *item1 = new wxStaticBoxSizer( item2, wxVERTICAL );
 
-    wxCheckBox *item3 = new wxCheckBox( item2, IDC_MSGFILTER, _("Filter incoming messages (except current chat):"), wxDefaultPosition, wxDefaultSize, 0 );
+    wxCheckBox *item3 = new wxCheckBox( item2, IDC_MSGFILTER, _("Enable incoming message filtering (except current chat):"), wxDefaultPosition, wxDefaultSize, 0 );
+    item3->SetToolTip(_("Enable the filter options below. Select at least one option to filter messages.\n"
+                    "Turning this off keeps your selected options and word list.\n"
+                    "Filtered messages are discarded without opening a chat or replying to the sender."));
     item1->Add( item3, wxSizerFlags().CenterVertical().Border(wxALL, 0) );
     wxCheckBox *item4 = new wxCheckBox( item2, IDC_MSGFILTER_ALL, _("Filter all messages"), wxDefaultPosition, wxDefaultSize, 0 );
     item1->Add( item4, wxSizerFlags().CenterVertical().Border(wxLEFT, 25) );
@@ -3255,7 +3258,12 @@ wxSizer *PreferencesFilteringTab( wxWindow *parent, bool call_fit, bool set_size
     wxCheckBox *item7 = new wxCheckBox( item2, IDC_MSGFILTER_WORD, _("Filter messages containing (use ',' as separator):"), wxDefaultPosition, wxDefaultSize, 0 );
     item1->Add( item7, wxSizerFlags().CenterVertical().Border(wxLEFT, 25) );
     wxTextCtrl *item8 = new wxTextCtrl( item2, IDC_MSGWORD, "", wxDefaultPosition, wxSize(80,-1), 0 );
-    item8->SetToolTip( _("add here the words amule should filter and block messages including it") );
+    item7->SetToolTip(_("Discard chat messages containing any comma-separated term. Matching ignores case and "
+                    "spaces around each term.\n"
+                    "Terms match anywhere in a message: dog matches hotdog and black dog spotted.\n"
+                    "Wildcards are not supported. A * is literal, except that a word list of exactly * "
+                    "blocks every message."));
+    item8->SetToolTip( item7->GetToolTipText() );
     item1->Add( item8, wxSizerFlags().Expand().CenterVertical().Border(wxLEFT, 50) );
     wxCheckBox *advancedSpam = new wxCheckBox(item2, IDC_MSGADVSPAM, _("Enable advanced spam filter"));
     advancedSpam->SetToolTip(_("Block unsolicited links and repeated messages from non-friends."));
@@ -3266,15 +3274,28 @@ wxSizer *PreferencesFilteringTab( wxWindow *parent, bool call_fit, bool set_size
     wxCheckBox *item9 = new wxCheckBox( item2, IDC_MSGLOG, _("Show received messages in the log"), wxDefaultPosition, wxDefaultSize, 0 );
     item1->Add( item9, wxSizerFlags().CenterVertical().Border(wxALL, 0) );
     item0->Add( item1, wxSizerFlags().Expand().CenterVertical().Border(wxALL, 0) );
-    wxStaticBox *item11 = new wxStaticBox( parent, -1, _("Comments") );
+    wxStaticBox *item11 = new wxStaticBox( parent, -1, _("File comments") );
     wxStaticBoxSizer *item10 = new wxStaticBoxSizer( item11, wxVERTICAL );
 
-    wxCheckBox *item12 = new wxCheckBox( item11, IDC_FILTERCOMMENTS, _("Filter comments containing (use ',' as separator):"), wxDefaultPosition, wxDefaultSize, 0 );
+    wxCheckBox *item12 = new wxCheckBox( item11, IDC_FILTERCOMMENTS, _("Filter file comments containing (use ',' as separator):"), wxDefaultPosition, wxDefaultSize, 0 );
+    item12->SetToolTip(_("Hide file comments from other users containing any comma-separated term. This does not "
+                     "filter chat messages.\n"
+                     "Matching ignores case and spaces around each term. Terms match anywhere in a comment: "
+                     "dog matches hotdog and black dog spotted.\n"
+                     "Wildcards are not supported; * is matched literally."));
     item10->Add( item12, wxSizerFlags().CenterVertical().Border(wxALL, 0) );
     wxTextCtrl *item13 = new wxTextCtrl( item11, IDC_COMMENTWORD, "", wxDefaultPosition, wxSize(80,-1), 0 );
-    item13->SetToolTip( _("add here the words amule should filter and block messages including it") );
+    item13->SetToolTip( item12->GetToolTipText() );
     item10->Add( item13, wxSizerFlags().Expand().CenterVertical().Border(wxLEFT, 50) );
     item0->Add( item10, wxSizerFlags().Expand().CenterVertical().Border(wxALL, 0) );
+    wxStaticBoxSizer *summaryBox = new wxStaticBoxSizer( wxVERTICAL, parent, _("With these settings") );
+    wxTextCtrl *summary = new wxTextCtrl( summaryBox->GetStaticBox(), IDC_FILTER_SUMMARY, wxEmptyString,
+        wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY );
+    summary->SetName( "Filter selection summary" );
+    // Reserve a stable, font-scaled area. Long lists wrap and scroll instead of resizing the page.
+    summary->SetMinSize( wxSize( -1, summary->GetCharHeight() * 6 + summary->FromDIP(12) ) );
+    summaryBox->Add( summary, wxSizerFlags(1).Expand() );
+    item0->Add( summaryBox, wxSizerFlags().Expand().Border(wxTOP, 5) );
     if (set_sizer)
     {
         parent->SetSizer( item0 );

@@ -41,6 +41,7 @@ src/FileDetailListCtrl.cpp
 src/FileRenameDialog.h
 src/ExternalCommand.cpp
 src/FileLaunch.cpp
+src/FilterSelectionSummary.h
 src/FirstRunWizard.cpp
 src/FriendList.cpp
 src/FriendListCtrl.cpp

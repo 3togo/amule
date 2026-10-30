@@ -437,3 +437,25 @@ TEST(StringFunctions, ContainsAnyKeywordMatchesTrimmedAndCaseInsensitive)
 	ASSERT_TRUE(ContainsAnyKeyword("buy now please", " spam , Buy Now "));
 	ASSERT_FALSE(ContainsAnyKeyword(wxEmptyString, "spam"));
 }
+
+TEST(StringFunctions, SplitKeywordsPreservesCaseAndLiteralCharacters)
+{
+	const auto terms = SplitKeywords(" , Dog , , CAT, hot dog, *, C:\\spam, ");
+	ASSERT_EQUALS(5u, terms.size());
+	ASSERT_EQUALS(wxString("Dog"), terms[0]);
+	ASSERT_EQUALS(wxString("CAT"), terms[1]);
+	ASSERT_EQUALS(wxString("hot dog"), terms[2]);
+	ASSERT_EQUALS(wxString("*"), terms[3]);
+	ASSERT_EQUALS(wxString("C:\\spam"), terms[4]);
+	ASSERT_TRUE(SplitKeywords(" , , ").empty());
+	ASSERT_TRUE(SplitKeywords(wxEmptyString).empty());
+}
+
+TEST(StringFunctions, ContainsAnyKeywordUsesLiteralSubstrings)
+{
+	ASSERT_TRUE(ContainsAnyKeyword("hotdog", " Dog , CAT "));
+	ASSERT_TRUE(ContainsAnyKeyword("C:\\SPAM\\file", " C:\\spam "));
+	ASSERT_FALSE(ContainsAnyKeyword("dog", "*"));
+	ASSERT_TRUE(ContainsAnyKeyword("a*b", " * "));
+	ASSERT_FALSE(ContainsAnyKeyword("hotdog", "d?g,d*g"));
+}

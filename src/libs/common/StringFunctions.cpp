@@ -346,14 +346,25 @@ int FuzzyStrCaseCmp(const wxString &a, const wxString &b)
 	return FuzzyStrCmp(a.Lower(), b.Lower());
 }
 
+wxArrayString SplitKeywords(const wxString &keywords)
+{
+	wxArrayString terms;
+	wxStringTokenizer tokenizer(keywords, ",");
+	while (tokenizer.HasMoreTokens()) {
+		wxString term = tokenizer.GetNextToken();
+		term.Trim(false).Trim(true);
+		if (!term.empty()) {
+			terms.Add(term);
+		}
+	}
+	return terms;
+}
+
 bool ContainsAnyKeyword(const wxString &text, const wxString &keywords)
 {
 	const wxString haystack = text.Lower();
-	wxStringTokenizer tokenizer(keywords, ",");
-	while (tokenizer.HasMoreTokens()) {
-		wxString keyword = tokenizer.GetNextToken().Lower();
-		keyword.Trim(false).Trim(true);
-		if (!keyword.IsEmpty() && haystack.Contains(keyword)) {
+	for (const auto &keyword : SplitKeywords(keywords)) {
+		if (haystack.Contains(keyword.Lower())) {
 			return true;
 		}
 	}

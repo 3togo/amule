@@ -2759,6 +2759,7 @@ bool CPreferences::HasExcludedFolderBelow(const CPath &root, const CPath &path)
 	return ShareExclude::HasExcludedFolderBelow(s_ShareExcludeFilter, root, path);
 }
 
+// Keep FilterSelectionSummary::Describe() in sync with changes to these filtering rules.
 bool CPreferences::IsMessageFiltered(const wxString &message)
 {
 	if (s_FilterAllMessages) {

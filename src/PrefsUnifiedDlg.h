@@ -325,6 +325,8 @@ public:
 	// Enables the message-filter options from the checkboxes above them: the master switch gates
 	// all of them, and "Filter all messages" makes the rest moot.
 	void UpdateMessageFilterControls();
+	void UpdateFilterSummary();
+	void OnFilterSummaryChange(wxCommandEvent &event);
 
 #ifdef ENABLE_IPV6
 	// Enables the AdvertiseIPv6 checkbox only while dual stack is selected.

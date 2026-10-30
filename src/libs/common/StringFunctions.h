@@ -27,6 +27,7 @@
 #define STRING_FUNCTIONS_H
 
 #include "../../Types.h" // Needed for uint16 and uint32
+#include <wx/arrstr.h>   // Needed for wxArrayString
 
 // UTF8 types: No UTF8, BOM prefix, or Raw UTF8
 enum EUtf8Str
@@ -264,6 +265,12 @@ int FuzzyStrCmp(const wxString &a, const wxString &b);
  * As FuzzyStrCmp, but case insensitive.
  */
 int FuzzyStrCaseCmp(const wxString &a, const wxString &b);
+
+/**
+ * Split comma-separated keywords, trim surrounding whitespace and skip empty terms.
+ * Preserve each term's case and literal characters for display as well as matching.
+ */
+wxArrayString SplitKeywords(const wxString &keywords);
 
 /**
  * Whether text contains any of the comma-separated keywords, ignoring case and

@@ -587,6 +587,7 @@ wxSizer *PreferencesOnlineSigTab(wxWindow *parent, bool call_fit = TRUE, bool se
 #define IDC_MSGCAPTCHA 10527
 #define IDC_FILTERCOMMENTS 10291
 #define IDC_COMMENTWORD 10292
+#define IDC_FILTER_SUMMARY 10529
 wxSizer *PreferencesFilteringTab(wxWindow *parent, bool call_fit = TRUE, bool set_sizer = TRUE);
 
 #define ID_PROXY_ENABLE_PASSWORD 10294
