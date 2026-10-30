@@ -3212,10 +3212,6 @@ msgid "Browse"
 msgstr "ব্রাউজ করুন"
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
-msgid "(All files in this folder are shared with other peers)"
-msgstr "(এই ফোল্ডারের সব ফাইল অন্যান্য পিয়ারদের সাথে শেয়ার করা হয়)"
-
-#: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Folder for temporary download files"
 msgstr "অস্থায়ী ডাউনলোড ফাইলের জন্য ফোল্ডার"
 
@@ -6429,6 +6425,10 @@ msgstr ""
 #, c-format
 msgid "%s:"
 msgstr ""
+
+#: src/OtherFunctions.cpp
+msgid "(All files in this folder are shared with other peers)"
+msgstr "(এই ফোল্ডারের সব ফাইল অন্যান্য পিয়ারদের সাথে শেয়ার করা হয়)"
 
 #: src/OtherFunctions.cpp
 msgid "all"

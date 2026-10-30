@@ -3243,10 +3243,6 @@ msgid "Browse"
 msgstr "Bla"
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
-msgid "(All files in this folder are shared with other peers)"
-msgstr "(Alle filer i denne katalogen vert delte med andre brukarar)"
-
-#: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Folder for temporary download files"
 msgstr "Katalog for mellombelse nedlastingsfiler"
 
@@ -6480,6 +6476,10 @@ msgstr ""
 #, c-format
 msgid "%s:"
 msgstr ""
+
+#: src/OtherFunctions.cpp
+msgid "(All files in this folder are shared with other peers)"
+msgstr "(Alle filer i denne katalogen vert delte med andre brukarar)"
 
 #: src/OtherFunctions.cpp
 msgid "all"

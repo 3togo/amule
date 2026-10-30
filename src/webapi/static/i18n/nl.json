@@ -504,7 +504,7 @@
   "downloads_cat_priority": "Prioriteit",
   "identity_tip_hash": "Unieke ED2K-identificatie (MD4) van het bestand.",
   "messages_field_userhash": "Gebruikershash",
-  "shared_media_refresh_tip": "Dit bestand opnieuw peilen met ffprobe en vervang de lengte, bitwaarde, codec en labels. Gerapporteerd in het aMule logbestand.",
+  "shared_media_refresh_tip": "Dit bestand opnieuw peilen met de bijgevoegde media-parseerder en vervang de lengte, bitwaarde, codec en labels. Gerapporteerd in het aMule logbestand.",
   "messages_close": "Sluiten",
   "shared_detail_tip_parts": "Aantal delen van ~9.29 MB waarin het bestand is gesplitst.",
   "comments_col_comment": "Opmerking",
@@ -616,7 +616,7 @@
   "prefs_creds_admin": "Nieuw beheerderswachtwoord (laat leeg om huidig te behouden)",
   "prefs_field_files_mmap_enabled": "MMAP gebruiken: memory-mapped bestandstoegang (lager geheugengebruik)",
   "prefs_guest_readonly": "U bent aangemeld als gast — commando's zijn uitgeschakeld.",
-  "prefs_field_files_media_metadata_enabled": "Precieze lengte/bitrate/codec uitlezen uit gedeelde audio- en videobestanden",
+  "prefs_field_files_media_metadata_enabled": "Precieze lengte/bitwaarde/codec uitlezen uit gedeelde audio- en videobestanden",
   "prefs_field_files_on_finished_start_next_paused": "Start volgend gepauzeerd bestand als een bestand compleet is",
   "prefs_webui_warning": "Deze instellingen worden opgeslagen in uw browser, niet op de server.",
   "prefs_field_remote_controls_external_connections_bind_address": "IP van de luisterende interface (leeg voor alle)",
@@ -1053,5 +1053,7 @@
   "prefs_field_servers_accelerated_publication_enabled_help": "Volg de publicatiesnelheid waarmee de server adverteert. Andere servers gebruiken de standaardsnelheid. Wordt toegepast vanaf de volgende serververbinding.",
   "common_err_path_not_allowed": "Map niet toegestaan — {message}. De mappen die de daemon toestaat zijn genoemd onder Voorkeuren ▸ Mappen.",
   "prefs_field_directories_allowed_remote_roots": "Ingestelde wortelmappen",
-  "prefs_field_servers_accelerated_publication_enabled": "Publiceer gedeelde bestanden sneller op servers die het toestaan"
+  "prefs_field_servers_accelerated_publication_enabled": "Publiceer gedeelde bestanden sneller op servers die het toestaan",
+  "shared_media_refresh_tip_disabled": "Media-metadata uitlezen is uitgeschakeld in Voorkeuren.",
+  "shared_media_refresh_tip_unavailable": "Deze aMule heeft geen mediahelper (amule-media-probe) waardoor het geen media-metadata kan uitlezen."
 }

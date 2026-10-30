@@ -3242,10 +3242,6 @@ msgid "Browse"
 msgstr "Arakatu"
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
-msgid "(All files in this folder are shared with other peers)"
-msgstr "(Karpeta honetako fitxategi guztiak beste pareekin partekatzen dira)"
-
-#: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Folder for temporary download files"
 msgstr "Aldiroko deskarga fitxategientzat karpeta"
 
@@ -6476,6 +6472,10 @@ msgstr ""
 #, c-format
 msgid "%s:"
 msgstr ""
+
+#: src/OtherFunctions.cpp
+msgid "(All files in this folder are shared with other peers)"
+msgstr "(Karpeta honetako fitxategi guztiak beste pareekin partekatzen dira)"
 
 #: src/OtherFunctions.cpp
 msgid "all"

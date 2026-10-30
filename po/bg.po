@@ -3236,10 +3236,6 @@ msgid "Browse"
 msgstr "Избери"
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
-msgid "(All files in this folder are shared with other peers)"
-msgstr "(Всички файлове в тази папка са споделени с останалите потребители)"
-
-#: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Folder for temporary download files"
 msgstr "Папка за временни файлове при изтегляне"
 
@@ -6488,6 +6484,10 @@ msgstr ""
 #, c-format
 msgid "%s:"
 msgstr ""
+
+#: src/OtherFunctions.cpp
+msgid "(All files in this folder are shared with other peers)"
+msgstr "(Всички файлове в тази папка са споделени с останалите потребители)"
 
 #: src/OtherFunctions.cpp
 msgid "all"

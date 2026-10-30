@@ -13,7 +13,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-29 17:24+0000\n"
+"PO-Revision-Date: 2026-10-30 09:27+0000\n"
 "Last-Translator: Marcel Pol <marcel@timelord.nl>\n"
 "Language-Team: Dutch <nl@li.org>\n"
 "Language: nl\n"
@@ -2673,7 +2673,7 @@ msgstr "Uitlezen van media-metadata is uitgeschakeld in voorkeuren"
 
 #: src/ExternalConn.cpp
 msgid "This aMule has no media helper (amule-media-probe)"
-msgstr ""
+msgstr "Deze aMule heeft geen mediahelper (amule-media-probe)"
 
 #: src/ExternalConn.cpp
 msgid "File is not eligible for media metadata extraction (not an audio/video file, or an incomplete download)"
@@ -3230,10 +3230,6 @@ msgstr "Doelmap voor downloads"
 #: src/utils/aLinkCreator/src/alcframe.cpp src/utils/wxCas/src/wxcasprefs.cpp
 msgid "Browse"
 msgstr "Bladeren"
-
-#: src/FirstRunWizard.cpp src/muuli_wdr.cpp
-msgid "(All files in this folder are shared with other peers)"
-msgstr "(Alle bestanden in deze map worden gedeeld met andere peers)"
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Folder for temporary download files"
@@ -4102,7 +4098,7 @@ msgstr "FOUT: Luisteren op TCP-poort mislukt."
 
 #: src/MediaProbe.cpp
 msgid "Media metadata: bundled amule-media-probe helper is unavailable."
-msgstr ""
+msgstr "Media-metadata: bijgevoegde amule-media-probe helper is niet beschikbaar."
 
 #: src/MediaProbe.cpp
 #, c-format
@@ -4110,14 +4106,14 @@ msgid "Media metadata: %s is gone, nothing to extract"
 msgstr "Media-metadata: %s is verdwenen, niets om uit te lezen"
 
 #: src/MediaProbe.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Extracting media metadata: %s"
-msgstr "Media-metadata wordt uitgelezen met ffprobe: %s"
+msgstr "Media-metadata wordt uitgelezen: %s"
 
 #: src/MediaProbe.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Media metadata: parser failed for %s"
-msgstr "Media-metadata: ffprobe mislukt (code %d) voor %s"
+msgstr "Media-metadata: parser mislukt voor %s"
 
 #: src/MediaProbeThread.cpp
 #, c-format
@@ -4712,7 +4708,7 @@ msgstr "Lengte"
 
 #: src/muuli_wdr.cpp src/SearchListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Bitrate"
-msgstr "Bitrate"
+msgstr "Bitwaarde"
 
 #: src/muuli_wdr.cpp src/SearchListCtrl.cpp src/SharedFilesCtrl.cpp
 msgid "Codec"
@@ -5224,11 +5220,11 @@ msgstr "Zet handmatig toegevoegde servers op hoge prioriteit"
 
 #: src/muuli_wdr.cpp
 msgid "Publish shared files faster on servers that allow it"
-msgstr ""
+msgstr "Publiceer gedeelde bestanden sneller op servers die het toestaan"
 
 #: src/muuli_wdr.cpp
 msgid "Follow the publication pace that the server advertises. Other servers get the standard pace."
-msgstr ""
+msgstr "Volg de publicatiesnelheid waarmee de server adverteert. Andere servers gebruiken de standaardsnelheid."
 
 #: src/muuli_wdr.cpp
 msgid "Add files to download in pause mode"
@@ -5376,11 +5372,11 @@ msgstr "Uitlezen van media-metadata"
 
 #: src/muuli_wdr.cpp
 msgid "Extract length / bitrate / codec from shared audio and video files"
-msgstr "Precieze lengte/bitrate/codec uitlezen uit gedeelde audio- en videobestanden"
+msgstr "Precieze lengte/bitwaarde/codec uitlezen uit gedeelde audio- en videobestanden"
 
 #: src/muuli_wdr.cpp
 msgid "When enabled, aMule uses its bundled MediaInfo parser to extract metadata from shared media files."
-msgstr ""
+msgstr "Wanneer ingeschakeld gebruikt aMule de bijgevoegde MediaInfo parser om metadata van gedeelde mediabestanden uit te lezen."
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6446,6 +6442,10 @@ msgid "%s:"
 msgstr "%s:"
 
 #: src/OtherFunctions.cpp
+msgid "(All files in this folder are shared with other peers)"
+msgstr "(Alle bestanden in deze map worden gedeeld met andere peers)"
+
+#: src/OtherFunctions.cpp
 msgid "all"
 msgstr "alle"
 
@@ -6810,7 +6810,7 @@ msgstr "geen opties beschikbaar"
 
 #: src/Preferences.cpp
 msgid "Media metadata: FFProbePath is obsolete; aMule now uses its bundled MediaInfo parser. Removing the old setting."
-msgstr ""
+msgstr "Media-metadata: FFProbePath is verouderd. aMule gebruikt nu de bijgevoegde MediaInfo parser. De oude instelling wordt verwijderd."
 
 #: src/Preferences.cpp
 msgid "Invalid path mapping found, skipping"
@@ -6941,7 +6941,7 @@ msgstr "Overdragen van gegevens van Cfg naar widget met ID %d en sleutel %s misl
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "This aMule has no media helper (amule-media-probe), so it cannot extract media metadata."
-msgstr ""
+msgstr "Deze aMule heeft geen mediahelper (amule-media-probe), dus het kan geen media-metadata uitlezen."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The type of proxy you are connecting to"
@@ -7147,15 +7147,14 @@ msgid "The aMule web server is deprecated. Consider running the aMule API instea
 msgstr "De aMule-webserver is verouderd. Overweeg in plaats daarvan de aMule API uit te voeren."
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid ""
 "Your server list sources are empty.\n"
 "Please add at least one URL of a valid server.met file.\n"
 "Click the \"Edit sources...\" button next to this checkbox to add one."
 msgstr ""
-"Uw Auto-update servers lijst is leeg.\n"
-"Vul minimaal een URL naar een geldig server.met bestand in.\n"
-"Klik op de knop \"Lijst\" hiernaast om een URL in te voeren."
+"Uw serverlijst bronnen zijn leeg.\n"
+"Vul minimaal één URL naar een geldig server.met bestand in.\n"
+"Klik op de knop \"Bronnen bewerken...\" hiernaast om er een in te voeren."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Temporary files"
@@ -8235,7 +8234,7 @@ msgstr "Uitlezen van media-metadata is uitgeschakeld in voorkeuren, dus er is ni
 
 #: src/SharedFileList.cpp
 msgid "This aMule has no media helper (amule-media-probe), so it cannot re-extract media metadata."
-msgstr ""
+msgstr "Deze aMule heeft geen mediahelper (amule-media-probe) dus het hkan geen media-metadata opnieuw uitlezen."
 
 #: src/SharedFileList.cpp
 #, c-format

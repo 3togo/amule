@@ -3250,10 +3250,6 @@ msgid "Browse"
 msgstr "Navigare"
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
-msgid "(All files in this folder are shared with other peers)"
-msgstr "(Toate fișierele din acest dosar sunt partajate cu alți parteneri)"
-
-#: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Folder for temporary download files"
 msgstr "Dosar pentru fișiere descărcate temporar"
 
@@ -6505,6 +6501,10 @@ msgstr ""
 #, c-format
 msgid "%s:"
 msgstr ""
+
+#: src/OtherFunctions.cpp
+msgid "(All files in this folder are shared with other peers)"
+msgstr "(Toate fișierele din acest dosar sunt partajate cu alți parteneri)"
 
 #: src/OtherFunctions.cpp
 msgid "all"

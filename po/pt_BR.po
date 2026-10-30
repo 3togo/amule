@@ -3236,10 +3236,6 @@ msgid "Browse"
 msgstr "Procurar"
 
 #: src/FirstRunWizard.cpp src/muuli_wdr.cpp
-msgid "(All files in this folder are shared with other peers)"
-msgstr "(Todos os arquivos nesta pasta são compartilhados com outros pares)"
-
-#: src/FirstRunWizard.cpp src/muuli_wdr.cpp
 msgid "Folder for temporary download files"
 msgstr "Pasta dos arquivos temporários de download"
 
@@ -6447,6 +6443,10 @@ msgstr "%u kbps"
 #, c-format
 msgid "%s:"
 msgstr "%s:"
+
+#: src/OtherFunctions.cpp
+msgid "(All files in this folder are shared with other peers)"
+msgstr "(Todos os arquivos nesta pasta são compartilhados com outros pares)"
 
 #: src/OtherFunctions.cpp
 msgid "all"
