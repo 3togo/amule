@@ -3047,6 +3047,68 @@ msgstr "ERROR: no s'ha pogut obrir «%s» amb l'aplicació predeterminada."
 msgid "ERROR: Failed to show '%s' in the file manager."
 msgstr "ERROR: no s'ha pogut mostrar «%s» al gestor de fitxers."
 
+#: src/FilterSelectionSummary.h
+msgid "The message filter is off; its selected rules are saved."
+msgstr ""
+
+#: src/FilterSelectionSummary.h
+#, fuzzy
+msgid "All incoming messages outside current chats will be discarded."
+msgstr "Filtra els missatges entrants (excepte el xat actual):"
+
+#: src/FilterSelectionSummary.h
+#, fuzzy
+msgid "Messages from people not on your friend list will be discarded."
+msgstr "Filtra els missatges de la gent que no és a la llista d'amics"
+
+#: src/FilterSelectionSummary.h
+#, fuzzy
+msgid "Messages from unknown clients will be discarded."
+msgstr "Filtra els missatges dels clients desconeguts"
+
+#: src/FilterSelectionSummary.h
+#, c-format
+msgid "Messages containing any of these terms will be discarded (ignoring case): %s."
+msgstr ""
+
+#: src/FilterSelectionSummary.h
+msgid "No messages will be discarded by the message filter: the word list is empty."
+msgstr ""
+
+#: src/FilterSelectionSummary.h
+msgid "No messages will be discarded by the message filter: select at least one option."
+msgstr ""
+
+#: src/FilterSelectionSummary.h
+msgid "Current chats are exempt from these rules."
+msgstr ""
+
+#: src/FilterSelectionSummary.h
+msgid "Advanced spam filtering for non-friends is also enabled."
+msgstr ""
+
+#: src/FilterSelectionSummary.h
+msgid "First messages from non-friends require a CAPTCHA."
+msgstr ""
+
+#: src/FilterSelectionSummary.h
+#, fuzzy
+msgid "Received message text will also be written to the log."
+msgstr "Mostra els missatges rebuts en el registre"
+
+#: src/FilterSelectionSummary.h
+msgid "File comment filtering is off."
+msgstr ""
+
+#: src/FilterSelectionSummary.h
+msgid "No file comments will be hidden: the word list is empty."
+msgstr ""
+
+#: src/FilterSelectionSummary.h
+#, c-format
+msgid "File comments containing any of these literal terms will be hidden (ignoring case): %s."
+msgstr ""
+
 #: src/FirstRunWizard.cpp
 msgid "Mobile / 4G-5G (20 / 5 Mbit)"
 msgstr "Mòbil / 4G-5G (20 / 5 Mbit)"
@@ -6161,8 +6223,16 @@ msgid "Check for a newer GeoIP database at startup and every week while aMule is
 msgstr "Comprova si hi ha una base de dades GeoIP més nova a l'inici i cada setmana mentre aMule s'executa."
 
 #: src/muuli_wdr.cpp
-msgid "Filter incoming messages (except current chat):"
+#, fuzzy
+msgid "Enable incoming message filtering (except current chat):"
 msgstr "Filtra els missatges entrants (excepte el xat actual):"
+
+#: src/muuli_wdr.cpp
+msgid ""
+"Enable the filter options below. Select at least one option to filter messages.\n"
+"Turning this off keeps your selected options and word list.\n"
+"Filtered messages are discarded without opening a chat or replying to the sender."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Filter all messages"
@@ -6181,8 +6251,11 @@ msgid "Filter messages containing (use ',' as separator):"
 msgstr "Filtra els missatges que continguin (useu ',' per a separar):"
 
 #: src/muuli_wdr.cpp
-msgid "add here the words amule should filter and block messages including it"
-msgstr "Els missatges que continguin aquestes paraules seran filtrats i bloquejats per l'aMule"
+msgid ""
+"Discard chat messages containing any comma-separated term. Matching ignores case and spaces around each term.\n"
+"Terms match anywhere in a message: dog matches hotdog and black dog spotted.\n"
+"Wildcards are not supported. A * is literal, except that a word list of exactly * blocks every message."
+msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Enable advanced spam filter"
@@ -6205,12 +6278,26 @@ msgid "Show received messages in the log"
 msgstr "Mostra els missatges rebuts en el registre"
 
 #: src/muuli_wdr.cpp
-msgid "Comments"
-msgstr "Comentaris"
+#, fuzzy
+msgid "File comments"
+msgstr "Comentaris del Fitxer"
 
 #: src/muuli_wdr.cpp
-msgid "Filter comments containing (use ',' as separator):"
+#, fuzzy
+msgid "Filter file comments containing (use ',' as separator):"
 msgstr "Filtra els comentaris que continguin (useu ',' per a separar):"
+
+#: src/muuli_wdr.cpp
+msgid ""
+"Hide file comments from other users containing any comma-separated term. This does not filter chat messages.\n"
+"Matching ignores case and spaces around each term. Terms match anywhere in a comment: dog matches hotdog and black dog spotted.\n"
+"Wildcards are not supported; * is matched literally."
+msgstr ""
+
+#: src/muuli_wdr.cpp
+#, fuzzy
+msgid "With these settings"
+msgstr "Recorda la configuració"
 
 #: src/muuli_wdr.cpp
 msgid "Enable Proxy"
@@ -10293,6 +10380,12 @@ msgstr "Kad no ha pogut carregar l'índex desat. S'han conservat els fitxers d'�
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr "Kad no ha pogut desar un índex. S'ha conservat la còpia anterior d'aquest fitxer."
+
+#~ msgid "add here the words amule should filter and block messages including it"
+#~ msgstr "Els missatges que continguin aquestes paraules seran filtrats i bloquejats per l'aMule"
+
+#~ msgid "Comments"
+#~ msgstr "Comentaris"
 
 #~ msgid "Refused a remote request to change the media-probe (ffprobe) path: it can only be set in the daemon's own configuration."
 #~ msgstr "S'ha rebutjat una sol·licitud remota per canviar el camí de l'analitzador multimèdia (ffprobe): només es pot definir a la configuració pròpia del dimoni."
