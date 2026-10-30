@@ -502,18 +502,26 @@ msgid "Not starting %s: it is neither next to aMule nor on PATH."
 msgstr ""
 
 #: src/amule.cpp
+msgid "An exception occurred while launching amuleweb."
+msgstr ""
+
+#: src/amule.cpp
 #, c-format
 msgid "web server running on pid %d"
 msgstr "ওয়েব সার্ভার pid %d-এ চলছে"
 
 #: src/amule.cpp
-msgid "You requested to run web server on startup, but the amuleweb binary cannot be run. Please install the package containing aMule web server, or build aMule from source with -DBUILD_WEBSERVER=YES and install it."
-msgstr "আপনি স্টার্টআপে ওয়েব সার্ভার চালানোর অনুরোধ করেছেন, কিন্তু amuleweb বাইনারি চালানো যাচ্ছে না। অনুগ্রহ করে aMule ওয়েব সার্ভার সম্বলিত প্যাকেজটি ইনস্টল করুন, অথবা -DBUILD_WEBSERVER=YES সহ সোর্স থেকে aMule বিল্ড করে ইনস্টল করুন।"
+msgid "Could not prepare the amuleweb authentication token. The web server was not started."
+msgstr ""
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
 #: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "ত্রুটি"
+
+#: src/amule.cpp
+msgid "You requested to run web server on startup, but the amuleweb binary cannot be run. Please install the package containing aMule web server, or build aMule from source with -DBUILD_WEBSERVER=YES and install it."
+msgstr "আপনি স্টার্টআপে ওয়েব সার্ভার চালানোর অনুরোধ করেছেন, কিন্তু amuleweb বাইনারি চালানো যাচ্ছে না। অনুগ্রহ করে aMule ওয়েব সার্ভার সম্বলিত প্যাকেজটি ইনস্টল করুন, অথবা -DBUILD_WEBSERVER=YES সহ সোর্স থেকে aMule বিল্ড করে ইনস্টল করুন।"
 
 #: src/amule.cpp
 #, c-format
@@ -536,6 +544,16 @@ msgstr ""
 #: src/amule.cpp
 msgid "You requested to run amuleapi on startup, but the amuleapi binary cannot be run. Please install the package containing aMule's REST API server, or build aMule from source with -DBUILD_AMULEAPI=YES and install it."
 msgstr "আপনি স্টার্টআপে amuleapi চালানোর অনুরোধ করেছেন, কিন্তু amuleapi বাইনারি চালানো যাচ্ছে না। অনুগ্রহ করে aMule-এর REST API সার্ভার ধারণকারী প্যাকেজ ইনস্টল করুন, অথবা -DBUILD_AMULEAPI=YES সহ সোর্স থেকে aMule বিল্ড করে ইনস্টল করুন।"
+
+#: src/amule.cpp
+#, fuzzy
+msgid "Could not prepare the amuleweb EC token."
+msgstr "amuleapi পাসওয়ার্ড সংরক্ষণ করা যায়নি: %s"
+
+#: src/amule.cpp
+#, fuzzy, c-format
+msgid "Could not remove the amuleweb EC token file: %s"
+msgstr "amuleapi পাসওয়ার্ড সংরক্ষণ করা যায়নি: %s"
 
 #: src/amule.cpp
 #, fuzzy, c-format
@@ -851,8 +869,12 @@ msgid "ERROR: aMule daemon cannot be used when external connections are disabled
 msgstr "ত্রুটি: বাহ্যিক সংযোগ নিষ্ক্রিয় থাকলে aMule ডেমন ব্যবহার করা যাবে না। বাহ্যিক সংযোগ সক্রিয় করতে, হয় একটি সাধারণ aMule ব্যবহার করুন, --ec-config অপশন দিয়ে amuled চালু করুন, অথবা ~/.aMule/amule.conf ফাইলে \"AcceptExternalConnections\" কী-টি 1 এ সেট করুন"
 
 #: src/amuled.cpp
-msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
-msgstr "ত্রুটি: বাহ্যিক সংযোগ ব্যবহার করতে একটি বৈধ পাসওয়ার্ড প্রয়োজন, এবং বাহ্যিক সংযোগ ছাড়া aMule ডেমন ব্যবহার করা যাবে না। aMule ডেমন চালাতে, আপনাকে ~/.aMule/amule.conf ফাইলে \"ECPassword\" ফিল্ডে একটি উপযুক্ত মান সেট করতে হবে। পাসওয়ার্ড সেট করতে --ec-config ফ্ল্যাগ দিয়ে amuled চালান। আরও তথ্যের জন্য https://amule-org.github.io/docs দেখুন"
+msgid "ERROR: An EC password is required. Run amuled --ec-config to set it."
+msgstr ""
+
+#: src/amuled.cpp
+msgid "ERROR: Invalid ECPasswordVerifier in amule.conf. Run amuled --ec-config to set a new EC password."
+msgstr ""
 
 #: src/amuled.cpp
 msgid "amuled: OnInit - starting timer"
@@ -1269,6 +1291,10 @@ msgstr ""
 msgid "All"
 msgstr "সব"
 
+#: src/amule-remote-gui.cpp
+msgid "The EC password changed on the daemon, but the saved client password could not be updated."
+msgstr ""
+
 #: src/amule-remote-gui.cpp src/muuli_wdr.cpp
 msgid "To allow a folder, add it to allowed-remote-dirs.dat in the daemon's configuration folder, one absolute path per line, then restart the daemon."
 msgstr ""
@@ -1278,8 +1304,13 @@ msgstr ""
 msgid "The daemon refused these folders because they are outside the folders it allows (configured on the daemon):%s"
 msgstr ""
 
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp
+#, fuzzy
+msgid "The EC password was not changed."
+msgstr "- TCP পোর্ট পরিবর্তিত হয়েছে।\n"
+
 #: src/amule-remote-gui.cpp
-msgid "The daemon could not apply the connection port changes."
+msgid "The daemon could not apply the preference changes."
 msgstr ""
 
 #: src/amule-remote-gui.cpp
@@ -2385,6 +2416,16 @@ msgid "External connections disabled due to empty password!"
 msgstr "খালি পাসওয়ার্ডের কারণে বাহ্যিক সংযোগ নিষ্ক্রিয় করা হয়েছে!"
 
 #: src/ExternalConn.cpp
+#, fuzzy
+msgid "External connections disabled due to invalid ECPasswordVerifier!"
+msgstr "খালি পাসওয়ার্ডের কারণে বাহ্যিক সংযোগ নিষ্ক্রিয় করা হয়েছে!"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "External connections disabled: could not prepare the EC token verifier."
+msgstr "কনফিগ ফাইলে বাহ্যিক সংযোগ নিষ্ক্রিয় করা আছে"
+
+#: src/ExternalConn.cpp
 #, c-format
 msgid "Remote clients cannot change folders: no folder is listed in %s"
 msgstr ""
@@ -2407,12 +2448,21 @@ msgstr "পছন্দসমূহে খালি পাসওয়ার্�
 
 #: src/ExternalConn.cpp
 #, c-format
+msgid "Too many failed connection attempts; try again in %d seconds."
+msgstr ""
+
+#: src/ExternalConn.cpp
+#, c-format
 msgid "Connecting client: %s %s"
 msgstr "ক্লায়েন্টের সাথে সংযোগ স্থাপন করা হচ্ছে: %s %s"
 
 #: src/ExternalConn.cpp
 msgid "Unknown version"
 msgstr "অজানা সংস্করণ"
+
+#: src/ExternalConn.cpp
+msgid "An EC client of version 3.3.0 or later is required."
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Incorrect EC version ID, there might be binary incompatibility. Use core and remote from same snapshot."
@@ -2423,33 +2473,16 @@ msgid "You cannot connect to a release version from an arbitrary development sna
 msgstr "আপনি একটি স্বেচ্ছাচারী ডেভেলপমেন্ট স্ন্যাপশট থেকে রিলিজ সংস্করণে সংযোগ করতে পারবেন না! *sigh* সম্ভাব্য ক্র্যাশ প্রতিরোধ করা হয়েছে"
 
 #: src/ExternalConn.cpp
+msgid "Invalid SRP handshake or EC verifier."
+msgstr ""
+
+#: src/ExternalConn.cpp
 msgid "Invalid protocol version."
 msgstr "অবৈধ প্রোটোকল সংস্করণ।"
 
 #: src/ExternalConn.cpp
 msgid "Missing protocol version tag."
 msgstr "প্রোটোকল সংস্করণ ট্যাগ অনুপস্থিত।"
-
-#: src/ExternalConn.cpp
-#, c-format
-msgid "Too many failed connection attempts; try again in %d seconds."
-msgstr ""
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: invalid hash specified as EC password."
-msgstr "প্রমাণীকরণ ব্যর্থ: EC পাসওয়ার্ড হিসেবে অবৈধ হ্যাশ নির্দিষ্ট করা হয়েছে।"
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: the client offered an encrypted External Connection but sent no usable key."
-msgstr ""
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: this aMule requires an encrypted External Connection, and the client did not negotiate one."
-msgstr ""
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: the client could not confirm the encrypted session."
-msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Authentication failed: wrong password."
@@ -2615,9 +2648,37 @@ msgid "Client could not be swapped to that file."
 msgstr ""
 
 #: src/ExternalConn.cpp
+msgid "Duplicate remote-control preference groups are not allowed."
+msgstr ""
+
+#: src/ExternalConn.cpp
+msgid "Only password-authenticated sessions may change the EC password."
+msgstr ""
+
+#: src/ExternalConn.cpp src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "Could not update EC password verifier."
+msgstr "amuleapi পাসওয়ার্ড সংরক্ষণ করা যায়নি: %s"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "Could not apply preferences."
+msgstr "পছন্দসমূহে Kad নিষ্ক্রিয় করা আছে।"
+
+#: src/ExternalConn.cpp
 #, c-format
 msgid "Could not save the amuleapi password: %s"
 msgstr "amuleapi পাসওয়ার্ড সংরক্ষণ করা যায়নি: %s"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "Could not update EC password verifier. The other preferences were saved."
+msgstr "পাসওয়ার্ড সেট করা হয়েছে এবং বাহ্যিক সংযোগ সক্রিয় করা হয়েছে।"
+
+#: src/ExternalConn.cpp
+#, c-format
+msgid "EC password changed by %s"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "One or more folders were outside the allowed remote directories and were left unchanged."
@@ -2917,10 +2978,6 @@ msgid "Print program version."
 msgstr "প্রোগ্রামের সংস্করণ প্রিন্ট করুন।"
 
 #: src/ExternalConnector.cpp
-msgid "Do not encrypt the External Connect session. Encryption is on by default whenever the remote aMule supports it; turning it off leaves everything after the login readable and modifiable by anyone on the path."
-msgstr ""
-
-#: src/ExternalConnector.cpp
 msgid "Force ZLIB compression regardless of dialed-IP locality (useful when the server is reachable over a VPN tunnel that resolves to a LAN IP)."
 msgstr "ডায়ালড-IP লোকালিটি নির্বিশেষে ZLIB কম্প্রেশন বলপূর্বক প্রয়োগ করুন (এটি তখন কার্যকর যখন সার্ভারটি এমন একটি VPN টানেলের মাধ্যমে পৌঁছানো যায় যা একটি LAN IP তে রিজলভ হয়)।"
 
@@ -2931,6 +2988,10 @@ msgstr "সমস্ত কনসোল আউটপুটের একটি �
 #: src/ExternalConnector.cpp
 msgid "Do not write a log file; print to the console only."
 msgstr "কোনো লগ ফাইল লিখবেন না; শুধু কনসোলে প্রদর্শন করুন।"
+
+#: src/ExternalConnector.cpp
+msgid "The daemon verifier cannot supply a client password. Use -P or the password prompt.\n"
+msgstr ""
 
 #: src/FileDetailDialog.cpp
 msgid "File Details"
@@ -4075,6 +4136,11 @@ msgid "Invalid password, not a MD5 hash!"
 msgstr "অবৈধ পাসওয়ার্ড, এটি একটি MD5 হ্যাশ নয়!"
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
+#, fuzzy
+msgid "Could not generate SRP credentials."
+msgstr "Kad থেকে সংগ্রহ করুন"
+
+#: src/libs/ec/cpp/RemoteConnect.cpp
 #, c-format
 msgid "Could not resolve %s to an IPv4 address."
 msgstr ""
@@ -4092,16 +4158,13 @@ msgid "EC connection failed. Empty reply."
 msgstr "EC সংযোগ ব্যর্থ হয়েছে। খালি উত্তর।"
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "Could not set up connection encryption. Connection closed."
-msgstr ""
-
-#: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "The core did not negotiate an encrypted connection. It may be an older aMule without encryption support, or the connection may have been tampered with. To connect without encryption, turn it off in the connection settings."
-msgstr ""
-
-#: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "External Connection: Bad reply, handshake failed. Connection closed."
+#, fuzzy
+msgid "Invalid SRP handshake or unsupported profile. Connection closed."
 msgstr "বাহ্যিক সংযোগ: ভুল উত্তর, হ্যান্ডশেক ব্যর্থ হয়েছে। সংযোগ বন্ধ করা হয়েছে।"
+
+#: src/libs/ec/cpp/RemoteConnect.cpp
+msgid "An EC daemon of version 3.3.0 or later is required."
+msgstr ""
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 msgid "External Connection: the daemon failed to prove it knows the password. Connection closed."
@@ -5761,10 +5824,6 @@ msgstr "EC পোর্টে UPnP পোর্ট ফরওয়ার্ড�
 #: src/muuli_wdr.cpp src/utils/wxCas/src/wxcasprefs.cpp
 msgid "Password"
 msgstr "পাসওয়ার্ড"
-
-#: src/muuli_wdr.cpp
-msgid "Require encrypted connections (rejects clients that cannot encrypt)"
-msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Folders remote clients may use"
@@ -8608,6 +8667,16 @@ msgid "Crypt overhead (UDP): %s"
 msgstr "ক্রিপ্ট ওভারহেড (UDP): %s"
 
 #: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "LowID to LowID Data (Session): %s"
+msgstr "ডাউনলোড করা ডেটা (সেশন (মোট)): %s"
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "IPv6 Data (Session): %s"
+msgstr "আপলোড করা ডেটা (সেশন (মোট)): %s"
+
+#: src/Statistics.cpp
 #, c-format
 msgid "Active Uploads: %s"
 msgstr "সক্রিয় আপলোড: %s"
@@ -8706,6 +8775,30 @@ msgstr "গড় সংযোগ (আনুমানিক): %g"
 #, c-format
 msgid "Peak Connections (estimate): %i"
 msgstr "শীর্ষ সংযোগ (আনুমানিক): %i"
+
+#: src/Statistics.cpp
+msgid "NAT Traversal (Session)"
+msgstr ""
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "Server Hole Punches: %s"
+msgstr "সার্ভার ওভারহেড (প্যাকেট): %s"
+
+#: src/Statistics.cpp
+#, c-format
+msgid "Successful Server Hole Punches: %s"
+msgstr ""
+
+#: src/Statistics.cpp
+#, c-format
+msgid "Lugdunum Callbacks: %s"
+msgstr ""
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "Successful Lugdunum Callbacks: %s"
+msgstr "%s সফলভাবে আপডেট করা হয়েছে"
 
 #: src/Statistics.cpp
 #, c-format
@@ -10375,11 +10468,15 @@ msgid "Could not generate ECPasswordVerifier; external connections are disabled.
 msgstr "পাসওয়ার্ড সেট করা হয়েছে এবং বাহ্যিক সংযোগ সক্রিয় করা হয়েছে।"
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
 msgid "EC password change rejected: could not persist ECPasswordVerifier. The active credential is unchanged."
 msgstr ""
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
-msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgid "EC password change rejected: could not store ECPasswordVerifier. The active credential is unchanged."
 msgstr ""
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
@@ -10397,6 +10494,12 @@ msgstr ""
 #: src/libs/ec/cpp/ECSRPConfig.cpp
 msgid "Migrating a changed legacy ECPassword after downgrade; the previous verifier no longer authenticates this run."
 msgstr ""
+
+#~ msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
+#~ msgstr "ত্রুটি: বাহ্যিক সংযোগ ব্যবহার করতে একটি বৈধ পাসওয়ার্ড প্রয়োজন, এবং বাহ্যিক সংযোগ ছাড়া aMule ডেমন ব্যবহার করা যাবে না। aMule ডেমন চালাতে, আপনাকে ~/.aMule/amule.conf ফাইলে \"ECPassword\" ফিল্ডে একটি উপযুক্ত মান সেট করতে হবে। পাসওয়ার্ড সেট করতে --ec-config ফ্ল্যাগ দিয়ে amuled চালান। আরও তথ্যের জন্য https://amule-org.github.io/docs দেখুন"
+
+#~ msgid "Authentication failed: invalid hash specified as EC password."
+#~ msgstr "প্রমাণীকরণ ব্যর্থ: EC পাসওয়ার্ড হিসেবে অবৈধ হ্যাশ নির্দিষ্ট করা হয়েছে।"
 
 #~ msgid "add here the words amule should filter and block messages including it"
 #~ msgstr "এখানে সেই শব্দগুলো যোগ করুন যা amule ফিল্টার করবে এবং তা সম্বলিত বার্তা ব্লক করবে"

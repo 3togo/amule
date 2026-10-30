@@ -511,18 +511,26 @@ msgid "Not starting %s: it is neither next to aMule nor on PATH."
 msgstr ""
 
 #: src/amule.cpp
+msgid "An exception occurred while launching amuleweb."
+msgstr ""
+
+#: src/amule.cpp
 #, c-format
 msgid "web server running on pid %d"
 msgstr "ウェブサーバはPID %d で実行中です"
 
 #: src/amule.cpp
-msgid "You requested to run web server on startup, but the amuleweb binary cannot be run. Please install the package containing aMule web server, or build aMule from source with -DBUILD_WEBSERVER=YES and install it."
-msgstr "起動時にウェブサーバを実行するよう要求されましたが、amulewebバイナリを実行できません。aMuleウェブサーバを含むパッケージをインストールするか、-DBUILD_WEBSERVER=YESを指定してソースからaMuleをビルドし、インストールしてください。"
+msgid "Could not prepare the amuleweb authentication token. The web server was not started."
+msgstr ""
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
 #: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "エラー"
+
+#: src/amule.cpp
+msgid "You requested to run web server on startup, but the amuleweb binary cannot be run. Please install the package containing aMule web server, or build aMule from source with -DBUILD_WEBSERVER=YES and install it."
+msgstr "起動時にウェブサーバを実行するよう要求されましたが、amulewebバイナリを実行できません。aMuleウェブサーバを含むパッケージをインストールするか、-DBUILD_WEBSERVER=YESを指定してソースからaMuleをビルドし、インストールしてください。"
 
 #: src/amule.cpp
 #, c-format
@@ -545,6 +553,16 @@ msgstr ""
 #: src/amule.cpp
 msgid "You requested to run amuleapi on startup, but the amuleapi binary cannot be run. Please install the package containing aMule's REST API server, or build aMule from source with -DBUILD_AMULEAPI=YES and install it."
 msgstr "起動時に amuleapi を実行するよう指定されていますが、amuleapi バイナリを実行できません。aMule の REST API サーバを含むパッケージをインストールするか、-DBUILD_AMULEAPI=YES を指定してソースから aMule をビルドしてインストールしてください。"
+
+#: src/amule.cpp
+#, fuzzy
+msgid "Could not prepare the amuleweb EC token."
+msgstr "amuleapiパスワードを保存できませんでした：%s"
+
+#: src/amule.cpp
+#, fuzzy, c-format
+msgid "Could not remove the amuleweb EC token file: %s"
+msgstr "amuleapiパスワードを保存できませんでした：%s"
 
 #: src/amule.cpp
 #, fuzzy, c-format
@@ -860,8 +878,12 @@ msgid "ERROR: aMule daemon cannot be used when external connections are disabled
 msgstr "エラー：外部接続が無効になっている場合、aMuleデーモンは使用できません。外部接続を有効にするには、通常のaMuleを使用するか、--ec-configオプションを付けてamuledを起動するか、~/.aMule/amule.confファイル内の \"AcceptExternalConnections\" キーを1に設定してください"
 
 #: src/amuled.cpp
-msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
-msgstr "エラー：外部接続を使用するには有効なパスワードが必要であり、外部接続なしではaMuleデーモンを使用できません。aMuleデーモンを実行するには、~/.aMule/amule.confファイル内の \"ECPassword\" フィールドに適切な値を設定する必要があります。パスワードを設定するには、--ec-configフラグを付けてamuledを実行してください。詳細については https://amule-org.github.io/docs を参照してください"
+msgid "ERROR: An EC password is required. Run amuled --ec-config to set it."
+msgstr ""
+
+#: src/amuled.cpp
+msgid "ERROR: Invalid ECPasswordVerifier in amule.conf. Run amuled --ec-config to set a new EC password."
+msgstr ""
 
 #: src/amuled.cpp
 msgid "amuled: OnInit - starting timer"
@@ -1281,6 +1303,10 @@ msgstr ""
 msgid "All"
 msgstr "全て"
 
+#: src/amule-remote-gui.cpp
+msgid "The EC password changed on the daemon, but the saved client password could not be updated."
+msgstr ""
+
 #: src/amule-remote-gui.cpp src/muuli_wdr.cpp
 msgid "To allow a folder, add it to allowed-remote-dirs.dat in the daemon's configuration folder, one absolute path per line, then restart the daemon."
 msgstr ""
@@ -1290,8 +1316,13 @@ msgstr ""
 msgid "The daemon refused these folders because they are outside the folders it allows (configured on the daemon):%s"
 msgstr ""
 
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp
+#, fuzzy
+msgid "The EC password was not changed."
+msgstr "- TCPポートを変更しました。\n"
+
 #: src/amule-remote-gui.cpp
-msgid "The daemon could not apply the connection port changes."
+msgid "The daemon could not apply the preference changes."
 msgstr ""
 
 #: src/amule-remote-gui.cpp
@@ -2395,6 +2426,16 @@ msgid "External connections disabled due to empty password!"
 msgstr "外部接続は空パスワードのため無効にしました！"
 
 #: src/ExternalConn.cpp
+#, fuzzy
+msgid "External connections disabled due to invalid ECPasswordVerifier!"
+msgstr "外部接続は空パスワードのため無効にしました！"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "External connections disabled: could not prepare the EC token verifier."
+msgstr "外部接続を設定ファイルに無効しました"
+
+#: src/ExternalConn.cpp
 #, c-format
 msgid "Remote clients cannot change folders: no folder is listed in %s"
 msgstr ""
@@ -2416,6 +2457,11 @@ msgid "External connection refused due to empty password in preferences!"
 msgstr "個人設定に空欄のパスワードがあるため、外部接続を拒否しました！"
 
 #: src/ExternalConn.cpp
+#, fuzzy, c-format
+msgid "Too many failed connection attempts; try again in %d seconds."
+msgstr "自動的なサーバへの接続は、あと%d秒で再試行します"
+
+#: src/ExternalConn.cpp
 #, c-format
 msgid "Connecting client: %s %s"
 msgstr "クライアントを接続中： %s %s"
@@ -2423,6 +2469,10 @@ msgstr "クライアントを接続中： %s %s"
 #: src/ExternalConn.cpp
 msgid "Unknown version"
 msgstr "不明なバージョン"
+
+#: src/ExternalConn.cpp
+msgid "An EC client of version 3.3.0 or later is required."
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Incorrect EC version ID, there might be binary incompatibility. Use core and remote from same snapshot."
@@ -2433,33 +2483,16 @@ msgid "You cannot connect to a release version from an arbitrary development sna
 msgstr "任意の開発スナップショットからリリース版に接続することはできません！ *ため息* クラッシュを未然に防ぎました"
 
 #: src/ExternalConn.cpp
+msgid "Invalid SRP handshake or EC verifier."
+msgstr ""
+
+#: src/ExternalConn.cpp
 msgid "Invalid protocol version."
 msgstr "無効なプロトコルバージョン。"
 
 #: src/ExternalConn.cpp
 msgid "Missing protocol version tag."
 msgstr "プロトコルバージョンタグがありません。"
-
-#: src/ExternalConn.cpp
-#, fuzzy, c-format
-msgid "Too many failed connection attempts; try again in %d seconds."
-msgstr "自動的なサーバへの接続は、あと%d秒で再試行します"
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: invalid hash specified as EC password."
-msgstr "認証に失敗しました：ECパスワードとして無効なハッシュが指定されました。"
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: the client offered an encrypted External Connection but sent no usable key."
-msgstr ""
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: this aMule requires an encrypted External Connection, and the client did not negotiate one."
-msgstr ""
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: the client could not confirm the encrypted session."
-msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Authentication failed: wrong password."
@@ -2625,9 +2658,37 @@ msgid "Client could not be swapped to that file."
 msgstr ""
 
 #: src/ExternalConn.cpp
+msgid "Duplicate remote-control preference groups are not allowed."
+msgstr ""
+
+#: src/ExternalConn.cpp
+msgid "Only password-authenticated sessions may change the EC password."
+msgstr ""
+
+#: src/ExternalConn.cpp src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "Could not update EC password verifier."
+msgstr "amuleapiパスワードを保存できませんでした：%s"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "Could not apply preferences."
+msgstr "Kadは個人設定に無効されています。"
+
+#: src/ExternalConn.cpp
 #, c-format
 msgid "Could not save the amuleapi password: %s"
 msgstr "amuleapiパスワードを保存できませんでした：%s"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "Could not update EC password verifier. The other preferences were saved."
+msgstr "パスワードが設定され、外部接続が有効になりました。"
+
+#: src/ExternalConn.cpp
+#, c-format
+msgid "EC password changed by %s"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "One or more folders were outside the allowed remote directories and were left unchanged."
@@ -2932,10 +2993,6 @@ msgid "Print program version."
 msgstr "プログラム・バージョンをプリンとする。"
 
 #: src/ExternalConnector.cpp
-msgid "Do not encrypt the External Connect session. Encryption is on by default whenever the remote aMule supports it; turning it off leaves everything after the login readable and modifiable by anyone on the path."
-msgstr ""
-
-#: src/ExternalConnector.cpp
 msgid "Force ZLIB compression regardless of dialed-IP locality (useful when the server is reachable over a VPN tunnel that resolves to a LAN IP)."
 msgstr "ダイヤル先IPのローカル性に関わらずZLIB圧縮を強制します（サーバがLAN IPに解決されるVPNトンネル経由で到達可能な場合に便利です）。"
 
@@ -2946,6 +3003,10 @@ msgstr "すべてのコンソール出力のコピーをこのログファイル
 #: src/ExternalConnector.cpp
 msgid "Do not write a log file; print to the console only."
 msgstr "ログファイルを書き込まず、コンソールにのみ出力します。"
+
+#: src/ExternalConnector.cpp
+msgid "The daemon verifier cannot supply a client password. Use -P or the password prompt.\n"
+msgstr ""
 
 #: src/FileDetailDialog.cpp
 msgid "File Details"
@@ -4086,6 +4147,11 @@ msgid "Invalid password, not a MD5 hash!"
 msgstr "不正なパスワード、 MD5ハッシュではありません！"
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
+#, fuzzy
+msgid "Could not generate SRP credentials."
+msgstr "あなたはすでにファイル%sをダウンロードしようとしています"
+
+#: src/libs/ec/cpp/RemoteConnect.cpp
 #, c-format
 msgid "Could not resolve %s to an IPv4 address."
 msgstr ""
@@ -4103,16 +4169,13 @@ msgid "EC connection failed. Empty reply."
 msgstr "EC接続に失敗しました。応答が空です。"
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "Could not set up connection encryption. Connection closed."
-msgstr ""
-
-#: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "The core did not negotiate an encrypted connection. It may be an older aMule without encryption support, or the connection may have been tampered with. To connect without encryption, turn it off in the connection settings."
-msgstr ""
-
-#: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "External Connection: Bad reply, handshake failed. Connection closed."
+#, fuzzy
+msgid "Invalid SRP handshake or unsupported profile. Connection closed."
 msgstr "外部接続：不正な応答、ハンドシェイクに失敗しました。接続を閉じました。"
+
+#: src/libs/ec/cpp/RemoteConnect.cpp
+msgid "An EC daemon of version 3.3.0 or later is required."
+msgstr ""
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 #, fuzzy
@@ -5778,10 +5841,6 @@ msgstr "ECポートでUPnPポート転送を有効にする"
 #: src/muuli_wdr.cpp src/utils/wxCas/src/wxcasprefs.cpp
 msgid "Password"
 msgstr "パスワード"
-
-#: src/muuli_wdr.cpp
-msgid "Require encrypted connections (rejects clients that cannot encrypt)"
-msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Folders remote clients may use"
@@ -8623,6 +8682,16 @@ msgid "Crypt overhead (UDP): %s"
 msgstr "暗号化オーバーヘッド (UDP): %s"
 
 #: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "LowID to LowID Data (Session): %s"
+msgstr "ダウンロードされたデータ（セッション合計）： %s"
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "IPv6 Data (Session): %s"
+msgstr "アップロードされたデータ（セッション合計）： %s"
+
+#: src/Statistics.cpp
 #, c-format
 msgid "Active Uploads: %s"
 msgstr "アクティブなアップロード数： %s"
@@ -8721,6 +8790,30 @@ msgstr "平均接続数（推測）： %g"
 #, c-format
 msgid "Peak Connections (estimate): %i"
 msgstr "ピーク接続数（推測）： %i"
+
+#: src/Statistics.cpp
+msgid "NAT Traversal (Session)"
+msgstr ""
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "Server Hole Punches: %s"
+msgstr "サーバのオーバヘッド（パケット数）： %s"
+
+#: src/Statistics.cpp
+#, c-format
+msgid "Successful Server Hole Punches: %s"
+msgstr ""
+
+#: src/Statistics.cpp
+#, c-format
+msgid "Lugdunum Callbacks: %s"
+msgstr ""
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "Successful Lugdunum Callbacks: %s"
+msgstr "%s を正常に更新しました"
 
 #: src/Statistics.cpp
 #, c-format
@@ -10390,11 +10483,15 @@ msgid "Could not generate ECPasswordVerifier; external connections are disabled.
 msgstr "パスワードが設定され、外部接続が有効になりました。"
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
 msgid "EC password change rejected: could not persist ECPasswordVerifier. The active credential is unchanged."
 msgstr ""
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
-msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgid "EC password change rejected: could not store ECPasswordVerifier. The active credential is unchanged."
 msgstr ""
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
@@ -10412,6 +10509,12 @@ msgstr ""
 #: src/libs/ec/cpp/ECSRPConfig.cpp
 msgid "Migrating a changed legacy ECPassword after downgrade; the previous verifier no longer authenticates this run."
 msgstr ""
+
+#~ msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
+#~ msgstr "エラー：外部接続を使用するには有効なパスワードが必要であり、外部接続なしではaMuleデーモンを使用できません。aMuleデーモンを実行するには、~/.aMule/amule.confファイル内の \"ECPassword\" フィールドに適切な値を設定する必要があります。パスワードを設定するには、--ec-configフラグを付けてamuledを実行してください。詳細については https://amule-org.github.io/docs を参照してください"
+
+#~ msgid "Authentication failed: invalid hash specified as EC password."
+#~ msgstr "認証に失敗しました：ECパスワードとして無効なハッシュが指定されました。"
 
 #, fuzzy
 #~ msgid "Encrypt the connection (recommended)"
