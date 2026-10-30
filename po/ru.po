@@ -530,18 +530,27 @@ msgid "Not starting %s: it is neither next to aMule nor on PATH."
 msgstr "Запуск %s не выполняется: его нет ни рядом с aMule, ни в PATH."
 
 #: src/amule.cpp
+#, fuzzy
+msgid "An exception occurred while launching amuleweb."
+msgstr "При запуске amuleapi возникло исключение."
+
+#: src/amule.cpp
 #, c-format
 msgid "web server running on pid %d"
 msgstr "веб-сервер работает с pid %d"
 
 #: src/amule.cpp
-msgid "You requested to run web server on startup, but the amuleweb binary cannot be run. Please install the package containing aMule web server, or build aMule from source with -DBUILD_WEBSERVER=YES and install it."
-msgstr "Вы запросили запуск веб-сервера при старте, но исполняемый файл amuleweb не может быть запущен. Установите пакет, содержащий веб-сервер aMule, либо соберите aMule из исходного кода с параметром -DBUILD_WEBSERVER=YES и установите его."
+msgid "Could not prepare the amuleweb authentication token. The web server was not started."
+msgstr ""
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
 #: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "ОШИБКА"
+
+#: src/amule.cpp
+msgid "You requested to run web server on startup, but the amuleweb binary cannot be run. Please install the package containing aMule web server, or build aMule from source with -DBUILD_WEBSERVER=YES and install it."
+msgstr "Вы запросили запуск веб-сервера при старте, но исполняемый файл amuleweb не может быть запущен. Установите пакет, содержащий веб-сервер aMule, либо соберите aMule из исходного кода с параметром -DBUILD_WEBSERVER=YES и установите его."
 
 #: src/amule.cpp
 #, c-format
@@ -564,6 +573,16 @@ msgstr "Не удалось запустить amuleapi при автомати�
 #: src/amule.cpp
 msgid "You requested to run amuleapi on startup, but the amuleapi binary cannot be run. Please install the package containing aMule's REST API server, or build aMule from source with -DBUILD_AMULEAPI=YES and install it."
 msgstr "Вы запросили запуск amuleapi при старте, но исполняемый файл amuleapi не может быть запущен. Установите пакет, содержащий REST API-сервер aMule, либо соберите aMule из исходного кода с параметром -DBUILD_AMULEAPI=YES и установите его."
+
+#: src/amule.cpp
+#, fuzzy
+msgid "Could not prepare the amuleweb EC token."
+msgstr "Не удалось удалить файл токена внешнего соединения amuleapi: %s"
+
+#: src/amule.cpp
+#, fuzzy, c-format
+msgid "Could not remove the amuleweb EC token file: %s"
+msgstr "Не удалось удалить файл токена внешнего соединения amuleapi: %s"
 
 #: src/amule.cpp
 #, c-format
@@ -881,8 +900,12 @@ msgid "ERROR: aMule daemon cannot be used when external connections are disabled
 msgstr "ОШИБКА: демон aMule нельзя использовать при отключённых внешних подключениях. Включите их: запустите обычный aMule, запустите amuled с --ec-config или задайте «AcceptExternalConnections» = 1 в ~/.aMule/amule.conf"
 
 #: src/amuled.cpp
-msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
-msgstr "ОШИБКА: для использования внешних подключений требуется действительный пароль, а демон aMule не может работать без внешних подключений. Чтобы запустить демон aMule, необходимо задать поле «ECPassword» в файле ~/.aMule/amule.conf с подходящим значением. Запустите amuled с флагом --ec-config, чтобы задать пароль. Дополнительную информацию можно найти на https://amule-org.github.io/docs"
+msgid "ERROR: An EC password is required. Run amuled --ec-config to set it."
+msgstr ""
+
+#: src/amuled.cpp
+msgid "ERROR: Invalid ECPasswordVerifier in amule.conf. Run amuled --ec-config to set a new EC password."
+msgstr ""
 
 #: src/amuled.cpp
 msgid "amuled: OnInit - starting timer"
@@ -1299,6 +1322,10 @@ msgstr "*** CAPTCHA не пройдена; попытки исчерпаны."
 msgid "All"
 msgstr "Все"
 
+#: src/amule-remote-gui.cpp
+msgid "The EC password changed on the daemon, but the saved client password could not be updated."
+msgstr ""
+
 #: src/amule-remote-gui.cpp src/muuli_wdr.cpp
 msgid "To allow a folder, add it to allowed-remote-dirs.dat in the daemon's configuration folder, one absolute path per line, then restart the daemon."
 msgstr "Чтобы разрешить папку, добавьте её в allowed-remote-dirs.dat в каталоге конфигурации демона — по одному абсолютному пути на строку — и перезапустите демон."
@@ -1308,8 +1335,14 @@ msgstr "Чтобы разрешить папку, добавьте её в allow
 msgid "The daemon refused these folders because they are outside the folders it allows (configured on the daemon):%s"
 msgstr "Демон отклонил эти папки, так как они находятся вне разрешённых им папок (настраивается на стороне демона):%s"
 
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp
+#, fuzzy
+msgid "The EC password was not changed."
+msgstr "— изменён порт TCP.\n"
+
 #: src/amule-remote-gui.cpp
-msgid "The daemon could not apply the connection port changes."
+#, fuzzy
+msgid "The daemon could not apply the preference changes."
 msgstr "Демон не смог применить изменения портов соединения."
 
 #: src/amule-remote-gui.cpp
@@ -2431,6 +2464,16 @@ msgid "External connections disabled due to empty password!"
 msgstr "Внешние подключения отключены из-за отсутствия пароля!"
 
 #: src/ExternalConn.cpp
+#, fuzzy
+msgid "External connections disabled due to invalid ECPasswordVerifier!"
+msgstr "Внешние подключения отключены из-за отсутствия пароля!"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "External connections disabled: could not prepare the EC token verifier."
+msgstr "Внешние соединения отключены в файле конфигурации"
+
+#: src/ExternalConn.cpp
 #, c-format
 msgid "Remote clients cannot change folders: no folder is listed in %s"
 msgstr "Удалённые клиенты не могут изменять папки: в %s не указано ни одной папки"
@@ -2453,12 +2496,21 @@ msgstr "Отказано во внешнем соединении из-за пу
 
 #: src/ExternalConn.cpp
 #, c-format
+msgid "Too many failed connection attempts; try again in %d seconds."
+msgstr "Слишком много неудачных попыток подключения; повторите через %d секунд."
+
+#: src/ExternalConn.cpp
+#, c-format
 msgid "Connecting client: %s %s"
 msgstr "Соединение с клиентом: %s %s"
 
 #: src/ExternalConn.cpp
 msgid "Unknown version"
 msgstr "Неизвестная версия"
+
+#: src/ExternalConn.cpp
+msgid "An EC client of version 3.3.0 or later is required."
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Incorrect EC version ID, there might be binary incompatibility. Use core and remote from same snapshot."
@@ -2469,33 +2521,16 @@ msgid "You cannot connect to a release version from an arbitrary development sna
 msgstr "Вы не можете подключиться к стабильной версии из произвольного снимка разработки! *вздох* возможный сбой предотвращён"
 
 #: src/ExternalConn.cpp
+msgid "Invalid SRP handshake or EC verifier."
+msgstr ""
+
+#: src/ExternalConn.cpp
 msgid "Invalid protocol version."
 msgstr "Недопустимая версия протокола."
 
 #: src/ExternalConn.cpp
 msgid "Missing protocol version tag."
 msgstr "Тег версии протокола отсутствует."
-
-#: src/ExternalConn.cpp
-#, c-format
-msgid "Too many failed connection attempts; try again in %d seconds."
-msgstr "Слишком много неудачных попыток подключения; повторите через %d секунд."
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: invalid hash specified as EC password."
-msgstr "Ошибка авторизации: в качестве EC-пароля указан неправильный хэш."
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: the client offered an encrypted External Connection but sent no usable key."
-msgstr "Ошибка аутентификации: клиент предложил зашифрованное внешнее соединение, но не отправил ключ."
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: this aMule requires an encrypted External Connection, and the client did not negotiate one."
-msgstr "Ошибка аутентификации: этот aMule требует зашифрованного внешнего подключения, а клиент не согласовал его."
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: the client could not confirm the encrypted session."
-msgstr "Ошибка аутентификации: клиент не смог подтвердить шифрованный сеанс."
 
 #: src/ExternalConn.cpp
 msgid "Authentication failed: wrong password."
@@ -2660,9 +2695,37 @@ msgid "Client could not be swapped to that file."
 msgstr "Не удалось переключить клиента на этот файл."
 
 #: src/ExternalConn.cpp
+msgid "Duplicate remote-control preference groups are not allowed."
+msgstr ""
+
+#: src/ExternalConn.cpp
+msgid "Only password-authenticated sessions may change the EC password."
+msgstr ""
+
+#: src/ExternalConn.cpp src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "Could not update EC password verifier."
+msgstr "Не удалось сохранить пароль amuleapi: %s"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "Could not apply preferences."
+msgstr "Kad отключён в настройках."
+
+#: src/ExternalConn.cpp
 #, c-format
 msgid "Could not save the amuleapi password: %s"
 msgstr "Не удалось сохранить пароль amuleapi: %s"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "Could not update EC password verifier. The other preferences were saved."
+msgstr "Пароль задан и внешние соединения разрешены."
+
+#: src/ExternalConn.cpp
+#, c-format
+msgid "EC password changed by %s"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "One or more folders were outside the allowed remote directories and were left unchanged."
@@ -2962,10 +3025,6 @@ msgid "Print program version."
 msgstr "Вывести версию программы."
 
 #: src/ExternalConnector.cpp
-msgid "Do not encrypt the External Connect session. Encryption is on by default whenever the remote aMule supports it; turning it off leaves everything after the login readable and modifiable by anyone on the path."
-msgstr "Не шифровать сеанс внешнего подключения. Шифрование включено по умолчанию, когда удалённый aMule его поддерживает; отключение делает трафик после входа открытым для перехвата."
-
-#: src/ExternalConnector.cpp
 msgid "Force ZLIB compression regardless of dialed-IP locality (useful when the server is reachable over a VPN tunnel that resolves to a LAN IP)."
 msgstr "Принудительно использовать сжатие ZLIB независимо от локальности IP-адреса подключения (полезно, если сервер доступен через VPN-туннель, разрешающийся в локальный IP-адрес)."
 
@@ -2976,6 +3035,10 @@ msgstr "Дублировать весь вывод консоли в этот ф
 #: src/ExternalConnector.cpp
 msgid "Do not write a log file; print to the console only."
 msgstr "Не записывать файл журнала; выводить только в консоль."
+
+#: src/ExternalConnector.cpp
+msgid "The daemon verifier cannot supply a client password. Use -P or the password prompt.\n"
+msgstr ""
 
 #: src/FileDetailDialog.cpp
 msgid "File Details"
@@ -4118,6 +4181,11 @@ msgid "Invalid password, not a MD5 hash!"
 msgstr "Неверный пароль. Не MD5-хеш!"
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
+#, fuzzy
+msgid "Could not generate SRP credentials."
+msgstr "Не удалось удалить «%s» с диска."
+
+#: src/libs/ec/cpp/RemoteConnect.cpp
 #, c-format
 msgid "Could not resolve %s to an IPv4 address."
 msgstr "Не удалось разрешить %s в IPv4-адрес."
@@ -4135,16 +4203,13 @@ msgid "EC connection failed. Empty reply."
 msgstr "EC соединение не удалось. Пустой ответ."
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "Could not set up connection encryption. Connection closed."
-msgstr "Не удалось настроить шифрование соединения. Соединение закрыто."
-
-#: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "The core did not negotiate an encrypted connection. It may be an older aMule without encryption support, or the connection may have been tampered with. To connect without encryption, turn it off in the connection settings."
-msgstr "Ядро не согласовало зашифрованное соединение. Возможно, это старая версия aMule без поддержки шифрования, или соединение было подменено. Чтобы подключиться без шифрования, отключите его в настройках соединения."
-
-#: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "External Connection: Bad reply, handshake failed. Connection closed."
+#, fuzzy
+msgid "Invalid SRP handshake or unsupported profile. Connection closed."
 msgstr "Внешнее соединение: Некорректный ответ, авторизация неудачна. Соединение закрыто."
+
+#: src/libs/ec/cpp/RemoteConnect.cpp
+msgid "An EC daemon of version 3.3.0 or later is required."
+msgstr ""
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 msgid "External Connection: the daemon failed to prove it knows the password. Connection closed."
@@ -5823,10 +5888,6 @@ msgstr "Включить UPnP-проброс для порта внешних с
 #: src/muuli_wdr.cpp src/utils/wxCas/src/wxcasprefs.cpp
 msgid "Password"
 msgstr "Пароль"
-
-#: src/muuli_wdr.cpp
-msgid "Require encrypted connections (rejects clients that cannot encrypt)"
-msgstr "Требовать шифрованные соединения (отклоняет клиенты без шифрования)"
 
 #: src/muuli_wdr.cpp
 msgid "Folders remote clients may use"
@@ -8701,6 +8762,16 @@ msgid "Crypt overhead (UDP): %s"
 msgstr "Потери шифрования (UDP): %s"
 
 #: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "LowID to LowID Data (Session): %s"
+msgstr "Загружено данных (за сеанс (всего)): %s"
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "IPv6 Data (Session): %s"
+msgstr "Отдано данных (за сеанс (всего)): %s"
+
+#: src/Statistics.cpp
 #, c-format
 msgid "Active Uploads: %s"
 msgstr "Активные отдачи: %s"
@@ -8800,6 +8871,31 @@ msgstr "Соединений в среднем (примерно): %g"
 #, c-format
 msgid "Peak Connections (estimate): %i"
 msgstr "Максимальное число соединений (примерно): %i"
+
+#: src/Statistics.cpp
+#, fuzzy
+msgid "NAT Traversal (Session)"
+msgstr "Обход NAT (uTP)"
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "Server Hole Punches: %s"
+msgstr "Трафик с сервером (пакеты): %s"
+
+#: src/Statistics.cpp
+#, c-format
+msgid "Successful Server Hole Punches: %s"
+msgstr ""
+
+#: src/Statistics.cpp
+#, c-format
+msgid "Lugdunum Callbacks: %s"
+msgstr ""
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "Successful Lugdunum Callbacks: %s"
+msgstr "%s успешно обновлён"
 
 #: src/Statistics.cpp
 #, c-format
@@ -10479,11 +10575,15 @@ msgid "Could not generate ECPasswordVerifier; external connections are disabled.
 msgstr "Пароль задан и внешние соединения разрешены."
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
 msgid "EC password change rejected: could not persist ECPasswordVerifier. The active credential is unchanged."
 msgstr ""
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
-msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgid "EC password change rejected: could not store ECPasswordVerifier. The active credential is unchanged."
 msgstr ""
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
@@ -10501,6 +10601,33 @@ msgstr ""
 #: src/libs/ec/cpp/ECSRPConfig.cpp
 msgid "Migrating a changed legacy ECPassword after downgrade; the previous verifier no longer authenticates this run."
 msgstr ""
+
+#~ msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
+#~ msgstr "ОШИБКА: для использования внешних подключений требуется действительный пароль, а демон aMule не может работать без внешних подключений. Чтобы запустить демон aMule, необходимо задать поле «ECPassword» в файле ~/.aMule/amule.conf с подходящим значением. Запустите amuled с флагом --ec-config, чтобы задать пароль. Дополнительную информацию можно найти на https://amule-org.github.io/docs"
+
+#~ msgid "Authentication failed: invalid hash specified as EC password."
+#~ msgstr "Ошибка авторизации: в качестве EC-пароля указан неправильный хэш."
+
+#~ msgid "Authentication failed: the client offered an encrypted External Connection but sent no usable key."
+#~ msgstr "Ошибка аутентификации: клиент предложил зашифрованное внешнее соединение, но не отправил ключ."
+
+#~ msgid "Authentication failed: this aMule requires an encrypted External Connection, and the client did not negotiate one."
+#~ msgstr "Ошибка аутентификации: этот aMule требует зашифрованного внешнего подключения, а клиент не согласовал его."
+
+#~ msgid "Authentication failed: the client could not confirm the encrypted session."
+#~ msgstr "Ошибка аутентификации: клиент не смог подтвердить шифрованный сеанс."
+
+#~ msgid "Do not encrypt the External Connect session. Encryption is on by default whenever the remote aMule supports it; turning it off leaves everything after the login readable and modifiable by anyone on the path."
+#~ msgstr "Не шифровать сеанс внешнего подключения. Шифрование включено по умолчанию, когда удалённый aMule его поддерживает; отключение делает трафик после входа открытым для перехвата."
+
+#~ msgid "Could not set up connection encryption. Connection closed."
+#~ msgstr "Не удалось настроить шифрование соединения. Соединение закрыто."
+
+#~ msgid "The core did not negotiate an encrypted connection. It may be an older aMule without encryption support, or the connection may have been tampered with. To connect without encryption, turn it off in the connection settings."
+#~ msgstr "Ядро не согласовало зашифрованное соединение. Возможно, это старая версия aMule без поддержки шифрования, или соединение было подменено. Чтобы подключиться без шифрования, отключите его в настройках соединения."
+
+#~ msgid "Require encrypted connections (rejects clients that cannot encrypt)"
+#~ msgstr "Требовать шифрованные соединения (отклоняет клиенты без шифрования)"
 
 #~ msgid "Encrypt the connection (recommended)"
 #~ msgstr "Шифровать соединение (рекомендуется)"

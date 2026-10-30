@@ -514,18 +514,26 @@ msgid "Not starting %s: it is neither next to aMule nor on PATH."
 msgstr ""
 
 #: src/amule.cpp
+msgid "An exception occurred while launching amuleweb."
+msgstr ""
+
+#: src/amule.cpp
 #, c-format
 msgid "web server running on pid %d"
 msgstr "웹 서버가 pid %d에서 실행 중입니다"
 
 #: src/amule.cpp
-msgid "You requested to run web server on startup, but the amuleweb binary cannot be run. Please install the package containing aMule web server, or build aMule from source with -DBUILD_WEBSERVER=YES and install it."
-msgstr "시작 시 웹 서버를 실행하도록 요청하셨지만, amuleweb 바이너리를 실행할 수 없습니다. aMule 웹 서버가 포함된 패키지를 설치하거나, -DBUILD_WEBSERVER=YES 옵션으로 aMule을 소스에서 빌드하여 설치하세요."
+msgid "Could not prepare the amuleweb authentication token. The web server was not started."
+msgstr ""
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
 #: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "오류"
+
+#: src/amule.cpp
+msgid "You requested to run web server on startup, but the amuleweb binary cannot be run. Please install the package containing aMule web server, or build aMule from source with -DBUILD_WEBSERVER=YES and install it."
+msgstr "시작 시 웹 서버를 실행하도록 요청하셨지만, amuleweb 바이너리를 실행할 수 없습니다. aMule 웹 서버가 포함된 패키지를 설치하거나, -DBUILD_WEBSERVER=YES 옵션으로 aMule을 소스에서 빌드하여 설치하세요."
 
 #: src/amule.cpp
 #, c-format
@@ -548,6 +556,16 @@ msgstr ""
 #: src/amule.cpp
 msgid "You requested to run amuleapi on startup, but the amuleapi binary cannot be run. Please install the package containing aMule's REST API server, or build aMule from source with -DBUILD_AMULEAPI=YES and install it."
 msgstr "시작 시 amuleapi를 실행하도록 요청하셨지만 amuleapi 바이너리를 실행할 수 없습니다. aMule의 REST API 서버가 포함된 패키지를 설치하거나, -DBUILD_AMULEAPI=YES 옵션으로 aMule을 소스에서 빌드하여 설치하세요."
+
+#: src/amule.cpp
+#, fuzzy
+msgid "Could not prepare the amuleweb EC token."
+msgstr "amuleapi 암호를 저장할 수 없습니다: %s"
+
+#: src/amule.cpp
+#, fuzzy, c-format
+msgid "Could not remove the amuleweb EC token file: %s"
+msgstr "amuleapi 암호를 저장할 수 없습니다: %s"
 
 #: src/amule.cpp
 #, fuzzy, c-format
@@ -863,8 +881,12 @@ msgid "ERROR: aMule daemon cannot be used when external connections are disabled
 msgstr "오류: 외부 연결이 비활성화된 경우 aMule 데몬을 사용할 수 없습니다. 외부 연결을 활성화하려면 일반 aMule을 사용하거나, --ec-config 옵션으로 amuled를 시작하거나, ~/.aMule/amule.conf 파일에서 \"AcceptExternalConnections\" 키를 1로 설정하세요."
 
 #: src/amuled.cpp
-msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
-msgstr "오류: 외부 연결을 사용하려면 유효한 암호가 필요하며, 외부 연결 없이는 aMule 데몬을 사용할 수 없습니다. aMule 데몬을 실행하려면 ~/.aMule/amule.conf 파일의 \"ECPassword\" 필드에 적절한 값을 설정해야 합니다. 암호를 설정하려면 --ec-config 플래그로 amuled를 실행하세요. 자세한 정보는 https://amule-org.github.io/docs 에서 확인할 수 있습니다."
+msgid "ERROR: An EC password is required. Run amuled --ec-config to set it."
+msgstr ""
+
+#: src/amuled.cpp
+msgid "ERROR: Invalid ECPasswordVerifier in amule.conf. Run amuled --ec-config to set a new EC password."
+msgstr ""
 
 #: src/amuled.cpp
 msgid "amuled: OnInit - starting timer"
@@ -1284,6 +1306,10 @@ msgstr ""
 msgid "All"
 msgstr "전부"
 
+#: src/amule-remote-gui.cpp
+msgid "The EC password changed on the daemon, but the saved client password could not be updated."
+msgstr ""
+
 #: src/amule-remote-gui.cpp src/muuli_wdr.cpp
 msgid "To allow a folder, add it to allowed-remote-dirs.dat in the daemon's configuration folder, one absolute path per line, then restart the daemon."
 msgstr ""
@@ -1293,8 +1319,13 @@ msgstr ""
 msgid "The daemon refused these folders because they are outside the folders it allows (configured on the daemon):%s"
 msgstr ""
 
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp
+#, fuzzy
+msgid "The EC password was not changed."
+msgstr "- TCP 포트가 변경되었습니다.\n"
+
 #: src/amule-remote-gui.cpp
-msgid "The daemon could not apply the connection port changes."
+msgid "The daemon could not apply the preference changes."
 msgstr ""
 
 #: src/amule-remote-gui.cpp
@@ -2409,6 +2440,16 @@ msgid "External connections disabled due to empty password!"
 msgstr "빈암호 때문에 외부연결이 불가능합니다."
 
 #: src/ExternalConn.cpp
+#, fuzzy
+msgid "External connections disabled due to invalid ECPasswordVerifier!"
+msgstr "빈암호 때문에 외부연결이 불가능합니다."
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "External connections disabled: could not prepare the EC token verifier."
+msgstr "이 환경설정에서 외부연결은 불가능합니다."
+
+#: src/ExternalConn.cpp
 #, c-format
 msgid "Remote clients cannot change folders: no folder is listed in %s"
 msgstr ""
@@ -2430,6 +2471,11 @@ msgid "External connection refused due to empty password in preferences!"
 msgstr "환경설정의 빈암호로 인해 외부연결이 거부되었습니다."
 
 #: src/ExternalConn.cpp
+#, fuzzy, c-format
+msgid "Too many failed connection attempts; try again in %d seconds."
+msgstr "%d 초후에 서버로 자동 접속을 재시도"
+
+#: src/ExternalConn.cpp
 #, c-format
 msgid "Connecting client: %s %s"
 msgstr "연결중인 클라이언트: %s %s"
@@ -2437,6 +2483,10 @@ msgstr "연결중인 클라이언트: %s %s"
 #: src/ExternalConn.cpp
 msgid "Unknown version"
 msgstr "알수없는 버젼"
+
+#: src/ExternalConn.cpp
+msgid "An EC client of version 3.3.0 or later is required."
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Incorrect EC version ID, there might be binary incompatibility. Use core and remote from same snapshot."
@@ -2447,33 +2497,16 @@ msgid "You cannot connect to a release version from an arbitrary development sna
 msgstr "임의의 개발 스냅샷에서 릴리스 버전으로 연결할 수 없습니다! *한숨* 발생 가능한 충돌이 방지되었습니다"
 
 #: src/ExternalConn.cpp
+msgid "Invalid SRP handshake or EC verifier."
+msgstr ""
+
+#: src/ExternalConn.cpp
 msgid "Invalid protocol version."
 msgstr "유효하지 않은 프로토콜 버젼입니다"
 
 #: src/ExternalConn.cpp
 msgid "Missing protocol version tag."
 msgstr "프로토콜 버젼 태그 없음"
-
-#: src/ExternalConn.cpp
-#, fuzzy, c-format
-msgid "Too many failed connection attempts; try again in %d seconds."
-msgstr "%d 초후에 서버로 자동 접속을 재시도"
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: invalid hash specified as EC password."
-msgstr "인증 실패: EC 암호로 지정된 해시가 잘못되었습니다."
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: the client offered an encrypted External Connection but sent no usable key."
-msgstr ""
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: this aMule requires an encrypted External Connection, and the client did not negotiate one."
-msgstr ""
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: the client could not confirm the encrypted session."
-msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Authentication failed: wrong password."
@@ -2639,9 +2672,37 @@ msgid "Client could not be swapped to that file."
 msgstr ""
 
 #: src/ExternalConn.cpp
+msgid "Duplicate remote-control preference groups are not allowed."
+msgstr ""
+
+#: src/ExternalConn.cpp
+msgid "Only password-authenticated sessions may change the EC password."
+msgstr ""
+
+#: src/ExternalConn.cpp src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "Could not update EC password verifier."
+msgstr "amuleapi 암호를 저장할 수 없습니다: %s"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "Could not apply preferences."
+msgstr "Kad는 환경설정에서 비활성화되어 있습니다."
+
+#: src/ExternalConn.cpp
 #, c-format
 msgid "Could not save the amuleapi password: %s"
 msgstr "amuleapi 암호를 저장할 수 없습니다: %s"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "Could not update EC password verifier. The other preferences were saved."
+msgstr "암호가 설정되고 외부 연결이 활성화되었습니다."
+
+#: src/ExternalConn.cpp
+#, c-format
+msgid "EC password changed by %s"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "One or more folders were outside the allowed remote directories and were left unchanged."
@@ -2946,10 +3007,6 @@ msgid "Print program version."
 msgstr "프로그램 버전을 출력합니다."
 
 #: src/ExternalConnector.cpp
-msgid "Do not encrypt the External Connect session. Encryption is on by default whenever the remote aMule supports it; turning it off leaves everything after the login readable and modifiable by anyone on the path."
-msgstr ""
-
-#: src/ExternalConnector.cpp
 msgid "Force ZLIB compression regardless of dialed-IP locality (useful when the server is reachable over a VPN tunnel that resolves to a LAN IP)."
 msgstr "다이얼된 IP의 지역성과 관계없이 ZLIB 압축을 강제 적용합니다 (서버가 LAN IP로 확인되는 VPN 터널을 통해 접근 가능한 경우 유용합니다)."
 
@@ -2960,6 +3017,10 @@ msgstr "모든 콘솔 출력의 사본을 이 로그 파일에 추가합니다 (
 #: src/ExternalConnector.cpp
 msgid "Do not write a log file; print to the console only."
 msgstr "로그 파일을 기록하지 않고 콘솔에만 출력합니다."
+
+#: src/ExternalConnector.cpp
+msgid "The daemon verifier cannot supply a client password. Use -P or the password prompt.\n"
+msgstr ""
 
 #: src/FileDetailDialog.cpp
 msgid "File Details"
@@ -4108,6 +4169,11 @@ msgid "Invalid password, not a MD5 hash!"
 msgstr "잘못된 패스워드, MD5 해시가 아닙니다."
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
+#, fuzzy
+msgid "Could not generate SRP credentials."
+msgstr "이미 %s 파일을 내려받으려고 하고있음"
+
+#: src/libs/ec/cpp/RemoteConnect.cpp
 #, c-format
 msgid "Could not resolve %s to an IPv4 address."
 msgstr "%s을(를) IPv4 주소로 확인할 수 없습니다."
@@ -4125,16 +4191,13 @@ msgid "EC connection failed. Empty reply."
 msgstr "EC 연결에 실패했습니다. 응답이 비어 있습니다."
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "Could not set up connection encryption. Connection closed."
-msgstr ""
-
-#: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "The core did not negotiate an encrypted connection. It may be an older aMule without encryption support, or the connection may have been tampered with. To connect without encryption, turn it off in the connection settings."
-msgstr ""
-
-#: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "External Connection: Bad reply, handshake failed. Connection closed."
+#, fuzzy
+msgid "Invalid SRP handshake or unsupported profile. Connection closed."
 msgstr "외부 연결: 잘못된 응답, 핸드셰이크 실패. 연결이 종료되었습니다."
+
+#: src/libs/ec/cpp/RemoteConnect.cpp
+msgid "An EC daemon of version 3.3.0 or later is required."
+msgstr ""
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 #, fuzzy
@@ -5803,10 +5866,6 @@ msgstr "외부연결 포트에 UPnP 포트포워딩 활성화"
 #: src/muuli_wdr.cpp src/utils/wxCas/src/wxcasprefs.cpp
 msgid "Password"
 msgstr "암호"
-
-#: src/muuli_wdr.cpp
-msgid "Require encrypted connections (rejects clients that cannot encrypt)"
-msgstr ""
 
 #: src/muuli_wdr.cpp
 msgid "Folders remote clients may use"
@@ -8672,6 +8731,16 @@ msgid "Crypt overhead (UDP): %s"
 msgstr "암호화 추가자원 (UDP): %s"
 
 #: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "LowID to LowID Data (Session): %s"
+msgstr "내려받은 데이터 (세션 (전체)): %s"
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "IPv6 Data (Session): %s"
+msgstr "올려준 데이터 (세션 (전체)): %s"
+
+#: src/Statistics.cpp
 #, c-format
 msgid "Active Uploads: %s"
 msgstr "활성화된 올려주기: %s"
@@ -8770,6 +8839,30 @@ msgstr "평균 연결 (평가): %g"
 #, c-format
 msgid "Peak Connections (estimate): %i"
 msgstr "최대 연결 (평가): %i"
+
+#: src/Statistics.cpp
+msgid "NAT Traversal (Session)"
+msgstr ""
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "Server Hole Punches: %s"
+msgstr "서버 추가자원 (패킷): %s"
+
+#: src/Statistics.cpp
+#, c-format
+msgid "Successful Server Hole Punches: %s"
+msgstr ""
+
+#: src/Statistics.cpp
+#, c-format
+msgid "Lugdunum Callbacks: %s"
+msgstr ""
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "Successful Lugdunum Callbacks: %s"
+msgstr "%s 갱신에 성공했습니다"
 
 #: src/Statistics.cpp
 #, c-format
@@ -10440,11 +10533,15 @@ msgid "Could not generate ECPasswordVerifier; external connections are disabled.
 msgstr "암호가 설정되고 외부 연결이 활성화되었습니다."
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
 msgid "EC password change rejected: could not persist ECPasswordVerifier. The active credential is unchanged."
 msgstr ""
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
-msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgid "EC password change rejected: could not store ECPasswordVerifier. The active credential is unchanged."
 msgstr ""
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
@@ -10462,6 +10559,12 @@ msgstr ""
 #: src/libs/ec/cpp/ECSRPConfig.cpp
 msgid "Migrating a changed legacy ECPassword after downgrade; the previous verifier no longer authenticates this run."
 msgstr ""
+
+#~ msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
+#~ msgstr "오류: 외부 연결을 사용하려면 유효한 암호가 필요하며, 외부 연결 없이는 aMule 데몬을 사용할 수 없습니다. aMule 데몬을 실행하려면 ~/.aMule/amule.conf 파일의 \"ECPassword\" 필드에 적절한 값을 설정해야 합니다. 암호를 설정하려면 --ec-config 플래그로 amuled를 실행하세요. 자세한 정보는 https://amule-org.github.io/docs 에서 확인할 수 있습니다."
+
+#~ msgid "Authentication failed: invalid hash specified as EC password."
+#~ msgstr "인증 실패: EC 암호로 지정된 해시가 잘못되었습니다."
 
 #, fuzzy
 #~ msgid "Encrypt the connection (recommended)"

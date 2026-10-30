@@ -526,18 +526,27 @@ msgid "Not starting %s: it is neither next to aMule nor on PATH."
 msgstr "没有在启动 %s：它不在 aMule 边上也不在 PATH 上。"
 
 #: src/amule.cpp
+#, fuzzy
+msgid "An exception occurred while launching amuleweb."
+msgstr "启动 amuleapi 时发生异常。"
+
+#: src/amule.cpp
 #, c-format
 msgid "web server running on pid %d"
 msgstr "web 服务器正在运行，pid 为 %d"
 
 #: src/amule.cpp
-msgid "You requested to run web server on startup, but the amuleweb binary cannot be run. Please install the package containing aMule web server, or build aMule from source with -DBUILD_WEBSERVER=YES and install it."
-msgstr "您要求启动时运行 Web 服务器，但 amuleweb 程序无法运行， 请先安装包含 amule web 服务器的 aMule 包，或者使用 -DBUILD_WEBSERVER=YES 选项从源码构建 aMule 并安装它。"
+msgid "Could not prepare the amuleweb authentication token. The web server was not started."
+msgstr ""
 
 #: src/amule.cpp src/amule-remote-gui.cpp src/DownloadQueue.cpp
 #: src/EditServerListDlg.cpp src/PrefsUnifiedDlg.cpp src/SearchDlg.cpp
 msgid "ERROR"
 msgstr "错误"
+
+#: src/amule.cpp
+msgid "You requested to run web server on startup, but the amuleweb binary cannot be run. Please install the package containing aMule web server, or build aMule from source with -DBUILD_WEBSERVER=YES and install it."
+msgstr "您要求启动时运行 Web 服务器，但 amuleweb 程序无法运行， 请先安装包含 amule web 服务器的 aMule 包，或者使用 -DBUILD_WEBSERVER=YES 选项从源码构建 aMule 并安装它。"
 
 #: src/amule.cpp
 #, c-format
@@ -560,6 +569,16 @@ msgstr "自动重启期间无法启动 amuleapi。"
 #: src/amule.cpp
 msgid "You requested to run amuleapi on startup, but the amuleapi binary cannot be run. Please install the package containing aMule's REST API server, or build aMule from source with -DBUILD_AMULEAPI=YES and install it."
 msgstr "您要求启动时运行 amuleapi，但 amuleapi 程序无法运行， 请先安装包含 amule REST API 服务器的 包，或者使用 -DBUILD_AMULEAPI=YES 选项从源码构建 aMule 并安装它。"
+
+#: src/amule.cpp
+#, fuzzy
+msgid "Could not prepare the amuleweb EC token."
+msgstr "无法删除 amuleapi EC 令牌文件：%s"
+
+#: src/amule.cpp
+#, fuzzy, c-format
+msgid "Could not remove the amuleweb EC token file: %s"
+msgstr "无法删除 amuleapi EC 令牌文件：%s"
 
 #: src/amule.cpp
 #, c-format
@@ -873,8 +892,12 @@ msgid "ERROR: aMule daemon cannot be used when external connections are disabled
 msgstr "错误：当远程连接被禁用的时，aMule 服务程序无法使用。要启用远程连接，请使用普通的 aMule，或使用 --ec-config选项启动 amuled 或在文件 ~/aMule/amule.conf 中设置选项\"AcceptExternalConnections\"为1"
 
 #: src/amuled.cpp
-msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
-msgstr "错误：如果需要使用外部连接，必须设置一个可用的密码，aMule daemon不能在没有启用外部连接的情况下使用。要运行aMule daemon，你必须设置~/.aMule/amule.conf文件中的\"ECPassword\"字段，使它有一个合适的值。执行amuled --ce-config来设置这个密码。更多信息请访问https://amule-org.github.io/docs"
+msgid "ERROR: An EC password is required. Run amuled --ec-config to set it."
+msgstr ""
+
+#: src/amuled.cpp
+msgid "ERROR: Invalid ECPasswordVerifier in amule.conf. Run amuled --ec-config to set a new EC password."
+msgstr ""
 
 #: src/amuled.cpp
 msgid "amuled: OnInit - starting timer"
@@ -1291,6 +1314,10 @@ msgstr "*** CAPTCHA 验证失败；已无法再试。"
 msgid "All"
 msgstr "全部"
 
+#: src/amule-remote-gui.cpp
+msgid "The EC password changed on the daemon, but the saved client password could not be updated."
+msgstr ""
+
 #: src/amule-remote-gui.cpp src/muuli_wdr.cpp
 msgid "To allow a folder, add it to allowed-remote-dirs.dat in the daemon's configuration folder, one absolute path per line, then restart the daemon."
 msgstr "要允许一个文件夹，将它添加到 daemon 程序配置文件夹中的 allowed-remote-dirs.dat，每行一个绝对路径，然后重启 daemon。"
@@ -1300,8 +1327,14 @@ msgstr "要允许一个文件夹，将它添加到 daemon 程序配置文件夹�
 msgid "The daemon refused these folders because they are outside the folders it allows (configured on the daemon):%s"
 msgstr "daemon 程序拒绝了这些文件夹，因为它们不在它允许的文件夹中（在 daemon 上配置）：%s"
 
+#: src/amule-remote-gui.cpp src/ExternalConn.cpp
+#, fuzzy
+msgid "The EC password was not changed."
+msgstr "- TCP端口已更改。\n"
+
 #: src/amule-remote-gui.cpp
-msgid "The daemon could not apply the connection port changes."
+#, fuzzy
+msgid "The daemon could not apply the preference changes."
 msgstr "守护进程无法应用连接端口更改。"
 
 #: src/amule-remote-gui.cpp
@@ -2407,6 +2440,16 @@ msgid "External connections disabled due to empty password!"
 msgstr "密码未设置，已禁止远程连接！"
 
 #: src/ExternalConn.cpp
+#, fuzzy
+msgid "External connections disabled due to invalid ECPasswordVerifier!"
+msgstr "密码未设置，已禁止远程连接！"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "External connections disabled: could not prepare the EC token verifier."
+msgstr "配置文件中已禁止远程连接"
+
+#: src/ExternalConn.cpp
 #, c-format
 msgid "Remote clients cannot change folders: no folder is listed in %s"
 msgstr "远程客户端无法更改文件夹：%s 中未列出文件夹"
@@ -2429,12 +2472,21 @@ msgstr "由于未设置密码，远程连接已被拒绝！"
 
 #: src/ExternalConn.cpp
 #, c-format
+msgid "Too many failed connection attempts; try again in %d seconds."
+msgstr "失败的连接尝试过多；%d 秒后重试。"
+
+#: src/ExternalConn.cpp
+#, c-format
 msgid "Connecting client: %s %s"
 msgstr "正在连接客户端：%s %s"
 
 #: src/ExternalConn.cpp
 msgid "Unknown version"
 msgstr "未知版本"
+
+#: src/ExternalConn.cpp
+msgid "An EC client of version 3.3.0 or later is required."
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "Incorrect EC version ID, there might be binary incompatibility. Use core and remote from same snapshot."
@@ -2445,33 +2497,16 @@ msgid "You cannot connect to a release version from an arbitrary development sna
 msgstr "您无法从任意开发快照连接到发布版本！*sigh* 防止可能发生的崩溃"
 
 #: src/ExternalConn.cpp
+msgid "Invalid SRP handshake or EC verifier."
+msgstr ""
+
+#: src/ExternalConn.cpp
 msgid "Invalid protocol version."
 msgstr "非法协议版本。"
 
 #: src/ExternalConn.cpp
 msgid "Missing protocol version tag."
 msgstr "缺失协议版本标签。"
-
-#: src/ExternalConn.cpp
-#, c-format
-msgid "Too many failed connection attempts; try again in %d seconds."
-msgstr "失败的连接尝试过多；%d 秒后重试。"
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: invalid hash specified as EC password."
-msgstr "身份验证失败: 指定为 EC 密码的 MD5 哈希值无效。"
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: the client offered an encrypted External Connection but sent no usable key."
-msgstr "身份认证失败：客户端提供了加密的外部连接，但未发送可用密钥。"
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: this aMule requires an encrypted External Connection, and the client did not negotiate one."
-msgstr "身份认证失败：此 aMule 需要加密的外部连接，但客户端未协商。"
-
-#: src/ExternalConn.cpp
-msgid "Authentication failed: the client could not confirm the encrypted session."
-msgstr "身份认证失败：客户端无法确认加密会话。"
 
 #: src/ExternalConn.cpp
 msgid "Authentication failed: wrong password."
@@ -2635,9 +2670,37 @@ msgid "Client could not be swapped to that file."
 msgstr "无法交换客户端到那个文件。"
 
 #: src/ExternalConn.cpp
+msgid "Duplicate remote-control preference groups are not allowed."
+msgstr ""
+
+#: src/ExternalConn.cpp
+msgid "Only password-authenticated sessions may change the EC password."
+msgstr ""
+
+#: src/ExternalConn.cpp src/PrefsUnifiedDlg.cpp
+#, fuzzy
+msgid "Could not update EC password verifier."
+msgstr "无法保存 amuleapi 密码：%s"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "Could not apply preferences."
+msgstr "Kad 在首选项中被禁用。"
+
+#: src/ExternalConn.cpp
 #, c-format
 msgid "Could not save the amuleapi password: %s"
 msgstr "无法保存 amuleapi 密码：%s"
+
+#: src/ExternalConn.cpp
+#, fuzzy
+msgid "Could not update EC password verifier. The other preferences were saved."
+msgstr "密码已设置，启用远程连接。"
+
+#: src/ExternalConn.cpp
+#, c-format
+msgid "EC password changed by %s"
+msgstr ""
 
 #: src/ExternalConn.cpp
 msgid "One or more folders were outside the allowed remote directories and were left unchanged."
@@ -2937,10 +3000,6 @@ msgid "Print program version."
 msgstr "输出程序版本。"
 
 #: src/ExternalConnector.cpp
-msgid "Do not encrypt the External Connect session. Encryption is on by default whenever the remote aMule supports it; turning it off leaves everything after the login readable and modifiable by anyone on the path."
-msgstr "不加密外部连接会话。只要远程 aMule 支持加密，则默认启用加密；如禁用则该路径上的任何人都可读取和修改登录后的一切内容。"
-
-#: src/ExternalConnector.cpp
 msgid "Force ZLIB compression regardless of dialed-IP locality (useful when the server is reachable over a VPN tunnel that resolves to a LAN IP)."
 msgstr "强制使用 ZLIB 压缩，忽略目标 IP 的地域属性（适用于服务器可通过解析为局域网 IP 的 VPN 隧道访问场景）。"
 
@@ -2951,6 +3010,10 @@ msgstr "将所有控制台输出的副本附加到此日志文件（默认：<co
 #: src/ExternalConnector.cpp
 msgid "Do not write a log file; print to the console only."
 msgstr "不写入日志文件；只打印到控制台。"
+
+#: src/ExternalConnector.cpp
+msgid "The daemon verifier cannot supply a client password. Use -P or the password prompt.\n"
+msgstr ""
 
 #: src/FileDetailDialog.cpp
 msgid "File Details"
@@ -4087,6 +4150,11 @@ msgid "Invalid password, not a MD5 hash!"
 msgstr "密码无效，不是一个 MD5 哈希值！"
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
+#, fuzzy
+msgid "Could not generate SRP credentials."
+msgstr "无法删除磁盘上的“%s”。"
+
+#: src/libs/ec/cpp/RemoteConnect.cpp
 #, c-format
 msgid "Could not resolve %s to an IPv4 address."
 msgstr "无法将 %s 解析为 IPv4 地址。"
@@ -4104,16 +4172,13 @@ msgid "EC connection failed. Empty reply."
 msgstr "远程连接失败，回复为空。"
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "Could not set up connection encryption. Connection closed."
-msgstr "无法设置连接加密。连接关闭。"
-
-#: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "The core did not negotiate an encrypted connection. It may be an older aMule without encryption support, or the connection may have been tampered with. To connect without encryption, turn it off in the connection settings."
-msgstr "核心未协商加密连接。它可能是没有加密支持的较老的 aMule，或者该连接可能已遭篡改。要进行不加密连接，在连接设置中关闭它。"
-
-#: src/libs/ec/cpp/RemoteConnect.cpp
-msgid "External Connection: Bad reply, handshake failed. Connection closed."
+#, fuzzy
+msgid "Invalid SRP handshake or unsupported profile. Connection closed."
 msgstr "远程连接：错误回应，握手失败。连接已经关闭。"
+
+#: src/libs/ec/cpp/RemoteConnect.cpp
+msgid "An EC daemon of version 3.3.0 or later is required."
+msgstr ""
 
 #: src/libs/ec/cpp/RemoteConnect.cpp
 msgid "External Connection: the daemon failed to prove it knows the password. Connection closed."
@@ -5778,10 +5843,6 @@ msgstr "为远程连接端口启用 UPnP"
 #: src/muuli_wdr.cpp src/utils/wxCas/src/wxcasprefs.cpp
 msgid "Password"
 msgstr "密码"
-
-#: src/muuli_wdr.cpp
-msgid "Require encrypted connections (rejects clients that cannot encrypt)"
-msgstr "要求加密的连接 （拒绝不能加密的客户端）"
 
 #: src/muuli_wdr.cpp
 msgid "Folders remote clients may use"
@@ -8615,6 +8676,16 @@ msgid "Crypt overhead (UDP): %s"
 msgstr "加密开销 (UDP): %s"
 
 #: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "LowID to LowID Data (Session): %s"
+msgstr "本次下载 (总共): %s"
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "IPv6 Data (Session): %s"
+msgstr "本次上传 (全部): %s"
+
+#: src/Statistics.cpp
 #, c-format
 msgid "Active Uploads: %s"
 msgstr "活动上传: %s"
@@ -8713,6 +8784,31 @@ msgstr "平均连接数 (估计): %g"
 #, c-format
 msgid "Peak Connections (estimate): %i"
 msgstr "最高连接（估计值）： %i"
+
+#: src/Statistics.cpp
+#, fuzzy
+msgid "NAT Traversal (Session)"
+msgstr "NAT穿透（uTP）"
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "Server Hole Punches: %s"
+msgstr "服务器开销 (数据包): %s"
+
+#: src/Statistics.cpp
+#, c-format
+msgid "Successful Server Hole Punches: %s"
+msgstr ""
+
+#: src/Statistics.cpp
+#, c-format
+msgid "Lugdunum Callbacks: %s"
+msgstr ""
+
+#: src/Statistics.cpp
+#, fuzzy, c-format
+msgid "Successful Lugdunum Callbacks: %s"
+msgstr "成功更新 %s"
 
 #: src/Statistics.cpp
 #, c-format
@@ -10386,11 +10482,15 @@ msgid "Could not generate ECPasswordVerifier; external connections are disabled.
 msgstr "密码已设置，启用远程连接。"
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
 msgid "EC password change rejected: could not persist ECPasswordVerifier. The active credential is unchanged."
 msgstr ""
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
-msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgid "EC password change rejected: could not store ECPasswordVerifier. The active credential is unchanged."
 msgstr ""
 
 #: src/libs/ec/cpp/ECSRPConfig.cpp
@@ -10408,6 +10508,33 @@ msgstr ""
 #: src/libs/ec/cpp/ECSRPConfig.cpp
 msgid "Migrating a changed legacy ECPassword after downgrade; the previous verifier no longer authenticates this run."
 msgstr ""
+
+#~ msgid "ERROR: A valid password is required to use external connections, and aMule daemon cannot be used without external connections. To run aMule daemon, you must set the \"ECPassword\" field in the file ~/.aMule/amule.conf with an appropriate value. Execute amuled with the flag --ec-config to set the password. More information can be found at https://amule-org.github.io/docs"
+#~ msgstr "错误：如果需要使用外部连接，必须设置一个可用的密码，aMule daemon不能在没有启用外部连接的情况下使用。要运行aMule daemon，你必须设置~/.aMule/amule.conf文件中的\"ECPassword\"字段，使它有一个合适的值。执行amuled --ce-config来设置这个密码。更多信息请访问https://amule-org.github.io/docs"
+
+#~ msgid "Authentication failed: invalid hash specified as EC password."
+#~ msgstr "身份验证失败: 指定为 EC 密码的 MD5 哈希值无效。"
+
+#~ msgid "Authentication failed: the client offered an encrypted External Connection but sent no usable key."
+#~ msgstr "身份认证失败：客户端提供了加密的外部连接，但未发送可用密钥。"
+
+#~ msgid "Authentication failed: this aMule requires an encrypted External Connection, and the client did not negotiate one."
+#~ msgstr "身份认证失败：此 aMule 需要加密的外部连接，但客户端未协商。"
+
+#~ msgid "Authentication failed: the client could not confirm the encrypted session."
+#~ msgstr "身份认证失败：客户端无法确认加密会话。"
+
+#~ msgid "Do not encrypt the External Connect session. Encryption is on by default whenever the remote aMule supports it; turning it off leaves everything after the login readable and modifiable by anyone on the path."
+#~ msgstr "不加密外部连接会话。只要远程 aMule 支持加密，则默认启用加密；如禁用则该路径上的任何人都可读取和修改登录后的一切内容。"
+
+#~ msgid "Could not set up connection encryption. Connection closed."
+#~ msgstr "无法设置连接加密。连接关闭。"
+
+#~ msgid "The core did not negotiate an encrypted connection. It may be an older aMule without encryption support, or the connection may have been tampered with. To connect without encryption, turn it off in the connection settings."
+#~ msgstr "核心未协商加密连接。它可能是没有加密支持的较老的 aMule，或者该连接可能已遭篡改。要进行不加密连接，在连接设置中关闭它。"
+
+#~ msgid "Require encrypted connections (rejects clients that cannot encrypt)"
+#~ msgstr "要求加密的连接 （拒绝不能加密的客户端）"
 
 #~ msgid "Encrypt the connection (recommended)"
 #~ msgstr "加密连接（推荐）"
