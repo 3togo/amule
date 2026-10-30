@@ -1878,6 +1878,14 @@ msgstr "Benutzer %s (%u) verweigert den Zugriff auf die Liste freigegebener Verz
 msgid "File Comments"
 msgstr "Dateikommentare"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Kommentar/Bewertung abgeben"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Kommentar/Bewertung ändern"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Benutzername"
@@ -8456,14 +8464,6 @@ msgstr "Verzeichnispfad"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Freigaben"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Kommentar/Bewertung abgeben"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Kommentar/Bewertung ändern"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

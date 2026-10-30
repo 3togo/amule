@@ -1867,6 +1867,14 @@ msgstr "L'utente %s (%u) ha negato l'accesso alla lista dei file e directory con
 msgid "File Comments"
 msgstr "Commenti file"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Aggiungi commento/giudizio"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Modifica commento/giudizio"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Nome utente"
@@ -8333,14 +8341,6 @@ msgstr "Percorso directory"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "File condivisi"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Aggiungi commento/giudizio"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Modifica commento/giudizio"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

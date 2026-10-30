@@ -1864,6 +1864,14 @@ msgstr "Uživatel %s (%u) odmítl přístup k seznamu sdílených adresářů/so
 msgid "File Comments"
 msgstr "Komentáře k souboru"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Přidat komentář nebo hodnocení"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Upravit komentář nebo hodnocení"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Uživatelské jméno"
@@ -8372,14 +8380,6 @@ msgstr "Cesta k adresáři"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Sdílené soubory"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Přidat komentář nebo hodnocení"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Upravit komentář nebo hodnocení"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

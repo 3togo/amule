@@ -1873,6 +1873,14 @@ msgstr "O usuario %s (%u) denegou o acceso á lista de ficheiros e directorios c
 msgid "File Comments"
 msgstr "Comentarios do ficheiro"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Engadir Comentario/Calificación"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Editar Comentario/Calificación"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Nome de usuario"
@@ -8394,14 +8402,6 @@ msgstr "Ruta do directorio"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Ficheiros compartidos"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Engadir Comentario/Calificación"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Editar Comentario/Calificación"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

@@ -1879,6 +1879,14 @@ msgstr "Uporabnik %s (%u) je zavrnil dostop do seznama deljenih datotek/map"
 msgid "File Comments"
 msgstr "Komentarji o datoteki"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Dodaj komentar/oceno"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Uredi komentar/oceno"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Uporabniško ime"
@@ -8473,14 +8481,6 @@ msgstr "Pot mape"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Deljene datoteke"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Dodaj komentar/oceno"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Uredi komentar/oceno"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

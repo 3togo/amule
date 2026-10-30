@@ -1871,6 +1871,14 @@ msgstr "O utilizador %s (%u) negou acesso à lista de pastas/ficheiros partilhad
 msgid "File Comments"
 msgstr "Comentários do ficheiro"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Adicionar Comentário/Avaliação"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Editar Comentário/Avaliação"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Nome de Utilizador"
@@ -8394,14 +8402,6 @@ msgstr "Caminho da Pasta"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Ficheiros Partilhados"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Adicionar Comentário/Avaliação"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Editar Comentário/Avaliação"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

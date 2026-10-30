@@ -1857,6 +1857,14 @@ msgstr "Bruger %s (%u) nægtede adgang til liste over delte mapper/filer"
 msgid "File Comments"
 msgstr "Fil Kommentarer"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Tilføj kommentar/bedømmelse"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Rediger Kommentar/Bedømmelse"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Brugernavn"
@@ -8370,14 +8378,6 @@ msgstr "Mappe sti"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Delte Filer"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Tilføj kommentar/bedømmelse"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Rediger Kommentar/Bedømmelse"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

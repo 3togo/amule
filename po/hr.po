@@ -1846,6 +1846,14 @@ msgstr ""
 msgid "File Comments"
 msgstr "Komentari fajla"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr ""
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr ""
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Ime korisnika"
@@ -8379,14 +8387,6 @@ msgstr ""
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Dijeljeni fajlovi"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr ""
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr ""
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

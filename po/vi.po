@@ -1824,6 +1824,14 @@ msgstr "Người dùng %s (%u) đã từ chối quyền truy cập vào danh sá
 msgid "File Comments"
 msgstr "Bình luận tệp"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Thêm bình luận/đánh giá"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Chỉnh sửa bình luận/đánh giá"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Tên người dùng"
@@ -8267,14 +8275,6 @@ msgstr "Đường dẫn thư mục"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Tệp chia sẻ"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Thêm bình luận/đánh giá"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Chỉnh sửa bình luận/đánh giá"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

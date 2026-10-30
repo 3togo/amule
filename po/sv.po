@@ -1851,6 +1851,14 @@ msgstr "Användare %s (%u) nekade tillgång till listan för delade mappar/filer
 msgid "File Comments"
 msgstr "Filkommentarer"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Lägg till Kommentar/Betyg"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Redigera Kommentar/Betyg"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Användarnamn"
@@ -8341,14 +8349,6 @@ msgstr "Mappsökväg"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Utdelade filer"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Lägg till Kommentar/Betyg"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Redigera Kommentar/Betyg"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

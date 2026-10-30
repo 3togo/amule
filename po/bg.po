@@ -1856,6 +1856,14 @@ msgstr "Потребител %s (%u) отказа достъп до списък
 msgid "File Comments"
 msgstr "Коментари за файла"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Добавяне на коментар/оценка"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Редактиране на коментар/оценка"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Потребителско име"
@@ -8378,14 +8386,6 @@ msgstr "Път до директорията"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Споделени файлове"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Добавяне на коментар/оценка"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Редактиране на коментар/оценка"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

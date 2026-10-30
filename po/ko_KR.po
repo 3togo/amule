@@ -1858,6 +1858,14 @@ msgstr "사용자 %s (%u)는 공유파일이나 공유폴더 목록에 접근하
 msgid "File Comments"
 msgstr "파일 의견"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "의견/등급 추가"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "의견/등급 편집"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "사용자이름"
@@ -8375,14 +8383,6 @@ msgstr "폴더 경로"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "공유 파일"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "의견/등급 추가"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "의견/등급 편집"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

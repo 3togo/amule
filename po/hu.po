@@ -1847,6 +1847,14 @@ msgstr "A(z) %s (%u) felhasználó megtagadta a megosztott könytár/fájl list�
 msgid "File Comments"
 msgstr "Fájl megjegyzés"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Megjegyzés/Értékelés hozzáadása"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Megjegyzés/Értékelés szerkesztése"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Felhasználói név"
@@ -8334,14 +8342,6 @@ msgstr "Könyvtár útvonal"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Megosztott fájlok"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Megjegyzés/Értékelés hozzáadása"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Megjegyzés/Értékelés szerkesztése"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

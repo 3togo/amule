@@ -1851,6 +1851,14 @@ msgstr "Kullanıcı %s (%u)nın paylaşılmış dizin/dosyalara erişimi reddedi
 msgid "File Comments"
 msgstr "Dosya Yorumları"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Yorum/Puanlama Ekle"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Yorum/Puanlama Düzenle"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Kullanıcı Adı"
@@ -8340,14 +8348,6 @@ msgstr "Dizin Konumu"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Paylaşılan Dosyalar"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Yorum/Puanlama Ekle"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Yorum/Puanlama Düzenle"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

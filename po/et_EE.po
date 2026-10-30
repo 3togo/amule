@@ -1858,6 +1858,14 @@ msgstr "Kasutaja %s (%u) keelas ligipääsu jagatud kataloogide/failide nimekirj
 msgid "File Comments"
 msgstr "Faili kommentaarid"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Lisa Kommentaar/Hinnang"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Muuda Kommentaari/Hinnangut"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Kasutajanimi"
@@ -8376,14 +8384,6 @@ msgstr "Kataloogi asukoht"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Jagatud failid"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Lisa Kommentaar/Hinnang"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Muuda Kommentaari/Hinnangut"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

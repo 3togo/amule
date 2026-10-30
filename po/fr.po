@@ -1870,6 +1870,14 @@ msgstr "L'utilisateur %s (%u) a refusé l'accès à la liste des répertoires/fi
 msgid "File Comments"
 msgstr "Commentaires sur le fichier"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Ajouter un Commentaire/Note"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Éditer un Commentaire/Note"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Nom d'utilisateur"
@@ -8346,14 +8354,6 @@ msgstr "Chemin du répertoire"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Fichiers partagés"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Ajouter un Commentaire/Note"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Éditer un Commentaire/Note"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

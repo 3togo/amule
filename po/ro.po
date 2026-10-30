@@ -1862,6 +1862,14 @@ msgstr "Utilizatorul %s (%u) interzice accesul la lista directoarelor/fișierelo
 msgid "File Comments"
 msgstr "Comentarii fișier"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Adaugă comentariu/evaluare"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Editare comentariu/evaluare"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Utilizator"
@@ -8430,14 +8438,6 @@ msgstr "Cale director"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Fișiere partajate"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Adaugă comentariu/evaluare"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Editare comentariu/evaluare"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

@@ -1859,6 +1859,14 @@ msgstr "Ο χρήστης %s (%u) αρνήθηκε πρόσβαση στη λί�
 msgid "File Comments"
 msgstr "Σχόλια αρχείου"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Προσθήκη σχολίου/Αξιολόγησης"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Επεξεργασία σχολίου/Αξιολόγησης"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Όνομα Χρήστη"
@@ -8381,14 +8389,6 @@ msgstr "Μονοπάτι καταλόγου"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Κοινόχρηστα αρχεία"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Προσθήκη σχολίου/Αξιολόγησης"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Επεξεργασία σχολίου/Αξιολόγησης"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

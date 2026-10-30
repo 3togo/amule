@@ -1870,6 +1870,14 @@ msgstr "Naudotojas %s (%u) nesuteikė prieigos prie dalinamų aplankų/failų s�
 msgid "File Comments"
 msgstr "Failo komentarai"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Įdėti komentarą/įvertinimą"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Keisti komentarą/įvertinimą"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Vardas"
@@ -8429,14 +8437,6 @@ msgstr "Kelias"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Dalinami failai"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Įdėti komentarą/įvertinimą"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Keisti komentarą/įvertinimą"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-29 00:16+0000\n"
+"PO-Revision-Date: 2026-10-29 21:57+0000\n"
 "Last-Translator: Radist Morse <radist.morse@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
 "Language: ru\n"
@@ -1301,7 +1301,7 @@ msgstr "Все"
 
 #: src/amule-remote-gui.cpp src/muuli_wdr.cpp
 msgid "To allow a folder, add it to allowed-remote-dirs.dat in the daemon's configuration folder, one absolute path per line, then restart the daemon."
-msgstr ""
+msgstr "Чтобы разрешить папку, добавьте её в allowed-remote-dirs.dat в каталоге конфигурации демона — по одному абсолютному пути на строку — и перезапустите демон."
 
 #: src/amule-remote-gui.cpp
 #, c-format
@@ -1875,6 +1875,14 @@ msgstr "Пользователь %s (%u) отказал в доступе к с�
 msgid "File Comments"
 msgstr "Комментарии файла"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "Добавить комментарий/оценку"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "Изменить комментарий/оценку"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "Имя пользователя"
@@ -2425,7 +2433,7 @@ msgstr "Внешние подключения отключены из-за от�
 #: src/ExternalConn.cpp
 #, c-format
 msgid "Remote clients cannot change folders: no folder is listed in %s"
-msgstr ""
+msgstr "Удалённые клиенты не могут изменять папки: в %s не указано ни одной папки"
 
 #: src/ExternalConn.cpp
 msgid "External connections disabled in config file"
@@ -2690,7 +2698,7 @@ msgstr "Извлечение метаданных медиафайлов отк�
 
 #: src/ExternalConn.cpp
 msgid "This aMule has no media helper (amule-media-probe)"
-msgstr ""
+msgstr "В этом aMule нет помощника для работы с медиа (amule-media-probe)"
 
 #: src/ExternalConn.cpp
 msgid "File is not eligible for media metadata extraction (not an audio/video file, or an incomplete download)"
@@ -4125,7 +4133,7 @@ msgstr "ОШИБКА: не удалось прослушать порт TCP."
 
 #: src/MediaProbe.cpp
 msgid "Media metadata: bundled amule-media-probe helper is unavailable."
-msgstr ""
+msgstr "Метаданные медиафайла: встроенный помощник amule-media-probe недоступен."
 
 #: src/MediaProbe.cpp
 #, c-format
@@ -4133,14 +4141,14 @@ msgid "Media metadata: %s is gone, nothing to extract"
 msgstr "Метаданные медиафайла: %s отсутствует, извлекать нечего"
 
 #: src/MediaProbe.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Extracting media metadata: %s"
-msgstr "Извлечение метаданных медиафайла через ffprobe: %s"
+msgstr "Извлечение метаданных медиафайла: %s"
 
 #: src/MediaProbe.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Media metadata: parser failed for %s"
-msgstr "Метаданные медиафайла: ffprobe завершился с ошибкой (код %d) для %s"
+msgstr "Метаданные медиафайла: парсер завершился с ошибкой для %s"
 
 #: src/MediaProbeThread.cpp
 #, c-format
@@ -5256,11 +5264,11 @@ msgstr "Высокий приоритет серверов, добавленны
 
 #: src/muuli_wdr.cpp
 msgid "Publish shared files faster on servers that allow it"
-msgstr ""
+msgstr "Публиковать общие файлы быстрее на серверах, которые это позволяют"
 
 #: src/muuli_wdr.cpp
 msgid "Follow the publication pace that the server advertises. Other servers get the standard pace."
-msgstr ""
+msgstr "Следовать темпу публикации, который объявляет сервер. Остальные серверы получают стандартный темп."
 
 #: src/muuli_wdr.cpp
 msgid "Add files to download in pause mode"
@@ -5413,7 +5421,7 @@ msgstr "Извлекать длительность, битрейт и коде�
 
 #: src/muuli_wdr.cpp
 msgid "When enabled, aMule uses its bundled MediaInfo parser to extract metadata from shared media files."
-msgstr ""
+msgstr "Если включено, aMule использует встроенный парсер MediaInfo для извлечения метаданных из общих медиафайлов."
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6855,7 +6863,7 @@ msgstr "нет доступных опций"
 
 #: src/Preferences.cpp
 msgid "Media metadata: FFProbePath is obsolete; aMule now uses its bundled MediaInfo parser. Removing the old setting."
-msgstr ""
+msgstr "Метаданные медиафайла: параметр FFProbePath устарел; теперь aMule использует встроенный парсер MediaInfo. Удаление устаревшего параметра."
 
 #: src/Preferences.cpp
 msgid "Invalid path mapping found, skipping"
@@ -6986,7 +6994,7 @@ msgstr "Не удалось передать данные из Cfg к Widget с 
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "This aMule has no media helper (amule-media-probe), so it cannot extract media metadata."
-msgstr ""
+msgstr "В этом aMule нет помощника для работы с медиа (amule-media-probe), поэтому он не может извлекать метаданные медиафайлов."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The type of proxy you are connecting to"
@@ -7192,15 +7200,14 @@ msgid "The aMule web server is deprecated. Consider running the aMule API instea
 msgstr "Веб-сервер aMule устарел. Рассмотрите возможность использования aMule API вместо него."
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid ""
 "Your server list sources are empty.\n"
 "Please add at least one URL of a valid server.met file.\n"
 "Click the \"Edit sources...\" button next to this checkbox to add one."
 msgstr ""
-"Ваш список автообновления серверов пуст.\n"
-"Пожалуйста, внесите в список хотя бы один адрес, указывающий на верный server.met.\n"
-"Щёлкните на кнопке «Список», чтобы ввести адрес."
+"Источники списка серверов пусты.\n"
+"Пожалуйста, добавьте хотя бы один URL-адрес действительного файла server.met.\n"
+"Нажмите кнопку «Изменить источники…» рядом с этим флажком, чтобы добавить его."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Temporary files"
@@ -8299,7 +8306,7 @@ msgstr "Извлечение метаданных медиафайлов отк�
 
 #: src/SharedFileList.cpp
 msgid "This aMule has no media helper (amule-media-probe), so it cannot re-extract media metadata."
-msgstr ""
+msgstr "В этом aMule нет помощника для работы с медиа (amule-media-probe), поэтому он не может повторно извлекать метаданные медиафайлов."
 
 #: src/SharedFileList.cpp
 #, c-format
@@ -8399,14 +8406,6 @@ msgstr "Каталог"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "Общие файлы"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "Добавить комментарий/оценку"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "Изменить комментарий/оценку"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

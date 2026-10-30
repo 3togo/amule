@@ -1847,6 +1847,14 @@ msgstr "ユーザ %s（%u）は共有ファイルまたはディレクトリ・�
 msgid "File Comments"
 msgstr "ファイル・コメント"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "コメントおよび評価を追加する"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "コメントおよび評価を編集する"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "ユーザ名"
@@ -8332,14 +8340,6 @@ msgstr "ディレクトリパス"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "共有ファイル"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "コメントおよび評価を追加する"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "コメントおよび評価を編集する"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"

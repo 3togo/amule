@@ -1855,6 +1855,14 @@ msgstr "使用者 %s (%u) 拒絕傳送分享檔案/目錄清單"
 msgid "File Comments"
 msgstr "檔案註解"
 
+#: src/CommentDialog.cpp
+msgid "Add Comment/Rating"
+msgstr "加入註解/評價"
+
+#: src/CommentDialog.cpp
+msgid "Edit Comment/Rating"
+msgstr "編輯註解/評價"
+
 #: src/CommentDialogLst.cpp src/FriendListCtrl.cpp src/muuli_wdr.cpp
 msgid "Username"
 msgstr "使用者名稱"
@@ -8344,14 +8352,6 @@ msgstr "所在目錄"
 #: src/SharedFilesCtrl.cpp src/Statistics.cpp
 msgid "Shared Files"
 msgstr "分享檔案"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Add Comment/Rating"
-msgstr "加入註解/評價"
-
-#: src/SharedFilesCtrl.cpp
-msgid "Edit Comment/Rating"
-msgstr "編輯註解/評價"
 
 #: src/SharedFilesCtrl.cpp
 msgid "Rename"
