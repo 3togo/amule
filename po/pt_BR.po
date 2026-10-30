@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-29 21:57+0000\n"
+"PO-Revision-Date: 2026-10-30 18:02+0000\n"
 "Last-Translator: Marcelo Jimenez <mroberto@users.sourceforge.com>\n"
 "Language-Team: Português (Brasileiro) <pt@li.org>\n"
 "Language: pt_BR\n"
@@ -3052,65 +3052,61 @@ msgstr "ERRO: Falha ao mostrar '%s' no gerenciador de arquivos."
 
 #: src/FilterSelectionSummary.h
 msgid "The message filter is off; its selected rules are saved."
-msgstr ""
+msgstr "O filtro de mensagens está desligado; as regras selecionadas continuam salvas."
 
 #: src/FilterSelectionSummary.h
-#, fuzzy
 msgid "All incoming messages outside current chats will be discarded."
-msgstr "Filtrar mensagens recebidas (exceto o chat atual):"
+msgstr "Todas as mensagens recebidas fora dos chats atuais serão descartadas."
 
 #: src/FilterSelectionSummary.h
-#, fuzzy
 msgid "Messages from people not on your friend list will be discarded."
-msgstr "Filtrar mensagens de pessoas que não estão na sua lista de amigos"
+msgstr "Mensagens de pessoas que não estão na sua lista de amigos serão descartadas."
 
 #: src/FilterSelectionSummary.h
-#, fuzzy
 msgid "Messages from unknown clients will be discarded."
-msgstr "Filtrar mensagens de clientes desconhecidos"
+msgstr "Mensagens de clientes desconhecidos serão descartadas."
 
 #: src/FilterSelectionSummary.h
 #, c-format
 msgid "Messages containing any of these terms will be discarded (ignoring case): %s."
-msgstr ""
+msgstr "Mensagens que contenham qualquer um destes termos serão descartadas (sem diferenciar maiúsculas de minúsculas): %s."
 
 #: src/FilterSelectionSummary.h
 msgid "No messages will be discarded by the message filter: the word list is empty."
-msgstr ""
+msgstr "Nenhuma mensagem será descartada pelo filtro de mensagens: a lista de palavras está vazia."
 
 #: src/FilterSelectionSummary.h
 msgid "No messages will be discarded by the message filter: select at least one option."
-msgstr ""
+msgstr "Nenhuma mensagem será descartada pelo filtro de mensagens: selecione pelo menos uma opção."
 
 #: src/FilterSelectionSummary.h
 msgid "Current chats are exempt from these rules."
-msgstr ""
+msgstr "Os chats atuais não estão sujeitos a estas regras."
 
 #: src/FilterSelectionSummary.h
 msgid "Advanced spam filtering for non-friends is also enabled."
-msgstr ""
+msgstr "A filtragem avançada de spam para quem não é amigo também está habilitada."
 
 #: src/FilterSelectionSummary.h
 msgid "First messages from non-friends require a CAPTCHA."
-msgstr ""
+msgstr "As primeiras mensagens de quem não é amigo exigem um CAPTCHA."
 
 #: src/FilterSelectionSummary.h
-#, fuzzy
 msgid "Received message text will also be written to the log."
-msgstr "Mostrar mensagens recebidas no log"
+msgstr "O texto das mensagens recebidas também será gravado no log."
 
 #: src/FilterSelectionSummary.h
 msgid "File comment filtering is off."
-msgstr ""
+msgstr "A filtragem de comentários de arquivos está desligada."
 
 #: src/FilterSelectionSummary.h
 msgid "No file comments will be hidden: the word list is empty."
-msgstr ""
+msgstr "Nenhum comentário de arquivo será ocultado: a lista de palavras está vazia."
 
 #: src/FilterSelectionSummary.h
 #, c-format
 msgid "File comments containing any of these literal terms will be hidden (ignoring case): %s."
-msgstr ""
+msgstr "Comentários de arquivos que contenham qualquer um destes termos literais serão ocultados (sem diferenciar maiúsculas de minúsculas): %s."
 
 #: src/FirstRunWizard.cpp
 msgid "Mobile / 4G-5G (20 / 5 Mbit)"
@@ -6226,9 +6222,8 @@ msgid "Check for a newer GeoIP database at startup and every week while aMule is
 msgstr "Verificar se há um banco de dados GeoIP mais recente ao iniciar e semanalmente enquanto o aMule estiver em execução."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Enable incoming message filtering (except current chat):"
-msgstr "Filtrar mensagens recebidas (exceto o chat atual):"
+msgstr "Habilitar a filtragem de mensagens recebidas (exceto o chat atual):"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6236,6 +6231,9 @@ msgid ""
 "Turning this off keeps your selected options and word list.\n"
 "Filtered messages are discarded without opening a chat or replying to the sender."
 msgstr ""
+"Habilita as opções de filtro abaixo. Selecione pelo menos uma opção para filtrar mensagens.\n"
+"Desligar esta opção mantém as opções selecionadas e a lista de palavras.\n"
+"As mensagens filtradas são descartadas sem abrir um chat nem responder ao remetente."
 
 #: src/muuli_wdr.cpp
 msgid "Filter all messages"
@@ -6259,6 +6257,9 @@ msgid ""
 "Terms match anywhere in a message: dog matches hotdog and black dog spotted.\n"
 "Wildcards are not supported. A * is literal, except that a word list of exactly * blocks every message."
 msgstr ""
+"Descarta mensagens de chat que contenham qualquer termo da lista separada por vírgulas. A correspondência não diferencia maiúsculas de minúsculas e ignora os espaços ao redor de cada termo.\n"
+"Os termos correspondem em qualquer parte da mensagem: gato corresponde a gatinho e a vi um gato preto.\n"
+"Caracteres curinga não são suportados. Um * é literal, exceto que uma lista de palavras composta apenas por * bloqueia todas as mensagens."
 
 #: src/muuli_wdr.cpp
 msgid "Enable advanced spam filter"
@@ -6281,14 +6282,12 @@ msgid "Show received messages in the log"
 msgstr "Mostrar mensagens recebidas no log"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "File comments"
-msgstr "Comentários do arquivo"
+msgstr "Comentários de arquivos"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Filter file comments containing (use ',' as separator):"
-msgstr "Filtrar comentários contendo (use ',' como separador):"
+msgstr "Filtrar comentários de arquivos contendo (use ',' como separador):"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6296,11 +6295,13 @@ msgid ""
 "Matching ignores case and spaces around each term. Terms match anywhere in a comment: dog matches hotdog and black dog spotted.\n"
 "Wildcards are not supported; * is matched literally."
 msgstr ""
+"Oculta comentários de arquivos de outros usuários que contenham qualquer termo da lista separada por vírgulas. Isto não filtra mensagens de chat.\n"
+"A correspondência não diferencia maiúsculas de minúsculas e ignora os espaços ao redor de cada termo. Os termos correspondem em qualquer parte do comentário: gato corresponde a gatinho e a vi um gato preto.\n"
+"Caracteres curinga não são suportados; o * é tratado literalmente."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "With these settings"
-msgstr "Lembrar essas definições"
+msgstr "Com estas configurações"
 
 #: src/muuli_wdr.cpp
 msgid "Enable Proxy"
@@ -6357,10 +6358,6 @@ msgstr "Fazer login no aMule remoto"
 #: src/muuli_wdr.cpp
 msgid "Remember those settings"
 msgstr "Lembrar essas definições"
-
-#: src/muuli_wdr.cpp
-msgid "Encrypt the connection (recommended)"
-msgstr "Criptografar a conexão (recomendado)"
 
 #: src/muuli_wdr.cpp
 msgid "Force ZLIB compression"
@@ -10382,6 +10379,46 @@ msgstr "O Kad não conseguiu carregar seu índice salvo. Os arquivos de índice 
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr "O Kad não conseguiu salvar um índice. A cópia anterior desse arquivo foi preservada."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Could not remove legacy ECPassword; cleanup will be retried on restart."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Could not persist ECPasswordVerifier; using the legacy ECPassword in memory for this run. Migration will be retried on restart."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+#, fuzzy
+msgid "Could not generate ECPasswordVerifier; external connections are disabled."
+msgstr "Senha definida e conexões externas habilitadas."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "EC password change rejected: could not persist ECPasswordVerifier. The active credential is unchanged."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "ECPassword contains an invalid or empty-password digest. Run amuled --ec-config to set a new EC password."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Invalid or unsupported ECPasswordVerifier; refusing external connections."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Could not compare legacy ECPassword with ECPasswordVerifier; refusing external connections."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Migrating a changed legacy ECPassword after downgrade; the previous verifier no longer authenticates this run."
+msgstr ""
+
+#~ msgid "Encrypt the connection (recommended)"
+#~ msgstr "Criptografar a conexão (recomendado)"
 
 #~ msgid "add here the words amule should filter and block messages including it"
 #~ msgstr "adicione aqui as palavras que o amule deve filtrar e bloquear nas mensagens"

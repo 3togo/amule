@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: aMule\n"
 "Report-Msgid-Bugs-To: https://github.com/amule-org/amule/issues\n"
 "POT-Creation-Date: 2026-10-09 12:39+0000\n"
-"PO-Revision-Date: 2026-10-29 00:16+0000\n"
+"PO-Revision-Date: 2026-10-30 18:23+0000\n"
 "Last-Translator: minterior <minterior@gmail.com>\n"
 "Language-Team: Català\n"
 "Language: ca\n"
@@ -1294,7 +1294,7 @@ msgstr "Tots"
 
 #: src/amule-remote-gui.cpp src/muuli_wdr.cpp
 msgid "To allow a folder, add it to allowed-remote-dirs.dat in the daemon's configuration folder, one absolute path per line, then restart the daemon."
-msgstr ""
+msgstr "Per permetre una carpeta, afegiu-la a allowed-remote-dirs.dat a la carpeta de configuració del dimoni, un camí absolut per línia, i després reinicieu el dimoni."
 
 #: src/amule-remote-gui.cpp
 #, c-format
@@ -2410,7 +2410,7 @@ msgstr "Les connexions externes han estat inhabilitades per manca d'una contrase
 #: src/ExternalConn.cpp
 #, c-format
 msgid "Remote clients cannot change folders: no folder is listed in %s"
-msgstr ""
+msgstr "Els clients remots no poden canviar les carpetes: no hi ha cap carpeta a %s"
 
 #: src/ExternalConn.cpp
 msgid "External connections disabled in config file"
@@ -2674,7 +2674,7 @@ msgstr "L'extracció de metadades multimèdia està desactivada a les preferènc
 
 #: src/ExternalConn.cpp
 msgid "This aMule has no media helper (amule-media-probe)"
-msgstr ""
+msgstr "Aquest aMule no té el programa auxiliar multimèdia (amule-media-probe)"
 
 #: src/ExternalConn.cpp
 msgid "File is not eligible for media metadata extraction (not an audio/video file, or an incomplete download)"
@@ -3049,65 +3049,61 @@ msgstr "ERROR: no s'ha pogut mostrar «%s» al gestor de fitxers."
 
 #: src/FilterSelectionSummary.h
 msgid "The message filter is off; its selected rules are saved."
-msgstr ""
+msgstr "El filtre de missatges està desactivat; se'n conserven les regles seleccionades."
 
 #: src/FilterSelectionSummary.h
-#, fuzzy
 msgid "All incoming messages outside current chats will be discarded."
-msgstr "Filtra els missatges entrants (excepte el xat actual):"
+msgstr "Es descartaran tots els missatges entrants de fora dels xats actuals."
 
 #: src/FilterSelectionSummary.h
-#, fuzzy
 msgid "Messages from people not on your friend list will be discarded."
-msgstr "Filtra els missatges de la gent que no és a la llista d'amics"
+msgstr "Es descartaran els missatges de la gent que no és a la vostra llista d'amics."
 
 #: src/FilterSelectionSummary.h
-#, fuzzy
 msgid "Messages from unknown clients will be discarded."
-msgstr "Filtra els missatges dels clients desconeguts"
+msgstr "Es descartaran els missatges dels clients desconeguts."
 
 #: src/FilterSelectionSummary.h
 #, c-format
 msgid "Messages containing any of these terms will be discarded (ignoring case): %s."
-msgstr ""
+msgstr "Es descartaran els missatges que continguin qualsevol d'aquests termes (sense distingir entre majúscules i minúscules): %s."
 
 #: src/FilterSelectionSummary.h
 msgid "No messages will be discarded by the message filter: the word list is empty."
-msgstr ""
+msgstr "El filtre de missatges no descartarà cap missatge: la llista de paraules és buida."
 
 #: src/FilterSelectionSummary.h
 msgid "No messages will be discarded by the message filter: select at least one option."
-msgstr ""
+msgstr "El filtre de missatges no descartarà cap missatge: seleccioneu almenys una opció."
 
 #: src/FilterSelectionSummary.h
 msgid "Current chats are exempt from these rules."
-msgstr ""
+msgstr "Els xats actuals queden exempts d'aquestes regles."
 
 #: src/FilterSelectionSummary.h
 msgid "Advanced spam filtering for non-friends is also enabled."
-msgstr ""
+msgstr "També està activat el filtre avançat de missatges brossa per a qui no és a la llista d'amics."
 
 #: src/FilterSelectionSummary.h
 msgid "First messages from non-friends require a CAPTCHA."
-msgstr ""
+msgstr "Els primers missatges de qui no és a la llista d'amics requereixen un CAPTCHA."
 
 #: src/FilterSelectionSummary.h
-#, fuzzy
 msgid "Received message text will also be written to the log."
-msgstr "Mostra els missatges rebuts en el registre"
+msgstr "El text dels missatges rebuts també s'escriurà al registre."
 
 #: src/FilterSelectionSummary.h
 msgid "File comment filtering is off."
-msgstr ""
+msgstr "El filtratge de comentaris de fitxers està desactivat."
 
 #: src/FilterSelectionSummary.h
 msgid "No file comments will be hidden: the word list is empty."
-msgstr ""
+msgstr "No s'amagarà cap comentari de fitxer: la llista de paraules és buida."
 
 #: src/FilterSelectionSummary.h
 #, c-format
 msgid "File comments containing any of these literal terms will be hidden (ignoring case): %s."
-msgstr ""
+msgstr "S'amagaran els comentaris de fitxers que continguin qualsevol d'aquests termes literals (sense distingir entre majúscules i minúscules): %s."
 
 #: src/FirstRunWizard.cpp
 msgid "Mobile / 4G-5G (20 / 5 Mbit)"
@@ -4161,7 +4157,7 @@ msgstr "ERROR: No s'ha pogut escoltar el port TCP."
 
 #: src/MediaProbe.cpp
 msgid "Media metadata: bundled amule-media-probe helper is unavailable."
-msgstr ""
+msgstr "Metadades multimèdia: el programa auxiliar amule-media-probe inclòs no està disponible."
 
 #: src/MediaProbe.cpp
 #, c-format
@@ -4169,14 +4165,14 @@ msgid "Media metadata: %s is gone, nothing to extract"
 msgstr "Metadades multimèdia: %s ha desaparegut, no hi ha res per extreure"
 
 #: src/MediaProbe.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Extracting media metadata: %s"
-msgstr "S'estan extraient les metadades multimèdia amb ffprobe: %s"
+msgstr "S'estan extraient les metadades multimèdia: %s"
 
 #: src/MediaProbe.cpp
-#, fuzzy, c-format
+#, c-format
 msgid "Media metadata: parser failed for %s"
-msgstr "Metadades multimèdia: ffprobe ha fallat (codi %d) per a %s"
+msgstr "Metadades multimèdia: l'analitzador ha fallat per a %s"
 
 #: src/MediaProbeThread.cpp
 #, c-format
@@ -5282,11 +5278,11 @@ msgstr "Estableix prioritat Alta per als servidors afegits manualment"
 
 #: src/muuli_wdr.cpp
 msgid "Publish shared files faster on servers that allow it"
-msgstr ""
+msgstr "Publica els fitxers compartits més ràpidament als servidors que ho permeten"
 
 #: src/muuli_wdr.cpp
 msgid "Follow the publication pace that the server advertises. Other servers get the standard pace."
-msgstr ""
+msgstr "Segueix el ritme de publicació que anuncia el servidor. Als altres servidors s'aplica el ritme estàndard."
 
 #: src/muuli_wdr.cpp
 msgid "Add files to download in pause mode"
@@ -5438,7 +5434,7 @@ msgstr "Extreu la durada, la taxa de bits i el còdec dels fitxers d'àudio i v�
 
 #: src/muuli_wdr.cpp
 msgid "When enabled, aMule uses its bundled MediaInfo parser to extract metadata from shared media files."
-msgstr ""
+msgstr "Si està activat, l'aMule fa servir l'analitzador MediaInfo inclòs per extreure les metadades dels fitxers multimèdia compartits."
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6223,9 +6219,8 @@ msgid "Check for a newer GeoIP database at startup and every week while aMule is
 msgstr "Comprova si hi ha una base de dades GeoIP més nova a l'inici i cada setmana mentre aMule s'executa."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Enable incoming message filtering (except current chat):"
-msgstr "Filtra els missatges entrants (excepte el xat actual):"
+msgstr "Activa el filtratge dels missatges entrants (excepte el xat actual):"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6233,6 +6228,9 @@ msgid ""
 "Turning this off keeps your selected options and word list.\n"
 "Filtered messages are discarded without opening a chat or replying to the sender."
 msgstr ""
+"Activeu les opcions de filtre de sota. Seleccioneu almenys una opció per filtrar missatges.\n"
+"Si ho desactiveu, es conserven les opcions seleccionades i la llista de paraules.\n"
+"Els missatges filtrats es descarten sense obrir cap xat ni respondre al remitent."
 
 #: src/muuli_wdr.cpp
 msgid "Filter all messages"
@@ -6256,6 +6254,9 @@ msgid ""
 "Terms match anywhere in a message: dog matches hotdog and black dog spotted.\n"
 "Wildcards are not supported. A * is literal, except that a word list of exactly * blocks every message."
 msgstr ""
+"Descarta els missatges de xat que continguin qualsevol terme separat per comes. La coincidència no distingeix entre majúscules i minúscules i ignora els espais al voltant de cada terme.\n"
+"Els termes coincideixen en qualsevol part del missatge: gat coincideix amb gatet i amb he vist un gat negre.\n"
+"No s'admeten comodins. Un * és literal, excepte que una llista de paraules que sigui exactament * bloqueja tots els missatges."
 
 #: src/muuli_wdr.cpp
 msgid "Enable advanced spam filter"
@@ -6278,14 +6279,12 @@ msgid "Show received messages in the log"
 msgstr "Mostra els missatges rebuts en el registre"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "File comments"
-msgstr "Comentaris del Fitxer"
+msgstr "Comentaris dels fitxers"
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "Filter file comments containing (use ',' as separator):"
-msgstr "Filtra els comentaris que continguin (useu ',' per a separar):"
+msgstr "Filtra els comentaris de fitxers que continguin (useu «,» com a separador):"
 
 #: src/muuli_wdr.cpp
 msgid ""
@@ -6293,11 +6292,13 @@ msgid ""
 "Matching ignores case and spaces around each term. Terms match anywhere in a comment: dog matches hotdog and black dog spotted.\n"
 "Wildcards are not supported; * is matched literally."
 msgstr ""
+"Amaga els comentaris de fitxers d'altres usuaris que continguin qualsevol terme separat per comes. Això no filtra els missatges de xat.\n"
+"La coincidència no distingeix entre majúscules i minúscules i ignora els espais al voltant de cada terme. Els termes coincideixen en qualsevol part del comentari: gat coincideix amb gatet i amb he vist un gat negre.\n"
+"No s'admeten comodins; el * es tracta literalment."
 
 #: src/muuli_wdr.cpp
-#, fuzzy
 msgid "With these settings"
-msgstr "Recorda la configuració"
+msgstr "Amb aquesta configuració"
 
 #: src/muuli_wdr.cpp
 msgid "Enable Proxy"
@@ -6354,10 +6355,6 @@ msgstr "Entra a l'aMule remot"
 #: src/muuli_wdr.cpp
 msgid "Remember those settings"
 msgstr "Recorda la configuració"
-
-#: src/muuli_wdr.cpp
-msgid "Encrypt the connection (recommended)"
-msgstr "Xifra la connexió (recomanat)"
 
 #: src/muuli_wdr.cpp
 msgid "Force ZLIB compression"
@@ -6897,7 +6894,7 @@ msgstr "No hi ha opcions disponibles"
 
 #: src/Preferences.cpp
 msgid "Media metadata: FFProbePath is obsolete; aMule now uses its bundled MediaInfo parser. Removing the old setting."
-msgstr ""
+msgstr "Metadades multimèdia: FFProbePath està obsolet; ara l'aMule fa servir l'analitzador MediaInfo inclòs. S'elimina l'opció antiga."
 
 #: src/Preferences.cpp
 msgid "Invalid path mapping found, skipping"
@@ -7028,7 +7025,7 @@ msgstr "Fallida en l'enviament de dades de Cfg al giny amb ID %d i clau %s"
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "This aMule has no media helper (amule-media-probe), so it cannot extract media metadata."
-msgstr ""
+msgstr "Aquest aMule no té el programa auxiliar multimèdia (amule-media-probe), així que no pot extreure les metadades multimèdia."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "The type of proxy you are connecting to"
@@ -7234,15 +7231,14 @@ msgid "The aMule web server is deprecated. Consider running the aMule API instea
 msgstr "El servidor web de l'aMule està obsolet. Considereu executar l'API de l'aMule en lloc seu."
 
 #: src/PrefsUnifiedDlg.cpp
-#, fuzzy
 msgid ""
 "Your server list sources are empty.\n"
 "Please add at least one URL of a valid server.met file.\n"
 "Click the \"Edit sources...\" button next to this checkbox to add one."
 msgstr ""
-"La llista d'actualització automàtica de servidors és buida.\n"
-"Si us plau, ompliu-la amb una URL que apunti a un fitxer server.met vàlid.\n"
-"Feu clic sobre el botó \"Llista\" d'aquest quadre de verificació per afegir una adreça."
+"Les fonts de la llista de servidors són buides.\n"
+"Afegiu-hi almenys una URL d'un fitxer server.met vàlid.\n"
+"Feu clic al botó «Edita les fonts…» que hi ha al costat d'aquesta casella per afegir-ne una."
 
 #: src/PrefsUnifiedDlg.cpp
 msgid "Temporary files"
@@ -8322,7 +8318,7 @@ msgstr "L'extracció de metadades multimèdia està desactivada a les preferènc
 
 #: src/SharedFileList.cpp
 msgid "This aMule has no media helper (amule-media-probe), so it cannot re-extract media metadata."
-msgstr ""
+msgstr "Aquest aMule no té el programa auxiliar multimèdia (amule-media-probe), així que no pot tornar a extreure les metadades multimèdia."
 
 #: src/SharedFileList.cpp
 #, c-format
@@ -10380,6 +10376,45 @@ msgstr "Kad no ha pogut carregar l'índex desat. S'han conservat els fitxers d'�
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr "Kad no ha pogut desar un índex. S'ha conservat la còpia anterior d'aquest fitxer."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Could not remove legacy ECPassword; cleanup will be retried on restart."
+msgstr "No s'ha pogut eliminar l'ECPassword antic; es tornarà a intentar la neteja en reiniciar."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Could not persist ECPasswordVerifier; using the legacy ECPassword in memory for this run. Migration will be retried on restart."
+msgstr "No s'ha pogut desar l'ECPasswordVerifier; per a aquesta execució s'utilitza l'ECPassword antic en memòria. Es tornarà a intentar la migració en reiniciar."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Could not generate ECPasswordVerifier; external connections are disabled."
+msgstr "No s'ha pogut generar l'ECPasswordVerifier; les connexions externes estan desactivades."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "EC password change rejected: could not persist ECPasswordVerifier. The active credential is unchanged."
+msgstr "S'ha rebutjat el canvi de contrasenya d'EC: no s'ha pogut desar l'ECPasswordVerifier. La credencial activa no ha canviat."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgstr "S'ha rebutjat el canvi de contrasenya d'EC: no s'ha pogut generar l'ECPasswordVerifier. La credencial activa no ha canviat."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "ECPassword contains an invalid or empty-password digest. Run amuled --ec-config to set a new EC password."
+msgstr "L'ECPassword conté un resum no vàlid o de contrasenya buida. Executeu amuled --ec-config per definir una contrasenya d'EC nova."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Invalid or unsupported ECPasswordVerifier; refusing external connections."
+msgstr "ECPasswordVerifier no vàlid o no compatible; es rebutgen les connexions externes."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Could not compare legacy ECPassword with ECPasswordVerifier; refusing external connections."
+msgstr "No s'ha pogut comparar l'ECPassword antic amb l'ECPasswordVerifier; es rebutgen les connexions externes."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Migrating a changed legacy ECPassword after downgrade; the previous verifier no longer authenticates this run."
+msgstr "S'està migrant un ECPassword antic modificat després de tornar a una versió anterior; el verificador anterior ja no autentica aquesta execució."
+
+#~ msgid "Encrypt the connection (recommended)"
+#~ msgstr "Xifra la connexió (recomanat)"
 
 #~ msgid "add here the words amule should filter and block messages including it"
 #~ msgstr "Els missatges que continguin aquestes paraules seran filtrats i bloquejats per l'aMule"

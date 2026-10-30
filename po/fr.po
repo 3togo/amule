@@ -6376,10 +6376,6 @@ msgid "Remember those settings"
 msgstr "Se rappeler de ces réglages"
 
 #: src/muuli_wdr.cpp
-msgid "Encrypt the connection (recommended)"
-msgstr "Chiffrer la connexion (recommandée)"
-
-#: src/muuli_wdr.cpp
 msgid "Force ZLIB compression"
 msgstr "Forcer la compression ZLIB"
 
@@ -10406,6 +10402,46 @@ msgstr "Kad n'a pu charger son index sauvegardé. Les fichiers d'index existants
 #: src/kademlia/kademlia/Indexed.cpp
 msgid "Kad could not save an index. The previous copy of that file was preserved."
 msgstr "Kad n'a pu sauvegarder un index. La copie précédente de ce fichier a été conservé."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Could not remove legacy ECPassword; cleanup will be retried on restart."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Could not persist ECPasswordVerifier; using the legacy ECPassword in memory for this run. Migration will be retried on restart."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+#, fuzzy
+msgid "Could not generate ECPasswordVerifier; external connections are disabled."
+msgstr "Mot de passe renseigné et connexions externes activées."
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "EC password change rejected: could not persist ECPasswordVerifier. The active credential is unchanged."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "EC password change rejected: could not generate ECPasswordVerifier. The active credential is unchanged."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "ECPassword contains an invalid or empty-password digest. Run amuled --ec-config to set a new EC password."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Invalid or unsupported ECPasswordVerifier; refusing external connections."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Could not compare legacy ECPassword with ECPasswordVerifier; refusing external connections."
+msgstr ""
+
+#: src/libs/ec/cpp/ECSRPConfig.cpp
+msgid "Migrating a changed legacy ECPassword after downgrade; the previous verifier no longer authenticates this run."
+msgstr ""
+
+#~ msgid "Encrypt the connection (recommended)"
+#~ msgstr "Chiffrer la connexion (recommandée)"
 
 #~ msgid "add here the words amule should filter and block messages including it"
 #~ msgstr "ajouter ici les mots qu'aMule doit filtrer : blocage des messages les contenant"
