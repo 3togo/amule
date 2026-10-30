@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2026-10-29 11:58+0100\n"
-"PO-Revision-Date: 2026-10-30 09:27+0000\n"
+"PO-Revision-Date: 2026-10-30 11:27+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: none\n"
 "Language: nl\n"
@@ -935,7 +935,7 @@ msgstr "MEDIA-METADATA"
 #. type: Plain text
 #: amuled.1.in
 msgid "B<amuled> runs its bundled B<amule-media-probe> helper on each received file to extract the length, bitrate and codec tags it then publishes to the network. The helper must sit next to the B<amuled> executable. This is on by default (B<Enabled=1> under B<[MediaMetadata]> in I<amule.conf>); set B<Enabled=0> there and restart to turn it off."
-msgstr "B<amuled> voert de bijgevoegde B<amule-media-probe> helper uit op elk ontvangen bestand om de lengte, bitwaarde en codeclabels te bepalen en publiceert dit naar het netwerk. De helper moet naast het uitvoerbare bestand van B<amuled> in een map staan. Dit staat standaard aan (B<Enabled=1> onder B[MediaMetadata}> in I<amule.conf>). Stel B<Enabled=0> daar in en herstart om het uit te schakelen."
+msgstr "B<amuled> voert de bijgevoegde B<amule-media-probe> helper uit op elk ontvangen bestand om de lengte, bitwaarde en codeclabels te bepalen en publiceert dit naar het netwerk. De helper moet naast het uitvoerbare bestand van B<amuled> in een map staan. Dit staat standaard aan (B<Enabled=1> onder B<[MediaMetadata]> in I<amule.conf>). Stel B<Enabled=0> daar in en herstart om het uit te schakelen."
 
 #. type: TH
 #: amulegui.1.in
