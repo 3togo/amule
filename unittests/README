@@ -337,3 +337,9 @@ application must wait for that read, then exit cleanly when it is released.
 Keep opens, reads and closes off the coordinator in each native run. Record
 unavailable alias/UNC/fault-injection cases as untested, rather than treating a
 successful build or ordinary two-volume transfer as an isolation test.
+
+EC integration-test requirements
+--------------------------------
+Tests that authenticate through ECWire require Python 3 with the cryptography
+module (python3-cryptography on Debian/Ubuntu). These tests return skip code 77
+when the module is unavailable, including fixtures importing the EC helper.

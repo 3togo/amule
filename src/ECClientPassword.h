@@ -25,10 +25,29 @@
 #ifndef EC_CLIENT_PASSWORD_H
 #define EC_CLIENT_PASSWORD_H
 
+#include "Types.h"
 #include <wx/config.h>
+#include <common/MD5Sum.h>
 
 namespace ECClientPassword
 {
+inline wxString Display(const wxString &pending)
+{
+	return pending.IsEmpty() ? wxString() : wxString("********");
+}
+
+// Preserve a pending digest while the dialog remains open. Only newly entered
+// text is a password; the displayed mask must never be hashed as one. Closing
+// the dialog discards the pending edit.
+inline bool ReadInput(wxString &pending, const wxString &text, bool modified)
+{
+	if (modified || text != Display(pending)) {
+		pending = text.IsEmpty() ? wxString() : MD5Sum(text).GetHash();
+		return true;
+	}
+	return !pending.IsEmpty() && pending != "********";
+}
+
 // The server has already committed next. Always update the in-memory reconnect
 // credential, but only replace a saved credential for this exact connection.
 // In particular, rotating a password must not opt a user into saving passwords.

@@ -267,9 +267,8 @@ protected:
 	// where the locality check would otherwise strip ZLIB.
 	bool m_forceZLIB;
 
-	// Explicit legacy command-line opt-out; never persisted to remote.conf.
-	bool m_ECEncryption;
-
+	// Select the spawned API or web token's verifier instead of the configured password's.
+	uint8_t m_ECTokenCredential = 0;
 	// Advertise the multi-search EC capability (EC_TAG_CAN_MULTI_SEARCH) so the daemon
 	// addresses searches by ID and several can run at once. Off by default; only a connector
 	// that reads EC_TAG_SEARCH_ID back and handles per-ID results (amulecmd) sets it true.

@@ -27,6 +27,9 @@
 #include <wx/config.h>
 namespace ECSRP
 {
+// Prepare before applying preferences; persist only after their fallible rebind.
+wxString PrepareCredential(const wxString &digest);
+bool StorePreparedCredential(wxConfigBase &cfg, const wxString &record, wxString &verifier, wxString &error);
 // Rotations commit the new verifier and removal of any legacy key together.
 // On failure, restore the in-memory config too (wxFileConfig flushes on exit).
 bool StoreCredential(wxConfigBase &cfg, const wxString &digest, wxString &verifier, wxString &error);

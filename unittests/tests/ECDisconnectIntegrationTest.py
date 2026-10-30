@@ -11,8 +11,9 @@ import subprocess
 import sys
 import tempfile
 
-from AllSearchIntegrationTest import (C, connect_daemon, exact, free_ports, parse_tags,
-                                      retry_port_collisions, stop_daemon, string, tag)
+from AllSearchIntegrationTest import (C, connect_daemon, free_ports,
+                                      retry_port_collisions, stop_daemon)
+import ECWire as W
 from DaemonConfig import EC_PASSWORD, write_amule_conf
 
 
@@ -21,27 +22,9 @@ def packet(opcode, tags=(), flags=0x20):
     return struct.pack('!II', flags, len(body)) + body
 
 
-def receive(peer):
-    flags, length = struct.unpack('!II', exact(peer, 8))
-    assert flags == 0x20, flags
-    body = exact(peer, length)
-    return body[0], parse_tags(body, 3, struct.unpack_from('!H', body, 1)[0])[0]
-
-
-def challenge(peer):
-    peer.sendall(packet('EC_OP_AUTH_REQ', [
-        string(C['EC_TAG_CLIENT_NAME'], 'EC disconnect regression'),
-        string(C['EC_TAG_CLIENT_VERSION'], '1'),
-        tag(C['EC_TAG_PROTOCOL_VERSION'],
-            struct.pack('!H', C['EC_CURRENT_PROTOCOL_VERSION']), 3),
-        tag(C['EC_TAG_CAN_NOTIFY'])]))
-    opcode, tags = receive(peer)
-    assert opcode == C['EC_OP_AUTH_SALT'], (opcode, tags)
-    salt = tags[C['EC_TAG_PASSWD_SALT']][0]
-    password_hash = hashlib.md5(EC_PASSWORD.encode()).hexdigest()
-    salt_hash = hashlib.md5(f'{salt:X}'.encode()).hexdigest()
-    proof = hashlib.md5((password_hash + salt_hash).encode()).digest()
-    return packet('EC_OP_AUTH_PASSWD', [tag(C['EC_TAG_PASSWD_HASH'], proof, 9)])
+def authenticate(peer, **kwargs):
+    return W.authenticate(peer, hashlib.md5(EC_PASSWORD.encode()).digest(),
+                          capabilities=[W.tag('EC_TAG_CAN_NOTIFY')], **kwargs)
 
 
 def run(binary):
@@ -63,22 +46,21 @@ def run(binary):
             # Positive control: the very same notification-capable login succeeds
             # when no rejected packet precedes its proof.
             with socket.create_connection(('127.0.0.1', ports[0]), timeout=10) as peer:
-                peer.sendall(challenge(peer))
-                assert receive(peer)[0] == C['EC_OP_AUTH_OK']
+                assert authenticate(peer)[1] == C['EC_OP_AUTH_OK']
             assert control.call(C['EC_OP_STAT_REQ'])[0] == C['EC_OP_STATS']
             granted = (root / 'logfile').read_text().count('Access granted.')
 
             with socket.create_connection(('127.0.0.1', ports[0]), timeout=10) as peer:
-                proof = challenge(peer)
-                # One write puts the valid password proof and a command behind
-                # a packet whose version flags ReadPacket must reject. The Asio
-                # close leaves buffered input readable without a socket error.
-                peer.sendall(packet('EC_OP_STAT_REQ', flags=0x60) + proof
-                             + packet('EC_OP_STAT_REQ'))
+                # One write puts the encrypted proof and command behind a packet
+                # whose version flags ReadPacket must reject. Buffered input must
+                # not authenticate the connection after its asynchronous close.
                 try:
-                    assert peer.recv(1) == b'', 'dropped connection sent a reply'
-                except ConnectionResetError:
+                    authenticate(peer, proof_prefix=packet('EC_OP_STAT_REQ', flags=0x60),
+                                 proof_followup=[packet('EC_OP_STAT_REQ')])
+                except (EOFError, ConnectionResetError):
                     pass
+                else:
+                    raise AssertionError('dropped connection sent a reply')
 
             # This round trip is a main-loop barrier, and would also expose a
             # notifier registered by the dying socket. No sleeps are needed.
@@ -91,10 +73,12 @@ def run(binary):
             # close raises no lost event, so OnLost would never destroy it.
             closed = (root / 'logfile').read_text().count('External connection closed.')
             with socket.create_connection(('127.0.0.1', ports[0]), timeout=10) as peer:
-                challenge(peer)
-                wrong = packet('EC_OP_AUTH_PASSWD', [tag(C['EC_TAG_PASSWD_HASH'], bytes(16), 9)])
-                peer.sendall(wrong + packet('EC_OP_STAT_REQ'))
-                assert receive(peer)[0] == C['EC_OP_AUTH_FAIL']
+                encrypted, opcode, _ = authenticate(
+                    peer,
+                    proof_mutator=lambda _: W.packet('EC_OP_AUTH_PASSWD',
+                                                      [W.tag('EC_TAG_SRP_M1', bytes(32))]))
+                assert opcode == C['EC_OP_AUTH_FAIL']
+                encrypted.sendall(packet('EC_OP_STAT_REQ'))
                 try:
                     assert peer.recv(1) == b'', 'failed login stayed open'
                 except ConnectionResetError:

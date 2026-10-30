@@ -382,7 +382,6 @@ wxSizer *PreferencesFilesTab(wxWindow *parent, bool call_fit = TRUE, bool set_si
 #define IDC_EXT_CONN_IPTEXT 10357
 #define IDC_EXT_CONN_TCPPORTTEXT 10358
 #define IDC_EXT_CONN_PASSWDTEXT 10359
-#define IDC_EXT_CONN_REQUIRE_ENCRYPTION 10494
 #define IDC_OSDIRTEXT 10360
 #define IDC_OSUPDATETEXT 10361
 wxSizer *PreferencesDirectoriesTab(wxWindow *parent, bool call_fit = TRUE, bool set_sizer = TRUE);

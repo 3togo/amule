@@ -36,10 +36,9 @@
 
 using namespace muleunit;
 
-// Once a session has received a sealed packet, a cleartext one can only have been injected. The
-// synchronous SendRecvPacket path (amulecmd, amuleweb, amuleapi) must reject it like the async
-// client and the daemon do, while a failed login's clear AUTH_FAIL, which arrives before any
-// sealed packet, must still get through.
+// SRP seals every reply after key setup, including the first proof reply. The synchronous
+// SendRecvPacket path (amulecmd, amuleweb, amuleapi) must reject plaintext at that boundary
+// like the async client and daemon do. A login rejected before key setup can still fail clear.
 
 DECLARE_SIMPLE(ECSessionSeal)
 
@@ -145,10 +144,20 @@ TEST(ECSessionSeal, ClearReplyAfterSealedIsRejected)
 	ASSERT_TRUE(client.Lost());
 }
 
-TEST(ECSessionSeal, ClearReplyBeforeAnySealedIsAccepted)
+TEST(ECSessionSeal, ClearReplyBeforeAnySealedIsRejected)
 {
 	CLoopSocket client, daemon, plain;
 	Pair(client, daemon);
+	client.Feed(Wire(plain, EC_OP_AUTH_FAIL));
+
+	// SRP enables sealing before the first proof reply; no clear reply is legitimate.
+	ASSERT_EQUALS(-1, Exchange(client));
+	ASSERT_TRUE(client.Lost());
+}
+
+TEST(ECSessionSeal, ClearFailureBeforeKeySetupIsAccepted)
+{
+	CLoopSocket client, plain;
 	client.Feed(Wire(plain, EC_OP_AUTH_FAIL));
 
 	ASSERT_EQUALS(static_cast<int>(EC_OP_AUTH_FAIL), Exchange(client));

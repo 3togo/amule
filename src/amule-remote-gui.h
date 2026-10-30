@@ -141,7 +141,7 @@ public:
 	void UpdateNetworks(bool ed2kEnabled, bool kadEnabled);
 	bool SupportsLiveNetworkPreferences() const { return m_liveNetworkPreferences; }
 	void SetLiveNetworkPreferencesSupported(bool supported) { m_liveNetworkPreferences = supported; }
-	void SendChangesToRemote();
+	void SendChangesToRemote(bool includeECPassword = false);
 	//! Sends one preferences category holding only the given tags.
 	void SendPartialToRemote(const CECTag &category);
 
@@ -1065,6 +1065,8 @@ class CamuleRemoteGuiApp : public wxApp, public CamuleGuiBase, public CamuleAppC
 
 public:
 	void RequestKadContactDistribution();
+	// Called only after the daemon acknowledges a password change.
+	void CommitECPasswordChange(const wxString &digest);
 	void Startup();
 
 	/// The main window came back from the taskbar/tray. If a reconnect has been running

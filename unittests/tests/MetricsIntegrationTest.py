@@ -23,6 +23,7 @@ import zlib
 from AllSearchIntegrationTest import (C, connect_daemon, exact, free_ports,
                                       integer, string, tag)
 from DaemonConfig import write_amule_conf
+from ECWire import accept  # Preflight in the parent before starting fixtures.
 
 TOKEN = '0123456789abcdef' * 4
 # A shared-format warning record in the Metrics category.
@@ -93,7 +94,7 @@ def api_fixture(binary, root, ec_port, enabled=True, configured=True, token=TOKE
         port = free_ports(1)[0]
         base = f'http://127.0.0.1:{port}'
         proc = subprocess.Popen([binary, f'--config-dir={root}', '--host=127.0.0.1',
-            f'--port={ec_port}', f'--http-port={port}', '--disable-ec-encryption'],
+            f'--port={ec_port}', f'--http-port={port}'],
             env=env, stdout=log, stderr=log)
         try:
             def listening():
@@ -112,50 +113,46 @@ def api_fixture(binary, root, ec_port, enabled=True, configured=True, token=TOKE
 class CoreHandler(socketserver.BaseRequestHandler):
     def handle(self):
         try:
+            peer = accept(self.request, server_version=b'metrics-fixture')
             while True:
-                flags, size = struct.unpack('!II', exact(self.request, 8))
-                body = exact(self.request, size)
+                flags, size = struct.unpack('!II', exact(peer, 8))
+                body = exact(peer, size)
                 if flags & 1:
                     body = zlib.decompress(body)
                 op = body[0]
                 self.server.ops.append(op)
-                if op == C['EC_OP_AUTH_REQ']:
-                    reply, tags = C['EC_OP_AUTH_SALT'], [integer(C['EC_TAG_PASSWD_SALT'], 123)]
-                elif op == C['EC_OP_AUTH_PASSWD']:
-                    reply, tags = C['EC_OP_AUTH_OK'], [string(C['EC_TAG_SERVER_VERSION'], 'metrics-fixture')]
-                else:
-                    if self.server.hold.is_set():
-                        self.server.entered.set()
-                        if not self.server.release.wait(15):
-                            return
-                    reply, tags = C['EC_OP_NOOP'], []
-                    if op == C['EC_OP_STAT_REQ']:
-                        reply = C['EC_OP_STATS']
-                        if self.server.populated:
-                            tags = [tag(C['EC_TAG_STATS_SESSION_SENT_BYTES'], struct.pack('!Q', 1234567890123), 5),
-                                    tag(C['EC_TAG_STATS_SESSION_RECEIVED_BYTES'], struct.pack('!Q', 9876543210123), 5),
-                                    integer(C['EC_TAG_STATS_ACTIVE_CONNECTIONS'], 7),
-                                    integer(C['EC_TAG_STATS_UPTIME_SECONDS'], 42),
-                                    tag(C['EC_TAG_CONNSTATE'], b'\x01', 2, [
-                                        tag(C['EC_TAG_SERVER'], bytes([1, 2, 3, 4]) + struct.pack('!H', 4661), 8)])]
-                    if op == C['EC_OP_GET_UPDATE']:
-                        if self.server.populated:
-                            tags = [tag(C['EC_TAG_CLIENT'], children=[
-                                tag(C['EC_TAG_CLIENT'], struct.pack('!I', 1), 4,
-                                    [tag(C['EC_TAG_CLIENT_UPLOAD_STATE'], b'\x00', 2)]),
-                                tag(C['EC_TAG_CLIENT'], struct.pack('!I', 2), 4,
-                                    [tag(C['EC_TAG_CLIENT_UPLOAD_STATE'], b'\x01', 2)])]),
-                                tag(C['EC_TAG_SERVER'], children=[
-                                    tag(C['EC_TAG_SERVER'], struct.pack('!I', 1), 4, [
-                                        integer(C['EC_TAG_SERVER_IP'], 0x04030201),
-                                        tag(C['EC_TAG_SERVER_PORT'], struct.pack('!H', 4661), 3),
-                                        integer(C['EC_TAG_SERVER_USERS'], 12345)])])]
-                        else:
-                            tags = [tag(C['EC_TAG_CLIENT']), tag(C['EC_TAG_SERVER'])]
-                    if op == self.server.fail_opcode:
-                        reply = C['EC_OP_FAILED']
+                if self.server.hold.is_set():
+                    self.server.entered.set()
+                    if not self.server.release.wait(15):
+                        return
+                reply, tags = C['EC_OP_NOOP'], []
+                if op == C['EC_OP_STAT_REQ']:
+                    reply = C['EC_OP_STATS']
+                    if self.server.populated:
+                        tags = [tag(C['EC_TAG_STATS_SESSION_SENT_BYTES'], struct.pack('!Q', 1234567890123), 5),
+                                tag(C['EC_TAG_STATS_SESSION_RECEIVED_BYTES'], struct.pack('!Q', 9876543210123), 5),
+                                integer(C['EC_TAG_STATS_ACTIVE_CONNECTIONS'], 7),
+                                integer(C['EC_TAG_STATS_UPTIME_SECONDS'], 42),
+                                tag(C['EC_TAG_CONNSTATE'], b'\x01', 2, [
+                                    tag(C['EC_TAG_SERVER'], bytes([1, 2, 3, 4]) + struct.pack('!H', 4661), 8)])]
+                if op == C['EC_OP_GET_UPDATE']:
+                    if self.server.populated:
+                        tags = [tag(C['EC_TAG_CLIENT'], children=[
+                            tag(C['EC_TAG_CLIENT'], struct.pack('!I', 1), 4,
+                                [tag(C['EC_TAG_CLIENT_UPLOAD_STATE'], b'\x00', 2)]),
+                            tag(C['EC_TAG_CLIENT'], struct.pack('!I', 2), 4,
+                                [tag(C['EC_TAG_CLIENT_UPLOAD_STATE'], b'\x01', 2)])]),
+                            tag(C['EC_TAG_SERVER'], children=[
+                                tag(C['EC_TAG_SERVER'], struct.pack('!I', 1), 4, [
+                                    integer(C['EC_TAG_SERVER_IP'], 0x04030201),
+                                    tag(C['EC_TAG_SERVER_PORT'], struct.pack('!H', 4661), 3),
+                                    integer(C['EC_TAG_SERVER_USERS'], 12345)])])]
+                    else:
+                        tags = [tag(C['EC_TAG_CLIENT']), tag(C['EC_TAG_SERVER'])]
+                if op == self.server.fail_opcode:
+                    reply = C['EC_OP_FAILED']
                 payload = bytes([reply]) + struct.pack('!H', len(tags)) + b''.join(tags)
-                self.request.sendall(struct.pack('!II', 0x20, len(payload)) + payload)
+                peer.sendall(struct.pack('!II', 0x20, len(payload)) + payload)
         except (EOFError, OSError):
             pass
 

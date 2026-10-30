@@ -81,6 +81,7 @@ env:
     locales \
     pkg-config \
     po4a \
+    python3-cryptography \
     xvfb \
     xauth \
     wx3.2-headers
@@ -603,6 +604,9 @@ jobs:
         run: |
           brew update
           brew install ${{ env.cmake_macos_deps }}
+          python3 -m venv "$RUNNER_TEMP/ec-python"
+          "$RUNNER_TEMP/ec-python/bin/python" -m pip install cryptography
+          echo "EC_TEST_PYTHON=$RUNNER_TEMP/ec-python/bin/python" >> "$GITHUB_ENV"
           # Homebrew installs into /opt/homebrew on Apple Silicon — not a
           # default compiler/linker/pkg-config search path. aMule's custom
           # cmake/cryptopp.cmake uses check_include_file_cxx which does NOT
@@ -618,7 +622,8 @@ jobs:
           cmake \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             ${{ env.cmake_common_config_flags }} \
-            ${{ env.cmake_macos_config_flags }}
+            ${{ env.cmake_macos_config_flags }} \
+            -DPython3_EXECUTABLE="$EC_TEST_PYTHON"
       - name: zero ccache stats
         run: |
           ccache --zero-stats
@@ -648,6 +653,19 @@ jobs:
         run: |
           ctest ${{ env.ctest_flags }} --timeout 10 -LE '^(slow|integration|reverify)$' &&
           ctest ${{ env.ctest_flags }} --timeout 60 -L '^slow$'
+      - name: SRP integration tests (require execution)
+        run: |
+          ctest ${{ env.ctest_flags }} --timeout 300 --no-tests=error \
+            -R '^(AmulecmdShutdownTest|AmuleApiEcPasswordIntegrationTest|MetricsIntegrationTest|ECSRPIntegrationTest|ECSRPApiIntegrationTest|ECSRPWebIntegrationTest)$' \
+            --output-junit "$RUNNER_TEMP/ec-tests.xml"
+          "$EC_TEST_PYTHON" - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          tests = ET.parse(Path(os.environ['RUNNER_TEMP']) / 'ec-tests.xml').findall('.//testcase')
+          assert len(tests) == 6, 'Expected all six EC integration tests'
+          assert all(t.find('skipped') is None for t in tests), 'EC integration tests must not skip'
+          PY
 
   build_cmake_windows_mingw_w64:
     name: Build CMake mingw-w64 (${{ matrix.build_type }})

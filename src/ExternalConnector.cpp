@@ -258,7 +258,6 @@ CaMuleExternalConnector::CaMuleExternalConnector()
 , m_port(-1)
 , m_ZLIB(false)
 , m_forceZLIB(false)
-, m_ECEncryption(true)
 , m_canMultiSearch(false)
 , m_canSearchProgressUnion(true)
 , m_canChat(false)
@@ -457,7 +456,7 @@ void CaMuleExternalConnector::ConnectAndRun(const wxString &ProgName, const wxSt
 		m_ECClient = new CRemoteConnect(NULL);
 		m_ECClient->SetCapabilities(m_ZLIB, true, false); // ZLIB, UTF8 numbers, notification
 		m_ECClient->SetForceZlib(m_forceZLIB);
-		m_ECClient->SetCanAEAD(m_ECEncryption);
+		m_ECClient->SetTokenCredential(m_ECTokenCredential);
 		m_ECClient->SetCanMultiSearch(m_canMultiSearch);
 		m_ECClient->SetCanSearchProgressUnion(m_canSearchProgressUnion);
 		m_ECClient->SetCanChatSessions(m_canChat);
@@ -549,12 +548,6 @@ void CaMuleExternalConnector::OnInitCmdLine(wxCmdLineParser &parser, const char 
 	}
 	parser.AddSwitch("", "version", _("Print program version."), wxCMD_LINE_PARAM_OPTIONAL);
 	parser.AddSwitch("",
-		"disable-ec-encryption",
-		_("Do not encrypt the External Connect session. Encryption is on by default "
-		  "whenever the remote aMule supports it; turning it off leaves everything "
-		  "after the login readable and modifiable by anyone on the path."),
-		wxCMD_LINE_PARAM_OPTIONAL);
-	parser.AddSwitch("",
 		"force-zlib",
 		_("Force ZLIB compression regardless of dialed-IP locality (useful when the server is "
 		  "reachable over a VPN tunnel that resolves to a LAN IP)."),
@@ -595,7 +588,9 @@ bool CaMuleExternalConnector::OnCmdLineParsed(wxCmdLineParser &parser)
 	m_configFileName = FinalizeFilename(m_configFileName, m_configDir);
 
 	wxString aMuleConfigFile;
-	if (UsesConnectorConfigFile() && parser.Found("create-config-from", &aMuleConfigFile)) {
+	const bool createConfig =
+		UsesConnectorConfigFile() && parser.Found("create-config-from", &aMuleConfigFile);
+	if (createConfig) {
 		aMuleConfigFile = FinalizeFilename(aMuleConfigFile);
 		if (!::wxFileExists(aMuleConfigFile)) {
 			fprintf(stderr,
@@ -605,25 +600,13 @@ bool CaMuleExternalConnector::OnCmdLineParsed(wxCmdLineParser &parser)
 					.utf8_str());
 			exit(1);
 		}
+		// Preserve saved connector-only settings and the client credential when
+		// the daemon now stores only a verifier. Explicit -P below still wins.
+		LoadConfigFile();
 		CECFileConfig aMuleConfig(aMuleConfigFile);
 		LoadAmuleConfig(aMuleConfig);
-		SaveConfigFile();
-		exit(FlushConfigFile() ? 0 : 1);
-	}
-
-	if (UsesConnectorConfigFile()) {
+	} else if (UsesConnectorConfigFile()) {
 		LoadConfigFile();
-	}
-
-	if (!parser.Found("host", &m_host)) {
-		if (m_host.IsEmpty()) {
-			m_host = "127.0.0.1";
-		}
-	}
-
-	long port;
-	if (parser.Found("port", &port)) {
-		m_port = port;
 	}
 
 	if (UsesEcPasswordOption()) {
@@ -637,9 +620,25 @@ bool CaMuleExternalConnector::OnCmdLineParsed(wxCmdLineParser &parser)
 		}
 	}
 
-	if (parser.Found("disable-ec-encryption")) {
-		m_ECEncryption = false;
+	if (createConfig) {
+		if (m_password.IsEmpty())
+			Show(_("The daemon verifier cannot supply a client password. Use -P or the password "
+			       "prompt.\n"));
+		SaveConfigFile();
+		exit(FlushConfigFile() ? 0 : 1);
 	}
+
+	if (!parser.Found("host", &m_host)) {
+		if (m_host.IsEmpty()) {
+			m_host = "127.0.0.1";
+		}
+	}
+
+	long port;
+	if (parser.Found("port", &port)) {
+		m_port = port;
+	}
+
 	if (parser.Found("force-zlib")) {
 		m_forceZLIB = true;
 	}
@@ -672,7 +671,9 @@ void CaMuleExternalConnector::LoadAmuleConfig(CECFileConfig &cfg)
 {
 	m_host = "127.0.0.1";
 	m_port = cfg.Read("/ExternalConnect/ECPort", 4712l);
-	cfg.ReadHash("/ExternalConnect/ECPassword", &m_password);
+	if (!cfg.HasEntry("/ExternalConnect/ECPasswordVerifier")) {
+		cfg.ReadHash("/ExternalConnect/ECPassword", &m_password);
+	}
 	m_language = cfg.Read("/eMule/Language", "");
 	theLogger.SetVerbose(cfg.Read("/eMule/VerboseDebug", 0l) != 0);
 }
@@ -732,8 +733,7 @@ bool CaMuleExternalConnector::FlushConfigFile()
 	if (!m_configFile || !m_configFile->Flush()) {
 		return false;
 	}
-	// The umask covers a new file; an existing one keeps its mode across the rewrite, and
-	// --create-config-from writes it without loading it first.
+	// The umask covers a new file; an existing one keeps its mode across the rewrite.
 	RestrictToOwner(CPath(m_configFileName));
 	return true;
 }

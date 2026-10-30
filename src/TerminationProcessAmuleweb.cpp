@@ -24,10 +24,13 @@
 //
 
 #include "TerminationProcessAmuleweb.h"
+#include <utility>
 
-CTerminationProcessAmuleweb::CTerminationProcessAmuleweb(const wxString &cmd, int *webserver_pid)
+CTerminationProcessAmuleweb::CTerminationProcessAmuleweb(
+	const wxString &cmd, int *webserver_pid, std::function<void()> onTerminated)
 : CTerminationProcess(cmd)
 , m_webserver_pid(webserver_pid)
+, m_onTerminated(std::move(onTerminated))
 {
 	// Don't open a command window on Windows
 	Redirect();
@@ -37,6 +40,9 @@ void CTerminationProcessAmuleweb::OnTerminate(int pid, int status)
 {
 	// Tell the application that the webserver is no longer running
 	*m_webserver_pid = 0;
+	// The shared library must not depend on CamuleApp's per-binary layout.
+	if (m_onTerminated)
+		m_onTerminated();
 
 	// Normal termination processing here
 	CTerminationProcess::OnTerminate(pid, status);

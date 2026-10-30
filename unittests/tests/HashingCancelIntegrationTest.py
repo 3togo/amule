@@ -82,7 +82,7 @@ def run(daemon, api):
                 # Start amuleapi now, not after the EC checks: the rehash takes only a few
                 # seconds, and amuleapi does not retry its first connection.
                 api_proc = subprocess.Popen([api, '--config-dir=' + str(api_root), '--host=127.0.0.1',
-                    '--port=' + str(ec_port), '--http-port=' + str(hp), '--disable-ec-encryption'],
+                    '--port=' + str(ec_port), '--http-port=' + str(hp)],
                     env=env, stdout=api_log, stderr=api_log)
                 processes.append(api_proc)
 

@@ -1,11 +1,11 @@
 # EC authentication, verifier format v1
 
-Upgrade the core and every EC client together to 3.2.0 or later. Authentication
+Upgrade the core and every EC client together to 3.3.0 or later. Authentication
 requires both SRP-6a and the encrypted X25519 channel, including on loopback.
 There is no legacy password challenge or plaintext fallback. The removed
 `--disable-ec-encryption` option is an unknown option. Old `Encryption` and
 `RequireEncryption` config keys are ignored. An old client receives an error
-requiring a 3.2.0 client; a new client facing an old daemon requires a 3.2.0 daemon.
+requiring a 3.3.0 client; a new client facing an old daemon requires a 3.3.0 daemon.
 
 ## Exact construction
 
@@ -36,7 +36,7 @@ The main ROMix array needs 32 MiB plus implementation overhead. The cost is
 paid once per client login and when generating a verifier, not per command on
 an established connection. `x` is wiped after constructing the client proof;
 there is no process cache or disk cache. Separate amulecmd invocations each
-perform their own login. Slower platforms still require performance validation.
+perform their own login.
 
 The stored `/ExternalConnect/ECPasswordVerifier` is exactly:
 
@@ -82,6 +82,10 @@ password-keyed AEAD confirmation tags are retired; their tag IDs are not reused.
 
 ## Migration and credential changes
 
+Legacy ECPassword values containing an empty-password digest, all zeros or invalid
+hex are refused without altering the saved verifier. Run `amuled --ec-config` to
+set a new EC password before starting external connections.
+
 When the verifier key is absent, the core derives a verifier from the existing
 ECPassword digest, writes and flushes it, then deletes and flushes the old key.
 wxFileConfig writes through a temporary file. Failure of the first commit
@@ -103,10 +107,12 @@ all-zero digests are rejected before changing preferences. A combined remote
 password/port edit commits its password only after port rebinding succeeds.
 The local dialog commits the password only after validation and cancellable
 work. Remote preference snapshots never consume or retain a pending EC digest;
-the edit is sent explicitly at commit and cleared only on acknowledgement.
-Confirmed changes update the GUI's reconnect credential and, only if the active
-credential was already saved for that endpoint, its saved client password.
-Failed requests preserve the pending edit for retry; cancelling discards it.
+the edit is sent explicitly when OK is pressed. Closing the dialog, including
+with OK, discards the pending edit. The request handler retains the submitted
+digest until the reply and updates the GUI's reconnect credential only after
+acknowledgement. It updates a saved client password only if that credential was
+already saved for the active endpoint. A failed request is not retried when the
+dialog is reopened.
 
 Config backups and saved client digests are not revoked by deleting the live
 key. A downgrade has no ECPassword and requires setting a password again with
@@ -151,7 +157,10 @@ the production daemon and clients. Fault-injected config tests cover failed
 commits, interrupted cleanup, restart and malformed existing verifiers.
 The asynchronous GUI transport is also queried for connection locality during
 login to verify that UI queries do not change SRP state. Both client transports
-reject missing or tampered server evidence before sending commands.
+reject missing or tampered server evidence before sending commands. Plaintext
+packets after key setup are rejected in the shared packet reader, including final
+authentication replies and synchronous command replies, and immediately report
+connection loss to event-driven clients.
 `ECSRPApiIntegrationTest` runs the production amuleapi against an offline core
 with both a configured password and a spawned token, including an obsolete
 `Encryption=0` setting. The token case uses a wrong configured password to rule

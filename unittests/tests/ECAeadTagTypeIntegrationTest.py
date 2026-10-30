@@ -9,39 +9,24 @@ running.
 """
 import hashlib, os, socket, struct, subprocess, sys, tempfile, time
 from pathlib import Path
-from AllSearchIntegrationTest import (C, EC, PortCollision, exact, free_ports, log_snapshot,
-                                      new_log_text, parse_tags, retry_port_collisions,
-                                      stop_daemon, string, tag)
+from AllSearchIntegrationTest import (C, EC, PortCollision, free_ports, log_snapshot,
+                                      new_log_text, retry_port_collisions, stop_daemon)
 from DaemonConfig import EC_PASSWORD, write_amule_conf
+from ECWire import authenticate  # Preflight before starting the daemon.
 
-UINT8, STRING, HASH16 = 2, 6, 9
-KEY = bytes(range(32))  # X25519_KEY_LEN; any 32 bytes reach the type check
-NONCE = bytes(range(32, 64))  # NONCE_TAG_LEN
-CHACHA20 = bytes([2])
+UINT8, STRING = 2, 6
 
 
-def call(sock, op, tags):
-    payload = bytes([op]) + struct.pack('!H', len(tags)) + b''.join(tags)
-    sock.sendall(struct.pack('!II', 0x20, len(payload)) + payload)
-    _, length = struct.unpack('!II', exact(sock, 8))
-    reply = exact(sock, length)
-    return reply[0], parse_tags(reply, 3, struct.unpack_from('!H', reply, 1)[0])[0]
-
-
-def login(port, offer, nonce, pubkey):
-    """Returns the reply to the password, or None when the request got no salt."""
+def login(port, field_name, field_type):
+    """Mutate one tag in an otherwise valid SRP request, reaching its type check."""
+    def mistype(fields):
+        return [field[:2] + bytes([field_type]) + field[3:]
+                if struct.unpack_from('!H', field)[0] == C[field_name] * 2 else field
+                for field in fields]
     with socket.create_connection(('127.0.0.1', port), timeout=30) as sock:
-        op, tags = call(sock, C['EC_OP_AUTH_REQ'], [
-            string(C['EC_TAG_CLIENT_NAME'], 'tag type regression'),
-            string(C['EC_TAG_CLIENT_VERSION'], '1'),
-            tag(C['EC_TAG_PROTOCOL_VERSION'], struct.pack('!H', C['EC_CURRENT_PROTOCOL_VERSION']), 3),
-            offer, nonce, pubkey])
-        if op != C['EC_OP_AUTH_SALT']:
-            return op, tags
-        salt = tags[C['EC_TAG_PASSWD_SALT']][0]
-        proof = hashlib.md5((hashlib.md5(EC_PASSWORD.encode()).hexdigest()
-                             + hashlib.md5(f'{salt:X}'.encode()).hexdigest()).encode()).digest()
-        return call(sock, C['EC_OP_AUTH_PASSWD'], [tag(C['EC_TAG_PASSWD_HASH'], proof, HASH16)])
+        _, op, fields = authenticate(sock, hashlib.md5(EC_PASSWORD.encode()).digest(),
+                                    request_mutator=mistype)
+        return op, fields
 
 
 def run(binary):
@@ -65,24 +50,19 @@ def run(binary):
                         break
                     time.sleep(0.1)
 
-                offer, nonce, pubkey = (tag(C['EC_TAG_CAN_AEAD'], CHACHA20),
-                                        tag(C['EC_TAG_AEAD_CLIENT_NONCE'], NONCE),
-                                        tag(C['EC_TAG_AEAD_CLIENT_PUBKEY'], KEY))
                 cases = [
-                    ('offer as UINT8', (tag(C['EC_TAG_CAN_AEAD'], CHACHA20, UINT8), nonce, pubkey)),
-                    ('nonce as STRING', (offer, tag(C['EC_TAG_AEAD_CLIENT_NONCE'], NONCE, STRING), pubkey)),
-                    ('public key as STRING', (offer, nonce, tag(C['EC_TAG_AEAD_CLIENT_PUBKEY'], KEY, STRING))),
+                    ('offer as UINT8', 'EC_TAG_CAN_AEAD', UINT8),
+                    ('nonce as STRING', 'EC_TAG_AEAD_CLIENT_NONCE', STRING),
+                    ('public key as STRING', 'EC_TAG_AEAD_CLIENT_PUBKEY', STRING),
                 ]
-                for name, tags in cases:
-                    op, reply = login(ec_port, *tags)
+                for name, field_name, field_type in cases:
+                    op, reply = login(ec_port, field_name, field_type)
                     assert proc.poll() is None, f'{name}: daemon exited with {proc.returncode}'
-                    if name == 'public key as STRING':
-                        # A mistyped key counts as missing: the login is refused, not run in clear.
-                        message = reply.get(C['EC_TAG_STRING'], (b'',))[0]
-                        assert op == C['EC_OP_AUTH_FAIL'] and b'no usable key' in message, (name, op, reply)
-                    print(f'PASS: {name} is answered and amuled keeps running')
+                    message = reply.get(C['EC_TAG_STRING'], b'')
+                    assert op == C['EC_OP_AUTH_FAIL'] and b'Invalid SRP handshake' in message, (name, op, reply)
+                    print(f'PASS: {name} is refused and amuled keeps running')
 
-                EC(ec_port, password=EC_PASSWORD)
+                EC(ec_port, password=EC_PASSWORD).sock.close()
                 print('PASS: a normal login still works')
             finally:
                 if proc.poll() is None:

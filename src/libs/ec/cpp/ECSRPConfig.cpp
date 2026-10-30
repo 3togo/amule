@@ -33,7 +33,7 @@ namespace
 {
 const char *const KEY = "/ExternalConnect/ECPasswordVerifier";
 const char *const LEGACY = "/ExternalConnect/ECPassword";
-wxString CreateRecord(const wxString &digest)
+wxString PrepareRecord(const wxString &digest)
 {
 	if (!digest.IsEmpty() && !IsPasswordDigest(std::string(digest.utf8_str())))
 		throw std::invalid_argument("Invalid EC password digest");
@@ -64,7 +64,7 @@ bool Persist(wxConfigBase &cfg, const wxString &next)
 bool Migrate(wxConfigBase &cfg, const wxString &legacy, wxString &verifier, wxString &error)
 {
 	try {
-		const wxString next = CreateRecord(legacy);
+		const wxString next = PrepareRecord(legacy);
 		if (Persist(cfg, next)) {
 			verifier = next;
 			Cleanup(cfg, error);
@@ -81,11 +81,26 @@ bool Migrate(wxConfigBase &cfg, const wxString &legacy, wxString &verifier, wxSt
 	}
 }
 } // namespace
+wxString PrepareCredential(const wxString &digest)
+{
+	return PrepareRecord(digest);
+}
 bool StoreCredential(wxConfigBase &cfg, const wxString &digest, wxString &verifier, wxString &error)
+{
+	try {
+		return StorePreparedCredential(cfg, PrepareCredential(digest), verifier, error);
+	} catch (const std::exception &) {
+		error = _("EC password change rejected: could not generate ECPasswordVerifier. The active "
+			  "credential is unchanged.");
+		return false;
+	}
+}
+bool StorePreparedCredential(wxConfigBase &cfg, const wxString &next, wxString &verifier, wxString &error)
 {
 	error.clear();
 	try {
-		const wxString next = CreateRecord(digest);
+		if (!next.IsEmpty())
+			Verifier::Decode(std::string(next.utf8_str()));
 		// Unlike migration, an explicit rotation must never persist a new
 		// verifier alongside a stale legacy password: startup would interpret
 		// that legacy key as a later password edit made by a downgraded core.
@@ -106,7 +121,7 @@ bool StoreCredential(wxConfigBase &cfg, const wxString &digest, wxString &verifi
 		verifier = next;
 		return true;
 	} catch (const std::exception &) {
-		error = _("EC password change rejected: could not generate ECPasswordVerifier. The active "
+		error = _("EC password change rejected: could not store ECPasswordVerifier. The active "
 			  "credential is unchanged.");
 		return false;
 	}
