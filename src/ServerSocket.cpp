@@ -74,6 +74,11 @@ void HandleLowIdHolePunchInfo(
 		info.tcpPort == 0) {
 		return;
 	}
+	if (info.peerId.has_value()) {
+		// The 0x61 a wake was waiting for, even one the guards below keep us from acting on: the
+		// requester already has its 0x61, so the wake's Lugdunum fallback must not dial it.
+		serverconnect->HolePunchExtensionWakes().Resolve(*info.peerId);
+	}
 	const uint32 peerIP = PeekUInt32(info.peerIP.data());
 	if (!IsGoodIP(peerIP, thePrefs::FilterLanIPs()) || theApp->ipfilter->IsFiltered(peerIP) ||
 		theApp->clientlist->IsBannedClient(CNetworkAddress::FromIPv4NetworkOrderOrAbsent(peerIP))) {
@@ -89,7 +94,8 @@ void HandleLowIdHolePunchInfo(
 	// 25-byte one, leaves us the target, who punches and waits for the peer's stream.
 	const bool requester = info.peerId.has_value() &&
 			       serverconnect->LowIdHolePunchPendingRequests().Take(*info.peerId, now);
-	serverconnect->LowIdHolePunchExpectedEndpoints().Register(info.peerIP, info.tcpPort, now);
+	const NatServerHolePunch::VouchedPeer peer{ info.userHash, info.peerCrypt };
+	serverconnect->LowIdHolePunchExpectedEndpoints().Register(info.peerIP, info.tcpPort, now, peer);
 	theApp->clientudp->ExpectNatTPeer(peerIP, info.udpPort, &info.userHash);
 	CPacket *punch = new CPacket(OP_HOLEPUNCH, 0, OP_EMULEPROT);
 	theStats::AddUpOverheadOther(punch->GetPacketSize());
@@ -98,8 +104,7 @@ void HandleLowIdHolePunchInfo(
 		CFormat("Client UDP socket: OP_HOLEPUNCH to %s") %
 			Uint32_16toStringIP_Port(peerIP, info.udpPort));
 	if (requester) {
-		if (theApp->clientudp->DialLowIdHolePunchPeer(
-			    peerIP, info.tcpPort, info.udpPort, info.userHash)) {
+		if (theApp->clientudp->DialLowIdHolePunchPeer(peerIP, info.tcpPort, info.udpPort, peer)) {
 			serverconnect->LowIdHolePunchExpectedEndpoints().NoteDialled(
 				info.peerIP, info.udpPort);
 		}
@@ -361,6 +366,10 @@ bool CServerSocket::ProcessPacket(const uint8_t *packet, uint32 size, int8 opcod
 				if (cur_server->SupportsLowIdHolePunch()) {
 					AddDebugLogLineN(logServer,
 						"OP_IDCHANGE: server accepts LowID hole punch requests");
+				}
+				if (cur_server->SupportsHolePunchExtension()) {
+					AddDebugLogLineN(logServer,
+						"OP_IDCHANGE: server runs the hole-punch extension");
 				}
 #endif
 				// copy TCP flags into the server in the server list
@@ -775,7 +784,7 @@ bool CServerSocket::ProcessPacket(const uint8_t *packet, uint32 size, int8 opcod
 						logServer, "OP_NAT_CALLBACKREQUESTED", forwarded);
 #ifdef AMULE_UTP_TRANSPORT
 					if (theApp->clientudp != nullptr) {
-						theApp->clientudp->DialLugdunumNatCallbackPeer(forwarded);
+						theApp->clientudp->HandleForwardedCallback(forwarded);
 					}
 #endif
 				});

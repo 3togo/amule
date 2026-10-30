@@ -689,6 +689,8 @@ bool CClientUDPSocket::TryProcessServerWayNatCallback(uint32 ip, uint8_t *buffer
 			LugdunumNatTraversal::LogForwardedCallback(
 				logClientUDP, "OP_NAT_CALLBACKREQUESTED_UDP", forwarded);
 #ifdef AMULE_UTP_TRANSPORT
+			// The extension wakes a target only with TCP 0x37: a 0xA7 is always Lugdunum's
+			// callback, answering our own 0xA6, so it is dialled at once.
 			DialLugdunumNatCallbackPeer(forwarded);
 #endif
 		});
@@ -927,9 +929,31 @@ void CClientUDPSocket::ProcessReservedProt2Frame(
 	}
 }
 
+#ifdef ENABLE_NATT_SERVER_COORDINATION
+uint32 CClientUDPSocket::SendServerWayObfuscated(
+	CPacket *packet, uint32 serverIp, uint16 port, uint32 serverKeyUdp)
+{
+	// Encrypted as CServerUDPSocket::SendPacket does, but sent from this socket: the server reads
+	// the source port peers must punch.
+	uint16 rawSize = static_cast<uint16>(packet->GetPacketSize() + 2);
+	uint8_t *raw = new uint8_t[rawSize];
+	memcpy(raw, packet->GetUDPHeader(), 2);
+	memcpy(raw + 2, packet->GetDataBuffer(), packet->GetPacketSize());
+	delete packet;
+	rawSize =
+		static_cast<uint16>(CEncryptedDatagramSocket::EncryptSendServer(&raw, rawSize, serverKeyUdp));
+	CMemFile encryptedData(raw + 2, rawSize - 2);
+	CPacket *encrypted = new CPacket(encryptedData, raw[0], raw[1]);
+	delete[] raw;
+	const uint32 queuedBytes = encrypted->GetPacketSize();
+	SendPacket(encrypted, serverIp, port, false, nullptr, false, 0);
+	return queuedBytes;
+}
+#endif
+
 #if defined(ENABLE_NATT_SERVER_COORDINATION) && defined(AMULE_UTP_TRANSPORT)
 bool CClientUDPSocket::DialLowIdHolePunchPeer(
-	uint32 ip, uint16 tcpPort, uint16 udpPort, const std::array<std::uint8_t, 16> &userHash)
+	uint32 ip, uint16 tcpPort, uint16 udpPort, const NatServerHolePunch::VouchedPeer &peer)
 {
 	if (tcpPort == 0 || udpPort == 0 || !Ok() || !m_utp.IsAvailable() ||
 		!IsGoodIP(ip, thePrefs::FilterLanIPs()) || theApp->ipfilter->IsFiltered(ip) ||
@@ -942,12 +966,16 @@ bool CClientUDPSocket::DialLowIdHolePunchPeer(
 	CUpDownClient *client = new CUpDownClient(tcpPort, ip, 0, 0, nullptr, true, false);
 	// The server-vouched punch dial needs HasValidHash() for the CAPS probe and the QUIC
 	// selection in TryServerVouchedLowIdUtpDial(); set it before AddClient() so the client
-	// list indexes it immediately, matching the OP_DIRECTCALLBACKREQ pattern. The target-side
-	// dial (OP_HOLEPUNCH-triggered, no 0x61 in hand) has nothing to pass here, and an all-zero
-	// hash is not a real one: skip the call rather than running the hash-list/chat-adoption
-	// machinery in SetUserHash() for nothing.
-	if (userHash != std::array<std::uint8_t, 16>{}) {
-		client->SetUserHash(CMD4Hash(userHash.data()));
+	// list indexes it immediately, matching the OP_DIRECTCALLBACKREQ pattern. An all-zero hash
+	// (a dial with no 0x61 in hand) is not a real one: skip the call rather than running the
+	// hash-list/chat-adoption machinery in SetUserHash() for nothing.
+	if (peer.userHash != NatServerHolePunch::Hash{}) {
+		client->SetUserHash(CMD4Hash(peer.userHash.data()));
+		// The peer's crypt options from a 30-byte 0x61 let the dial be obfuscated from its SYN,
+		// and let a peer that requires obfuscation accept it.
+		if (peer.cryptOptions) {
+			client->SetConnectOptions(*peer.cryptOptions, true, false);
+		}
 	}
 	theApp->clientlist->AddClient(client);
 	CClientRef ref{ client CLIENT_DEBUGSTRING("LowID hole punch dial") };
@@ -1018,24 +1046,10 @@ void CClientUDPSocket::SendLugdunumNatCallbackRequest(const LugdunumNatTraversal
 	const auto payload = LugdunumNatTraversal::BuildCallbackRequest(request);
 	CMemFile data(payload.data(), payload.size());
 	CPacket *packet = new CPacket(data, OP_EDONKEYPROT, OP_NAT_CALLBACKREQUEST);
-	uint16 rawSize = static_cast<uint16>(packet->GetPacketSize() + 2);
-	uint8_t *raw = new uint8_t[rawSize];
-	memcpy(raw, packet->GetUDPHeader(), 2);
-	memcpy(raw + 2, packet->GetDataBuffer(), packet->GetPacketSize());
-	delete packet;
-	rawSize = static_cast<uint16>(CEncryptedDatagramSocket::EncryptSendServer(
-		&raw, rawSize, serverListEntry->GetServerKeyUDP()));
-	CMemFile encryptedData(raw + 2, rawSize - 2);
-	CPacket *encrypted = new CPacket(encryptedData, raw[0], raw[1]);
-	delete[] raw;
-	theStats::AddUpOverheadOther(encrypted->GetPacketSize());
-	SendPacket(encrypted,
+	theStats::AddUpOverheadOther(SendServerWayObfuscated(packet,
 		server->GetIP(),
 		serverListEntry->GetObfuscationPortUDP(),
-		false,
-		nullptr,
-		false,
-		0);
+		serverListEntry->GetServerKeyUDP()));
 }
 
 void CClientUDPSocket::TickLugdunumCallbackRendezvous()
@@ -1051,6 +1065,49 @@ void CClientUDPSocket::TickLugdunumCallbackRendezvous()
 			SendPacket(punch, action.ip, action.udpPort, false, nullptr, false, 0);
 		}
 	}
+}
+
+void CClientUDPSocket::HandleForwardedCallback(const LugdunumNatTraversal::ForwardedCallback &callback)
+{
+	if (theApp->serverconnect != nullptr && theApp->serverconnect->IsHolePunchExtensionActive()) {
+		AnswerHolePunchExtensionWake(callback);
+	} else {
+		DialLugdunumNatCallbackPeer(callback);
+	}
+}
+
+bool CClientUDPSocket::AnswerHolePunchExtensionWake(const LugdunumNatTraversal::ForwardedCallback &callback)
+{
+	CServerConnect *connect = theApp->serverconnect;
+	CServer *server = connect->GetCurrentServer();
+	if (server == nullptr ||
+		!LugdunumNatTraversal::ShouldDialForwardedCallback(callback,
+			server->IsLugdunumNatCallbackActive(),
+			thePrefs::IsLugdunumNatCallbackEnabled()) ||
+		!Ok() || !m_utp.IsAvailable() || !IsGoodIP(callback.seenIp, thePrefs::FilterLanIPs()) ||
+		theApp->ipfilter->IsFiltered(callback.seenIp) ||
+		theApp->clientlist->IsBannedClient(
+			CNetworkAddress::FromIPv4NetworkOrderOrAbsent(callback.seenIp))) {
+		return false;
+	}
+	const std::uint64_t now = ::GetTickCount64();
+	if (!connect->LowIdHolePunchActionLimiter().Admit(now)) {
+		return false;
+	}
+	const LugdunumNatTraversal::CallbackDialTarget target =
+		LugdunumNatTraversal::BuildCallbackDialTarget(callback);
+	ExpectNatTPeer(target.ip, target.udpPort, callback.hasObfuscation ? &callback.userHash : nullptr);
+	// Punch now and refresh our port; the dial waits for the 0x61's role, as on any extension
+	// server, and no reverse callback is needed when the 0x61 gives both sides the endpoints.
+	connect->HolePunchExtensionWakes().Add(callback.requesterId, callback, now);
+	connect->StartHolePunchExtensionKeepalives();
+	CPacket *punch = new CPacket(OP_HOLEPUNCH, 0, OP_EMULEPROT);
+	theStats::AddUpOverheadOther(punch->GetPacketSize());
+	SendPacket(punch, target.ip, target.udpPort, false, nullptr, false, 0);
+	AddDebugLogLineN(logClientUDP,
+		CFormat("Hole-punch extension wake from requester %u: OP_HOLEPUNCH to %s") %
+			callback.requesterId % Uint32_16toStringIP_Port(target.ip, target.udpPort));
+	return true;
 }
 
 bool CClientUDPSocket::DialLugdunumNatCallbackPeer(const LugdunumNatTraversal::ForwardedCallback &callback)
@@ -1139,12 +1196,11 @@ void CClientUDPSocket::HandleLowIdHolePunch(uint32 host, uint16 port)
 			AddDebugLogLineN(logClientUDP,
 				CFormat("OP_HOLEPUNCH from %s; dialling its observed UDP port") %
 					Uint32_16toStringIP_Port(host, port));
-			// OP_HOLEPUNCH carries no user hash; this target-side dial has none to propagate,
-			// unlike the requester-side dial in HandleLowIdHolePunchInfo().
-			DialLowIdHolePunchPeer(host, action.tcpPort, port, std::array<std::uint8_t, 16>{});
+			// OP_HOLEPUNCH carries no user hash; the 0x61 that announced this endpoint does.
+			DialLowIdHolePunchPeer(host, action.tcpPort, port, action.peer);
 		}
 	} else if (action.kind == NatServerHolePunch::PunchAction::DialLater) {
-		connect->LowIdHolePunchDialBacks().Schedule(source, action.tcpPort, port, now);
+		connect->LowIdHolePunchDialBacks().Schedule(source, action.tcpPort, port, now, action.peer);
 	}
 }
 #endif

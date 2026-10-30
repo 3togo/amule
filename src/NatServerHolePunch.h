@@ -58,6 +58,8 @@ struct Info
 	std::uint8_t role; // Opaque: decoding does not authorize a peer action.
 	// The server ID of the peer described, present only in a frame of 29 bytes or more.
 	std::optional<std::uint32_t> peerId;
+	// The peer's crypt-layer options, (CT_SERVER_FLAGS >> 9) & 7, only in a frame of 30 bytes or more.
+	std::optional<std::uint8_t> peerCrypt;
 };
 struct Failure
 {
@@ -140,6 +142,9 @@ inline std::optional<Info> ParseInfo(const std::uint8_t *data, std::size_t size)
 	info.role = data[24];
 	if (size >= 29) {
 		info.peerId = Detail::ReadLE(data + 25, 4);
+	}
+	if (size >= 30) {
+		info.peerCrypt = data[29];
 	}
 	return info;
 }
@@ -384,6 +389,13 @@ private:
 	std::deque<std::uint64_t> m_events;
 };
 
+// What a 0x61 told us about the peer, so a dial to it can be obfuscated from its first frame.
+struct VouchedPeer
+{
+	Hash userHash{};
+	std::optional<std::uint8_t> cryptOptions;
+};
+
 // A punch reply is accepted for 30 s after the server gives us its peer endpoint.
 constexpr std::uint64_t kExpectedEndpointTtlMs = 30'000;
 
@@ -398,6 +410,7 @@ struct PunchAction
 	};
 	Kind kind = None;
 	std::uint16_t tcpPort = 0;
+	VouchedPeer peer;
 };
 
 // A server-announced endpoint may trigger one dial back when its UDP punch arrives. The TCP
@@ -405,13 +418,14 @@ struct PunchAction
 class ExpectedEndpointRegistry
 {
 public:
-	void Register(const IPv4 &peerIP, std::uint16_t tcpPort, std::uint64_t now)
+	void Register(
+		const IPv4 &peerIP, std::uint16_t tcpPort, std::uint64_t now, const VouchedPeer &peer = {})
 	{
 		Evict(now);
 		if (tcpPort == 0) {
 			return;
 		}
-		m_expected.push_back({ peerIP, tcpPort, now, std::nullopt });
+		m_expected.push_back({ peerIP, tcpPort, now, std::nullopt, peer });
 	}
 	// Records the UDP port of a dial already started for this endpoint, so the punch that
 	// follows from that same port does not start a second one.
@@ -434,12 +448,12 @@ public:
 		const Entry entry = *match;
 		m_expected.erase(match);
 		if (!entry.dialledUdpPort.has_value()) {
-			return { PunchAction::DialLater, entry.tcpPort };
+			return { PunchAction::DialLater, entry.tcpPort, entry.peer };
 		}
 		if (*entry.dialledUdpPort == sourcePort) {
 			return {};
 		}
-		return { PunchAction::DialNow, entry.tcpPort };
+		return { PunchAction::DialNow, entry.tcpPort, entry.peer };
 	}
 
 private:
@@ -449,6 +463,7 @@ private:
 		std::uint16_t tcpPort;
 		std::uint64_t registeredAt;
 		std::optional<std::uint16_t> dialledUdpPort;
+		VouchedPeer peer;
 	};
 	std::vector<Entry>::iterator Find(const IPv4 &peerIP)
 	{
@@ -482,8 +497,13 @@ public:
 		std::uint16_t tcpPort;
 		std::uint16_t udpPort;
 		std::uint64_t dueAt;
+		VouchedPeer peer;
 	};
-	void Schedule(const IPv4 &peerIP, std::uint16_t tcpPort, std::uint16_t udpPort, std::uint64_t now)
+	void Schedule(const IPv4 &peerIP,
+		std::uint16_t tcpPort,
+		std::uint16_t udpPort,
+		std::uint64_t now,
+		const VouchedPeer &peer = {})
 	{
 		const auto same = std::find_if(m_entries.begin(),
 			m_entries.end(),
@@ -493,7 +513,7 @@ public:
 		} else if (m_entries.size() >= kMaxDialBacks) {
 			m_entries.erase(m_entries.begin());
 		}
-		m_entries.push_back({ peerIP, tcpPort, udpPort, now + kDialBackDelayMs });
+		m_entries.push_back({ peerIP, tcpPort, udpPort, now + kDialBackDelayMs, peer });
 	}
 	std::vector<Entry> TakeDue(std::uint64_t now)
 	{
@@ -508,6 +528,119 @@ public:
 
 private:
 	std::vector<Entry> m_entries;
+};
+// Hole-punch extension (ed2k-server 0.9.85). Between two clients that both announced it, a 0x60
+// wakes the target with Lugdunum's 0x37; the target's fresh 0x9F then releases a 30-byte 0x61.
+
+inline bool ServerOffersHolePunchExtension(std::uint32_t tcpFlags)
+{
+	return (tcpFlags & SRV_TCPFLG_HOLEPUNCH_EXTENSION) != 0;
+}
+
+// The extension needs Lugdunum's opt-in too: its 0x1000 enrols us for 0x37 forwards, which only
+// the Lugdunum path serves.
+inline bool ShouldAnnounceHolePunchExtension(
+	bool holePunchEnabled, bool lugdunumCallbackEnabled, bool utpAvailable)
+{
+	return holePunchEnabled && lugdunumCallbackEnabled && utpAvailable;
+}
+
+struct KeepaliveCryptFacts
+{
+	bool extensionActive = false;
+	bool cryptLayerUdpEnabled = false;
+	std::uint32_t serverKeyUdp = 0;
+	bool serverSupportsObfuscationUdp = false;
+};
+
+// An extension server ignores a session's plain 0x9F once it has sent an obfuscated one, so every
+// 0x9F is obfuscated once the key exists. An older server reads only plain ones.
+inline bool ShouldObfuscateKeepalive(const KeepaliveCryptFacts &facts)
+{
+	return facts.extensionActive && facts.cryptLayerUdpEnabled && facts.serverKeyUdp != 0 &&
+	       facts.serverSupportsObfuscationUdp;
+}
+
+// A woken target sends 0x9F at 0, 0.5 and 1 s: the server takes the first that arrives.
+constexpr std::array<std::uint64_t, 3> kWakeKeepaliveOffsetsMs{ 0, 500, 1'000 };
+constexpr std::size_t kMaxPendingBurstKeepalives = 3 * kWakeKeepaliveOffsetsMs.size();
+
+class KeepaliveBurst
+{
+public:
+	void Start(std::uint64_t now)
+	{
+		for (const std::uint64_t offset : kWakeKeepaliveOffsetsMs) {
+			if (m_dueAt.size() >= kMaxPendingBurstKeepalives) {
+				m_dueAt.erase(m_dueAt.begin());
+			}
+			m_dueAt.push_back(now + offset);
+		}
+	}
+	// How many keepalives are due now; each is returned once.
+	std::size_t TakeDue(std::uint64_t now)
+	{
+		const auto firstPending = std::stable_partition(
+			m_dueAt.begin(), m_dueAt.end(), [now](std::uint64_t dueAt) { return now >= dueAt; });
+		const auto due = static_cast<std::size_t>(firstPending - m_dueAt.begin());
+		m_dueAt.erase(m_dueAt.begin(), firstPending);
+		return due;
+	}
+
+private:
+	std::vector<std::uint64_t> m_dueAt;
+};
+
+// A 0x37 on an extension server may also come from a Lugdunum 0xA6, which no 0x61 follows. The
+// server sends 0x61 within 3 s of the wake (resends at +1.2 s and +3 s); 5 s covers that.
+constexpr std::uint64_t kWakeInfoTimeoutMs = 5'000;
+constexpr std::size_t kMaxPendingWakes = 16;
+
+// Wakes waiting for the 0x61 that names their requester; an unanswered one is handed back.
+template <typename Wake> class PendingWakeSet
+{
+public:
+	void Add(std::uint32_t requesterId, Wake wake, std::uint64_t now)
+	{
+		Resolve(requesterId);
+		if (m_pending.size() >= kMaxPendingWakes) {
+			m_pending.erase(m_pending.begin());
+		}
+		m_pending.push_back({ requesterId, std::move(wake), now });
+	}
+	bool Resolve(std::uint32_t requesterId)
+	{
+		const auto match = std::find_if(m_pending.begin(),
+			m_pending.end(),
+			[requesterId](const Entry &entry) { return entry.requesterId == requesterId; });
+		if (match == m_pending.end()) {
+			return false;
+		}
+		m_pending.erase(match);
+		return true;
+	}
+	std::vector<Wake> TakeExpired(std::uint64_t now)
+	{
+		const auto firstLive =
+			std::stable_partition(m_pending.begin(), m_pending.end(), [now](const Entry &entry) {
+				return now >= entry.wokenAt && now - entry.wokenAt >= kWakeInfoTimeoutMs;
+			});
+		std::vector<Wake> expired;
+		for (auto it = m_pending.begin(); it != firstLive; ++it) {
+			expired.push_back(std::move(it->wake));
+		}
+		m_pending.erase(m_pending.begin(), firstLive);
+		return expired;
+	}
+
+private:
+	struct Entry
+	{
+		std::uint32_t requesterId;
+		Wake wake;
+		std::uint64_t wokenAt;
+	};
+	std::vector<Entry> m_pending;
 };
 } // namespace NatServerHolePunch
 #endif // ENABLE_NATT_SERVER_COORDINATION
