@@ -27,6 +27,7 @@
 
 #include <wx/file.h>
 #include <wx/filefn.h> // Needed for wxRename
+#include <wx/log.h>    // Needed for wxSysErrorMsgStr
 #ifdef __WINDOWS__
 #include <wx/msw/wrapwin.h> // Needed for MoveFileExW
 #endif
@@ -809,8 +810,11 @@ bool CPath::RenameFile(const CPath &src, const CPath &dst, bool overwrite)
 	return ::wxRenameFile(src.m_filesystem, dst.m_filesystem, overwrite);
 }
 
-bool CPath::ReplaceEntry(const CPath &src, const CPath &dst)
+bool CPath::ReplaceEntry(const CPath &src, const CPath &dst, wxString *detail)
 {
+	if (detail) {
+		detail->clear();
+	}
 	// wxRenameFile falls back to copying after a failed rename, which can remove or truncate
 	// the existing destination before failing. Replacement must leave it intact.
 #ifdef __WINDOWS__
@@ -818,13 +822,39 @@ bool CPath::ReplaceEntry(const CPath &src, const CPath &dst)
 	// directory sources so an invalid source cannot destroy the destination file.
 	const DWORD attributes = ::GetFileAttributesW(src.m_filesystem.wc_str());
 	if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+		const DWORD error = ::GetLastError();
+		if (detail) {
+			*detail = attributes == INVALID_FILE_ATTRIBUTES ? wxSysErrorMsgStr(error)
+									: wxString("source is a directory");
+		}
 		return false;
 	}
-	return ::MoveFileExW(
-		       src.m_filesystem.wc_str(), dst.m_filesystem.wc_str(), MOVEFILE_REPLACE_EXISTING) != 0;
+	if (::MoveFileExW(src.m_filesystem.wc_str(), dst.m_filesystem.wc_str(), MOVEFILE_REPLACE_EXISTING)) {
+		return true;
+	}
+	DWORD error = ::GetLastError();
+	if (error == ERROR_SHARING_VIOLATION || error == ERROR_ACCESS_DENIED) {
+		// Antivirus scanners and indexers may briefly hold either file open.
+		wxMilliSleep(50);
+		if (::MoveFileExW(src.m_filesystem.wc_str(),
+			    dst.m_filesystem.wc_str(),
+			    MOVEFILE_REPLACE_EXISTING)) {
+			return true;
+		}
+		error = ::GetLastError();
+	}
+	if (detail) {
+		*detail = wxSysErrorMsgStr(error);
+	}
 #else
-	return ::wxRename(src.m_filesystem, dst.m_filesystem) == 0;
+	if (::wxRename(src.m_filesystem, dst.m_filesystem) == 0) {
+		return true;
+	}
+	if (detail) {
+		*detail = wxSysErrorMsgStr();
+	}
 #endif
+	return false;
 }
 
 bool CPath::BackupFile(const CPath &src, const wxString &appendix)

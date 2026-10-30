@@ -198,8 +198,10 @@ public:
 	 * Replaces the directory entry dst with src on the same volume.
 	 * Creates dst if absent; leaves an existing destination intact on failure.
 	 * Does not fall back to copying or flushing file data to stable storage.
+	 * Clears detail on success; on failure, fills it with the OS error if requested.
+	 * On Windows, retries once after a short wait for sharing/access violations.
 	 */
-	static bool ReplaceEntry(const CPath &src, const CPath &dst);
+	static bool ReplaceEntry(const CPath &src, const CPath &dst, wxString *detail = nullptr);
 
 	/** Makes a backup of a file, by copying the original file to 'src' + 'appendix' */
 	static bool BackupFile(const CPath &src, const wxString &appendix);

@@ -74,7 +74,7 @@ CPartMetSaveResult WritePartMet(CPartMetSaveRequest &req);
 struct CPartMetFileOps
 {
 	std::function<bool(const CPath &, const wxString &)> backup;
-	std::function<bool(const CPath &, const CPath &)> replace;
+	std::function<bool(const CPath &, const CPath &, wxString *)> replace;
 };
 
 //! Backs up the old metadata without removing its live name, then installs the new file.
