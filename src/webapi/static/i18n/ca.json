@@ -675,7 +675,7 @@
   "networks_log_error": "Error",
   "identity_tip_hash": "Identificador ED2K únic (MD4) del fitxer.",
   "messages_field_userhash": "Hash de l'usuari",
-  "shared_media_refresh_tip": "Torna a analitzar aquest fitxer amb ffprobe i en substitueix la durada, la taxa de bits, el còdec i les etiquetes. Es mostra al registre de l'aMule.",
+  "shared_media_refresh_tip": "Torna a analitzar aquest fitxer amb l'analitzador multimèdia inclòs i en substitueix la durada, la taxa de bits, el còdec i les etiquetes. Es mostra al registre de l'aMule.",
   "messages_close": "Tanca",
   "prefs_group_external_connections": "Connexions externes",
   "stats_tree_ul_dl_ratio": "Raó PU:BA de la sessió (total): %s",
@@ -1061,5 +1061,9 @@
   "prefs_group_remote_roots": "Carpetes remotes permeses",
   "prefs_allowed_roots_hint": "Els canvis remots de carpetes (carpetes d'entrada, temporal, compartides i de categoria) es limiten a aquestes arrels. Una llista buida vol dir que el dimoni rebutja qualsevol canvi remot de carpetes. Es configuren al dimoni a allowed-remote-dirs.dat i no es poden canviar mitjançant l'API.",
   "prefs_daemon_local_hint": "Només es defineix al fitxer amule.conf del mateix dimoni; no es pot canviar mitjançant l'API.",
-  "prefs_field_directories_allowed_remote_roots": "Arrels configurades"
+  "prefs_field_directories_allowed_remote_roots": "Arrels configurades",
+  "prefs_field_servers_accelerated_publication_enabled_help": "Segueix el ritme de publicació que anuncia el servidor. Als altres servidors s'aplica el ritme estàndard. S'aplica a partir de la propera connexió a un servidor.",
+  "prefs_field_servers_accelerated_publication_enabled": "Publica els fitxers compartits més ràpidament als servidors que ho permeten",
+  "shared_media_refresh_tip_unavailable": "Aquest aMule no té el programa auxiliar multimèdia (amule-media-probe), així que no pot extreure les metadades multimèdia.",
+  "shared_media_refresh_tip_disabled": "L'extracció de metadades multimèdia està desactivada a les Preferències."
 }
