@@ -435,6 +435,10 @@ msgstr ""
 "Nastavitev zunanje povezave"
 
 #: src/amule.cpp
+msgid "Could not save AcceptExternalConnections to amule.conf."
+msgstr ""
+
+#: src/amule.cpp
 msgid "Password set and external connections enabled."
 msgstr "Geslo je bilo nastavljeno in zunanje povezave omogočene."
 

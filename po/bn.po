@@ -426,6 +426,10 @@ msgstr ""
 "EC কনফিগারেশন"
 
 #: src/amule.cpp
+msgid "Could not save AcceptExternalConnections to amule.conf."
+msgstr ""
+
+#: src/amule.cpp
 msgid "Password set and external connections enabled."
 msgstr "পাসওয়ার্ড সেট করা হয়েছে এবং বাহ্যিক সংযোগ সক্রিয় করা হয়েছে।"
 
