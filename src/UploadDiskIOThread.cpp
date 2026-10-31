@@ -148,7 +148,15 @@ void *CUploadDiskIOThread::Entry()
 {
 	try {
 		m_pool = std::make_unique<StorageReadPool<ReadRequest_Struct>>(
-			[](ReadRequest_Struct &req) { req.result = ReadBlock(&req); },
+			[this](ReadRequest_Struct &req) {
+				UploadReadDiagnostics::RunTimed(
+					req.diagnosticEpoch,
+					m_activeDiagnosticEpoch,
+					req.readStarted,
+					req.readFinished,
+					[&] { req.result = ReadBlock(&req); },
+					[] { return GetTickCount64(); });
+			},
 			[this] { NewBlockRequestsAvailable(); });
 	} catch (const std::exception &error) {
 		AddLogLineC(CFormat(_("Could not start the upload disk readers: %s")) % error.what());
@@ -187,8 +195,23 @@ void CUploadDiskIOThread::DispatchReads()
 		m_bNewBlocksPending = false;
 		m_bSocketNeedsPending = false;
 	}
+	const bool enabled = theLogger.IsEnabled(logFileIO);
+	if (enabled != m_diagnostics) {
+		m_diagnostics = enabled;
+		++m_diagnosticEpoch;
+		m_activeDiagnosticEpoch.store(enabled ? m_diagnosticEpoch : 0, std::memory_order_relaxed);
+		m_reportStarted = 0;
+		m_lastSample = 0;
+		m_volumes.clear();
+		m_waitingReads.clear();
+		m_slotSamples = {};
+		m_slotSamplePasses = 0;
+	}
 	DrainCompletions(true);
 	const uint64 now = GetTickCount64();
+	if (m_diagnostics) {
+		ObserveDiagnostics(now);
+	}
 	if ((m_storageRefreshed == 0 || now - m_storageRefreshed >= 5000) &&
 		m_pool->CanSubmit("storage-discovery")) {
 		// Network providers may block even when resolving a mapped drive.
@@ -258,18 +281,40 @@ void CUploadDiskIOThread::DispatchReads()
 		// The volume is busy: skip the lookups and checks PrepareRead would repeat.
 		const auto known = m_clientStorage.find(clientId);
 		if (known != m_clientStorage.end() && !m_pool->CanSubmit(known->second)) {
+			if (m_diagnostics) {
+				++m_volumes[known->second].busySkips;
+			}
 			continue;
 		}
 		auto req = PrepareRead(clientId);
 		if (!req) {
 			continue;
 		}
+		if (m_diagnostics) {
+			req->diagnosticEpoch = m_diagnosticEpoch;
+		}
 		const std::string storage = req->storage;
 		if (m_pool->Submit(storage, req)) {
+			if (m_diagnostics) {
+				const auto waiting = m_waitingReads.find(clientId);
+				if (waiting != m_waitingReads.end() && waiting->second.since != 0) {
+					m_volumes[storage].dispatch.Add(now - waiting->second.since);
+					waiting->second.since = 0;
+				}
+			}
 			m_pendingClients.insert(clientId);
 			m_lastDispatch[clientId] = ++m_dispatchSequence;
 			auto &turn = m_turns[storage];
-			if (turn.client != clientId || !turn.continues) {
+			const bool newTurn = turn.client != clientId || !turn.continues;
+			if (m_diagnostics) {
+				auto &volume = m_volumes[storage];
+				// Count a carry-in turn once when an interval begins partway through it.
+				if (newTurn || volume.turnReads == 0) {
+					++volume.turns;
+				}
+				++volume.turnReads;
+			}
+			if (newTurn) {
 				turn = Turn{ clientId, 0, now, false };
 			}
 			++turn.reads;
@@ -277,6 +322,126 @@ void CUploadDiskIOThread::DispatchReads()
 		}
 	}
 	QueueIdleCloses();
+	if (m_diagnostics) {
+		ReportDiagnostics(now);
+	}
+}
+
+// All accounting except request timestamps belongs to this coordinator.
+void CUploadDiskIOThread::ObserveDiagnostics(uint64 now)
+{
+	if (m_reportStarted == 0) {
+		m_reportStarted = now;
+	}
+	const bool sample = m_lastSample == 0 || now - m_lastSample >= 1000;
+	if (sample) {
+		m_lastSample = now;
+		++m_slotSamplePasses;
+	}
+	{
+		wxMutexLocker uploadLock(theApp->uploadqueue->GetUploadingListLock());
+		for (const auto &ref : theApp->uploadqueue->GetUploadingList()) {
+			auto *client = ref.GetClient();
+			auto *socket = client->GetSocket();
+			if (!socket || !client->IsConnected() || client->m_bIOError) {
+				continue;
+			}
+			wxMutexLocker blocks(client->m_blockListLock);
+			const auto target = client->GetUploadDatarate() > BIGBUFFER_MINDATARATE
+						    ? 10 * EMBLOCKSIZE + 1
+						    : EMBLOCKSIZE + 1;
+			const uint32 id = client->ECID();
+			const auto state = UploadReadDiagnostics::Classify(m_pendingClients.count(id) != 0,
+				!client->m_BlockRequests_queue.empty(),
+				socket->QueuedUploadPayload() >= target);
+			if (sample) {
+				++m_slotSamples[static_cast<unsigned>(state)];
+			}
+			if (state == UploadReadDiagnostics::SlotState::Storage) {
+				const auto *block = client->m_BlockRequests_queue.front();
+				auto it = m_waitingReads.find(id);
+				if (it == m_waitingReads.end() || it->second.since == 0 ||
+					it->second.session != client->m_uploadReadSession ||
+					it->second.start != block->StartOffset ||
+					it->second.end != block->EndOffset) {
+					m_waitingReads[id] = { client->m_uploadReadSession,
+						block->StartOffset,
+						block->EndOffset,
+						now };
+				}
+			} else {
+				const auto it = m_waitingReads.find(id);
+				if (it != m_waitingReads.end()) {
+					it->second.since = 0;
+				}
+			}
+		}
+		for (auto it = m_waitingReads.begin(); it != m_waitingReads.end();) {
+			it = theApp->uploadqueue->FindUploadingClient(it->first) != nullptr
+				     ? std::next(it)
+				     : m_waitingReads.erase(it);
+		}
+	}
+	// Copy at most four reports out of the pool lock before logging.
+	std::vector<wxString> pending;
+	m_pool->VisitRunning([&](const ReadRequest_Struct &req) {
+		if (req.diagnosticEpoch != m_diagnosticEpoch) {
+			return;
+		}
+		m_volumes.try_emplace(req.storage);
+		if (req.pendingReported) {
+			return;
+		}
+		const uint64 started = req.readStarted.load(std::memory_order_relaxed);
+		if (started != 0 && now >= started && now - started >= 5000) {
+			req.pendingReported = true;
+			pending.push_back(CFormat("Upload read pending: volume=%s file=%s elapsed_ms=%u") %
+					  wxString::FromUTF8(req.storage.c_str()) % req.path.GetRaw() %
+					  (now - started));
+		}
+	});
+	for (const auto &line : pending) {
+		AddDebugLogLineN(logFileIO, line);
+	}
+}
+
+void CUploadDiskIOThread::ReportDiagnostics(uint64 now)
+{
+	if (now - m_reportStarted < 60000) {
+		return;
+	}
+	for (const auto &entry : m_volumes) {
+		const auto &v = entry.second;
+		AddDebugLogLineN(logFileIO,
+			CFormat("Upload reads: volume=%s reads=%u bytes=%u read_ms_median_upper=%u "
+				"read_ms_max=%u "
+				"dispatch_ms_median_upper=%u dispatch_ms_max=%u delivery_ms_max=%u turns=%u "
+				"reads_per_turn=%s busy_skips=%u") %
+				wxString::FromUTF8(entry.first.c_str()) % v.read.count % v.bytes %
+				v.read.Median() % v.read.maximum % v.dispatch.Median() % v.dispatch.maximum %
+				v.deliveryMaximum % v.turns %
+				wxString::Format(
+					"%.2f", v.turns ? double(v.turnReads) / double(v.turns) : 0.0) %
+				v.busySkips);
+	}
+	uint64 total = 0;
+	for (auto count : m_slotSamples) {
+		total += count;
+	}
+	const auto percent = [&](unsigned i) {
+		return total ? 100.0 * double(m_slotSamples[i]) / double(total) : 0.0;
+	};
+	AddDebugLogLineN(logFileIO,
+		CFormat("Upload slots: average=%s receiver-limited=%s%% reading=%s%% "
+			"waiting-for-storage=%s%% waiting-for-peer=%s%% samples=%u") %
+			wxString::Format("%.2f",
+				m_slotSamplePasses ? double(total) / double(m_slotSamplePasses) : 0.0) %
+			wxString::Format("%.1f", percent(2)) % wxString::Format("%.1f", percent(1)) %
+			wxString::Format("%.1f", percent(0)) % wxString::Format("%.1f", percent(3)) % total);
+	m_volumes.clear();
+	m_slotSamples = {};
+	m_slotSamplePasses = 0;
+	m_reportStarted = now;
 }
 
 void CUploadDiskIOThread::DrainCompletions(bool deliver)
@@ -312,6 +477,17 @@ void CUploadDiskIOThread::DrainCompletions(bool deliver)
 			continue;
 		}
 		auto &req = completed.job;
+		if (m_diagnostics && req->diagnosticEpoch == m_diagnosticEpoch && req->readFinished != 0 &&
+			!req->closeOnly) {
+			auto &volume = m_volumes[req->storage];
+			const uint64 started = req->readStarted.load(std::memory_order_relaxed);
+			volume.read.Add(req->readFinished - started);
+			if (!completed.error && req->result == READ_OK) {
+				volume.bytes += req->uEndOffset - req->uStartOffset;
+			}
+			volume.deliveryMaximum =
+				std::max(volume.deliveryMaximum, GetTickCount64() - req->readFinished);
+		}
 		m_pendingClients.erase(req->clientId);
 		if (deliver && req->result == READ_DEFERRED) {
 			// File completion may briefly park a request. Worker completion wakes must
@@ -440,6 +616,9 @@ std::unique_ptr<ReadRequest_Struct> CUploadDiskIOThread::PrepareRead(uint32 clie
 		}
 		m_clientStorage[clientId] = storage->second;
 		if (!m_pool->CanSubmit(storage->second)) {
+			if (m_diagnostics) {
+				++m_volumes[storage->second].busySkips;
+			}
 			return nullptr;
 		}
 		auto req = std::make_unique<ReadRequest_Struct>();

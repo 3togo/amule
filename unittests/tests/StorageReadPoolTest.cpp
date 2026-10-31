@@ -53,6 +53,12 @@ TEST(StorageReadPool, ABlockedStorageCannotOccupyOtherWorkers)
 	ASSERT_TRUE(pool.CanSubmit("slow-device"));
 	ASSERT_TRUE(pool.Submit("slow-device", first));
 	ASSERT_TRUE(blocked.get_future().wait_for(std::chrono::seconds(3)) == std::future_status::ready);
+	unsigned running = 0;
+	pool.VisitRunning([&](const Job &job) {
+		ASSERT_TRUE(job.blocked);
+		++running;
+	});
+	ASSERT_EQUALS(1u, running);
 	ASSERT_FALSE(pool.CanSubmit("slow-device"));
 	ASSERT_TRUE(pool.CanSubmit("healthy-device"));
 	for (int i = 0; i < 12; ++i) {

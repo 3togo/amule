@@ -10,6 +10,7 @@ worker. All filesystem delays are pipe-controlled; no real mounts are changed.
 """
 import argparse
 import os
+import re
 from pathlib import Path
 import select
 import struct
@@ -80,7 +81,9 @@ def run(binary, fixture, stage):
         ec_port, peer_port = free_ports(2, peer_index=1)
         write_amule_conf(root, ec_port, Port=peer_port, UDPEnable=0, FilterLanIPs=0,
                          MaxUpload=3500, SlotAllocation=100, MMapEnabled=int(stage in ('mapped-copy', 'mapped-fault')),
-                         SharedFileReverifyDays=0, IncomingDir=incoming)
+                         SharedFileReverifyDays=0, IncomingDir=incoming,
+                         VerboseDebug=int(stage == 'diagnostics'), VerboseDebugLogfile=0,
+                         sections={'Debug': {'Cat_FileIO': int(stage == 'diagnostics')}})
         notify_r, notify_w = os.pipe()
         release_r, release_w = os.pipe()
         arm = root / 'armed'
@@ -290,6 +293,39 @@ def run(binary, fixture, stage):
                 for peer in peers[1:4]:
                     peer.request([(0, BLOCK)])
                     peer.barrier()
+                if stage in ('diagnostics', 'diagnostics-off'):
+                    # Keep the worker blocked long enough for the five-second warning
+                    # and several one-second slot samples, then let every read recover.
+                    time.sleep(6)
+                    text = (root / 'logfile').read_text(errors='replace')
+                    pending = [line for line in text.splitlines() if 'Upload read pending:' in line]
+                    if stage == 'diagnostics':
+                        assert len(pending) == 1, pending
+                        assert 'volume=' in pending[0] and slow_name in pending[0], pending
+                    else:
+                        assert not pending, pending
+                    os.close(release_w)
+                    release_w = None
+                    for index in range(4):
+                        peers[index].receive((0, BLOCK), bad_data[index])
+                    deadline = time.monotonic() + 65
+                    while True:
+                        text = (root / 'logfile').read_text(errors='replace')
+                        if stage == 'diagnostics' and 'Upload slots:' in text:
+                            assert 'Upload reads: volume=' in text, text[-5000:]
+                            for state in ('reading', 'waiting-for-storage'):
+                                values = re.findall(rf'{state}=([0-9.]+)%', text)
+                                assert values and float(values[-1]) > 0, text[-5000:]
+                            break
+                        if time.monotonic() >= deadline:
+                            assert stage == 'diagnostics-off', text[-5000:]
+                            assert not any(label in text for label in
+                                           ('Upload reads:', 'Upload slots:', 'Upload read pending:'))
+                            break
+                        assert proc.poll() is None
+                        time.sleep(0.1)
+                    print(f'{stage}: held-read warning, slot classification and opt-in output checked')
+                    return
                 healthy.request([(0, BLOCK)])
                 healthy.receive((0, BLOCK), healthy_data)
                 # There must be no second read/open on the blocked drive, including
@@ -327,7 +363,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('binary')
     parser.add_argument('fixture')
-    parser.add_argument('--stage', choices=('read', 'open', 'session', 'packet-session', 'heap-buffer', 'mapped-copy', 'mapped-fault', 'shutdown', 'fairness', 'discovery', 'open-failure', 'part-file'))
+    parser.add_argument('--stage', choices=('read', 'open', 'session', 'packet-session', 'heap-buffer', 'mapped-copy', 'mapped-fault', 'shutdown', 'fairness', 'discovery', 'open-failure', 'part-file', 'diagnostics', 'diagnostics-off'))
     args = parser.parse_args()
     for stage in ([args.stage] if args.stage else ('read', 'open', 'session', 'packet-session', 'heap-buffer', 'mapped-copy', 'mapped-fault', 'shutdown', 'fairness', 'discovery', 'open-failure', 'part-file')):
         retry_port_collisions(run, str(Path(args.binary).resolve()), str(Path(args.fixture).resolve()), stage)

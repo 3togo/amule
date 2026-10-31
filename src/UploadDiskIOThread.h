@@ -35,6 +35,7 @@
 #include <vector>
 #include "StorageReadPool.h"
 #include "UploadStorageMap.h"
+#include "UploadReadDiagnostics.h"
 
 #include <wx/thread.h>
 
@@ -83,6 +84,11 @@ struct ReadRequest_Struct
 	CFileArea area;
 	std::vector<uint8> data; // owned copy only when area was mapped
 	UploadReadResult result = READ_FAILED;
+	// Timing is enabled at submission and remains immutable on the worker.
+	uint64 diagnosticEpoch = 0;
+	std::atomic<uint64_t> readStarted{ 0 };
+	uint64_t readFinished = 0;
+	mutable bool pendingReported = false; // coordinator only
 	bool bCompress = false;
 	bool closeOnly = false;
 	bool continues = false;                       // the client's next block starts where this one ends
@@ -114,6 +120,8 @@ private:
 
 	using ReadResult = UploadReadResult;
 	void DispatchReads();
+	void ObserveDiagnostics(uint64 now);
+	void ReportDiagnostics(uint64 now);
 	void DrainCompletions(bool deliver);
 	void QueueIdleCloses();
 	std::unique_ptr<ReadRequest_Struct> PrepareRead(uint32 clientId);
@@ -121,6 +129,22 @@ private:
 	bool CommitRead(ReadRequest_Struct &req, ReadResult result);
 	bool ReadCompletionRoutine(ReadRequest_Struct &req); // true if payload was queued
 
+	bool m_diagnostics = false;
+	uint64 m_diagnosticEpoch = 0;
+	std::atomic<uint64_t> m_activeDiagnosticEpoch{ 0 };
+	uint64 m_reportStarted = 0;
+	uint64 m_lastSample = 0;
+	std::map<std::string, UploadReadDiagnostics::Volume> m_volumes;
+	struct WaitingRead
+	{
+		uint64 session;
+		uint64 start;
+		uint64 end;
+		uint64 since;
+	};
+	std::map<uint32, WaitingRead> m_waitingReads;
+	std::array<uint64, 4> m_slotSamples{};
+	uint64 m_slotSamplePasses = 0;
 	bool m_started = false;
 	std::atomic<bool> m_bRun{ false }; // eMule ref: m_bRun (line 77)
 

@@ -142,6 +142,17 @@ public:
 		}
 	}
 
+	// Callback may inspect immutable metadata and atomics only. It must not do I/O.
+	template <typename Inspect> void VisitRunning(Inspect inspect) const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		for (const auto &slot : m_slots) {
+			if (slot.state == State::Running) {
+				inspect(*slot.job);
+			}
+		}
+	}
+
 	// Drain accepted jobs and join before their owners or the application disappear.
 	// A kernel read that cannot be interrupted must still finish; never detach it.
 	void Stop()
