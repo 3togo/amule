@@ -1065,5 +1065,14 @@
   "prefs_field_servers_accelerated_publication_enabled_help": "Seguir o ritmo de publicação anunciado pelo servidor. Os demais servidores recebem o ritmo padrão. Vale a partir da próxima conexão ao servidor.",
   "prefs_field_servers_accelerated_publication_enabled": "Publicar arquivos compartilhados mais rápido nos servidores que permitem",
   "shared_media_refresh_tip_disabled": "A extração de metadados de mídia está desativada nas Preferências.",
-  "shared_media_refresh_tip_unavailable": "Este aMule não tem o auxiliar de mídia (amule-media-probe), portanto não pode extrair metadados de mídia."
+  "shared_media_refresh_tip_unavailable": "Este aMule não tem o auxiliar de mídia (amule-media-probe), portanto não pode extrair metadados de mídia.",
+  "stats_tree_upload_lowid_to_lowid_data": "Dados LowID para LowID (Sessão): %s",
+  "stats_tree_upload_ipv6_data": "Dados IPv6 (Sessão): %s",
+  "stats_tree_download_lowid_to_lowid_data": "Dados LowID para LowID (Sessão): %s",
+  "stats_tree_download_ipv6_data": "Dados IPv6 (Sessão): %s",
+  "stats_tree_nat_traversal": "Travessia de NAT (Sessão)",
+  "stats_tree_natt_server_punch_attempts": "Hole punches via servidor: %s",
+  "stats_tree_natt_server_punch_successes": "Hole punches via servidor bem-sucedidos: %s",
+  "stats_tree_natt_lugdunum_callback_attempts": "Callbacks Lugdunum: %s",
+  "stats_tree_natt_lugdunum_callback_successes": "Callbacks Lugdunum bem-sucedidos: %s"
 }

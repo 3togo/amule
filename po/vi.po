@@ -425,6 +425,10 @@ msgstr ""
 "Cấu hình EC"
 
 #: src/amule.cpp
+msgid "Could not save AcceptExternalConnections to amule.conf."
+msgstr ""
+
+#: src/amule.cpp
 msgid "Password set and external connections enabled."
 msgstr "Đã đặt mật khẩu và bật kết nối bên ngoài."
 

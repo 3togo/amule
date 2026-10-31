@@ -419,6 +419,10 @@ msgid ""
 msgstr "Potvrda izlaza"
 
 #: src/amule.cpp
+msgid "Could not save AcceptExternalConnections to amule.conf."
+msgstr ""
+
+#: src/amule.cpp
 #, fuzzy
 msgid "Password set and external connections enabled."
 msgstr "Nova vanjska veza prihvacena\n"
